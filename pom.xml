@@ -17,5 +17,11 @@
   		<version>3.0.2-SNAPSHOT</version>
   		<scope>compile</scope>
   	</dependency>
+  	<dependency>
+  		<groupId>org.rcsb</groupId>
+  		<artifactId>ava-core</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  		<scope>compile</scope>
+  	</dependency>
   </dependencies>
 </project>

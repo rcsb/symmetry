@@ -1,43 +1,25 @@
 package org.biojava3.structure.dbscan;
 
-import java.io.IOException;
 import java.util.SortedSet;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Chain;
-import org.biojava.bio.structure.ChainImpl;
-import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.ce.CECalculator;
 import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
-import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
-import org.biojava3.structure.utils.SimpleLog;
-import org.biojava3.structure.utils.SymmetryTools;
 import org.rcsb.fatcat.server.PdbChainKey;
 
-public class FindMirrorSymmetries {
-	
-	
-	
+public class FindRotationSymmetries {
 
-	
-	
 	public static void main(String[] args){
 		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
 		AtomCache cache = new AtomCache("/Users/andreas/WORK/PDB/",true);
-		
-		String filename = "/Users/andreas/tmp/findMirrorSymmetries.log";
-		SimpleLog.setLogFilename(filename);
-		
+		FindRotationSymmetries me = new FindRotationSymmetries();
+
 		int total = 0;
 		int symmetric = 0;
 		for ( PdbChainKey r : reps){
@@ -46,37 +28,26 @@ public class FindMirrorSymmetries {
 				Atom[] ca1 = cache.getAtoms(name);
 				Atom[] ca2 = cache.getAtoms(name);
 
-				Atom[] ca2M = SymmetryTools.mirrorCoordinates(ca2);
-				ca2M = SymmetryTools.duplicateMirrorCA2(ca2M);
-				
-				AFPChain afp = FindMirrorSymmetries.align(ca1,ca2M,name);
+				AFPChain afp = me.align(ca1,ca2,name);
 				afp.setAlgorithmName(CeMain.algorithmName);
 
 				//boolean isSignificant =  afp.isSignificantResult();
 				boolean isSignificant = false;
-				if ( afp.getTMScore() > 0.3 && afp.isSignificantResult()) {
+				if ( afp.getTMScore() > 0.3 && afp.isSignificantResult())
 					isSignificant = true;
-					//StructureAlignmentDisplay.display(afp, ca1, ca2M);
-				}
 				total++;
 				if ( isSignificant)
 					symmetric++;
-				String log = name + "\t" + String.format("%.2f", afp.getProbability()) + String.format(" %.2f", afp.getTMScore());
-				log += " " + symmetric + "/" + total + " (" + (symmetric/(float)total*100f)+"%)";
-				
-								
-				SimpleLog.write(log);
-				
+				System.out.print(name + "\t" + String.format("%.2f", afp.getProbability()) + String.format(" %.2f", afp.getTMScore()));
+				System.out.println(" " + symmetric + "/" + total + " (" + (symmetric/(float)total*100f)+"%)");
 			} catch (Exception e){
 				e.printStackTrace();
 			}
 		}
 	}
-	
-	
-	
 
-	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name) throws StructureException {
+
+	private AFPChain align(Atom[] ca1, Atom[] ca2, String name) throws StructureException {
 		int rows = ca1.length ;
 		int cols = ca2.length ;
 
@@ -113,7 +84,7 @@ public class FindMirrorSymmetries {
 		calculator.traceFragmentMatrix( afpChain,ca1, ca2);
 		calculator.nextStep( afpChain,ca1, ca2);
 
-		afpChain.setAlgorithmName("SpeedCE");
+		afpChain.setAlgorithmName("CE-rotation");
 		afpChain.setVersion("0.0000001");
 
 

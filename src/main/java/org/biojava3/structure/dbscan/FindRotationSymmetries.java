@@ -11,6 +11,7 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
+import org.biojava3.structure.utils.SimpleLog;
 import org.rcsb.fatcat.server.PdbChainKey;
 
 public class FindRotationSymmetries {
@@ -18,6 +19,8 @@ public class FindRotationSymmetries {
 	public static void main(String[] args){
 		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
 		AtomCache cache = new AtomCache("/Users/andreas/WORK/PDB/",true);
+		
+		SimpleLog.setLogFilename("/Users/andreas/tmp/findRotationSymm.log");
 		FindRotationSymmetries me = new FindRotationSymmetries();
 
 		int total = 0;
@@ -38,8 +41,10 @@ public class FindRotationSymmetries {
 				total++;
 				if ( isSignificant)
 					symmetric++;
-				System.out.print(name + "\t" + String.format("%.2f", afp.getProbability()) + String.format(" %.2f", afp.getTMScore()));
-				System.out.println(" " + symmetric + "/" + total + " (" + (symmetric/(float)total*100f)+"%)");
+				String log = (name + "\t" + String.format("%.2f", afp.getProbability()) + String.format(" %.2f", afp.getTMScore()));
+				log += (" " + symmetric + "/" + total + " (" + (symmetric/(float)total*100f)+"%)");
+				
+				SimpleLog.write(log);
 			} catch (Exception e){
 				e.printStackTrace();
 			}

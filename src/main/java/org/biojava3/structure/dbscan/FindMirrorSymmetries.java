@@ -77,9 +77,10 @@ public class FindMirrorSymmetries {
 	
 
 	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name) throws StructureException {
-		int rows = ca1.length ;
-		int cols = ca2.length ;
-
+		
+		
+		Atom[] ca2clone = SymmetryTools.cloneAtoms(ca2);
+		
 		CeParameters params = new CeParameters();
 		params.setCheckCircular(true);
 		CECalculator calculator = new CECalculator(params);
@@ -88,36 +89,36 @@ public class FindMirrorSymmetries {
 		AFPChain afpChain = new AFPChain();
 		afpChain.setName1(name);
 		afpChain.setName2(name);
-		afpChain = calculator.extractFragments(afpChain, ca1, ca2);
+		afpChain = calculator.extractFragments(afpChain, ca1, ca2clone);
 
 		Matrix origM = new Matrix( calculator.getMatMatrix());
 		// symmetry hack, disable main diagonale
 
-		for ( int i = 0 ; i< rows; i++){
-			for ( int j = 0 ; j < cols ; j++){
-				int diff = Math.abs(i-j);
-
-				if ( diff < 15 ){
-					origM.set(i,j, 99);
-				}
-				int diff2 = Math.abs(i-(j-ca2.length/2));
-				if ( diff2 < 15 ){
-					origM.set(i,j, 99);
-				}
-			}
-		}
-
+//		for ( int i = 0 ; i< rows; i++){
+//			for ( int j = 0 ; j < cols ; j++){
+//				int diff = Math.abs(i-j);
+//
+//				if ( diff < 15 ){
+//					origM.set(i,j, 99);
+//				}
+//				int diff2 = Math.abs(i-(j-ca2.length/2));
+//				if ( diff2 < 15 ){
+//					origM.set(i,j, 99);
+//				}
+//			}
+//		}
+		SymmetryTools.showMatrix(origM, "mirror matrix");
 		//showMatrix(origM, "original CE matrix");
 		calculator.setMatMatrix(origM.getArray());
 		//calculator.setMatMatrix(diffDistMax.getArray());
-		calculator.traceFragmentMatrix( afpChain,ca1, ca2);
-		calculator.nextStep( afpChain,ca1, ca2);
+		calculator.traceFragmentMatrix( afpChain,ca1, ca2clone);
+		calculator.nextStep( afpChain,ca1, ca2clone);
 
-		afpChain.setAlgorithmName("SpeedCE");
-		afpChain.setVersion("0.0000001");
+		//afpChain.setAlgorithmName("SpeedCE");
+		//afpChain.setVersion("0.0000001");
 
 
-		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
+		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2clone);
 		afpChain.setTMScore(tmScore);
 
 		return afpChain;

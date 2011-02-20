@@ -9,10 +9,12 @@ import org.biojava3.structure.utils.SymmetryTools;
 
 public class ShowMirrorSymmetry {
 	public static void main(String[] args){
-		String name1="1A25.B";
-		String name2="1A25.B";
+		//String name1="1A25.B";
+		//String name2="1A25.B";
 
-
+		String name1="3QGM.D";
+		String name2="3QGM.D";
+		
 		try {
 			AtomCache cache = new AtomCache("/Users/andreas/WORK/PDB/",true);
 			Atom[] ca1 = cache.getAtoms(name1);
@@ -40,3 +42,4 @@ public class ShowMirrorSymmetry {
 		}
 	}
 }
+

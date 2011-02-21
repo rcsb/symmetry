@@ -3,6 +3,7 @@ import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.dbscan.FindMirrorSymmetries;
 import org.biojava3.structure.utils.SymmetryTools;
 
@@ -24,17 +25,17 @@ public class ShowMirrorSymmetry {
 			Atom[] ca2M = SymmetryTools.mirrorCoordinates(ca2);
 			ca2M = SymmetryTools.duplicateMirrorCA2(ca2M);
 
-			AFPChain afp = FindMirrorSymmetries.align(ca1,ca2M,name1,true);
-			afp.setAlgorithmName(CeMain.algorithmName);
+			AFPChain afpChain = FindMirrorSymmetries.align(ca1,ca2M,name1,true);
+			afpChain.setAlgorithmName(CeMain.algorithmName);
 
 			//boolean isSignificant =  afp.isSignificantResult();
 			boolean isSignificant = false;
-			if ( afp.getTMScore() > 0.3 && afp.isSignificantResult()) {
+			if ( afpChain.getTMScore() > 0.3 && afpChain.isSignificantResult()) {
 				isSignificant = true;
 				
 			}
 			
-			StructureAlignmentDisplay.display(afp, ca1, ca2M);
+			StructureAlignmentDisplay.display(afpChain, ca1, ca2M);
 			
 			
 		} catch (Exception e){

@@ -124,7 +124,7 @@ public class FindMirrorSymmetries {
 
 		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2clone);
 		afpChain.setTMScore(tmScore);
-
+		afpChain.setDistanceMatrix((Matrix)origM.clone());
 		return afpChain;
 
 

@@ -96,7 +96,7 @@ public class FindRotationSymmetries {
 
 		afpChain.setAlgorithmName("CE-rotation " + name);
 		afpChain.setVersion("0.0000001");
-
+		afpChain.setDistanceMatrix((Matrix)origM.clone());
 
 		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 		afpChain.setTMScore(tmScore);

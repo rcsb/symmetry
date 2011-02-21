@@ -21,8 +21,8 @@ public class SymmetryTools {
 
 	// there won;t be an instance of this
 	private SymmetryTools(){}
-	
-	
+
+
 	public static Atom[] mirrorCoordinates(Atom[] ca2O) {
 		for(int i=0;i<ca2O.length;i++) {
 			//ca2O[i].setX(-ca2O[i].getX());
@@ -188,12 +188,23 @@ public class SymmetryTools {
 				int end2 = Math.min(pos2+dist, cols-1);
 				//System.out.println(pos1 + "  " + pos2 + " " + start1 + " " + end1 + " " + start2 + " " + end2);
 				for ( int i1 = start1; i1< end1 ; i1++){
-					dist1[i1][i1] = 99;
+					for ( int k=0; k < 8 ; k ++){
+						if ( i-k >= 0)
+							dist1[i-k][i-k] = 999;
+						if ( i+k < rows)
+							dist1[i+k][i+k] = 999;
+						
+					}
 
 					for ( int j2 = start2 ; j2 < end2 ; j2++){
 						//System.out.println(i1 + " " + j2);
 						max.set(i1,j2,99);
-						dist2[j2][j2] = 99;
+						for ( int k=0; k < 8 ; k ++){							
+							if ( j2-k >=0)
+								dist2[j2-k][j2-k] = 0;
+							if ( j2+k < cols)
+								dist2[j2+k][j2+k] = 0;
+						}
 					}
 				}
 
@@ -209,16 +220,41 @@ public class SymmetryTools {
 		origM = new Matrix( calculator.getMatMatrix());
 		// symmetry hack, disable main diagonale
 
+		double[][] dist1 = calculator.getDist1();
+		double[][] dist2 = calculator.getDist2();
+
 		for ( int i = 0 ; i< rows; i++){
 			for ( int j = 0 ; j < cols ; j++){
 				int diff = Math.abs(i-j);
 
 				if ( diff < 15 ){
 					origM.set(i,j, 99);
+//					for ( int k=0; k < 5 ; k ++){
+//						if ( i-k >= 0)
+//							dist1[i][i-k] = 99;
+//						if ( i+k < rows)
+//							dist1[i][i+k] = 99;
+//						if ( j-k >=0)
+//							dist2[j][j-k] = 499;
+//						if ( j+k < cols)
+//							dist2[j][j+k] = 499;
+//					}
 				}
 				int diff2 = Math.abs(i-(j-ca2.length/2));
 				if ( diff2 < 15 ){
 					origM.set(i,j, 99);
+					
+//					for ( int k=0; k < 5 ; k ++){
+//
+//						if ( i-k >= 0)
+//							dist1[i][i-k] = 99;
+//						if ( i+k < rows)
+//							dist1[i][i+k] = 99;
+//						if ( j-k >=0)
+//							dist2[j][j-k] = 99;
+//						if ( j+k < cols)
+//							dist2[j][j+k] = 99;
+//					}
 				}
 			}
 		}
@@ -237,10 +273,10 @@ public class SymmetryTools {
 
 			pos++;
 		}
-		
+
 		return ca2clone;
 	}
-	
+
 	public static Matrix getDkMatrix(Atom[] ca1, Atom[] ca2, int k, int fragmentLength) {
 		double[] dist1 = AlignTools.getDiagonalAtK(ca1, k);
 
@@ -248,12 +284,12 @@ public class SymmetryTools {
 
 		int rows = ca1.length - fragmentLength - k + 1;
 		int cols = ca2.length - fragmentLength - k + 1;
-				
+
 		// Matrix that tracks similarity of a fragment of length fragmentLength
 		// starting a position i,j.
-		
+
 		Matrix m2 = new Matrix(rows,cols); 
-		
+
 		for ( int i = 0 ; i< rows; i++){
 			double score1 = 0;
 			for ( int x=0 ; x < fragmentLength ; x++){
@@ -264,7 +300,7 @@ public class SymmetryTools {
 				for ( int y=0 ; y < fragmentLength ; y++){
 					score2 += dist2[j+y];
 				}	
-				
+
 				// if the intramolecular distances are very similar
 				// the two scores should be similar, i.e. the difference is close to 0
 				m2.set(i,j, Math.abs(score1-score2));

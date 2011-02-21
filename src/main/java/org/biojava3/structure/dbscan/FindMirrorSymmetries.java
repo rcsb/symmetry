@@ -49,7 +49,7 @@ public class FindMirrorSymmetries {
 				Atom[] ca2M = SymmetryTools.mirrorCoordinates(ca2);
 				ca2M = SymmetryTools.duplicateMirrorCA2(ca2M);
 				
-				AFPChain afp = FindMirrorSymmetries.align(ca1,ca2M,name);
+				AFPChain afp = FindMirrorSymmetries.align(ca1,ca2M,name, false);
 				afp.setAlgorithmName(CeMain.algorithmName);
 
 				//boolean isSignificant =  afp.isSignificantResult();
@@ -76,7 +76,7 @@ public class FindMirrorSymmetries {
 	
 	
 
-	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name) throws StructureException {
+	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name, boolean showMatrix) throws StructureException {
 		
 		
 		Atom[] ca2clone = SymmetryTools.cloneAtoms(ca2);
@@ -107,7 +107,11 @@ public class FindMirrorSymmetries {
 //				}
 //			}
 //		}
-		SymmetryTools.showMatrix(origM, "mirror matrix");
+		
+		
+		if ( showMatrix)
+			SymmetryTools.showMatrix(origM, "mirror matrix");
+		
 		//showMatrix(origM, "original CE matrix");
 		calculator.setMatMatrix(origM.getArray());
 		//calculator.setMatMatrix(diffDistMax.getArray());

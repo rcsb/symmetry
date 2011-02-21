@@ -10,6 +10,7 @@ import org.biojava.bio.structure.align.helper.AlignTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.gui.ScaleableMatrixPanel;
 import org.biojava.bio.structure.jama.Matrix;
+import org.biojava3.structure.utils.SymmetryTools;
 
 
 
@@ -73,34 +74,7 @@ public class TestDk {
 		//System.out.println("rows "  + rows + " " + cols +
 		//      " ca1 l " + ca1.length + " ca2 l " + ca2.length);
 
-		double[] dist1 = AlignTools.getDiagonalAtK(ca1, k);
-
-		double[] dist2 = AlignTools.getDiagonalAtK(ca2, k);
-
-		int rows = ca1.length - fragmentLength - k + 1;
-		int cols = ca2.length - fragmentLength - k + 1;
-				
-		// Matrix that tracks similarity of a fragment of length fragmentLength
-		// starting a position i,j.
-		
-		Matrix m2 = new Matrix(rows,cols); 
-		
-		for ( int i = 0 ; i< rows; i++){
-			double score1 = 0;
-			for ( int x=0 ; x < fragmentLength ; x++){
-				score1 += dist1[i+x];
-			}
-			for ( int j = 0 ; j < cols ; j++){
-				double score2 = 0;
-				for ( int y=0 ; y < fragmentLength ; y++){
-					score2 += dist2[j+y];
-				}	
-				
-				// if the intramolecular distances are very similar
-				// the two scores should be similar, i.e. the difference is close to 0
-				m2.set(i,j, Math.abs(score1-score2));
-			}
-		}
+		Matrix m2 = SymmetryTools.getDkMatrix(ca1, ca2, k, fragmentLength);
 
 		ScaleableMatrixPanel smp = new ScaleableMatrixPanel();
 		JFrame frame = new JFrame();
@@ -125,4 +99,6 @@ public class TestDk {
 
 
 	}
+
+	
 }

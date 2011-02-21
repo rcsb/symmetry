@@ -12,8 +12,8 @@ public class ShowMirrorSymmetry {
 		//String name1="1A25.B";
 		//String name2="1A25.B";
 
-		String name1="3QGM.D";
-		String name2="3QGM.D";
+		String name1="d1z7xw1";
+		String name2="d1z7xw1";
 		
 		try {
 			AtomCache cache = new AtomCache("/Users/andreas/WORK/PDB/",true);
@@ -24,7 +24,7 @@ public class ShowMirrorSymmetry {
 			Atom[] ca2M = SymmetryTools.mirrorCoordinates(ca2);
 			ca2M = SymmetryTools.duplicateMirrorCA2(ca2M);
 
-			AFPChain afp = FindMirrorSymmetries.align(ca1,ca2M,name1);
+			AFPChain afp = FindMirrorSymmetries.align(ca1,ca2M,name1,true);
 			afp.setAlgorithmName(CeMain.algorithmName);
 
 			//boolean isSignificant =  afp.isSignificantResult();

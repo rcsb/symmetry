@@ -12,6 +12,7 @@ import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.utils.SimpleLog;
+import org.biojava3.structure.utils.SymmetryTools;
 import org.rcsb.fatcat.server.PdbChainKey;
 
 public class FindRotationSymmetries {
@@ -31,7 +32,7 @@ public class FindRotationSymmetries {
 				Atom[] ca1 = cache.getAtoms(name);
 				Atom[] ca2 = cache.getAtoms(name);
 
-				AFPChain afp = me.align(ca1,ca2,name);
+				AFPChain afp = me.align(ca1,ca2,name,false);
 				afp.setAlgorithmName(CeMain.algorithmName);
 
 				//boolean isSignificant =  afp.isSignificantResult();
@@ -52,7 +53,7 @@ public class FindRotationSymmetries {
 	}
 
 
-	private AFPChain align(Atom[] ca1, Atom[] ca2, String name) throws StructureException {
+	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name, boolean showMatrix) throws StructureException {
 		int rows = ca1.length ;
 		int cols = ca2.length ;
 
@@ -83,13 +84,17 @@ public class FindRotationSymmetries {
 			}
 		}
 
+		
+		if ( showMatrix)
+			SymmetryTools.showMatrix(origM, "Rotatin Matrix, main diagonal disabled");
+		
 		//showMatrix(origM, "original CE matrix");
 		calculator.setMatMatrix(origM.getArray());
 		//calculator.setMatMatrix(diffDistMax.getArray());
 		calculator.traceFragmentMatrix( afpChain,ca1, ca2);
 		calculator.nextStep( afpChain,ca1, ca2);
 
-		afpChain.setAlgorithmName("CE-rotation");
+		afpChain.setAlgorithmName("CE-rotation " + name);
 		afpChain.setVersion("0.0000001");
 
 

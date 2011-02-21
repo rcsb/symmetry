@@ -27,6 +27,7 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.gui.ScaleableMatrixPanel;
 import org.biojava.bio.structure.io.PDBFileParser;
 import org.biojava.bio.structure.jama.Matrix;
+import org.biojava3.structure.dbscan.FindRotationSymmetries;
 import org.biojava3.structure.utils.SymmetryTools;
 
 
@@ -35,14 +36,14 @@ public class ShowRotationSymmetry {
 
 
 	public static void main(String[] args){
-		ShowRotationSymmetry dk = new ShowRotationSymmetry();
+		
 
 
 		int fragmentLength = 8;
 
 
 		try {
-			AtomCache cache = new AtomCache("/tmp/", true);
+			AtomCache cache = new AtomCache("/Users/andreas/WORK/PDB/", true);
 			Logger.getLogger(PDBFileParser.class.getName()).setLevel(Level.INFO);
 
 			// big one
@@ -50,14 +51,14 @@ public class ShowRotationSymmetry {
 			//String chainId2 = "1A9X.G";
 
 
-			String chainId1 = "3QGM.D";
-			String chainId2 = "3QGM.D";
+			//String chainId1 = "3QGM.D";
+			//String chainId2 = "3QGM.D";
 
 			//String chainId1 = "1A6S.A";
 			//String chainId2 = "1A6S.A";
 			
-			//String chainId1 = "1ubi";
-			//String chainId2 = "1ubi";
+			String chainId1 = "d1z7xw1";
+			String chainId2 = "d1z7xw1";
 
 
 			// intra and intermolecularsymm
@@ -111,8 +112,10 @@ public class ShowRotationSymmetry {
 
 
 			long timeS = System.currentTimeMillis();
-			AFPChain afpChain = new AFPChain();
-			Matrix origM = dk.align(afpChain,chainId1, chainId2, ca1,ca2, params, null);
+			
+			AFPChain afpChain = FindRotationSymmetries.align(ca1, ca2, chainId1, true);
+			//Matrix origM = dk.align(afpChain,chainId1, chainId2, ca1,ca2, params, null);
+			
 			long timeE = System.currentTimeMillis();
 			System.out.println("===== Alignment took " + (timeE-timeS) + " ms.");
 			StructureAlignmentDisplay.display(afpChain, ca1, ca2);

@@ -12,13 +12,17 @@ import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.ce.CECalculator;
+import org.biojava.bio.structure.align.helper.AlignTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.gui.ScaleableMatrixPanel;
 import org.biojava.bio.structure.jama.Matrix;
 
 public class SymmetryTools {
 
-
+	// there won;t be an instance of this
+	private SymmetryTools(){}
+	
+	
 	public static Atom[] mirrorCoordinates(Atom[] ca2O) {
 		for(int i=0;i<ca2O.length;i++) {
 			//ca2O[i].setX(-ca2O[i].getX());
@@ -235,6 +239,38 @@ public class SymmetryTools {
 		}
 		
 		return ca2clone;
+	}
+	
+	public static Matrix getDkMatrix(Atom[] ca1, Atom[] ca2, int k, int fragmentLength) {
+		double[] dist1 = AlignTools.getDiagonalAtK(ca1, k);
+
+		double[] dist2 = AlignTools.getDiagonalAtK(ca2, k);
+
+		int rows = ca1.length - fragmentLength - k + 1;
+		int cols = ca2.length - fragmentLength - k + 1;
+				
+		// Matrix that tracks similarity of a fragment of length fragmentLength
+		// starting a position i,j.
+		
+		Matrix m2 = new Matrix(rows,cols); 
+		
+		for ( int i = 0 ; i< rows; i++){
+			double score1 = 0;
+			for ( int x=0 ; x < fragmentLength ; x++){
+				score1 += dist1[i+x];
+			}
+			for ( int j = 0 ; j < cols ; j++){
+				double score2 = 0;
+				for ( int y=0 ; y < fragmentLength ; y++){
+					score2 += dist2[j+y];
+				}	
+				
+				// if the intramolecular distances are very similar
+				// the two scores should be similar, i.e. the difference is close to 0
+				m2.set(i,j, Math.abs(score1-score2));
+			}
+		}
+		return m2;
 	}
 
 

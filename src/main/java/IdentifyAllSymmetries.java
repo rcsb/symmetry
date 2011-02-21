@@ -70,7 +70,7 @@ public class IdentifyAllSymmetries {
 			
 			int i =0 ; ;
 			//while (! String.format("%.4f",afpChain.getTMScore()).equals(String.format("%.4f", prevTm)) ){
-			while ( afpChain.getTMScore() > 0.3 && (! String.format("%.4f",afpChain.getTMScore()).equals(String.format("%.4f", prevTm)) )){
+			while ( ! String.format("%.4f",afpChain.getTMScore()).equals(String.format("%.4f", prevTm)) ){
 				i++;
 				System.out.println("Iteration : " + i + " " + afpChain.getTMScore());
 				origM = align(afpChain,name1, name2, ca1,ca2, params, origM, calculator);

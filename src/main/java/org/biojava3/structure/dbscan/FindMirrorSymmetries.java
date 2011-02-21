@@ -113,18 +113,19 @@ public class FindMirrorSymmetries {
 			SymmetryTools.showMatrix(origM, "mirror matrix");
 		
 		//showMatrix(origM, "original CE matrix");
-		calculator.setMatMatrix(origM.getArray());
+		Matrix clone =(Matrix) origM.clone();
+		calculator.setMatMatrix(clone.getArray());
 		//calculator.setMatMatrix(diffDistMax.getArray());
 		calculator.traceFragmentMatrix( afpChain,ca1, ca2clone);
 		calculator.nextStep( afpChain,ca1, ca2clone);
 
 		//afpChain.setAlgorithmName("SpeedCE");
 		//afpChain.setVersion("0.0000001");
-
+		afpChain.setDistanceMatrix((Matrix)origM.clone());
 
 		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2clone);
 		afpChain.setTMScore(tmScore);
-		afpChain.setDistanceMatrix((Matrix)origM.clone());
+		
 		return afpChain;
 
 

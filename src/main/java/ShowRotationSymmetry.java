@@ -57,8 +57,8 @@ public class ShowRotationSymmetry {
 			//String chainId1 = "1A6S.A";
 			//String chainId2 = "1A6S.A";
 			
-			String chainId1 = "d1z7xw1";
-			String chainId2 = "d1z7xw1";
+			String chainId1 = "1AUO.A";
+			String chainId2 = "1AUO.A";
 
 
 			// intra and intermolecularsymm

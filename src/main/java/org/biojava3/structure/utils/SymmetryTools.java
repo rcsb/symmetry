@@ -69,7 +69,7 @@ public class SymmetryTools {
 
 	public static Atom[] duplicateMirrorCA2(Atom[] ca2) throws StructureException{
 		// we don't want to rotate input atoms, do we?
-		Atom[] ca2clone = new Atom[ca2.length*2];
+		Atom[] ca2clone = new Atom[ca2.length];
 
 		int pos = ca2clone.length - 1;
 
@@ -83,14 +83,14 @@ public class SymmetryTools {
 		}
 
 
-		// Duplicate ca2!
-		for (Atom a : ca2){
-			Group g = (Group)a.getGroup().clone();
-			c.addGroup(g);
-			ca2clone[pos] = g.getAtom(StructureTools.caAtomName);
-
-			pos--;
-		}
+//		// Duplicate ca2!
+//		for (Atom a : ca2){
+//			Group g = (Group)a.getGroup().clone();
+//			c.addGroup(g);
+//			ca2clone[pos] = g.getAtom(StructureTools.caAtomName);
+//
+//			pos--;
+//		}
 
 		return ca2clone;
 

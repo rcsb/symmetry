@@ -136,7 +136,7 @@ public class MomentsOfInertia {
 		double[][] tensor = new double[3][3];
 		
 		// calculate the interia tensor at center of mass
-		Atom com = Calc.centerOfMass( ca );
+		Atom com = Calc.getCentroid( ca );
 		System.out.println("Center of mass: " + com);
 		for (int i = 0, n = ca.length; i < n; i++) {
 			Atom a = ca[i];

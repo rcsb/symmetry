@@ -13,11 +13,11 @@ public class ShowMirrorSymmetry {
 		//String name1="1A25.B";
 		//String name2="1A25.B";
 
-		String name1="d1z7xw1";
-		String name2="d1z7xw1";
+		String name1="4hhb";
+		String name2="4hhb";
 		
 		try {
-			AtomCache cache = new AtomCache("/Users/andreas/WORK/PDB/",true);
+			AtomCache cache = new AtomCache("/Users/ap3/WORK/PDB/",true);
 			Atom[] ca1 = cache.getAtoms(name1);
 			Atom[] ca2 = cache.getAtoms(name2);
 

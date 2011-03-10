@@ -1,32 +1,17 @@
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JFrame;
+
 
 import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Calc;
-import org.biojava.bio.structure.Chain;
-import org.biojava.bio.structure.ChainImpl;
-import org.biojava.bio.structure.Group;
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureImpl;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.ce.CECalculator;
-import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
-import org.biojava.bio.structure.align.helper.AlignTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.model.AfpChainWriter;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.gui.ScaleableMatrixPanel;
 import org.biojava.bio.structure.io.PDBFileParser;
-import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.dbscan.FindRotationSymmetries;
 import org.biojava3.structure.utils.SymmetryTools;
 
@@ -43,7 +28,7 @@ public class ShowRotationSymmetry {
 
 
 		try {
-			AtomCache cache = new AtomCache("/Users/andreas/WORK/PDB/", true);
+			AtomCache cache = new AtomCache("/Users/ap3/WORK/PDB/", true);
 			Logger.getLogger(PDBFileParser.class.getName()).setLevel(Level.INFO);
 
 			// big one
@@ -51,15 +36,13 @@ public class ShowRotationSymmetry {
 			//String chainId2 = "1A9X.G";
 
 
-			//String chainId1 = "3QGM.D";
-			//String chainId2 = "3QGM.D";
+			String chainId1 = "4hhb.A";
+			String chainId2 = "4hhb.A";
 
 			//String chainId1 = "1A6S.A";
 			//String chainId2 = "1A6S.A";
 			
-			String chainId1 = "1AUO.A";
-			String chainId2 = "1AUO.A";
-
+			
 
 			// intra and intermolecularsymm
 			//String chainId1 = "1jnr.D";

@@ -164,10 +164,10 @@ public class SymmetryTools {
 	public static Matrix blankOutPreviousAlignment(AFPChain afpChain, Atom[] ca2,
 			int rows, int cols, CECalculator calculator, Matrix max) {
 
-
 		double[][] dist1 = calculator.getDist1();
 		double[][] dist2 = calculator.getDist2();
 
+		
 		int[][][] optAln = afpChain.getOptAln();
 		int blockNum = afpChain.getBlockNum();
 
@@ -220,8 +220,8 @@ public class SymmetryTools {
 		origM = new Matrix( calculator.getMatMatrix());
 		// symmetry hack, disable main diagonale
 
-		double[][] dist1 = calculator.getDist1();
-		double[][] dist2 = calculator.getDist2();
+		//double[][] dist1 = calculator.getDist1();
+		//double[][] dist2 = calculator.getDist2();
 
 		for ( int i = 0 ; i< rows; i++){
 			for ( int j = 0 ; j < cols ; j++){

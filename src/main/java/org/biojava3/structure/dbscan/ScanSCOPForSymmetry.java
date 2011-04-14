@@ -41,7 +41,7 @@ public class ScanSCOPForSymmetry {
 		for (ScopDescription superfamily : superfamilies){
 			Character scopClass = superfamily.getClassificationId().charAt(0);
 			
-			if ( scopClass > 'g')
+			if ( scopClass != 'f')
 				continue;
 			
 			count++;
@@ -65,9 +65,6 @@ public class ScanSCOPForSymmetry {
 					if ( IdentifyAllSymmetries.isSignificant(afpChain)) {
 						withSymm++;
 						isSymmetric = true;
-						
-						
-						
 						     		
 						str.append(String.format("%.2f",afpChain.getProbability()));		
 						str.append("\t");
@@ -100,8 +97,8 @@ public class ScanSCOPForSymmetry {
 				if ( isSymmetric) {
 					trackStats(classStats,scopClass,1);
 				}
-				if ( withSymm > 5)
-					break;
+				//if ( withSymm > 5)
+				//	break;
 			} catch (Exception e){
 				e.printStackTrace();
 			}

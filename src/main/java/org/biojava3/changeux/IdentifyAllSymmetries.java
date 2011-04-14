@@ -224,7 +224,7 @@ public class IdentifyAllSymmetries implements MatrixListener {
 	public static  boolean isSignificant(AFPChain myAFP){
 
 		//|| 
-		return ( myAFP.getTMScore() > 0.35  || myAFP.getProbability() >= 3.5);
+		return ( (myAFP.getTMScore() >= 0.35  || myAFP.getProbability() >= 3.5 ) && myAFP.getTotalRmsdOpt() < 5.0);
 	}
 
 	private void showCurrentAlig(AFPChain myAFP, Atom[] ca12, Atom[] ca22) throws StructureException {

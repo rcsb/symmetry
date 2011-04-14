@@ -22,6 +22,7 @@ public class SymmetryTools {
 	// there won;t be an instance of this
 	private SymmetryTools(){}
 
+	private static int RESET_VALUE= Integer.MIN_VALUE;
 
 	public static Atom[] mirrorCoordinates(Atom[] ca2O) {
 		for(int i=0;i<ca2O.length;i++) {
@@ -42,9 +43,23 @@ public class SymmetryTools {
 
 		int pos = 0;
 
-		Chain c = new ChainImpl();
-		for (Atom a : ca2){
+		Chain c = null;
+		String prevChainId = "";
+		for (Atom a : ca2){			
 			Group g = (Group) a.getGroup().clone(); // works because each group has only a CA atom
+			
+			if (c == null ) {
+				c = new ChainImpl();
+				Chain orig= a.getGroup().getChain();
+				c.setChainID(orig.getChainID());
+			} else {
+				Chain orig= a.getGroup().getChain();
+				if ( ! orig.getChainID().equals(prevChainId)){
+					c = new ChainImpl();
+					c.setChainID(orig.getChainID());
+				}
+			}
+			
 			c.addGroup(g);
 			ca2clone[pos] = g.getAtom(StructureTools.caAtomName);
 
@@ -53,8 +68,23 @@ public class SymmetryTools {
 
 
 		// Duplicate ca2!
+		c = null;
+		prevChainId = "";
 		for (Atom a : ca2){
 			Group g = (Group)a.getGroup().clone();
+			
+			if (c == null ) {
+				c = new ChainImpl();
+				Chain orig= a.getGroup().getChain();
+				c.setChainID(orig.getChainID());
+			} else {
+				Chain orig= a.getGroup().getChain();
+				if ( ! orig.getChainID().equals(prevChainId)){
+					c = new ChainImpl();
+					c.setChainID(orig.getChainID());
+				}
+			}
+			
 			c.addGroup(g);
 			ca2clone[pos] = g.getAtom(StructureTools.caAtomName);
 
@@ -162,16 +192,21 @@ public class SymmetryTools {
 	}
 
 	public static Matrix blankOutPreviousAlignment(AFPChain afpChain, Atom[] ca2,
-			int rows, int cols, CECalculator calculator, Matrix max) {
+			int rows, int cols, CECalculator calculator, Matrix max, int blankWindowSize) {
 
+		max =  blankOutCEOrig(ca2, rows, cols, calculator, max,  blankWindowSize);
+		
+		
 		double[][] dist1 = calculator.getDist1();
 		double[][] dist2 = calculator.getDist2();
-
 		
 		int[][][] optAln = afpChain.getOptAln();
 		int blockNum = afpChain.getBlockNum();
 
 		int[] optLen = afpChain.getOptLen();
+		
+		// ca2 is circularly permutated
+		int breakPoint = ca2.length / 2;
 		for(int bk = 0; bk < blockNum; bk ++)       {
 
 			//Matrix m= afpChain.getBlockRotationMatrix()[bk];
@@ -181,43 +216,55 @@ public class SymmetryTools {
 				int pos2 = optAln[bk][1][i];
 				// blank out area around these positions...
 
-				int dist = 10 ;
+				int dist = blankWindowSize/2 ;
 				int start1 = Math.max(pos1-dist,0);
 				int start2 = Math.max(pos2-dist,0);
 				int end1 = Math.min(pos1+dist, rows-1);
 				int end2 = Math.min(pos2+dist, cols-1);
+				
 				//System.out.println(pos1 + "  " + pos2 + " " + start1 + " " + end1 + " " + start2 + " " + end2);
+			
 				for ( int i1 = start1; i1< end1 ; i1++){
-					for ( int k=0; k < 8 ; k ++){
-						if ( i-k >= 0)
-							dist1[i-k][i-k] = 999;
-						if ( i+k < rows)
-							dist1[i+k][i+k] = 999;
+					
+					for ( int k=0; k < blankWindowSize/2 ; k ++){
+						if ( i1-k >= 0)
+							dist1[i1-k][i1-k] = RESET_VALUE;
+						if ( i1+k < rows)
+							dist1[i1+k][i1+k] = RESET_VALUE;
 						
 					}
 
 					for ( int j2 = start2 ; j2 < end2 ; j2++){
-						//System.out.println(i1 + " " + j2);
-						max.set(i1,j2,99);
-						for ( int k=0; k < 8 ; k ++){							
+						//System.out.println(i1 + " " + j2 + " (***)");
+						max.set(i1,j2,RESET_VALUE);
+						if ( j2 < breakPoint) {
+							max.set(i1,j2+breakPoint,RESET_VALUE);
+						} else {
+							max.set(i1,j2-breakPoint,RESET_VALUE);
+						}
+						for ( int k=0; k <blankWindowSize/2 ; k ++){							
 							if ( j2-k >=0)
-								dist2[j2-k][j2-k] = 0;
+								dist2[j2-k][j2-k] = RESET_VALUE;
 							if ( j2+k < cols)
-								dist2[j2+k][j2+k] = 0;
+								dist2[j2+k][j2+k] = RESET_VALUE;
 						}
 					}
 				}
 
 			}
-
 		}
+		calculator.setDist1(dist1);
+		calculator.setDist2(dist2);
 		return max;
 
 	}
 
 	public static Matrix blankOutCEOrig(Atom[] ca2, int rows, int cols,
-			CECalculator calculator, Matrix origM) {
-		origM = new Matrix( calculator.getMatMatrix());
+			CECalculator calculator, Matrix origM, int blankWindowSize) {
+		
+		if ( origM == null)
+			origM =   new Matrix( calculator.getMatMatrix());
+
 		// symmetry hack, disable main diagonale
 
 		//double[][] dist1 = calculator.getDist1();
@@ -227,8 +274,9 @@ public class SymmetryTools {
 			for ( int j = 0 ; j < cols ; j++){
 				int diff = Math.abs(i-j);
 
-				if ( diff < 15 ){
-					origM.set(i,j, 99);
+				if ( diff < blankWindowSize ){
+					origM.set(i,j, RESET_VALUE);
+					
 //					for ( int k=0; k < 5 ; k ++){
 //						if ( i-k >= 0)
 //							dist1[i][i-k] = 99;
@@ -241,8 +289,8 @@ public class SymmetryTools {
 //					}
 				}
 				int diff2 = Math.abs(i-(j-ca2.length/2));
-				if ( diff2 < 15 ){
-					origM.set(i,j, 99);
+				if ( diff2 < blankWindowSize ){
+					origM.set(i,j, RESET_VALUE);
 					
 //					for ( int k=0; k < 5 ; k ++){
 //
@@ -308,6 +356,99 @@ public class SymmetryTools {
 		}
 		return m2;
 	}
+
+
+	public static boolean[][] blankOutBreakFlag(AFPChain afpChain,
+			Atom[] ca2, int rows, int cols, CECalculator calculator,
+			boolean[][] breakFlag, int blankWindowSize) {
+		
+		
+		int[][][] optAln = afpChain.getOptAln();
+		int blockNum = afpChain.getBlockNum();
+
+		int[] optLen = afpChain.getOptLen();
+		
+		// ca2 is circularly permutated at this point.
+		int breakPoint = ca2.length / 2;
+		
+		for(int bk = 0; bk < blockNum; bk ++)       {
+
+			//Matrix m= afpChain.getBlockRotationMatrix()[bk];
+			//Atom shift = afpChain.getBlockShiftVector()[bk];
+			for ( int i=0;i< optLen[bk];i++){
+				int pos1 = optAln[bk][0][i];
+				int pos2 = optAln[bk][1][i];
+				// blank out area around these positions...
+
+				int dist = blankWindowSize ;
+				int start1 = Math.max(pos1-dist,0);
+				int start2 = Math.max(pos2-dist,0);
+				int end1 = Math.min(pos1+dist, rows-1);
+				int end2 = Math.min(pos2+dist, cols-1);
+				
+				//System.out.println(pos1 + "  " + pos2 + " " + start1 + " " + end1 + " " + start2 + " " + end2);
+			
+				for ( int i1 = start1; i1< end1 ; i1++){
+									
+					for ( int j2 = start2 ; j2 < end2 ; j2++){
+						//System.out.println(i1 + " " + j2 + " (***)");
+						breakFlag[i1][j2] = true;
+						if ( j2 < breakPoint) {
+							breakFlag[i1][j2+ breakPoint ] = true;
+						}
+					}
+				}
+
+			}
+		}
+		
+		return breakFlag;
+	}
+
+//	/** compare the PDB positions from the two alignment and if more than X % are equivalent then they are similar
+//	 * 
+//	 * @param first
+//	 * @param second
+//	 * @return
+//	 */
+//	public boolean isSimilar(AFPChain first, AFPChain second){
+//		
+//		if (! first.getName1().equals(second.getName1()))
+//			return false;
+//		
+//		if (! first.getName2().equals(second.getName2()))
+//			return false;
+//		
+//		int[][][] optAln1 = first.getOptAln();
+//		int[][][] optAln2 = second.getOptAln();
+//		int[] blockLens1 = first.getOptLen();
+//		int[] blockLens2 = first.getOptLen();
+//		
+//		
+//		for(int block1=0;block1< first.getBlockNum();block1++) {
+//		
+//			if ( blockLens1[block1] > optAln2[block1][0].length) {
+//				continue;
+//			}
+//			
+//			if (  blockLens1[block1] > optAln1[block1][0].length) {
+//				//errors reconstructing alignment block ["+ block +"]. Length is " + blockLens[block] + " but should be <=" + optAln[block][0].length );
+//				continue;
+//			}
+//
+//			for(int i=0;i<blockLens1[block1];i++) {
+//				int pos11 = optAln1[block1][0][i];
+//				int pos12 = optAln1[block1][1][i];
+//				
+//				//int pos21 = optAln2[block2][0][i];
+//				//int pos22 = optAln2[block2][1][i]; 
+//					
+//				
+//			}
+//		}
+//		
+//		
+//	}
 
 
 }

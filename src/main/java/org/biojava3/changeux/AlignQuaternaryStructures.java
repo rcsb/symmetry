@@ -26,6 +26,7 @@ import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
@@ -34,6 +35,7 @@ import org.biojava3.core.util.InputStreamProvider;
 
 import org.rcsb.fatcat.server.PdbChainKey;
 import org.rcsb.fatcat.server.dao.PdbDAO;
+import org.rcsb.fatcat.server.dao.SequenceClusterDAO;
 import org.rcsb.fatcat.server.util.SetupJNDIDataSource;
 
 public class AlignQuaternaryStructures {
@@ -51,8 +53,8 @@ public class AlignQuaternaryStructures {
 
 		//for ( PdbChainKey repre: representatives) {
 
-		PdbChainKey repre =  PdbChainKey.fromName("3KFK.A");
-		//PdbChainKey repre =  PdbChainKey.fromName("4HHB.A");
+		//PdbChainKey repre =  PdbChainKey.fromName("3KFK.A");
+		PdbChainKey repre =  PdbChainKey.fromName("4HHB.A");
 
 		try {
 			alignCluster(repre,clusterCutoff);
@@ -68,14 +70,14 @@ public class AlignQuaternaryStructures {
 
 
 
-		PdbDAO dao = new PdbDAO();
+		SequenceClusterDAO dao = new SequenceClusterDAO();
 		int clusterId = dao.getClusterNumber(clusterCutoff,repre);
 		SortedSet<PdbChainKey> members = dao.getClusterMembers(clusterCutoff,clusterId);
 
 		System.out.println("### cluster " + clusterCutoff + " has " + members.size() + " members");
 
-
 		StructureAlignment algo = StructureAlignmentFactory.getAlgorithm(CeMain.algorithmName);
+		//StructureAlignment algo = StructureAlignmentFactory.getAlgorithm(SmithWaterman3Daligner.algorithmName);
 
 		//CeParameters params = (CeParameters)algo.getParameters();
 		//params.setMaxGapSize(-1);
@@ -86,14 +88,15 @@ public class AlignQuaternaryStructures {
 			String xml = null;
 			String outputFileName = "/Users/ap3/WORK/PDB/bio/"+ repre.getPdbId() + "_" + member.getPdbId()+".xml.gz";
 			File f = new File(outputFileName);
-			if ( f.exists()){
+			if ( false) {
+			//if ( f.exists()){
 				System.out.println("loading results from previous calculation for " + f);
 				xml = showPrecalcResult(repre, member,f, logFile);
 			} else {
 
 				
 				try {
-					xml = align(repre, member,algo,logFile);
+					xml = align(repre, member,algo,logFile,false);
 					writeXML2File(f, xml);
 				} catch (Exception e){
 					//e.printStackTrace();
@@ -140,7 +143,7 @@ public class AlignQuaternaryStructures {
 			double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 			afpChain.setTMScore(tmScore);
 			
-			String msg = repre.toName() + "\t" + member.toName() + "\t" + 
+			String msg = repre.getPdbId() + "\t" + member.getPdbId() + "\t" + 
 			afpChain.getProbability() + "\t" + afpChain.getCoverage1() + "\t" + 
 			afpChain.getCoverage2() +"\t" + tmScore+ "\t-1" ;
 			writeToResultsFile(logFile, msg);
@@ -172,7 +175,7 @@ public class AlignQuaternaryStructures {
 
 	public static String align(PdbChainKey repre,
 			PdbChainKey member, StructureAlignment algo,
-			File logFile
+			File logFile, boolean showAlignment
 	) throws StructureException, IOException {
 		Structure s1 = cache.getBiologicalUnit(repre.getPdbId());
 		Structure s2 = cache.getBiologicalUnit(member.getPdbId());
@@ -192,7 +195,7 @@ public class AlignQuaternaryStructures {
 //		jmol2.setStructure(s2);
 
 
-		String msg1 = "aligning " + s1.getPDBCode() + " size:" + ca1.length + 
+		String msg1 = "aligning " + algo.getAlgorithmName() + " " + s1.getPDBCode() + " size:" + ca1.length + 
 				" atoms | " + s2.getPDBCode() + " size:" + ca2.length + " atoms";
 		System.out.println(msg1);
 		
@@ -203,11 +206,20 @@ public class AlignQuaternaryStructures {
 		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 		afpChain.setTMScore(tmScore);
 		
+		if ( showAlignment) {
+			afpChain.setName1(repre.getPdbId());
+			afpChain.setName2(member.getPdbId());
+			StructureAlignmentJmol jmol = new  StructureAlignmentJmol(afpChain, ca1, ca2);
+			
+			
+		}
+		
+		
 		long endTime = System.currentTimeMillis();
 		
-		String msg = repre.toName() + "\t" + member.toName() + "\t" + 
+		String msg = repre.getPdbId() + "\t" + member.getPdbId() + "\t" + 
 				afpChain.getProbability() + "\t" + afpChain.getCoverage1() + "\t" + 
-				afpChain.getCoverage2() +"\t" + tmScore+ "\t" + (endTime - startTime)/1000 ;
+				afpChain.getCoverage2() +"\t" + tmScore+ "\t" + afpChain.getTotalRmsdOpt() +"\t" + (endTime - startTime)/1000 ;
 		if ( logFile != null)
 			writeToResultsFile(logFile, msg);
 		else {

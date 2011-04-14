@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.model.AfpChainWriter;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
@@ -36,8 +37,8 @@ public class ShowRotationSymmetry {
 			//String chainId2 = "1A9X.G";
 
 
-			String chainId1 = "4hhb.A";
-			String chainId2 = "4hhb.A";
+			String chainId1 = "1MSO";
+			String chainId2 = "1MSO";
 
 			//String chainId1 = "1A6S.A";
 			//String chainId2 = "1A6S.A";
@@ -101,8 +102,10 @@ public class ShowRotationSymmetry {
 			
 			long timeE = System.currentTimeMillis();
 			System.out.println("===== Alignment took " + (timeE-timeS) + " ms.");
-			StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+			StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
 
+			jmol.evalString("draw l1 line 100 {0 0 0} (1:A.CA/1) ; draw l2 line 100 {0 0 0} (1:A.CA/2);" );
+			//jmol.evalString("monitor  {0 0 0} (1:A.CA/1)  {0 0 0} (1:A.CA/2)");
 
 			double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 			afpChain.setTMScore(tmScore);
@@ -130,7 +133,7 @@ public class ShowRotationSymmetry {
 			//double tmScore2 = AFPChainScorer.getTMScore(afpChain2, ca1, ca2);
 			//afpChain2.setTMScore(tmScore2);
 			//System.out.println(AfpChainWriter.toScoresList(afpChain2));
-
+			
 
 		} catch (Exception e){
 			e.printStackTrace();

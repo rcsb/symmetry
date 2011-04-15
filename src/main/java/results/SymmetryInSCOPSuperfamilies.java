@@ -45,6 +45,9 @@ public class SymmetryInSCOPSuperfamilies    {
 	public SymmetryInSCOPSuperfamilies() {
 		
 		CategoryDataset dataset = createDataset();
+		
+		
+		
 		JFreeChart chart = createChart(dataset);
 		ChartPanel chartPanel = new ChartPanel(chart);
 		chartPanel.setFillZoomRectangle(true);
@@ -100,7 +103,7 @@ public class SymmetryInSCOPSuperfamilies    {
 		dataset.addValue(0.14, series2, category5);
 		dataset.addValue(0.43, series2, category6);
 		dataset.addValue(0.06, series2, category7);
-		
+				
 		return dataset;
 
 	}

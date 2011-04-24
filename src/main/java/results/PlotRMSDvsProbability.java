@@ -30,7 +30,9 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.rcsb.fatcat.server.DbUtils;
 import org.rcsb.fatcat.server.PdbChainKey;
+import org.rcsb.fatcat.server.dao.AllVsAllDAO;
 import org.rcsb.fatcat.server.dao.DBAlignment;
+import org.rcsb.fatcat.server.dao.SequenceClusterDAO;
 import org.rcsb.fatcat.server.dao.SplitDatabase;
 
 public class PlotRMSDvsProbability {
@@ -42,7 +44,7 @@ public class PlotRMSDvsProbability {
 	
 	
 	public static void main(String[] args){
-		String name = "12AS.B";
+		String name = "4HHB.A";
 		
 		PdbChainKey repre = PdbChainKey.fromName(name);
 		
@@ -53,7 +55,9 @@ public class PlotRMSDvsProbability {
 	public void showData(PdbChainKey repre){
 		
 		XYDataset series = getData4Repre(repre);
+		
 		JFreeChart chart = createChart(series);
+		
 		chartPanel = new ChartPanel(chart);
 		chartPanel.setFillZoomRectangle(true);
 		
@@ -120,6 +124,17 @@ public class PlotRMSDvsProbability {
 	    SplitDatabase db = new SplitDatabase();
 	    List<DBAlignment> aligs = db.getAllAlignments(repre);
 	
+	    if ( aligs.size() < 10){
+	    	System.out.println(repre + " is not a representative...");
+	    	
+	    	SequenceClusterDAO dao = new SequenceClusterDAO();
+	    	repre = dao.getRepresentative(repre, 40);
+	    	
+	    	System.out.println("using representative " + repre + " instead.");
+	         aligs = db.getAllAlignments(repre);
+	         System.out.println("got " + aligs.size() + " results for " + repre);
+	    }
+	    
 	    double[][] data = new double[2][aligs.size()];
 	    int x = -1;
 	    for ( DBAlignment alig: aligs){

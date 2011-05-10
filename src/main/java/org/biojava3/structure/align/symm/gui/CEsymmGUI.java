@@ -23,7 +23,10 @@
 package org.biojava3.structure.align.symm.gui;
 
 
+import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
+import org.biojava.bio.structure.align.ce.CeCPMain;
+import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.gui.AlignmentGui;
 import org.biojava3.structure.align.symm.CeSymm;
 
@@ -40,10 +43,14 @@ public class CEsymmGUI {
 	public static void main(String[] args) {
 		System.setProperty("PDB_DIR","/tmp/");
 		
-		CeSymm alg = new CeSymm();
-		
-		StructureAlignmentFactory.addAlgorithm(alg);
-	
+		//Add CeSymm to the top of the algorithm list
+		StructureAlignment[] algorithms = StructureAlignmentFactory.getAllAlgorithms();
+		StructureAlignmentFactory.clearAlgorithms();
+		StructureAlignmentFactory.addAlgorithm(new CeSymm());
+		for(StructureAlignment alg: algorithms) {
+			StructureAlignmentFactory.addAlgorithm(alg);
+		}
+
 		AlignmentGui.getInstance();
 		
 	}

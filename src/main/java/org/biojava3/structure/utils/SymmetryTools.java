@@ -130,21 +130,13 @@ public class SymmetryTools {
 	public static void showMatrix(Matrix m, String string) {
 		ScaleableMatrixPanel smp = new ScaleableMatrixPanel();
 		JFrame frame = new JFrame();
-		frame.addWindowListener(new WindowAdapter(){
-			public void windowClosing(WindowEvent e){
-				JFrame f = (JFrame) e.getSource();
-				f.setVisible(false);
-				f.dispose();
-				System.exit(0);
-			}
-		});
 
 		smp.setMatrix((Matrix)m.clone());
 		//smp.getMatrixPanel().setScale(0.8f);
 
 		frame.setTitle(string);
 		frame.getContentPane().add(smp);
-
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.pack();
 		frame.setVisible(true);
 

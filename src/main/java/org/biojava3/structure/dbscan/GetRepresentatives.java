@@ -56,7 +56,7 @@ public class GetRepresentatives {
 
 			URL u = new URL(coreUrl + sequenceIdentity);
 
-			InputStream stream = HTTPConnectionTools.getInputStream(u, 15000);
+			InputStream stream = HTTPConnectionTools.getInputStream(u, 60000);
 
 			String xml = null;
 

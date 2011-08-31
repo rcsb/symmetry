@@ -1,7 +1,5 @@
 package org.biojava3.structure.utils;
 
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 

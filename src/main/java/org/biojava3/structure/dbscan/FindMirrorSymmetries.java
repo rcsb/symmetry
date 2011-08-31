@@ -1,21 +1,15 @@
 package org.biojava3.structure.dbscan;
 
-import java.io.IOException;
 import java.util.SortedSet;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Chain;
-import org.biojava.bio.structure.ChainImpl;
-import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
+
 import org.biojava.bio.structure.align.ce.CECalculator;
+import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
-import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
+
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
@@ -33,9 +27,9 @@ public class FindMirrorSymmetries {
 	
 	public static void main(String[] args){
 		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
-		AtomCache cache = new AtomCache("/Users/andreas/WORK/PDB/",true);
+		AtomCache cache = new AtomCache("/Users/ap3/WORK/PDB/",true);
 		
-		String filename = "/Users/andreas/tmp/findMirrorSymmetries.log";
+		String filename = "/Users/ap3/tmp/findMirrorSymmetries.log";
 		SimpleLog.setLogFilename(filename);
 		
 		int total = 0;
@@ -79,10 +73,10 @@ public class FindMirrorSymmetries {
 	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name, boolean showMatrix) throws StructureException {
 		
 		
-		Atom[] ca2clone = SymmetryTools.cloneAtoms(ca2);
-		
+		//Atom[] ca2clone = SymmetryTools.cloneAtoms(ca2);
+		Atom[] ca2clone = CeCPMain.prepareAtomsForAlign(ca2);
 		CeParameters params = new CeParameters();
-		params.setCheckCircular(true);
+		
 		CECalculator calculator = new CECalculator(params);
 
 		//Build alignment ca1 to ca2-ca2
@@ -126,6 +120,8 @@ public class FindMirrorSymmetries {
 		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2clone);
 		afpChain.setTMScore(tmScore);
 		
+		
+		CeCPMain.postProcessAlignment(afpChain, ca1, ca2clone, calculator);
 		return afpChain;
 
 

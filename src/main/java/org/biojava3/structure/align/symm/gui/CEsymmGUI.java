@@ -41,7 +41,9 @@ public class CEsymmGUI {
 	//  /Users/ap3/WORK/PDB/zl/pdb1zll.ent.gz
 	
 	public static void main(String[] args) {
-		System.setProperty("PDB_DIR","/tmp/");
+		String tmpDir = System.getProperty("java.io.tmpdir");
+		
+		System.setProperty("PDB_DIR",tmpDir);
 		
 		//Add CeSymm to the top of the algorithm list
 		StructureAlignment[] algorithms = StructureAlignmentFactory.getAllAlgorithms();

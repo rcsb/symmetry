@@ -9,7 +9,7 @@ import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.AbstractStructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.ce.CECalculator;
-import org.biojava.bio.structure.align.ce.CeMain;
+import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.bio.structure.align.ce.MatrixListener;
@@ -20,7 +20,12 @@ import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
 
+import org.biojava3.alignment.aaindex.ScaledSubstitutionMatrix;
+import org.biojava3.alignment.template.SubstitutionMatrix;
+import org.biojava3.core.sequence.compound.AminoAcidCompound;
+import org.biojava3.core.sequence.compound.AminoAcidCompoundSet;
 import org.biojava3.structure.utils.SymmetryTools;
+
 
 
 
@@ -298,34 +303,63 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	}
 
 	public double[][] matrixInOptimizer(double[][] max) {
+
+		// check if we should manipulate the matrix at all with sequence information
+		if (!  (params.getSeqWeight() > 0)) {
+		
+			//Matrix origM = new Matrix(max);
+			//max = origM.getArray();
+			loopCount++;
+			return max;
+					
+		}
+				
 		//System.out.println("In optimizer masking known alignments " );
 
 		//int fragmentLength = params.getWinSize();
 		//if ( ca1.length > 100 && ca2.length > 100 )
-		//	fragmentLength = fragmentLength * 2;
+		//      fragmentLength = fragmentLength * 2;
 		//int blankWindowSize = fragmentLength ;
 
 		Matrix origM = new Matrix(max);
-		//SymmetryTools.showMatrix((Matrix)origM.clone(), "before mask "  + loopCount  );
-		//SymmetryTools.showMatrix(origM, "iteration  matrix " + loopCount + " before");
+		
+		SubstitutionMatrix<AminoAcidCompound> substMatrix =
+			params.getSubstitutionMatrix();
+		
+		int internalScale = 1;
+		if ( substMatrix instanceof ScaledSubstitutionMatrix) {
+			ScaledSubstitutionMatrix scaledMatrix = (ScaledSubstitutionMatrix) substMatrix;
+			internalScale = scaledMatrix.getScale();
+		}
 
-		//System.out.println("iteration X..." + loopCount);
+		
+		AminoAcidCompoundSet set = AminoAcidCompoundSet.getAminoAcidCompoundSet();
 
-		//		for ( AFPChain prevAlig : prevAligs) {
-		//
-		//			origM =  SymmetryTools.blankOutPreviousAlignment(prevAlig, 
-		//					ca2, rows, cols, calculator, origM, blankWindowSize);
-		//		}
+		for (int i = 0 ; i < origM.getRowDimension() ; i++){
+			for ( int j =0; j < origM.getColumnDimension() ; j ++ ) {
+				double val = origM.get(i,j);
+				Atom a1 = ca1[i];
+				Atom a2 = ca2[j];
 
-		//		if ( afpChain != null) {
-		//			// blank out current alignment
-		//			origM = SymmetryTools.blankOutPreviousAlignment(afpChain, 
-		//					ca2, rows, cols, calculator, origM, blankWindowSize);
-		//		}
+				AminoAcidCompound ac1 =
+					set.getCompoundForString(a1.getGroup().getChemComp().getOne_letter_code());
+				AminoAcidCompound ac2 =
+					set.getCompoundForString(a2.getGroup().getChemComp().getOne_letter_code());
+				
+				
+				if ( ac1 == null || ac2 == null)
+					continue;
+				
+				short aaScore = substMatrix.getValue(ac1,ac2);
+				
+				double weightedScore = (aaScore / internalScale) * params.getSeqWeight();
+				
+				
+				val += weightedScore;
+				origM.set(i,j,val);
 
-		//origM =  SymmetryTools.blankOutPreviousAlignment(afpChain, 
-		//		   ca2, rows, cols, calculator, origM, blankWindowSize);
-
+			}
+		}
 		max = origM.getArray();
 
 		//SymmetryTools.showMatrix((Matrix)origM.clone(), "in optimizer "  + loopCount  );
@@ -439,7 +473,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 			afpChain.setTMScore(tmScore2);
 			try {
-				afpChain = CeMain.filterDuplicateAFPs(afpChain, calculator, ca1, ca2);
+				afpChain = CeCPMain.filterDuplicateAFPs(afpChain, calculator, ca1, ca2);
 			} catch (Exception e){
 				return afpChain;
 			}

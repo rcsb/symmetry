@@ -5,6 +5,7 @@ import java.util.SortedSet;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.ce.CECalculator;
+import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.model.AFPChain;
@@ -54,11 +55,13 @@ public class FindRotationSymmetries {
 
 
 	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name, boolean showMatrix) throws StructureException {
+		
+		Atom[] ca2m = CeCPMain.prepareAtomsForAlign(ca2);
 		int rows = ca1.length ;
 		int cols = ca2.length ;
 
 		CeParameters params = new CeParameters();
-		params.setCheckCircular(true);
+		
 		//params.setMaxNrIterationsForOptimization(0);
 		CECalculator calculator = new CECalculator(params);
 
@@ -103,6 +106,8 @@ public class FindRotationSymmetries {
 		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 		afpChain.setTMScore(tmScore);
 
+		CeCPMain.postProcessAlignment(afpChain, ca1, ca2m, calculator);
+		
 		return afpChain;
 
 

@@ -11,6 +11,7 @@ import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopCategory;
+import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopInstallation;
@@ -26,24 +27,26 @@ public class ScanSCOPForSymmetry {
 	private void scanSCOP(String pdbFilePath, boolean isSplit) {
 
 		AtomCache cache = new AtomCache(pdbFilePath, isSplit);
-		ScopInstallation scop = new ScopInstallation(pdbFilePath);
+		ScopDatabase scop = new ScopInstallation(pdbFilePath);
 
 		List<ScopDescription>superfamilies = scop.getByCategory(ScopCategory.Superfamily);
 
 		System.out.println("got " + superfamilies.size() + " superfamilies");
 
-		int fragmentLength = 8;
 		
+		printHTMLHeader();
+		int fragmentLength = 8;
+
 		int count = 0;
 		int withSymm = 0;
 		Map<Character,Integer> classStats = new HashMap<Character, Integer>();
 		Map<Character,Integer> totalStats = new HashMap<Character, Integer>();
 		for (ScopDescription superfamily : superfamilies){
 			Character scopClass = superfamily.getClassificationId().charAt(0);
-			
-			if ( scopClass != 'f')
+
+			if ( scopClass > 'f')
 				continue;
-			
+
 			count++;
 			//System.err.println(superfamily);
 			int sunid = superfamily.getSunID();
@@ -52,47 +55,26 @@ public class ScanSCOPForSymmetry {
 			try {
 				String name1 = first.getScopId();
 				String name2 = first.getScopId();
-				
+
 				IdentifyAllSymmetries identifyer = new IdentifyAllSymmetries();
 				identifyer.setMaxNrAlternatives(1);
 				identifyer.setDisplayJmol(false);
-				
+
 				List<AFPChain> alternatives = identifyer.indentifyAllSymmetries(name1, name2, cache, fragmentLength, null);
 				boolean isSymmetric = false;
-				StringBuffer str = new StringBuffer();
+				
+				AFPChain afpChain = null;
+
 				if ( alternatives.size() > 0) {
-					AFPChain afpChain = alternatives.get(0);
+					afpChain = alternatives.get(0);
 					if ( IdentifyAllSymmetries.isSignificant(afpChain)) {
 						withSymm++;
 						isSymmetric = true;
-						     		
-						str.append(String.format("%.2f",afpChain.getProbability()));		
-						str.append("\t");
-						str.append(String.format("%.2f",afpChain.getTotalRmsdOpt()));						
-						str.append("\t");
-						str.append(String.format("%.2f",afpChain.getTMScore()));
-						str.append("\t");
-						str.append(String.format("%.2f",afpChain.getAlignScore()));
-						
-					} else {
-						str.append("\t   ");  
-						str.append("\t   ");  
-						str.append("\t   ");  
 					}
-				} else {
-					str.append("\t   ");  
-					str.append("\t   ");  
-					str.append("\t   ");  
 				}
-				
-				System.out.print("#");
-				if ( isSymmetric )
-					System.out.print("* ");
-				else
-					System.out.print("  ");
-				System.out.println(superfamily.getClassificationId() + "\t" + name1 + "\t" + alternatives.size() + "\t"+ count + "\t" + withSymm+ "\t" +
-						String.format("%.2f",(withSymm/(float)count))  + "\t" + str.toString() +"\t" + superfamily.getDescription() + "\t" );
 
+				StringBuffer str = printTabbedResult(afpChain, isSymmetric, superfamily,name1, count);
+				System.out.println(str.toString());
 				trackStats(totalStats,scopClass,1);
 				if ( isSymmetric) {
 					trackStats(classStats,scopClass,1);
@@ -113,20 +95,219 @@ public class ScanSCOPForSymmetry {
 			Integer symm  = classStats.get(scopClass);
 			System.out.println("Class: " + scopClass + " " + String.format("%.2f",(symm/(float)total))  + "%");
 		}
+
+	}
+	
+
+	private void printHTMLHeader() {
+		System.out.println("<table>");
+		System.out.println("<tr><td>#<\td><td>Symnmetry?<\td><td>SCOP superfamily<\td><td>SCOP name<\td>");
+		System.out.println("<td>total % symmetry<\td><td>Z-score<\td><td>RMSD<\td><td>TM-score<\td><td>alignment score<\td>");
+		System.out.println("<td>% ID<\td><td>% similarity<\td>");
+		System.out.println("<td>SCOP description<\td><\tr>");
 		
 	}
 
+	private StringBuffer printResult( AFPChain afpChain, boolean isSignificant, ScopDescription superfamily, String name, int count) {
+		StringBuffer str = new StringBuffer();
+		
+		str.append("#");
+		if ( isSignificant )
+			str.append("* ");
+		else
+			str.append("  ");
+		System.out.println(superfamily.getClassificationId() + "\t" + name + "\t" );
+		
+		
+		if ( afpChain != null){
+			str.append(String.format("%.2f",afpChain.getProbability()));		
+			str.append("\t");
+			str.append(String.format("%.2f",afpChain.getTotalRmsdOpt()));						
+			str.append("\t");
+			str.append(String.format("%.2f",afpChain.getTMScore()));
+			str.append("\t");
+			str.append(String.format("%.2f",afpChain.getAlignScore()));
+
+		} else {
+			str.append("\t   ");  
+			str.append("\t   ");  
+			str.append("\t   ");  
+		}
+
+		
+		
+		str.append(superfamily.getDescription() + "\t" );
+
+
+		return str;
+		
+	}
+	
+	private StringBuffer printHTMLResult(AFPChain afpChain, boolean isSymmetric, ScopDescription superfamily, String name, int count){
+		
+		StringBuffer str = new StringBuffer();
+
+		str.append("<tr>");
+		str.append("<td>" + count+"<\td>");
+		if ( isSymmetric )
+			str.append("<td><b>*</b><\td>");
+		else
+			str.append("<td>&nbsp;<\td>");
+		str.append("<td>");
+		if ( isSymmetric)
+			str.append("<b>");
+		str.append(superfamily.getClassificationId());
+		if ( isSymmetric)
+			str.append("</b>");
+		str.append("<\td><td>");
+		if ( isSymmetric)
+			str.append("<b>");
+		str.append(
+				"<a href=\"/jfatcatserver/analyzeSymmetry.jsp?scop1="+name + "\">"+name+"</a>" );
+		if ( isSymmetric)
+			str.append("</b>");		
+		str.append("<\td>");
+		
+		
+		str.append("<td>");
+
+
+		if ( afpChain != null){		
+			if ( isSymmetric)
+				str.append("<b>");
+			str.append(String.format("%.2f",afpChain.getProbability()));
+			if ( isSymmetric)
+				str.append("</b>");
+			str.append("<\td><td>");
+			if ( isSymmetric)
+				str.append("<b>");
+			str.append(String.format("%.2f",afpChain.getTotalRmsdOpt()));
+			if ( isSymmetric)
+				str.append("</b>");
+			str.append("<\td><td>");
+			if ( isSymmetric)
+				str.append("<b>");
+			str.append(String.format("%.2f",afpChain.getTMScore()));
+			if ( isSymmetric)
+				str.append("</b>");
+			str.append("<\td><td>");
+			if ( isSymmetric)
+				str.append("<b>");
+			str.append(String.format("%.2f",afpChain.getAlignScore()));
+			if ( isSymmetric)
+				str.append("</b>");
+			str.append("<\td><td>");
+			if ( isSymmetric)
+				str.append("<b>");
+			str.append(String.format("%.2f", afpChain.getIdentity()));			
+			if ( isSymmetric)
+				str.append("</b>");
+			str.append("<\td><td>");
+			if ( isSymmetric)
+				str.append("<b>");
+			str.append(String.format("%.2f", afpChain.getSimilarity()));			
+			if ( isSymmetric)
+				str.append("</b>");
+			
+		} else {
+			str.append("<\td><td>   ");  
+			str.append("<\td><td>   ");  
+			str.append("<\td><td>   ");  
+			str.append("<\td><td>   ");
+			str.append("<\td><td>   ");
+		}
+		str.append("<\td>");
+				
+		str.append("<td>");
+		str.append(superfamily.getDescription() );
+		str.append("<\td>");
+		
+		str.append("<\tr>");
+		
+		return str;
+	}
+
+	private StringBuffer printTabbedResult(AFPChain afpChain, boolean isSymmetric, ScopDescription superfamily, String name, int count){
+		
+		StringBuffer str = new StringBuffer();
+
+		str.append("");
+		str.append("" + count+"\t");
+		if ( isSymmetric )
+			str.append("*\t");
+		else
+			str.append("\t");
+		str.append("");
+	
+		str.append(superfamily.getClassificationId());
+	
+		str.append("\t");
+		
+		str.append(
+				"/jfatcatserver/analyzeSymmetry.jsp?scop1="+name   );
+		
+		str.append("\t");
+		
+		
+	
+
+
+		if ( afpChain != null){		
+		
+			str.append(String.format("%.2f",afpChain.getProbability()));
+	
+			str.append("\t");
+			
+			str.append(String.format("%.2f",afpChain.getTotalRmsdOpt()));
+	
+			str.append("\t");
+
+			str.append(String.format("%.2f",afpChain.getTMScore()));
+		
+			str.append("\t");
+
+			str.append(String.format("%.2f",afpChain.getAlignScore()));
+	
+			str.append("\t");
+
+			str.append(String.format("%.2f", afpChain.getIdentity()));			
+	
+			str.append("\t");
+
+			str.append(String.format("%.2f", afpChain.getSimilarity()));			
+
+			
+		} else {
+			str.append("\t   ");  
+			str.append("\t   ");  
+			str.append("\t   ");  
+			str.append("\t   ");
+			str.append("\t   ");
+		}
+		str.append("\t");
+				
+		str.append("");
+		str.append(superfamily.getDescription() );
+		str.append("\t");
+		
+		
+		
+		return str;
+	}
+
+	
+	
 	private void trackStats(Map<Character, Integer> totalStats,
 			Character scopClass, int i) {
-	
+
 		Integer number = totalStats.get(scopClass);
 		if ( number == null) {
 			number = 0;
-			
+
 		}
-		
+
 		number += i;
 		totalStats.put(scopClass, number);
-		
+
 	}
 }

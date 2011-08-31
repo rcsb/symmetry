@@ -6,9 +6,13 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.ResidueNumber;
 import org.biojava.bio.structure.StructureException;
+import org.biojava.bio.structure.align.AbstractStructureAlignment;
+import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.ce.CECalculator;
+import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
+import org.biojava.bio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.bio.structure.align.ce.MatrixListener;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
@@ -25,8 +29,13 @@ import org.biojava3.structure.utils.SymmetryTools;
  * @author andreas
  *
  */
-public class IdentifyAllSymmetries implements MatrixListener {
+public class IdentifyAllSymmetries  implements MatrixListener {
 
+	public static final String algorithmName = "jCE-SYMM";
+
+	public static final String version = "1.0";
+	
+	
 	AFPChain afpChain;
 	List<AFPChain> prevAligs = new ArrayList<AFPChain>();
 	Atom[] ca1;
@@ -38,6 +47,8 @@ public class IdentifyAllSymmetries implements MatrixListener {
 	int loopCount ;
 	int maxNrAlternatives = Integer.MAX_VALUE;
 	boolean displayJmol = true;
+	
+	
 	public static void main(String[] args){
 
 		String name1 = args[0];
@@ -192,7 +203,7 @@ public class IdentifyAllSymmetries implements MatrixListener {
 				double tmScore2 = AFPChainScorer.getTMScore(a, ca1, ca2);
 				a.setTMScore(tmScore2);
 				
-				a = CeMain.filterDuplicateAFPs(a, calculator, ca1, ca2);
+				a = CeCPMain.filterDuplicateAFPs(a, calculator, ca1, ca2);
 				if ( displayJmol)
 					showCurrentAlig(a, ca1, ca2);
 			}
@@ -201,10 +212,12 @@ public class IdentifyAllSymmetries implements MatrixListener {
 				double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 				afpChain.setTMScore(tmScore2);
 				try {
-					afpChain = CeMain.filterDuplicateAFPs(afpChain, calculator, ca1, ca2);
+					afpChain = CeCPMain.filterDuplicateAFPs(afpChain, calculator, ca1, ca2);
 				} catch (Exception e){
 					return prevAligs;
 				}
+				
+				//afpChain = CeMain.filterDuplicateAFPs(afpChain,calculator,ca1,ca2);
 				prevAligs.add(afpChain);
 				if ( displayJmol) {
 					//if ( afpChain.getProbability() > 3.5) 
@@ -231,6 +244,9 @@ public class IdentifyAllSymmetries implements MatrixListener {
 		AFPChain c = (AFPChain) myAFP.clone();
 		StructureAlignmentJmol jmol =  StructureAlignmentDisplay.display(c, ca1, ca2);
 
+		
+		// draw a line from center of gravity to N terminus
+		
 		ResidueNumber res1 = ca1[0].getGroup().getResidueNumber();
 		ResidueNumber res2 = ca2[0].getGroup().getResidueNumber();
 		String chainId1 = ca1[0].getGroup().getChain().getChainID();
@@ -382,7 +398,7 @@ public class IdentifyAllSymmetries implements MatrixListener {
 			}
 
 			for ( AFPChain prevAlig : prevAligs) {
-				prevAlig = CeMain.filterDuplicateAFPs(prevAlig, calculator, ca1, ca2);
+				prevAlig = CeCPMain.filterDuplicateAFPs(prevAlig, calculator, ca1, ca2);
 				breakFlag =  SymmetryTools.blankOutBreakFlag(prevAlig, 
 						ca2, rows, cols, calculator, breakFlag, fragmentLength);
 			}
@@ -392,4 +408,18 @@ public class IdentifyAllSymmetries implements MatrixListener {
 		return breakFlag;
 
 	}
+
+	public CECalculator getCalculator() {
+		return calculator;
+	}
+
+	public void setCalculator(CECalculator calculator) {
+		this.calculator = calculator;
+	}
+
+	
+
+	
+	
+	
 }

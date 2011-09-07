@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>structcomplayground</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>StructCompPlayground</name>
 	<repositories>
 		<repository>
@@ -28,9 +28,9 @@
 		</repository>
 	</repositories>
 	<scm>
-		<connection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/trunk</connection>
-		<developerConnection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/trunk</developerConnection>
-		<url>http://source.rcsb.org/javadoc/</url>
+		<connection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/tags/structcomplayground-0.0.1</connection>
+		<developerConnection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/tags/structcomplayground-0.0.1</developerConnection>
+		<url>http://source.rcsb.org/javadoc/tags/structcomplayground-0.0.1</url>
 	</scm>
 
 	<distributionManagement>

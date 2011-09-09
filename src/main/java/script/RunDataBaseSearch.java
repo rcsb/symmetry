@@ -26,12 +26,11 @@ package script;
 
 import java.io.File;
 import java.util.SortedSet;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.StructureTools;
+
 import org.biojava.bio.structure.align.CallableStructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
@@ -51,6 +50,11 @@ import org.rcsb.fatcat.server.dao.SequenceClusterDAO;
 import org.biojava3.alignment.template.SubstitutionMatrix;
 import org.biojava3.core.sequence.compound.AminoAcidCompound;
 
+/** a Utility method to run a multi-threaded database search
+ * 
+ * @author Andreas Prlic
+ *
+ */
 public class RunDataBaseSearch implements Runnable{
 
 	
@@ -197,7 +201,7 @@ public class RunDataBaseSearch implements Runnable{
 
 	private static StructureAlignment getCeSymm(){
 		CeSymm ceSymm = new CeSymm();
-
+		StructureAlignmentFactory.addAlgorithm(ceSymm);
 		CeParameters params = (CeParameters) ceSymm.getParameters();
 		if ( params == null) {
 			params = new CeParameters();

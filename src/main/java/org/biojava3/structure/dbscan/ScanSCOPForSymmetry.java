@@ -21,13 +21,13 @@ public class ScanSCOPForSymmetry {
 	public static void main(String[] args){
 		ScanSCOPForSymmetry me = new ScanSCOPForSymmetry();
 
-		me.scanSCOP("/Users/ap3/WORK/PDB/", true);
+		me.scanSCOP();
 	}
 
-	private void scanSCOP(String pdbFilePath, boolean isSplit) {
+	private void scanSCOP() {
 
-		AtomCache cache = new AtomCache(pdbFilePath, isSplit);
-		ScopDatabase scop = new ScopInstallation(pdbFilePath);
+		AtomCache cache = new AtomCache();
+		ScopInstallation scop = new ScopInstallation();
 
 		List<ScopDescription>superfamilies = scop.getByCategory(ScopCategory.Superfamily);
 
@@ -36,17 +36,17 @@ public class ScanSCOPForSymmetry {
 		
 		printHTMLHeader();
 		int fragmentLength = 8;
-
+		
 		int count = 0;
 		int withSymm = 0;
 		Map<Character,Integer> classStats = new HashMap<Character, Integer>();
 		Map<Character,Integer> totalStats = new HashMap<Character, Integer>();
 		for (ScopDescription superfamily : superfamilies){
 			Character scopClass = superfamily.getClassificationId().charAt(0);
-
+			
 			if ( scopClass > 'f')
 				continue;
-
+			
 			count++;
 			//System.err.println(superfamily);
 			int sunid = superfamily.getSunID();
@@ -55,11 +55,11 @@ public class ScanSCOPForSymmetry {
 			try {
 				String name1 = first.getScopId();
 				String name2 = first.getScopId();
-
+				
 				IdentifyAllSymmetries identifyer = new IdentifyAllSymmetries();
 				identifyer.setMaxNrAlternatives(1);
 				identifyer.setDisplayJmol(false);
-
+				
 				List<AFPChain> alternatives = identifyer.indentifyAllSymmetries(name1, name2, cache, fragmentLength, null);
 				boolean isSymmetric = false;
 				
@@ -72,7 +72,7 @@ public class ScanSCOPForSymmetry {
 						isSymmetric = true;
 					}
 				}
-
+						     		
 				StringBuffer str = printTabbedResult(afpChain, isSymmetric, superfamily,name1, count);
 				System.out.println(str.toString());
 				trackStats(totalStats,scopClass,1);
@@ -120,19 +120,19 @@ public class ScanSCOPForSymmetry {
 		
 		
 		if ( afpChain != null){
-			str.append(String.format("%.2f",afpChain.getProbability()));		
-			str.append("\t");
-			str.append(String.format("%.2f",afpChain.getTotalRmsdOpt()));						
-			str.append("\t");
-			str.append(String.format("%.2f",afpChain.getTMScore()));
-			str.append("\t");
-			str.append(String.format("%.2f",afpChain.getAlignScore()));
-
-		} else {
-			str.append("\t   ");  
-			str.append("\t   ");  
-			str.append("\t   ");  
-		}
+						str.append(String.format("%.2f",afpChain.getProbability()));		
+						str.append("\t");
+						str.append(String.format("%.2f",afpChain.getTotalRmsdOpt()));						
+						str.append("\t");
+						str.append(String.format("%.2f",afpChain.getTMScore()));
+						str.append("\t");
+						str.append(String.format("%.2f",afpChain.getAlignScore()));
+						
+					} else {
+						str.append("\t   ");  
+						str.append("\t   ");  
+						str.append("\t   ");  
+					}
 
 		
 		
@@ -141,17 +141,17 @@ public class ScanSCOPForSymmetry {
 
 		return str;
 		
-	}
-	
+				}
+				
 	private StringBuffer printHTMLResult(AFPChain afpChain, boolean isSymmetric, ScopDescription superfamily, String name, int count){
 		
 		StringBuffer str = new StringBuffer();
 
 		str.append("<tr>");
 		str.append("<td>" + count+"<\td>");
-		if ( isSymmetric )
+				if ( isSymmetric )
 			str.append("<td><b>*</b><\td>");
-		else
+				else
 			str.append("<td>&nbsp;<\td>");
 		str.append("<td>");
 		if ( isSymmetric)
@@ -167,7 +167,7 @@ public class ScanSCOPForSymmetry {
 		if ( isSymmetric)
 			str.append("</b>");		
 		str.append("<\td>");
-		
+
 		
 		str.append("<td>");
 
@@ -215,9 +215,9 @@ public class ScanSCOPForSymmetry {
 			str.append("<\td><td>   ");  
 			str.append("<\td><td>   ");
 			str.append("<\td><td>   ");
-		}
+				}
 		str.append("<\td>");
-				
+
 		str.append("<td>");
 		str.append(superfamily.getDescription() );
 		str.append("<\td>");
@@ -225,7 +225,7 @@ public class ScanSCOPForSymmetry {
 		str.append("<\tr>");
 		
 		return str;
-	}
+		}
 
 	private StringBuffer printTabbedResult(AFPChain afpChain, boolean isSymmetric, ScopDescription superfamily, String name, int count){
 		
@@ -285,7 +285,7 @@ public class ScanSCOPForSymmetry {
 			str.append("\t   ");
 		}
 		str.append("\t");
-				
+		
 		str.append("");
 		str.append(superfamily.getDescription() );
 		str.append("\t");
@@ -299,15 +299,15 @@ public class ScanSCOPForSymmetry {
 	
 	private void trackStats(Map<Character, Integer> totalStats,
 			Character scopClass, int i) {
-
+	
 		Integer number = totalStats.get(scopClass);
 		if ( number == null) {
 			number = 0;
-
+			
 		}
-
+		
 		number += i;
 		totalStats.put(scopClass, number);
-
+		
 	}
 }

@@ -40,7 +40,7 @@ import org.rcsb.fatcat.server.util.SetupJNDIDataSource;
 
 public class AlignQuaternaryStructures {
 
-	protected static AtomCache cache = new AtomCache("/Users/ap3/WORK/PDB/",true);
+	protected static AtomCache cache = new AtomCache();
 
 	private static final String separator = System.getProperty("line.separator");
 	

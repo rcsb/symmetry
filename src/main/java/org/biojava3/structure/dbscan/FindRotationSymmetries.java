@@ -20,9 +20,11 @@ public class FindRotationSymmetries {
 
 	public static void main(String[] args){
 		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
-		AtomCache cache = new AtomCache("/Users/andreas/WORK/PDB/",true);
+		AtomCache cache = new AtomCache();
 		
-		SimpleLog.setLogFilename("/Users/andreas/tmp/findRotationSymm.log");
+		SimpleLog.setLogFilename(cache.getPath()+System.getProperty("file.seperator")
+				+"findRotationSymm.log");
+		
 		FindRotationSymmetries me = new FindRotationSymmetries();
 
 		int total = 0;

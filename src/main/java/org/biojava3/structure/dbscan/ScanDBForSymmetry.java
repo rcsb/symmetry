@@ -17,7 +17,7 @@ import org.rcsb.fatcat.server.PdbChainKey;
 public class ScanDBForSymmetry {
 	public static void main(String[] args){
 		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
-		AtomCache cache = new AtomCache("/Users/ap3/WORK/PDB/",true);
+		AtomCache cache = new AtomCache();
 		ScanDBForSymmetry me = new ScanDBForSymmetry();
 		
 		int total = 0;

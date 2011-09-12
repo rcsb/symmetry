@@ -29,7 +29,7 @@ public class ShowRotationSymmetry {
 
 
 		try {
-			AtomCache cache = new AtomCache("/Users/ap3/WORK/PDB/", true);
+			AtomCache cache = new AtomCache();
 			Logger.getLogger(PDBFileParser.class.getName()).setLevel(Level.INFO);
 
 			// big one

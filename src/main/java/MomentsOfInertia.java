@@ -44,7 +44,7 @@ public class MomentsOfInertia {
 
 
 	public static void main (String[] args){
-		AtomCache cache = new AtomCache("/tmp/",true);
+		AtomCache cache = new AtomCache();
 
 
 		int rotations = 3; 

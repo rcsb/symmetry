@@ -17,7 +17,7 @@ public class ShowMirrorSymmetry {
 		String name2="4hhb";
 		
 		try {
-			AtomCache cache = new AtomCache("/Users/ap3/WORK/PDB/",true);
+			AtomCache cache = new AtomCache();
 			Atom[] ca1 = cache.getAtoms(name1);
 			Atom[] ca2 = cache.getAtoms(name2);
 

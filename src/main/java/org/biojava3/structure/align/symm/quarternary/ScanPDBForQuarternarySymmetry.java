@@ -32,7 +32,7 @@ public class ScanPDBForQuarternarySymmetry {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		AtomCache cache = new AtomCache("C:/PDB/",true);
+		AtomCache cache = new AtomCache();
 		cache.setAutoFetch(true);
 
 		int total = 0;

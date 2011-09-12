@@ -28,7 +28,7 @@ public class TestDk {
 		
 		
 		try {
-			AtomCache cache = new AtomCache("/tmp/", true);
+			AtomCache cache = new AtomCache();
 			
 			
 			// intra and intermolecular symm

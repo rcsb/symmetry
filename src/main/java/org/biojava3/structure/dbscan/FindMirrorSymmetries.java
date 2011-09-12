@@ -27,9 +27,10 @@ public class FindMirrorSymmetries {
 	
 	public static void main(String[] args){
 		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
-		AtomCache cache = new AtomCache("/Users/ap3/WORK/PDB/",true);
+		AtomCache cache = new AtomCache();
 		
-		String filename = "/Users/ap3/tmp/findMirrorSymmetries.log";
+		String filename = cache.getPath()+System.getProperty("file.seperator")
+				+"findMirrorSymmetries.log";
 		SimpleLog.setLogFilename(filename);
 		
 		int total = 0;

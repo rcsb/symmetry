@@ -5,7 +5,7 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.beans.*;
 
-
+@Deprecated
 public class ProgressBar extends JPanel
                              implements ActionListener, 
                                         PropertyChangeListener {

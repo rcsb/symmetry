@@ -3,7 +3,11 @@ package org.biojava3.structure.dbscan;
 import java.util.SortedSet;
 
 import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.Chain;
+import org.biojava.bio.structure.ChainImpl;
+import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.StructureException;
+import org.biojava.bio.structure.StructureTools;
 
 import org.biojava.bio.structure.align.ce.CECalculator;
 import org.biojava.bio.structure.align.ce.CeCPMain;
@@ -20,10 +24,7 @@ import org.rcsb.fatcat.server.PdbChainKey;
 
 public class FindMirrorSymmetries {
 	
-	
-	
 
-	
 	
 	public static void main(String[] args){
 		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
@@ -42,7 +43,7 @@ public class FindMirrorSymmetries {
 				Atom[] ca2 = cache.getAtoms(name);
 
 				Atom[] ca2M = SymmetryTools.mirrorCoordinates(ca2);
-				ca2M = SymmetryTools.duplicateMirrorCA2(ca2M);
+				ca2M = duplicateMirrorCA2(ca2M);
 				
 				AFPChain afp = FindMirrorSymmetries.align(ca1,ca2M,name, false);
 				afp.setAlgorithmName(CeMain.algorithmName);
@@ -69,13 +70,48 @@ public class FindMirrorSymmetries {
 	}
 	
 	
-	
+
+	/** Create a mirror image of the Calpha atoms. Useful really only for detection of mirror symmetries, of which there are only few in PDB.
+	 * 
+	 * @param ca2
+	 * @return
+	 * @throws StructureException
+	 */
+	public static Atom[] duplicateMirrorCA2(Atom[] ca2) throws StructureException{
+		// we don't want to rotate input atoms, do we?
+		Atom[] ca2clone = new Atom[ca2.length];
+
+		int pos = ca2clone.length - 1;
+
+		Chain c = new ChainImpl();
+		for (Atom a : ca2){
+			Group g = (Group) a.getGroup().clone(); // works because each group has only a CA atom
+			c.addGroup(g);
+			ca2clone[pos] = g.getAtom(StructureTools.caAtomName);
+
+			pos--;
+		}
+
+
+//		// Duplicate ca2!
+//		for (Atom a : ca2){
+//			Group g = (Group)a.getGroup().clone();
+//			c.addGroup(g);
+//			ca2clone[pos] = g.getAtom(StructureTools.caAtomName);
+//
+//			pos--;
+//		}
+
+		return ca2clone;
+
+
+	}
 
 	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name, boolean showMatrix) throws StructureException {
 		
 		
 		//Atom[] ca2clone = SymmetryTools.cloneAtoms(ca2);
-		Atom[] ca2clone = CeCPMain.prepareAtomsForAlign(ca2);
+		Atom[] ca2clone = StructureTools.duplicateCA2(ca2);
 		CeParameters params = new CeParameters();
 		
 		CECalculator calculator = new CECalculator(params);

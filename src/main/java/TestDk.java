@@ -6,7 +6,6 @@ import javax.swing.JFrame;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
-import org.biojava.bio.structure.align.helper.AlignTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.gui.ScaleableMatrixPanel;
 import org.biojava.bio.structure.jama.Matrix;
@@ -14,7 +13,7 @@ import org.biojava3.structure.utils.SymmetryTools;
 
 
 
-
+@Deprecated
 public class TestDk {
 
 

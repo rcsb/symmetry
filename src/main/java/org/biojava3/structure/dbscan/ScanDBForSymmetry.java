@@ -4,6 +4,7 @@ import java.util.SortedSet;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
+import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.ce.CECalculator;
 import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeMain;
@@ -49,7 +50,7 @@ public class ScanDBForSymmetry {
 	protected AFPChain align(Atom[] ca1, Atom[] ca2, String name) throws StructureException {
 		int rows = ca1.length ;
 		
-		Atom[] ca2m = CeCPMain.prepareAtomsForAlign(ca2);
+		Atom[] ca2m = StructureTools.duplicateCA2(ca2);
 		
 		int cols = ca2m.length ;
 		

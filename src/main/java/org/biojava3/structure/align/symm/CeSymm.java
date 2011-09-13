@@ -6,6 +6,7 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.ResidueNumber;
 import org.biojava.bio.structure.StructureException;
+import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.AbstractStructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.ce.CECalculator;
@@ -426,7 +427,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 			//ca2O = mirrorCoordinates(ca2O);
 
-			ca2 = SymmetryTools.duplicateCA2(ca2O);
+			ca2 = StructureTools.duplicateCA2(ca2O);
 			rows = ca1.length ;
 			cols = ca2.length ;
 
@@ -520,7 +521,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	}
 
 
-
+	
 
 
 }

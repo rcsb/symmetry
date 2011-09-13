@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 
 import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
@@ -14,10 +15,9 @@ import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.PDBFileParser;
 import org.biojava3.structure.dbscan.FindRotationSymmetries;
-import org.biojava3.structure.utils.SymmetryTools;
 
 
-
+@Deprecated
 public class ShowRotationSymmetry {
 
 
@@ -87,7 +87,7 @@ public class ShowRotationSymmetry {
 
 			//ca2O = mirrorCoordinates(ca2O);
 
-			Atom[] ca2 = SymmetryTools.duplicateCA2(ca2O);
+			Atom[] ca2 = StructureTools.duplicateCA2(ca2O);
 
 			CeParameters params = new CeParameters();
 			params.setWinSize(fragmentLength);

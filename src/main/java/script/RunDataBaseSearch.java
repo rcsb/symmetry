@@ -92,7 +92,8 @@ public class RunDataBaseSearch implements Runnable{
 
 		AtomCache cache = new AtomCache(config);
 
-
+		cache.getFileParsingParams().setUpdateRemediatedFiles(true);
+		
 		String outFile = outPutDir+File.separator+query.toName()+".results.out";
 		
 		System.out.println("writing results to " + outFile);
@@ -199,29 +200,7 @@ public class RunDataBaseSearch implements Runnable{
 	}
 
 
-	private static StructureAlignment getCeSymm(){
-		CeSymm ceSymm = new CeSymm();
-		StructureAlignmentFactory.addAlgorithm(ceSymm);
-		CeParameters params = (CeParameters) ceSymm.getParameters();
-		if ( params == null) {
-			params = new CeParameters();
-			ceSymm.setParameters(params);
-		}
-
-
-
-		// here how to change the aa subst matrix, SDM is the default matrix
-		String matrixName = "PRLA000101";
-		SubstitutionMatrix<AminoAcidCompound> sdm = SubstitutionMatrixHelper.getMatrixFromAAINDEX(matrixName);			
-		params.setSubstitutionMatrix(sdm);
-		//SubstitutionMatrix<AminoAcidCompound> max = SubstitutionMatrixHelper.getBlosum85();
-		//params.setSubstitutionMatrix(max);		
-
-		// we over-weight sequence
-		params.setSeqWeight(2.0);
-		
-		return ceSymm;
-	}
+	
 
 	
 	public static void main(String[] args){
@@ -233,11 +212,13 @@ public class RunDataBaseSearch implements Runnable{
 
 		try {
 			StructureAlignment algorithm = StructureAlignmentFactory.getAlgorithm(CeMain.algorithmName);
+			//StructureAlignment algorithm = getCeSymm();
 
 			RunDataBaseSearch me = new RunDataBaseSearch(key, algorithm);
 			
-			//UserConfiguration config = new UserConfiguration();
-			//me.setUserConfiguration(config);
+			UserConfiguration config = new UserConfiguration();			
+			me.setUserConfiguration(config);
+			
 			me.run();
 
 		} catch (Exception e){

@@ -4,9 +4,6 @@ import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.model.AfpChainWriter;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava3.alignment.SubstitutionMatrixHelper;
-import org.biojava3.alignment.template.SubstitutionMatrix;
-import org.biojava3.core.sequence.compound.AminoAcidCompound;
 import org.biojava3.structure.align.symm.CeSymm;
 
 

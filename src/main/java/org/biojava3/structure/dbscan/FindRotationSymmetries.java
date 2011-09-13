@@ -4,6 +4,7 @@ import java.util.SortedSet;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
+import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.ce.CECalculator;
 import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeMain;
@@ -16,8 +17,8 @@ import org.biojava3.structure.utils.SimpleLog;
 import org.biojava3.structure.utils.SymmetryTools;
 import org.rcsb.fatcat.server.PdbChainKey;
 
+@Deprecated
 public class FindRotationSymmetries {
-
 	public static void main(String[] args){
 		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
 		AtomCache cache = new AtomCache();
@@ -58,7 +59,7 @@ public class FindRotationSymmetries {
 
 	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name, boolean showMatrix) throws StructureException {
 		
-		Atom[] ca2m = CeCPMain.prepareAtomsForAlign(ca2);
+		Atom[] ca2m = StructureTools.duplicateCA2(ca2);
 		int rows = ca1.length ;
 		int cols = ca2.length ;
 

@@ -3,11 +3,10 @@ import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.dbscan.FindMirrorSymmetries;
 import org.biojava3.structure.utils.SymmetryTools;
 
-
+@Deprecated
 public class ShowMirrorSymmetry {
 	public static void main(String[] args){
 		//String name1="1A25.B";
@@ -23,7 +22,7 @@ public class ShowMirrorSymmetry {
 
 
 			Atom[] ca2M = SymmetryTools.mirrorCoordinates(ca2);
-			ca2M = SymmetryTools.duplicateMirrorCA2(ca2M);
+			ca2M = FindMirrorSymmetries.duplicateMirrorCA2(ca2M);
 
 			AFPChain afpChain = FindMirrorSymmetries.align(ca1,ca2M,name1,true);
 			afpChain.setAlgorithmName(CeMain.algorithmName);

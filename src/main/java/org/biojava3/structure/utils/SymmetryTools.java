@@ -4,8 +4,6 @@ package org.biojava3.structure.utils;
 import javax.swing.JFrame;
 
 import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Chain;
-import org.biojava.bio.structure.ChainImpl;
 import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
@@ -15,6 +13,7 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.gui.ScaleableMatrixPanel;
 import org.biojava.bio.structure.jama.Matrix;
 
+
 public class SymmetryTools {
 
 	// there won;t be an instance of this
@@ -22,22 +21,7 @@ public class SymmetryTools {
 
 	private static int RESET_VALUE= Integer.MIN_VALUE;
 
-	public static Atom[] mirrorCoordinates(Atom[] ca2O) {
-		for(int i=0;i<ca2O.length;i++) {
-			//ca2O[i].setX(-ca2O[i].getX());
-			Group g = ca2O[i].getGroup();
-			for ( Atom a : g.getAtoms()){
-				a.setX(-a.getX());
-			}
-		}
-
-		return ca2O;
-	}
-
-
-	
-
-
+			
 	public static void showMatrix(Matrix m, String string) {
 		ScaleableMatrixPanel smp = new ScaleableMatrixPanel();
 		JFrame frame = new JFrame();

@@ -20,14 +20,12 @@ import org.rcsb.fatcat.server.PdbChainKey;
 @Deprecated
 public class FindRotationSymmetries {
 	public static void main(String[] args){
-		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
+		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives(40);
 		AtomCache cache = new AtomCache();
 		
 		SimpleLog.setLogFilename(cache.getPath()+System.getProperty("file.seperator")
 				+"findRotationSymm.log");
 		
-		FindRotationSymmetries me = new FindRotationSymmetries();
-
 		int total = 0;
 		int symmetric = 0;
 		for ( PdbChainKey r : reps){
@@ -36,7 +34,7 @@ public class FindRotationSymmetries {
 				Atom[] ca1 = cache.getAtoms(name);
 				Atom[] ca2 = cache.getAtoms(name);
 
-				AFPChain afp = me.align(ca1,ca2,name,false);
+				AFPChain afp = FindRotationSymmetries.align(ca1,ca2,name,false);
 				afp.setAlgorithmName(CeMain.algorithmName);
 
 				//boolean isSignificant =  afp.isSignificantResult();
@@ -57,11 +55,21 @@ public class FindRotationSymmetries {
 	}
 
 
+	/**
+	 * Detects off-diagonal similarity between two proteins. Typically this is
+	 * used with ca1==ca2 to find rotational symmetry in the protein.
+	 * @param ca1 The first protein
+	 * @param ca2 The second protein, typically the same as ca1
+	 * @param name A name to be used for the aligment
+	 * @param showMatrix If true, displays the distance matrix after masking diagonals
+	 * @return
+	 * @throws StructureException
+	 */
 	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name, boolean showMatrix) throws StructureException {
-		
+		// duplicate ca2
 		Atom[] ca2m = StructureTools.duplicateCA2(ca2);
 		int rows = ca1.length ;
-		int cols = ca2.length ;
+		int cols = ca2m.length ; // duplicated length
 
 		CeParameters params = new CeParameters();
 		
@@ -72,7 +80,7 @@ public class FindRotationSymmetries {
 		AFPChain afpChain = new AFPChain();
 		afpChain.setName1(name);
 		afpChain.setName2(name);
-		afpChain = calculator.extractFragments(afpChain, ca1, ca2);
+		afpChain = calculator.extractFragments(afpChain, ca1, ca2m);
 
 		Matrix origM = new Matrix( calculator.getMatMatrix());
 		// symmetry hack, disable main diagonale
@@ -84,7 +92,7 @@ public class FindRotationSymmetries {
 				if ( diff < 15 ){
 					origM.set(i,j, 99);
 				}
-				int diff2 = Math.abs(i-(j-ca2.length/2));
+				int diff2 = Math.abs(i-(j-ca2m.length/2));
 				if ( diff2 < 15 ){
 					origM.set(i,j, 99);
 				}
@@ -93,26 +101,26 @@ public class FindRotationSymmetries {
 
 		
 		if ( showMatrix)
-			SymmetryTools.showMatrix(origM, "Rotatin Matrix, main diagonal disabled");
+			SymmetryTools.showMatrix(origM, "Rotating Matrix, main diagonal disabled");
 		
 		
 		//showMatrix(origM, "original CE matrix");
-		calculator.setMatMatrix(origM.getArray());
+		calculator.setMatMatrix(((Matrix)origM.clone()).getArray());
 		//calculator.setMatMatrix(diffDistMax.getArray());
-		calculator.traceFragmentMatrix( afpChain,ca1, ca2);
-		calculator.nextStep( afpChain,ca1, ca2);
+		calculator.traceFragmentMatrix( afpChain,ca1, ca2m);
+		calculator.nextStep( afpChain,ca1, ca2m);
 
 		afpChain.setAlgorithmName("CE-rotation " + name);
 		afpChain.setVersion("0.0000001");
-		afpChain.setDistanceMatrix((Matrix)origM.clone());
+		
+		// reset the distance matrix, since this is modified by nextStep
+		afpChain.setDistanceMatrix(origM);
 
-		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
+		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2m);
 		afpChain.setTMScore(tmScore);
 
-		CeCPMain.postProcessAlignment(afpChain, ca1, ca2m, calculator);
+		afpChain = CeCPMain.postProcessAlignment(afpChain, ca1, ca2m, calculator);
 		
 		return afpChain;
-
-
 	}
 }

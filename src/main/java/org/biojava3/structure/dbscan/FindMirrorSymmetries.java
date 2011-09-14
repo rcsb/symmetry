@@ -22,12 +22,13 @@ import org.biojava3.structure.utils.SimpleLog;
 import org.biojava3.structure.utils.SymmetryTools;
 import org.rcsb.fatcat.server.PdbChainKey;
 
+//TODO Should be @Deprecated and made a CE-Symm subclass
 public class FindMirrorSymmetries {
 	
 
 	
 	public static void main(String[] args){
-		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
+		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives(40);
 		AtomCache cache = new AtomCache();
 		
 		String filename = cache.getPath()+System.getProperty("file.seperator")
@@ -42,8 +43,8 @@ public class FindMirrorSymmetries {
 				Atom[] ca1 = cache.getAtoms(name);
 				Atom[] ca2 = cache.getAtoms(name);
 
-				Atom[] ca2M = SymmetryTools.mirrorCoordinates(ca2);
-				ca2M = duplicateMirrorCA2(ca2M);
+				Atom[] ca2M = reverseCA2(ca2);
+				FindMirrorSymmetries.mirrorCoordinates(ca2M);
 				
 				AFPChain afp = FindMirrorSymmetries.align(ca1,ca2M,name, false);
 				afp.setAlgorithmName(CeMain.algorithmName);
@@ -71,13 +72,16 @@ public class FindMirrorSymmetries {
 	
 	
 
-	/** Create a mirror image of the Calpha atoms. Useful really only for detection of mirror symmetries, of which there are only few in PDB.
+	/**
+	 * Reverses an array of atoms.
+	 * Really only useful for the detection of mirror symmetries, of which there
+	 * are only few in the PDB.
 	 * 
-	 * @param ca2
-	 * @return
+	 * @param ca2 Array to be reversed
+	 * @return A cloned and reversed copy of ca2
 	 * @throws StructureException
 	 */
-	public static Atom[] duplicateMirrorCA2(Atom[] ca2) throws StructureException{
+	public static Atom[] reverseCA2(Atom[] ca2) throws StructureException{
 		// we don't want to rotate input atoms, do we?
 		Atom[] ca2clone = new Atom[ca2.length];
 
@@ -106,10 +110,40 @@ public class FindMirrorSymmetries {
 
 
 	}
+	
+	/**
+	 * Creates a mirror image of a structure along the X axis.
+	 * 
+	 * @param ca2O The array of atoms to be modified
+	 */
+	public static void mirrorCoordinates(Atom[] ca2O) {
+		for(int i=0;i<ca2O.length;i++) {
+			//ca2O[i].setX(-ca2O[i].getX());
+			Group g = ca2O[i].getGroup();
+			for ( Atom a : g.getAtoms()){
+				a.setX(-a.getX());
+			}
+		}
+	}
 
+
+	/**
+	 * Aligns two proteins, checking for circular permutations.
+	 * 
+	 * <p>When checking for mirror symmetries, create ca2 as follows:
+	 * <pre>
+	 * Atom[] ca2O = StructureTools.cloneCAArray(ca1);
+	 * Atom[] ca2 = FindMirrorSymmetries.reverseCA2(ca2O);
+	 * FindMirrorSymmetries.mirrorCoordinates(ca2);
+	 * </pre>
+	 * @param ca1 CA atoms of a protein
+	 * @param ca2 The mirrored and reversed version of the same protein
+	 * @param name the protein's name
+	 * @param showMatrix If true, displays the distance matrix after masking diagonals
+	 * @return
+	 * @throws StructureException
+	 */
 	public static AFPChain align(Atom[] ca1, Atom[] ca2, String name, boolean showMatrix) throws StructureException {
-		
-		
 		//Atom[] ca2clone = SymmetryTools.cloneAtoms(ca2);
 		Atom[] ca2clone = StructureTools.duplicateCA2(ca2);
 		CeParameters params = new CeParameters();
@@ -156,11 +190,9 @@ public class FindMirrorSymmetries {
 
 		double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2clone);
 		afpChain.setTMScore(tmScore);
-		
-		
+				
 		CeCPMain.postProcessAlignment(afpChain, ca1, ca2clone, calculator);
+		
 		return afpChain;
-
-
 	}
 }

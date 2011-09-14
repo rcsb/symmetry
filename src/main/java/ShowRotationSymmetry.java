@@ -5,7 +5,6 @@ import java.util.logging.Logger;
 
 
 import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
@@ -77,28 +76,15 @@ public class ShowRotationSymmetry {
 			//String chainId1 = "1BTL.A";
 			//String chainId2 = "1BTL.A";
 
-			//Structure s = cache.getStructure(chainId1);
-			//System.out.println("SITES: " + s.getSites());
-			//StructureAlignmentJmol jmol = new StructureAlignmentJmol();
-			//jmol.setStructure(s);
-
 			Atom[] ca1 = cache.getAtoms(chainId1);
-			Atom[] ca2O = cache.getAtoms(chainId2);
-
-			//ca2O = mirrorCoordinates(ca2O);
-
-			Atom[] ca2 = StructureTools.duplicateCA2(ca2O);
+			Atom[] ca2 = cache.getAtoms(chainId2);
 
 			CeParameters params = new CeParameters();
 			params.setWinSize(fragmentLength);
-			// set the maximum gap size to unlimited 
-
-
 
 			long timeS = System.currentTimeMillis();
 			
 			AFPChain afpChain = FindRotationSymmetries.align(ca1, ca2, chainId1, true);
-			//Matrix origM = dk.align(afpChain,chainId1, chainId2, ca1,ca2, params, null);
 			
 			long timeE = System.currentTimeMillis();
 			System.out.println("===== Alignment took " + (timeE-timeS) + " ms.");

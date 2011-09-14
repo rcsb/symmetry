@@ -26,6 +26,17 @@
 				<enabled>true</enabled>
 			</releases>
 		</repository>
+		<repository>
+			<id>rcsb-pdb-maven-repo</id>
+			<name>RCSB PDB Maven Repository</name>
+			<url>http://source.rcsb.org//maven/</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+		</repository>
 	</repositories>
 	<scm>
 		<connection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/trunk</connection>
@@ -42,7 +53,6 @@
 			<url>scp://emmy.rcsb.org/opt/maven/</url>
 			<layout>default</layout>
 		</repository>
-
 	</distributionManagement>
 	<dependencies>
 		<dependency>

@@ -51,7 +51,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	int cols;
 	CECalculator calculator;
 	CeParameters params;
-	int loopCount ;
+	//int loopCount ;
 	int maxNrAlternatives = 1;
 	boolean displayJmol = false;
 
@@ -172,7 +172,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	}
 
 	public AFPChain indentifyAllSymmetries(String name1, String name2, AtomCache cache, int fragmentLength ) throws StructureException,IOException{
-		loopCount = 0;
+		//loopCount = 0;
 		params = new CeParameters();
 
 		//params.setMaxOptRMSD(3.5);
@@ -305,68 +305,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 	public double[][] matrixInOptimizer(double[][] max) {
 
-		// check if we should manipulate the matrix at all with sequence information
-		if (!  (params.getSeqWeight() > 0)) {
-		
-			//Matrix origM = new Matrix(max);
-			//max = origM.getArray();
-			loopCount++;
-			return max;
-					
-		}
-				
-		//System.out.println("In optimizer masking known alignments " );
-
-		//int fragmentLength = params.getWinSize();
-		//if ( ca1.length > 100 && ca2.length > 100 )
-		//      fragmentLength = fragmentLength * 2;
-		//int blankWindowSize = fragmentLength ;
-
-		Matrix origM = new Matrix(max);
-		
-		SubstitutionMatrix<AminoAcidCompound> substMatrix =
-			params.getSubstitutionMatrix();
-		
-		int internalScale = 1;
-		if ( substMatrix instanceof ScaledSubstitutionMatrix) {
-			ScaledSubstitutionMatrix scaledMatrix = (ScaledSubstitutionMatrix) substMatrix;
-			internalScale = scaledMatrix.getScale();
-		}
-
-		
-		AminoAcidCompoundSet set = AminoAcidCompoundSet.getAminoAcidCompoundSet();
-
-		for (int i = 0 ; i < origM.getRowDimension() ; i++){
-			for ( int j =0; j < origM.getColumnDimension() ; j ++ ) {
-				double val = origM.get(i,j);
-				Atom a1 = ca1[i];
-				Atom a2 = ca2[j];
-
-				AminoAcidCompound ac1 =
-					set.getCompoundForString(a1.getGroup().getChemComp().getOne_letter_code());
-				AminoAcidCompound ac2 =
-					set.getCompoundForString(a2.getGroup().getChemComp().getOne_letter_code());
-				
-				
-				if ( ac1 == null || ac2 == null)
-					continue;
-				
-				short aaScore = substMatrix.getValue(ac1,ac2);
-				
-				double weightedScore = (aaScore / internalScale) * params.getSeqWeight();
-				
-				
-				val += weightedScore;
-				origM.set(i,j,val);
-
-			}
-		}
-		max = origM.getArray();
-
-		//SymmetryTools.showMatrix((Matrix)origM.clone(), "in optimizer "  + loopCount  );
-		//SymmetryTools.showMatrix(origM, "iteration  matrix " + loopCount + " after");
-		loopCount++;
-		return max;
+		return CECalculator.updateMatrixWithSequenceConservation(max, ca1, ca2, params);
 	}
 
 
@@ -404,10 +343,6 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 		if (params == null)
 			params = new CeParameters();
-
-
-
-
 
 		return align(ca1,ca2,params);
 	}

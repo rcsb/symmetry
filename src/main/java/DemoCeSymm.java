@@ -4,16 +4,18 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.model.AfpChainWriter;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.SymmRefiner;
 
 
 public class DemoCeSymm {
 
 	public static void main(String[] args){
 
-		String tmpDir = System.getProperty("java.io.tmpdir");
-		AtomCache cache = new AtomCache(tmpDir, true);
+	
+		AtomCache cache = new AtomCache();
 
-		String name = "d1jlya1";
+		//String name = "d1jlya1";
+		String name="1tim.A";
 
 		CeSymm ceSymm = new CeSymm();
 
@@ -28,6 +30,9 @@ public class DemoCeSymm {
 			System.out.println(AfpChainWriter.toDBSearchResult(afpChain));
 			
 			StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+			
+			int symmNr = CeSymm.getSymmetryOrder(afpChain);
+			System.out.println("Symmetry order of: " + symmNr);
 			
 		} catch (Exception e){
 			e.printStackTrace();

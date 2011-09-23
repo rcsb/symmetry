@@ -24,14 +24,7 @@ import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
 
-import org.biojava3.alignment.aaindex.ScaledSubstitutionMatrix;
-import org.biojava3.alignment.template.SubstitutionMatrix;
-import org.biojava3.core.sequence.compound.AminoAcidCompound;
-import org.biojava3.core.sequence.compound.AminoAcidCompoundSet;
 import org.biojava3.structure.utils.SymmetryTools;
-
-
-
 
 
 /** Try to identify all possible symmetries by iterating resursively over all results and disabling the diagonal of each previous result.

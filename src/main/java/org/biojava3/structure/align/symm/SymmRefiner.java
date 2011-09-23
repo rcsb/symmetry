@@ -18,11 +18,29 @@ import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.statistics.HistogramType;
 
 public class SymmRefiner {
-	static final boolean debug = true;
+	static boolean debug = true;
 
-	public static int getSymmetry(AFPChain afpChain) throws StructureException {
+	/**
+	 * Guesses the order of a symmetric alignment.
+	 * 
+	 * <p><strong>Details</strong><br/>
+	 * Considers the distance (in number of residues) which a residue moves
+	 * after undergoing <i>n</i> transforms by the alignment. If <i>n</i> corresponds
+	 * to the intrinsic order of the alignment, this will be small. This algorithm
+	 * tries increasing values of <i>n</i> and looks for abrupt decreases is the
+	 * sum of squared distances. If none are found at <i>n</i><=8 (the maximum
+	 * symmetry CE-Symm is likely to find), the alignment is reported as non-symmetric.
+	 * @param afpChain A CE-symm alignment, where one protein is compared to itself
+	 * @return The order of the alignment, or -1 if non-symmetric.
+	 * @throws StructureException If afpChain is not one-to-one
+	 */
+	public static int getSymmetryOrder(AFPChain afpChain) throws StructureException {
 		//maximum degree of rotational symmetry to consider
-		final int maxSymmetry = 10;
+		final int maxSymmetry = 8;
+		
+		// Percentage change in RSSE required to improve score
+		// Avoids reporting slight improvements in favor of lower order
+		final float minimumMetricChange = 0.40f;
 		
 		Map<Integer,Integer> alignment = alignmentAsMap(afpChain);
 		
@@ -33,6 +51,7 @@ public class SymmRefiner {
 		
 		int bestSymmetry = -1;
 		double bestMetric = Double.POSITIVE_INFINITY; //lower is better
+		boolean foundSymmetry = false;
 		
 		if(debug) {
 			System.out.println("Symm\tPos\tDelta");
@@ -64,13 +83,26 @@ public class SymmRefiner {
 			
 			//System.out.format("%d\t%f\n",n,metric);
 			
-			if(metric < bestMetric) {
+			if(!foundSymmetry && metric < bestMetric * minimumMetricChange) {
+				// n = 1 is never the best symmetry
+				if(bestMetric < Double.POSITIVE_INFINITY) {
+					foundSymmetry = true;
+				}
 				bestSymmetry = n;
 				bestMetric = metric;
 			}
 			
+			// When debugging need to loop over everything. Unneeded in production
+			if(!debug && foundSymmetry) {
+				break;
+			}
+			
 		}
-		return bestSymmetry;
+		if(foundSymmetry) {
+			return bestSymmetry;
+		} else {
+			return -1;
+		}
 	}
 	/**
 	 * Takes a self alignment and applies it <tt>n</tt> times. Returns a histogram
@@ -130,7 +162,7 @@ public class SymmRefiner {
 	 * 
 	 * @param afpChain
 	 * @return
-	 * @throws StructureException
+	 * @throws StructureException If afpChain is not one-to-one
 	 */
 	private static Map<Integer, Integer> alignmentAsMap(AFPChain afpChain) throws StructureException {
 		Map<Integer,Integer> map = new HashMap<Integer,Integer>();
@@ -158,6 +190,7 @@ public class SymmRefiner {
 			//name = "1tim.A"; // tim-barrel, C8
 			name = "d1p9ha_"; // not rotational symmetry
 			name = "3HKE.A"; // very questionable alignment
+			name = "d1jlya1";
 			
 			AtomCache cache = new AtomCache();
 			Atom[] ca1 = cache.getAtoms(name);
@@ -172,7 +205,7 @@ public class SymmRefiner {
 			for(int n=1;n<=8;n++) {
 				displayHist(afpChain,n,n);
 			}*/
-			int symm = getSymmetry(afpChain);
+			int symm = getSymmetryOrder(afpChain);
 			System.out.println("Symmetry="+symm);
 			
 			StructureAlignmentDisplay.display(afpChain, ca1, ca2);

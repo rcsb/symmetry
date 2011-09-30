@@ -17,7 +17,8 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopInstallation;
 import org.biojava3.changeux.IdentifyAllSymmetries;
 
-@Deprecated
+//use script.ScanSCOPFrSymmetry instead
+@Deprecated 
 public class ScanSCOPForSymmetry {
 	public static void main(String[] args){
 		ScanSCOPForSymmetry me = new ScanSCOPForSymmetry();

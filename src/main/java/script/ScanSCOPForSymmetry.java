@@ -36,11 +36,13 @@ import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
+import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
+import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
@@ -51,13 +53,16 @@ import org.biojava3.alignment.template.SubstitutionMatrix;
 import org.biojava3.changeux.IdentifyAllSymmetries;
 import org.biojava3.core.sequence.compound.AminoAcidCompound;
 import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.utils.SymmetryTools;
+
 
 public class ScanSCOPForSymmetry {
 
 	public static String newline = System.getProperty("line.separator");
 
 	public static StructureAlignment getCeSymm(){
+		
+		
+		
 		CeSymm ceSymm = new CeSymm();
 		StructureAlignmentFactory.addAlgorithm(ceSymm);
 		CeParameters params = (CeParameters) ceSymm.getParameters();
@@ -85,6 +90,10 @@ public class ScanSCOPForSymmetry {
 
 	public static void main(String[] args){
 
+		String path =  "/Volumes/Macintosh HD2/PDB/";
+		
+		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
+		
 
 		try {
 			ScanSCOPForSymmetry me = new ScanSCOPForSymmetry();
@@ -231,6 +240,7 @@ public class ScanSCOPForSymmetry {
 		file.write("<th>domain length</th>");
 		file.write("<th>alignment length</th>");
 		file.write("<th>angle</th>");
+		file.write("<th>order</th>");
 		file.write("<th>SCOP description</th>");
 		
 		
@@ -258,6 +268,7 @@ public class ScanSCOPForSymmetry {
 			str.append(String.format("%.2f",afpChain.getTMScore()));
 			str.append("\t");
 			str.append(String.format("%.2f",afpChain.getAlignScore()));
+
 
 		} else {
 			str.append("\t   ");  
@@ -336,11 +347,21 @@ public class ScanSCOPForSymmetry {
 			addHtmlColumn(str,String.format("%d",afpChain.getOptLength()), isSymmetric);
 			addHtmlColumn(str,String.format("%.1f",angle), isSymmetric);
 			
+			int order = -1;
+			try{
+				order = CeSymm.getSymmetryOrder(afpChain);
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+			addHtmlColumn(str,String.format("%d",order), isSymmetric);
+			
+			
 			
 		} else {
 			str.append("</td><td>   ");  
 			str.append("</td><td>   ");  
 			str.append("</td><td>   ");  
+			str.append("</td><td>   ");
 			str.append("</td><td>   ");
 			str.append("</td><td>   ");
 			str.append("</td><td>   ");

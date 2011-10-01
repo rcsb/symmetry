@@ -53,8 +53,10 @@ import org.biojava3.alignment.template.SubstitutionMatrix;
 import org.biojava3.changeux.IdentifyAllSymmetries;
 import org.biojava3.core.sequence.compound.AminoAcidCompound;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.utils.SymmetryTools;
 
-
+// use org.biojava3.structure.align.symm.ScanSCOPForSymmetry instead
+@Deprecated
 public class ScanSCOPForSymmetry {
 
 	public static String newline = System.getProperty("line.separator");
@@ -147,6 +149,9 @@ public class ScanSCOPForSymmetry {
 					String name1 = first.getScopId();
 					String name2 = first.getScopId();
 
+					if ( name1.equals("ds046__"))
+						continue;
+					
 					Atom[] ca1 = cache.getAtoms(name1);
 					Atom[] ca2 = cache.getAtoms(name2);
 
@@ -159,7 +164,7 @@ public class ScanSCOPForSymmetry {
 					
 					if ( afpChain != null) {
 
-						angle = getAngle(afpChain,ca1,ca2);
+						angle = SymmetryTools.getAngle(afpChain,ca1,ca2);
 						
 						if ( IdentifyAllSymmetries.isSignificant(afpChain)) {
 							
@@ -206,24 +211,7 @@ public class ScanSCOPForSymmetry {
 	}
 
 
-	public static double getAngle(AFPChain afpChain, Atom[] ca1, Atom[] ca2) throws StructureException {
-		
-		// rotate ca2 and then get the angle
-		
-		Atom[] ca2C = StructureTools.duplicateCA2(ca2);
-		
-		StructureAlignmentDisplay.prepareGroupsForDisplay(afpChain,ca1, ca2C);
-		
-		Atom centroid1 = Calc.getCentroid(ca1);
-		Atom centroid2 = Calc.getCentroid(ca2C);
-		
-		Atom v1 = Calc.subtract(centroid1, ca1[0]);
-		Atom v2 = Calc.subtract(centroid2, ca2C[0]);
-		
-		double ang= Calc.angle(v1,v2);
-		//System.out.println(v1 + " " + v2 + " " + ang);
-		return ang;
-	}
+	
 
 	private void printHTMLHeader(SynchronizedOutFile file) throws IOException {
 		file.write("<table id=\"census\">"+newline);

@@ -4,10 +4,12 @@ package org.biojava3.structure.utils;
 import javax.swing.JFrame;
 
 import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.ce.CECalculator;
+import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.helper.AlignTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.gui.ScaleableMatrixPanel;
@@ -21,7 +23,7 @@ public class SymmetryTools {
 
 	private static int RESET_VALUE= Integer.MIN_VALUE;
 
-			
+
 	public static void showMatrix(Matrix m, String string) {
 		ScaleableMatrixPanel smp = new ScaleableMatrixPanel();
 		JFrame frame = new JFrame();
@@ -82,16 +84,16 @@ public class SymmetryTools {
 			int rows, int cols, CECalculator calculator, Matrix max, int blankWindowSize) {
 
 		max =  blankOutCEOrig(ca2, rows, cols, calculator, max,  blankWindowSize);
-		
-		
+
+
 		double[][] dist1 = calculator.getDist1();
 		double[][] dist2 = calculator.getDist2();
-		
+
 		int[][][] optAln = afpChain.getOptAln();
 		int blockNum = afpChain.getBlockNum();
 
 		int[] optLen = afpChain.getOptLen();
-		
+
 		// ca2 is circularly permutated
 		int breakPoint = ca2.length / 2;
 		for(int bk = 0; bk < blockNum; bk ++)       {
@@ -108,17 +110,17 @@ public class SymmetryTools {
 				int start2 = Math.max(pos2-dist,0);
 				int end1 = Math.min(pos1+dist, rows-1);
 				int end2 = Math.min(pos2+dist, cols-1);
-				
+
 				//System.out.println(pos1 + "  " + pos2 + " " + start1 + " " + end1 + " " + start2 + " " + end2);
-			
+
 				for ( int i1 = start1; i1< end1 ; i1++){
-					
+
 					for ( int k=0; k < blankWindowSize/2 ; k ++){
 						if ( i1-k >= 0)
 							dist1[i1-k][i1-k] = RESET_VALUE;
 						if ( i1+k < rows)
 							dist1[i1+k][i1+k] = RESET_VALUE;
-						
+
 					}
 
 					for ( int j2 = start2 ; j2 < end2 ; j2++){
@@ -148,7 +150,7 @@ public class SymmetryTools {
 
 	public static Matrix blankOutCEOrig(Atom[] ca2, int rows, int cols,
 			CECalculator calculator, Matrix origM, int blankWindowSize) {
-		
+
 		if ( origM == null)
 			origM =   new Matrix( calculator.getMatMatrix());
 
@@ -163,33 +165,33 @@ public class SymmetryTools {
 
 				if ( diff < blankWindowSize ){
 					origM.set(i,j, RESET_VALUE);
-					
-//					for ( int k=0; k < 5 ; k ++){
-//						if ( i-k >= 0)
-//							dist1[i][i-k] = 99;
-//						if ( i+k < rows)
-//							dist1[i][i+k] = 99;
-//						if ( j-k >=0)
-//							dist2[j][j-k] = 499;
-//						if ( j+k < cols)
-//							dist2[j][j+k] = 499;
-//					}
+
+					//					for ( int k=0; k < 5 ; k ++){
+					//						if ( i-k >= 0)
+					//							dist1[i][i-k] = 99;
+					//						if ( i+k < rows)
+					//							dist1[i][i+k] = 99;
+					//						if ( j-k >=0)
+					//							dist2[j][j-k] = 499;
+					//						if ( j+k < cols)
+					//							dist2[j][j+k] = 499;
+					//					}
 				}
 				int diff2 = Math.abs(i-(j-ca2.length/2));
 				if ( diff2 < blankWindowSize ){
 					origM.set(i,j, RESET_VALUE);
-					
-//					for ( int k=0; k < 5 ; k ++){
-//
-//						if ( i-k >= 0)
-//							dist1[i][i-k] = 99;
-//						if ( i+k < rows)
-//							dist1[i][i+k] = 99;
-//						if ( j-k >=0)
-//							dist2[j][j-k] = 99;
-//						if ( j+k < cols)
-//							dist2[j][j+k] = 99;
-//					}
+
+					//					for ( int k=0; k < 5 ; k ++){
+					//
+					//						if ( i-k >= 0)
+					//							dist1[i][i-k] = 99;
+					//						if ( i+k < rows)
+					//							dist1[i][i+k] = 99;
+					//						if ( j-k >=0)
+					//							dist2[j][j-k] = 99;
+					//						if ( j+k < cols)
+					//							dist2[j][j+k] = 99;
+					//					}
 				}
 			}
 		}
@@ -248,16 +250,16 @@ public class SymmetryTools {
 	public static boolean[][] blankOutBreakFlag(AFPChain afpChain,
 			Atom[] ca2, int rows, int cols, CECalculator calculator,
 			boolean[][] breakFlag, int blankWindowSize) {
-		
-		
+
+
 		int[][][] optAln = afpChain.getOptAln();
 		int blockNum = afpChain.getBlockNum();
 
 		int[] optLen = afpChain.getOptLen();
-		
+
 		// ca2 is circularly permutated at this point.
 		int breakPoint = ca2.length / 2;
-		
+
 		for(int bk = 0; bk < blockNum; bk ++)       {
 
 			//Matrix m= afpChain.getBlockRotationMatrix()[bk];
@@ -272,11 +274,11 @@ public class SymmetryTools {
 				int start2 = Math.max(pos2-dist,0);
 				int end1 = Math.min(pos1+dist, rows-1);
 				int end2 = Math.min(pos2+dist, cols-1);
-				
+
 				//System.out.println(pos1 + "  " + pos2 + " " + start1 + " " + end1 + " " + start2 + " " + end2);
-			
+
 				for ( int i1 = start1; i1< end1 ; i1++){
-									
+
 					for ( int j2 = start2 ; j2 < end2 ; j2++){
 						//System.out.println(i1 + " " + j2 + " (***)");
 						breakFlag[i1][j2] = true;
@@ -288,54 +290,81 @@ public class SymmetryTools {
 
 			}
 		}
-		
+
 		return breakFlag;
 	}
 
-//	/** compare the PDB positions from the two alignment and if more than X % are equivalent then they are similar
-//	 * 
-//	 * @param first
-//	 * @param second
-//	 * @return
-//	 */
-//	public boolean isSimilar(AFPChain first, AFPChain second){
-//		
-//		if (! first.getName1().equals(second.getName1()))
-//			return false;
-//		
-//		if (! first.getName2().equals(second.getName2()))
-//			return false;
-//		
-//		int[][][] optAln1 = first.getOptAln();
-//		int[][][] optAln2 = second.getOptAln();
-//		int[] blockLens1 = first.getOptLen();
-//		int[] blockLens2 = first.getOptLen();
-//		
-//		
-//		for(int block1=0;block1< first.getBlockNum();block1++) {
-//		
-//			if ( blockLens1[block1] > optAln2[block1][0].length) {
-//				continue;
-//			}
-//			
-//			if (  blockLens1[block1] > optAln1[block1][0].length) {
-//				//errors reconstructing alignment block ["+ block +"]. Length is " + blockLens[block] + " but should be <=" + optAln[block][0].length );
-//				continue;
-//			}
-//
-//			for(int i=0;i<blockLens1[block1];i++) {
-//				int pos11 = optAln1[block1][0][i];
-//				int pos12 = optAln1[block1][1][i];
-//				
-//				//int pos21 = optAln2[block2][0][i];
-//				//int pos22 = optAln2[block2][1][i]; 
-//					
-//				
-//			}
-//		}
-//		
-//		
-//	}
+	/** Get the rotation angle between two sets of atoms
+	 * 
+	 * @param afpChain
+	 * @param ca1
+	 * @param ca2
+	 * @return
+	 * @throws StructureException
+	 */
+	public static double getAngle(AFPChain afpChain, Atom[] ca1, Atom[] ca2) throws StructureException {
+
+		// rotate ca2 and then get the angle
+
+		Atom[] ca2C = StructureTools.duplicateCA2(ca2);
+
+		StructureAlignmentDisplay.prepareGroupsForDisplay(afpChain,ca1, ca2C);
+
+		Atom centroid1 = Calc.getCentroid(ca1);
+		Atom centroid2 = Calc.getCentroid(ca2C);
+
+		Atom v1 = Calc.subtract(centroid1, ca1[0]);
+		Atom v2 = Calc.subtract(centroid2, ca2C[0]);
+
+		double ang= Calc.angle(v1,v2);
+		//System.out.println(v1 + " " + v2 + " " + ang);
+		return ang;
+	}
+
+	//	/** compare the PDB positions from the two alignment and if more than X % are equivalent then they are similar
+	//	 * 
+	//	 * @param first
+	//	 * @param second
+	//	 * @return
+	//	 */
+	//	public boolean isSimilar(AFPChain first, AFPChain second){
+	//		
+	//		if (! first.getName1().equals(second.getName1()))
+	//			return false;
+	//		
+	//		if (! first.getName2().equals(second.getName2()))
+	//			return false;
+	//		
+	//		int[][][] optAln1 = first.getOptAln();
+	//		int[][][] optAln2 = second.getOptAln();
+	//		int[] blockLens1 = first.getOptLen();
+	//		int[] blockLens2 = first.getOptLen();
+	//		
+	//		
+	//		for(int block1=0;block1< first.getBlockNum();block1++) {
+	//		
+	//			if ( blockLens1[block1] > optAln2[block1][0].length) {
+	//				continue;
+	//			}
+	//			
+	//			if (  blockLens1[block1] > optAln1[block1][0].length) {
+	//				//errors reconstructing alignment block ["+ block +"]. Length is " + blockLens[block] + " but should be <=" + optAln[block][0].length );
+	//				continue;
+	//			}
+	//
+	//			for(int i=0;i<blockLens1[block1];i++) {
+	//				int pos11 = optAln1[block1][0][i];
+	//				int pos12 = optAln1[block1][1][i];
+	//				
+	//				//int pos21 = optAln2[block2][0][i];
+	//				//int pos22 = optAln2[block2][1][i]; 
+	//					
+	//				
+	//			}
+	//		}
+	//		
+	//		
+	//	}
 
 
 }

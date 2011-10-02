@@ -313,12 +313,30 @@ public class SymmetryTools {
 		Atom centroid1 = Calc.getCentroid(ca1);
 		Atom centroid2 = Calc.getCentroid(ca2C);
 
-		Atom v1 = Calc.subtract(centroid1, ca1[0]);
-		Atom v2 = Calc.subtract(centroid2, ca2C[0]);
+		
+		// don't get first two atoms, but get first two aligned atoms...
+		//Atom a1 = ca1[0]//;
+		//Atom a2 = ca2[0];
+		
+		//int alnbeg1 = afpChain.getAlnbeg1();
+		//int alnbeg2 = afpChain.getAlnbeg2();
+		
+		int alnbeg1 = 0;
+		int alnbeg2 = 0;
+		
+		if (( alnbeg1 < ca1.length) && ( alnbeg2 < ca2.length)) {
+		
+			Atom v1 = Calc.subtract(centroid1, ca1[alnbeg1]);
+			Atom v2 = Calc.subtract(centroid2, ca2C[alnbeg2]);
 
-		double ang= Calc.angle(v1,v2);
-		//System.out.println(v1 + " " + v2 + " " + ang);
-		return ang;
+			double ang= Calc.angle(v1,v2);
+			//System.out.println(v1 + " " + v2 + " " + ang);
+			return ang;
+		} else {
+			return -1;
+		}
+		
+		
 	}
 
 	//	/** compare the PDB positions from the two alignment and if more than X % are equivalent then they are similar

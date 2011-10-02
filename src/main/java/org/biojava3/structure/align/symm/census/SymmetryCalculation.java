@@ -27,12 +27,14 @@ package org.biojava3.structure.align.symm.census;
 import java.util.concurrent.Callable;
 
 import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava3.changeux.IdentifyAllSymmetries;
+import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.utils.SymmetryTools;
 
 public class SymmetryCalculation implements Callable<CensusResult>{
@@ -108,7 +110,7 @@ public class SymmetryCalculation implements Callable<CensusResult>{
 
 			double angle = -1;
 
-			if ( afpChain == null) {
+			if ( afpChain == null) { 
 				return null;
 			}
 			angle = SymmetryTools.getAngle(afpChain,ca1,ca2);
@@ -122,12 +124,31 @@ public class SymmetryCalculation implements Callable<CensusResult>{
 				}
 			}
 
+			int order = CeSymm.getSymmetryOrder(afpChain);
 
 
+			int[]optLen = afpChain.getOptLen();
+			int[][][] optAln = afpChain.getOptAln();
+			int p1 = optAln[0][0][0];
+			int lenBlock1 = optLen[0] - 1;
+			int p2 = optAln[0][0][lenBlock1];
+			
+			Atom a1 = ca1[p1];
+			Atom a2 = ca1[p2];
+			
+			String chainId  = a1.getGroup().getChain().getChainID();
+			Group g1 = a1.getGroup();
+			Group g2 = a2.getGroup();
+			String protodomain = domain.getPdbId();
+			protodomain += "." + chainId + "_";
+			protodomain+= g1.getResidueNumber().toString()  + "-" + g2.getResidueNumber().toString();
+			
+			//System.out.println(isSymmetric + " : " + name + " " +  domain + " : "  );
+			
 			//StringBuffer str = printTabbedResult(afpChain, isSymmetric, superfamily,name1, count);
 			//StringBuffer str = printHTMLResult(afpChain, isSymmetric, superfamily,name1, count, angle);
-			CensusResult result = convertResult(afpChain, isSymmetric, scopDescription, name1, count, angle);
-
+			CensusResult result = convertResult(afpChain, isSymmetric, scopDescription, name1, count, angle, order, protodomain);
+			//System.out.println(result);
 			return result;
 		} catch (Exception e){
 			System.err.println("ERROR processing " + domain + " " + e.getMessage());
@@ -137,7 +158,8 @@ public class SymmetryCalculation implements Callable<CensusResult>{
 
 	}
 
-	private CensusResult convertResult(AFPChain afpChain, boolean isSymmetric, ScopDescription superfamily, String name, int count, double angle ){
+	private CensusResult convertResult(AFPChain afpChain, boolean isSymmetric, ScopDescription superfamily, 
+			String name, int count, double angle , int order, String protodomain){
 
 		String description = superfamily.getDescription();
 		Character scopClass = superfamily.getClassificationId().charAt(0);
@@ -159,6 +181,8 @@ public class SymmetryCalculation implements Callable<CensusResult>{
 		r.setAngle((float)angle);
 		r.setDescription(description);
 		r.setScopClass(scopClass);
+		r.setOrder(order);
+		r.setProtoDomain(protodomain);
 		return r;
 	}
 

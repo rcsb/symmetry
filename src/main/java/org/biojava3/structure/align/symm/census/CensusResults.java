@@ -28,6 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,6 +72,18 @@ public class CensusResults implements Serializable{
 		this.data = data;
 	}
 
+	public String toHTML(){
+		StringWriter w = new StringWriter();
+		
+		w.append(ResultConverter.getHTMLHeader());
+		for ( CensusResult d : data){
+			w.append(ResultConverter.toHTML(d));
+		}
+		
+		w.append("</table>");
+		return w.toString();
+	}
+	
 	public  String toXML(){
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();

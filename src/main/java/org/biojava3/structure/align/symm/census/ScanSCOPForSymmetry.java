@@ -58,8 +58,6 @@ import org.biojava3.changeux.IdentifyAllSymmetries;
 import org.biojava3.core.sequence.compound.AminoAcidCompound;
 import org.biojava3.structure.align.symm.CeSymm;
 
-
-
 public class ScanSCOPForSymmetry {
 
 	public static String newline = System.getProperty("line.separator");
@@ -77,7 +75,7 @@ public class ScanSCOPForSymmetry {
 
 	public static void main(String[] args){
 
-		String path =  "/Users/ap3/WORK/PDB/";
+		String path =  "/Volumes/Macintosh HD2/PDB/";
 
 		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
 
@@ -131,9 +129,6 @@ public class ScanSCOPForSymmetry {
 				if ( scopClass > 'f')
 					continue;
 
-				if ( count > 1000)
-					break;
-
 				count++;
 				int sunid = superfamily.getSunID();
 				List<ScopDomain> familyMembers = scop.getScopDomainsBySunid(sunid);
@@ -178,17 +173,19 @@ public class ScanSCOPForSymmetry {
 				boolean isSymmetric = processResult(result, outFile,totalStats,classStats);
 				if ( isSymmetric)
 					withSymm++;
-				
+					
 			}
 
-
+			System.out.println("starting to process multi threaded results...");
 			for (Future<CensusResult> futureResult : futureData) {
 
 				CensusResult result = futureResult.get();
-
+				System.out.println(result);
 				if ( result == null)
 					continue;
-
+				
+			
+				
 				boolean isSymmetric = processResult(result, outFile,totalStats,classStats);
 				if ( isSymmetric)
 					withSymm++;
@@ -196,9 +193,9 @@ public class ScanSCOPForSymmetry {
 				allResults.add(result);
 				//if ( withSymm > 5)
 				//	break;
+				if ( allResults.size() % 100 == 0)
+					writeResults(census, r);
 			} 
-
-
 
 			outFile.write("</tbody></table>");
 
@@ -226,23 +223,12 @@ public class ScanSCOPForSymmetry {
 			e.printStackTrace();
 		}
 
-
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
 	private boolean processResult(CensusResult result , SynchronizedOutFile outFile, Map<Character, Integer> totalStats,Map<Character,Integer> classStats) throws IOException{
+		
 		boolean isSymmetric = false;
+		
 		if ( result.getIsSignificant()){
 			isSymmetric = true;
 			
@@ -261,11 +247,6 @@ public class ScanSCOPForSymmetry {
 		
 	}
 
-
-
-
-
-
 	private List<String> getKnownResults(CensusResults census) {
 
 		List<String> known = new ArrayList<String>();
@@ -283,7 +264,7 @@ public class ScanSCOPForSymmetry {
 
 
 
-	private CensusResults getExistingResults(String filePath) throws IOException {
+	public static CensusResults getExistingResults(String filePath) throws IOException {
 
 		File f = new File(filePath); 
 

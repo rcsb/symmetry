@@ -55,6 +55,7 @@ public class CensusResult implements Serializable  {
 	Integer order;
 	String description;
 	Character scopClass;
+	String protoDomain;
 	
 	public Integer getRank() {
 		return rank;
@@ -162,6 +163,13 @@ public class CensusResult implements Serializable  {
 	}
 	
 	
+	
+	public String getProtoDomain() {
+		return protoDomain;
+	}
+	public void setProtoDomain(String protoDomain) {
+		this.protoDomain = protoDomain;
+	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -269,6 +277,29 @@ public class CensusResult implements Serializable  {
 		} else if (!zScore.equals(other.zScore))
 			return false;
 		return true;
+	}
+	@Override
+	public String toString() {
+		return "CensusResult [rank=" + rank + ", isSignificant="
+				+ isSignificant + ", classificationId=" + classificationId
+				+ ", name=" + name + ", zScore=" + zScore + ", rmsd=" + rmsd
+				+ ", tmScore=" + tmScore + ", alignScore=" + alignScore
+				+ ", identity=" + identity + ", similarity=" + similarity
+				+ ", length1=" + length1 + ", aligLength=" + aligLength
+				+ ", angle=" + angle + ", order=" + order + ", description="
+				+ description + ", scopClass=" + scopClass + ", getRank()="
+				+ getRank() + ", getIsSignificant()=" + getIsSignificant()
+				+ ", getClassificationId()=" + getClassificationId()
+				+ ", getName()=" + getName() + ", getzScore()=" + getzScore()
+				+ ", getRmsd()=" + getRmsd() + ", getTmScore()=" + getTmScore()
+				+ ", getAlignScore()=" + getAlignScore() + ", getIdentity()="
+				+ getIdentity() + ", getSimilarity()=" + getSimilarity()
+				+ ", getLength1()=" + getLength1() + ", getAligLength()="
+				+ getAligLength() + ", getAngle()=" + getAngle()
+				+ ", getOrder()=" + getOrder() + ", getDescription()="
+				+ getDescription() + ", getScopClass()=" + getScopClass() 
+				+ getProtoDomain() 
+				+ "]";
 	}
 	
 	

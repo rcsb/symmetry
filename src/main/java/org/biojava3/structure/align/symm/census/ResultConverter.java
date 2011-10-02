@@ -25,6 +25,7 @@
 package org.biojava3.structure.align.symm.census;
 
 import java.io.IOException;
+import java.io.StringWriter;
 
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
 
@@ -38,6 +39,12 @@ public class ResultConverter {
 	}
 
 	public static void printHTMLHeader(SynchronizedOutFile file) throws IOException {
+		String header = getHTMLHeader();
+		file.write(header);
+	}
+	
+	public static String getHTMLHeader(){
+		StringWriter file = new StringWriter();
 		file.write("<table id=\"census\">"+newline);
 		file.write("<tr><th>index</th>");
 		file.write("<th>Symmetry</th>");
@@ -53,11 +60,13 @@ public class ResultConverter {
 		file.write("<th>alignment length</th>");
 		file.write("<th>angle</th>");
 		file.write("<th>order</th>");
+		file.write("<th>symmetry unit</th>");
 		file.write("<th>SCOP description</th>");
 
 
 		file.write("</tr>"+newline);
 		file.write("<tbody>"+newline);
+		return file.toString();
 
 	}
 
@@ -93,13 +102,7 @@ public class ResultConverter {
 		if ( isSymmetric)
 			str.append("</b>");		
 		str.append("</td>");
-
-
 		str.append("<td>");
-
-
-
-
 		str.append(String.format("%.2f",r.getzScore()));
 
 		str.append("</td><td>");
@@ -129,6 +132,7 @@ public class ResultConverter {
 		addHtmlColumn(str,String.format("%d",r.getAligLength()), isSymmetric);
 		addHtmlColumn(str,String.format("%.1f",r.getAngle()), isSymmetric);			
 		addHtmlColumn(str,String.format("%d",r.getOrder()), isSymmetric);
+		addHtmlColumn(str, r.getProtoDomain(), isSymmetric);
 
 		str.append("<td>");
 		str.append(r.getDescription() );

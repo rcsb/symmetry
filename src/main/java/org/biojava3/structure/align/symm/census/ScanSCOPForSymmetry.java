@@ -61,7 +61,7 @@ import org.biojava3.structure.align.symm.CeSymm;
 public class ScanSCOPForSymmetry {
 
 	public static String newline = System.getProperty("line.separator");
-	static ExecutorService pool;
+	protected static ExecutorService pool;
 
 	static {
 		int maxThreads = Runtime.getRuntime().availableProcessors()-1;
@@ -278,7 +278,7 @@ public class ScanSCOPForSymmetry {
 		return null;
 	}
 
-	private static String readFileAsString(String filePath)
+	protected static String readFileAsString(String filePath)
 	throws java.io.IOException{
 		StringBuffer fileData = new StringBuffer(1000);
 		BufferedReader reader = new BufferedReader(

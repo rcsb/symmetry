@@ -24,7 +24,10 @@
  */
 package org.biojava3.structure.align.symm.census;
 
+import java.io.File;
 import java.io.Serializable;
+
+import org.biojava.bio.structure.align.util.AtomCache;
 
 /** a bean storing the results of the latest SCOP census.
  * 
@@ -303,6 +306,15 @@ public class CensusResult implements Serializable  {
 	}
 	
 	
-	
+	public boolean hasProtoDomainScanReady(AtomCache cache){
+		
+		if ( ! isSignificant )
+			return false;
+				
+		String resultFile = CallableProtodomainComparison.getResultFilePath(cache, protoDomain);
+		File f = new File(resultFile);
+		return f.exists();
+		
+	}
 
 }

@@ -80,7 +80,7 @@ public class CensusResults implements Serializable{
 			w.append(ResultConverter.toHTML(d));
 		}
 		
-		w.append("</table>");
+		w.append("</tbody></table>");
 		return w.toString();
 	}
 	

@@ -97,6 +97,7 @@ public class SymmetryCalculation implements Callable<CensusResult>{
 	public CensusResult call() throws Exception {
 
 		try {
+			
 			String name1 = domain.getScopId();
 			String name2 = domain.getScopId();
 
@@ -147,13 +148,18 @@ public class SymmetryCalculation implements Callable<CensusResult>{
 			
 			//StringBuffer str = printTabbedResult(afpChain, isSymmetric, superfamily,name1, count);
 			//StringBuffer str = printHTMLResult(afpChain, isSymmetric, superfamily,name1, count, angle);
+			
 			CensusResult result = convertResult(afpChain, isSymmetric, scopDescription, name1, count, angle, order, protodomain);
+			
 			//System.out.println(result);
 			return result;
 		} catch (Exception e){
-			System.err.println("ERROR processing " + domain + " " + e.getMessage());
 			e.printStackTrace();
+			System.err.println("ERROR processing " + domain + " " + e.getMessage());
+			
+			
 		}
+		System.err.println("returning null");
 		return null;
 
 	}
@@ -161,7 +167,7 @@ public class SymmetryCalculation implements Callable<CensusResult>{
 	private CensusResult convertResult(AFPChain afpChain, boolean isSymmetric, ScopDescription superfamily, 
 			String name, int count, double angle , int order, String protodomain){
 
-		String description = superfamily.getDescription();
+		String description  = superfamily.getDescription();
 		Character scopClass = superfamily.getClassificationId().charAt(0);
 
 		CensusResult r = new CensusResult();
@@ -183,6 +189,7 @@ public class SymmetryCalculation implements Callable<CensusResult>{
 		r.setScopClass(scopClass);
 		r.setOrder(order);
 		r.setProtoDomain(protodomain);
+		
 		return r;
 	}
 

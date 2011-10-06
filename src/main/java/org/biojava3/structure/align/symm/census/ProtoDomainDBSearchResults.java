@@ -17,6 +17,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.biojava3.structure.utils.FileUtils;
+
 
 
 @XmlRootElement(name = "ProtoDomainDBSearchResults", namespace ="http://source.rcsb.org")
@@ -90,7 +92,7 @@ public class ProtoDomainDBSearchResults implements Serializable {
 	
 	
 	public static ProtoDomainDBSearchResults fromFile(File resultsFile) throws IOException{
-		String dbResultsXML = ScanSCOPForSymmetry.readFileAsString(resultsFile.getAbsolutePath());
+		String dbResultsXML = FileUtils.readFileAsString(resultsFile.getAbsolutePath());
 
 		ProtoDomainDBSearchResults dbResults = ProtoDomainDBSearchResults.fromXML(dbResultsXML);
 		

@@ -26,6 +26,8 @@ package org.biojava3.structure.align.symm.census;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -38,6 +40,9 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava3.structure.utils.FileUtils;
 
 
 
@@ -124,6 +129,22 @@ public class CensusResults implements Serializable{
 		}
 
 		return job;
+	}
+	
+	public static CensusResults getExistingResults() throws IOException{
+		AtomCache cache  = new AtomCache();
+
+		String r = cache.getPath() + File.separator + "scopCensus.xml";
+		File f = new File(r); 
+		if (f.exists()) {
+			
+			String xml = FileUtils.readFileAsString(r);
+			CensusResults data = CensusResults.fromXML(xml);
+			
+			System.out.println("read " + data.getData().size() + " results from disk...");
+			return data;
+		}
+		return null;
 	}
 	
 

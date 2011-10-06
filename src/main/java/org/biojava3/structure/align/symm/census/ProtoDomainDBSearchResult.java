@@ -216,7 +216,7 @@ public class ProtoDomainDBSearchResult implements Serializable{
 	}
 	public String toHTML(){
 		StringBuffer str = new StringBuffer();
-		str.append("<td>");
+		str.append("<tr><td>");
 		str.append(getName1());
 		str.append("</td><td>");
 		str.append(getName2());

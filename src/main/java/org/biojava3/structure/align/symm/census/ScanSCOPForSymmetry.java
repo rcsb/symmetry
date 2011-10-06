@@ -56,12 +56,14 @@ import org.biojava3.alignment.SubstitutionMatrixHelper;
 import org.biojava3.alignment.template.SubstitutionMatrix;
 import org.biojava3.changeux.IdentifyAllSymmetries;
 import org.biojava3.core.sequence.compound.AminoAcidCompound;
+import org.biojava3.core.util.ConcurrencyTools;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.utils.FileUtils;
 
 public class ScanSCOPForSymmetry {
 
 	public static String newline = System.getProperty("line.separator");
-	protected static ExecutorService pool;
+	//protected static ExecutorService pool;
 
 	static {
 		int maxThreads = Runtime.getRuntime().availableProcessors()-1;
@@ -69,13 +71,14 @@ public class ScanSCOPForSymmetry {
 			maxThreads = 1;
 
 		System.out.println("using " + maxThreads + " threads for alignment calculation of DB jobs...");
-		pool = Executors.newFixedThreadPool(maxThreads);
+		//pool = Executors.newFixedThreadPool(maxThreads);
+		ConcurrencyTools.setThreadPoolSize(maxThreads);
 	}
 
 
 	public static void main(String[] args){
 
-		String path =  "/Volumes/Macintosh HD2/PDB/";
+		String path =  "/Users/ap3/WORK/PDB/";
 
 		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
 
@@ -148,7 +151,7 @@ public class ScanSCOPForSymmetry {
 				calc.setCount(count);
 
 
-				Future<CensusResult> result = pool.submit(calc);
+				Future<CensusResult> result = ConcurrencyTools.submit(calc);
 				futureData.add(result);
 			}
 
@@ -180,12 +183,10 @@ public class ScanSCOPForSymmetry {
 			for (Future<CensusResult> futureResult : futureData) {
 
 				CensusResult result = futureResult.get();
-				System.out.println(result);
+				System.out.println("got result: " + result);
 				if ( result == null)
 					continue;
-				
-			
-				
+							
 				boolean isSymmetric = processResult(result, outFile,totalStats,classStats);
 				if ( isSymmetric)
 					withSymm++;
@@ -199,13 +200,9 @@ public class ScanSCOPForSymmetry {
 
 			outFile.write("</tbody></table>");
 
-
-
 			census.setData(allResults);
 
 			writeResults(census, r);
-
-
 
 
 			System.out.println("===");
@@ -269,7 +266,7 @@ public class ScanSCOPForSymmetry {
 		File f = new File(filePath); 
 
 		if (f.exists()) {
-			String xml = readFileAsString(filePath);
+			String xml = FileUtils.readFileAsString(filePath);
 			CensusResults data = CensusResults.fromXML(xml);
 			
 			System.out.println("read " + data.getData().size() + " results from disk...");
@@ -278,48 +275,13 @@ public class ScanSCOPForSymmetry {
 		return null;
 	}
 
-	protected static String readFileAsString(String filePath)
-	throws java.io.IOException{
-		StringBuffer fileData = new StringBuffer(1000);
-		BufferedReader reader = new BufferedReader(
-				new FileReader(filePath));
-		char[] buf = new char[1024];
-		int numRead=0;
-		while((numRead=reader.read(buf)) != -1){
-			String readData = String.valueOf(buf, 0, numRead);
-			fileData.append(readData);
-			buf = new char[1024];
-		}
-		reader.close();
-		return fileData.toString();
-	}
+	
 
 	private void writeResults(CensusResults census, String filePath){
 
 		String xml = census.toXML();
 		//System.out.println(xml);
-		BufferedWriter writer = null;
-		try {
-			writer = new BufferedWriter( new FileWriter( filePath));
-			writer.write( xml);
-		}
-		catch ( IOException e)
-		{
-			e.printStackTrace();
-			
-		}
-		finally
-		{
-			try
-			{
-				if ( writer != null)
-					writer.close( );
-			}
-			catch ( IOException e)
-			{
-			}
-		}
-
+		FileUtils.writeStringToFile(xml, filePath);
 		System.out.println("wrote " + census.getData().size() + " results to disk...");
 
 	}

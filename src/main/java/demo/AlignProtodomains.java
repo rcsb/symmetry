@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census;
+package demo;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -7,10 +7,29 @@ import java.util.concurrent.Future;
 
 import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava3.core.util.ConcurrencyTools;
+import org.biojava3.structure.align.symm.census.CallableProtodomainComparison;
+import org.biojava3.structure.align.symm.census.CensusResult;
+import org.biojava3.structure.align.symm.census.CensusResults;
+import org.biojava3.structure.align.symm.census.ProtoDomainDBSearchResults;
+import org.biojava3.structure.align.symm.census.ScanSCOPForSymmetry;
 
 public class AlignProtodomains {
+	
+	static {
+		int maxThreads = Runtime.getRuntime().availableProcessors()-1;
+		if ( maxThreads < 1)
+			maxThreads = 1;
+
+		System.out.println("using " + maxThreads + " threads for alignment calculation of DB jobs...");
+		//pool = Executors.newFixedThreadPool(maxThreads);
+		ConcurrencyTools.setThreadPoolSize(maxThreads);
+	}
+
+	
+	
 	public static void main(String[] args){
-		String path =  "/Volumes/Macintosh HD2/PDB/";
+		String path =  "/Users/ap3/WORK/PDB/";
 
 		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
 
@@ -48,7 +67,7 @@ public class AlignProtodomains {
 				comp.setData(data);
 				comp.setProtoDomain(protoDomain);
 				
-				Future<ProtoDomainDBSearchResults> futureResults =ScanSCOPForSymmetry.pool.submit(comp);
+				Future<ProtoDomainDBSearchResults> futureResults =ConcurrencyTools.submit(comp);
 				// run with only 1 thread...
 				//futureResults.get();
 				allFutureResults.add(futureResults);

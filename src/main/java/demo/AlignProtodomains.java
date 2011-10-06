@@ -13,6 +13,7 @@ import org.biojava3.structure.align.symm.census.CensusResult;
 import org.biojava3.structure.align.symm.census.CensusResults;
 import org.biojava3.structure.align.symm.census.ProtoDomainDBSearchResults;
 import org.biojava3.structure.align.symm.census.ScanSCOPForSymmetry;
+import org.rcsb.fatcat.server.util.ResourceManager;
 
 public class AlignProtodomains {
 	
@@ -29,7 +30,8 @@ public class AlignProtodomains {
 	
 	
 	public static void main(String[] args){
-		String path =  "/Users/ap3/WORK/PDB/";
+		String path =  ResourceManager.getString("pdbFilePath");
+		System.out.println(path);
 
 		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
 

@@ -25,8 +25,6 @@ package org.biojava3.structure.align.symm.gui;
 
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
-import org.biojava.bio.structure.align.ce.CeCPMain;
-import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.gui.AlignmentGui;
 import org.biojava3.structure.align.symm.CeSymm;
 

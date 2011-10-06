@@ -77,7 +77,7 @@
 		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>ava-core</artifactId>
-			<version>2010.9</version>
+			<version>2010.10-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

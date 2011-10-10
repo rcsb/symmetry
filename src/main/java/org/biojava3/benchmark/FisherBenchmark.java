@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.biojava.bio.structure.align.client.PdbPair;
-import org.biojava3.alignment.TestDNAAlignment;
 
 public class FisherBenchmark implements Benchmark {
 

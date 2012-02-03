@@ -16,7 +16,11 @@ class Permute {
 	Permute(Point3i t) {
 		// assert(x.a >= x.b && x.b >= x.c && x.c >= 0);
 		// m_arr.push_back(x);
-		triples.add(new Point3i(t));
+		Point3i tmp = new Point3i();
+		tmp.x = t.x;
+		tmp.y = t.y;
+		tmp.z = t.z;
+		triples.add(tmp);
 		int n = 1;
 		// Do the sign changes
 		// if (x.a != 0) {
@@ -27,6 +31,7 @@ class Permute {
 		if (t.x != 0) {
 			for (int i = 0; i < n; ++i) {
 				Tuple3i m = triples.get(i);
+			
 				triples.add(new Point3i(-m.x, m.y, m.z));
 			}
 			n *= 2;

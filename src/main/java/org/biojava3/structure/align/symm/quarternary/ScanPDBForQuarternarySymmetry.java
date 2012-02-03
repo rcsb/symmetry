@@ -102,19 +102,19 @@ public class ScanPDBForQuarternarySymmetry {
 
 			long tc1 = System.nanoTime();
 
+			// cluster sequences by sequence identity
 			grouper.setStructure(structure);
 			int minSequenceLength = 24;
 			grouper.setMinSequenceLength(minSequenceLength);
 			int nClusters = grouper.getSequenceCluster100().size();
 			String formula = grouper.getCompositionFormula();
 			int hashCode = grouper.hashCodeMD5();
-
+			boolean sequenceNumberedCorrectly = grouper.isSequenceNumberedCorrectly();
+	
+			// determine point group
 			List<Point3d[]> caCoords = grouper.getCalphaTraces();
 			List<Point3d[]> cbCoords = grouper.getCbetaTraces();
-			boolean sequenceNumberedCorrectly = grouper.isSequenceNumberedCorrectly();
 			List<Integer> sequenceClusterIds = grouper.getSequenceClusterIds();
-			
-			// determine point group
 			FindQuarternarySymmetry finder = new FindQuarternarySymmetry(caCoords, cbCoords, sequenceClusterIds);
 			finder.setPseudoSymmetryAllowed(false);
 			RotationGroup rotationGroup = finder.getRotationGroup();	
@@ -130,8 +130,7 @@ public class ScanPDBForQuarternarySymmetry {
 					consistent = false;
 				}
 			}
-			String method = finder.getMethod();
-			
+			String method = finder.getMethod();	
 			
 			// get metrics
 			int caCount = finder.getSubunits().getCalphaCount();
@@ -140,7 +139,6 @@ public class ScanPDBForQuarternarySymmetry {
 			float rmsdT = (float) rotationGroup.getAverageTraceRmsd();
 			float gts = (float) rotationGroup.getAverageTraceGtsMin();
 			
-		
 			// determine overall symmetry
 			Subunits subunits = finder.getSubunits();
 			MomentsOfInertia m = subunits.getMomentsOfInertia();

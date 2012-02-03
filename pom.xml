@@ -37,6 +37,17 @@
 				<enabled>true</enabled>
 			</releases>
 		</repository>
+		
+		
+		<!--  for vecmath... -->
+		<repository>
+            <id>geotoolkit</id>
+            <name>geotoolkit Repository</name>
+            <url>http://maven.geotoolkit.org/</url>
+        </repository>
+		
+
+        
 	</repositories>
 	<scm>
 		<connection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/trunk</connection>
@@ -59,47 +70,48 @@
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-structure</artifactId>
 			<version>3.0.3-SNAPSHOT</version>
-			<scope>compile</scope>
+			
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-structure-gui</artifactId>
 			<version>3.0.3-SNAPSHOT</version>
-			<scope>compile</scope>
+			
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>sequenceui</artifactId>
 			<version>2011.09</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			
 		</dependency>
 		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>ava-core</artifactId>
-			<version>2010.10-SNAPSHOT</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			<version>2010.11-SNAPSHOT</version>
+			
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.15</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			
 		</dependency>
 		<dependency>
 			<groupId>jfree</groupId>
 			<artifactId>jfreechart</artifactId>
 			<version>1.0.12</version>
-			<type>jar</type>
-			<scope>compile</scope>
+			
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.7</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>java3d</groupId>
+			<artifactId>vecmath</artifactId>
+			<version>1.5.2</version>
 		</dependency>
 	</dependencies>
 	<build>

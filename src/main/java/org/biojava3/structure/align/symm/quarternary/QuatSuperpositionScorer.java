@@ -6,7 +6,6 @@ import java.util.List;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
 
 /**
  *
@@ -87,7 +86,6 @@ public class QuatSuperpositionScorer {
             // N -> Cterminal vector for transformed coordinates
             t.set(perm[first]);
             transformation.transform(t);
-            double distanceFirst = orig[first].distance(t);
             Vector3d vtrans = new Vector3d(t);
             t.set(perm[last]);
             transformation.transform(t);
@@ -145,13 +143,13 @@ public class QuatSuperpositionScorer {
     }
 
     /**
-     * Calculates a variant of the GDT-TS (Global Distance Test — Total Score)
+     * Calculates a variant of the GDT-TS (Global Distance Test Total Score)
      * describing the percentage of residues percent of residues that can fit
      * under 1, 2, 4, and 8 Angstrom distance cutoffs. Distances are calculated
      * between the two closest pairs of points, therefore the 'Min' in the name.
      *
      * Zemla, A. (2003) LGA: a method for finding 3D similarities in protein
-     * structures. Nucleic Acids Research 31: 3370–4. doi:10.1093/nar/gkg571
+     * structures. Nucleic Acids Research 31: 3370. doi:10.1093/nar/gkg571
      * http://www2.predictioncenter.org/calculations/lga.htm
      *
      * @param solution

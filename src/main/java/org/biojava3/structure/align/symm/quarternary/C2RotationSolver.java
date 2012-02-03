@@ -78,7 +78,9 @@ public class C2RotationSolver implements QuatSymmetrySolver {
   //      	System.out.println("sample: " + i + " axisangle: " + sphereAngle);
 
         	transformRotationAxis(sphereAngle);
-        	sphereAngle.setAngle(Math.PI);
+        	//sphereAngle.setAngle(Math.PI);
+        	
+        	sphereAngle.angle = Math.PI;
         	transformation.set(sphereAngle);
         	for (int j = 0; j < n; j++) {
         		transformedCoords[j].set(originalCoords[j]);
@@ -127,7 +129,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
      * @return
      */
     private AxisAngle4d transformRotationAxis(AxisAngle4d axisAngle) {
-    	Vector3d v = new Vector3d(axisAngle.getX(), axisAngle.getY(), axisAngle.getZ());
+    	Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
     	referenceTransformation.transform(v);
     	axisAngle.set(v, 0.0);
     	return axisAngle;

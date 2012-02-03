@@ -84,7 +84,7 @@ public class RotationSolver implements QuatSymmetrySolver {
             SphereSampler.getAxisAngle(i, sphereAngle);
             for (double angle : angles) {
                 // apply rotation
-                sphereAngle.setAngle(angle);
+                sphereAngle.angle = angle;
                 transformation.set(sphereAngle);
                 for (int j = 0; j < n; j++) {
                     transformedCoords[j].set(originalCoords[j]);

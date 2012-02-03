@@ -166,11 +166,11 @@ public class RotationGroup {
         }
         
         AxisAngle4d pa = rotations.get(principalAxisIndex).getAxisAngle();
-        Vector3d pv = new Vector3d(pa.getX(), pa.getY(), pa.getZ());
+        Vector3d pv = new Vector3d(pa.x, pa.y, pa.z);
 
         for (Rotation s: rotations) {
            AxisAngle4d axis = s.getAxisAngle();
-           Vector3d av = new Vector3d(axis.getX(), axis.getY(), axis.getZ());
+           Vector3d av = new Vector3d(axis.x, axis.y, axis.z);
            if (Math.abs(pv.dot(av)) > 0.9f) {
                // co-linear with principal axis
                s.setDirection(0);

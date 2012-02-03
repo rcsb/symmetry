@@ -28,7 +28,7 @@ import org.rcsb.fatcat.server.PdbChainKey;
 
 public class ScanPDBForQuarternarySymmetry {
 
-	public static String PDB_PATH = "C:/PDB/";
+	public static String PDB_PATH = "/Users/ap3/WORK/PDB2/";
 	
 	/**
 	 * @param args

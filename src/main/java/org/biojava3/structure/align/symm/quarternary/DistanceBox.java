@@ -59,9 +59,9 @@ public class DistanceBox<T> {
     }
     
     public void addPoint(Point3d point, T object) {
-        long i = (long) StrictMath.rint(point.getX() * inverseBinWidth);
-        long j = (long) StrictMath.rint(point.getY() * inverseBinWidth);
-        long k = (long) StrictMath.rint(point.getZ() * inverseBinWidth);
+        long i = (long) StrictMath.rint(point.x * inverseBinWidth);
+        long j = (long) StrictMath.rint(point.y * inverseBinWidth);
+        long k = (long) StrictMath.rint(point.z * inverseBinWidth);
         long location = i + (j * 10000L) + (k * 1000000000L);
             
         List<T> box = map.get(location);
@@ -81,9 +81,9 @@ public class DistanceBox<T> {
             modified = false;
         }
         
-        long i = (long) StrictMath.rint(point.getX() * inverseBinWidth);
-        long j = (long) StrictMath.rint(point.getY() * inverseBinWidth);
-        long k = (long) StrictMath.rint(point.getZ() * inverseBinWidth);
+        long i = (long) StrictMath.rint(point.x * inverseBinWidth);
+        long j = (long) StrictMath.rint(point.y * inverseBinWidth);
+        long k = (long) StrictMath.rint(point.z * inverseBinWidth);
         long location = i + (j * 10000L) + (k * 1000000000L);
         
         List<T> box = layerMap.get(location);
@@ -102,9 +102,9 @@ public class DistanceBox<T> {
             modified = false;
         }
         
-        long i = (long) StrictMath.rint(point.getX() * inverseBinWidth);
-        long j = (long) StrictMath.rint(point.getY() * inverseBinWidth);
-        long k = (long) StrictMath.rint(point.getZ() * inverseBinWidth);
+        long i = (long) StrictMath.rint(point.x * inverseBinWidth);
+        long j = (long) StrictMath.rint(point.y * inverseBinWidth);
+        long k = (long) StrictMath.rint(point.z * inverseBinWidth);
         long location = i + (j * 10000L) + (k * 1000000000L);
         
         List<T> box = getBoxTwo(location);

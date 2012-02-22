@@ -9,7 +9,9 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -31,6 +33,47 @@ public class BlastClustReader {
 	public List<List<String>> getPdbChainIdClusters() {
 		loadClusters(sequenceIdentity);
 		return clusters;
+	}
+	
+	public Map<String,String> getRepresentatives(String pdbId) {
+		loadClusters(sequenceIdentity);
+		String pdbIdUc = pdbId.toUpperCase();
+		
+		Map<String,String> representatives = new LinkedHashMap<String,String>();
+		for (List<String> cluster: clusters) {
+			// map fist match to representative
+			for (String chainId: cluster) {
+				if (chainId.startsWith(pdbIdUc)) {
+					representatives.put(chainId, cluster.get(0));
+                    break;
+				}
+			}
+		}
+		return representatives;
+	}
+	
+	public String getRepresentativeChain(String pdbId, String chainId) {
+		loadClusters(sequenceIdentity);
+	
+		// check if chain id is lower case. In that case double the chain id, i.e. "o" becomes "oo" (example PDB 1VU1_oo)
+		// This appears to be the convention in the BlastClust files for lower case letters
+		String cId = new String(chainId);
+        String chainIdLc = cId.toLowerCase();
+        if (chainIdLc.equals(chainId) && Character.isAlphabetic(chainId.codePointAt(0))) {
+        	cId = pdbId + "_" + chainIdLc + chainIdLc;
+        } else {
+        	cId = pdbId + "_" + chainId;
+        }
+		
+		System.out.println(cId);
+		for (List<String> cluster: clusters) {
+			for (String chnId: cluster) {
+				if (chnId.equals(cId)) {
+					return cluster.get(0);
+				}
+			}
+		}
+		return "";
 	}
 	
 	public List<List<String>> getPdbChainIdClusters(String pdbId) {
@@ -98,7 +141,7 @@ public class BlastClustReader {
 				String line = null;
 				try {
 					while ((line = reader.readLine()) != null) {
-						line = line.replace('_', '.');
+	//					line = line.replace('_', '.');
 						List<String> cluster = Arrays.asList(line.split(" "));	
 						clusters.add(cluster);
 					}

@@ -32,6 +32,7 @@ public class GlobalSequenceGrouper {
 	private List<Point3d[]> cbCoords = new ArrayList<Point3d[]>();
 	private List<String[]> sequences = new ArrayList<String[]>();
 	private boolean sequenceNumberedCorrectly = true;
+	private boolean unknownSequence = false;
 	
 //	private List<List<Integer>> clusters40 = new ArrayList<List<Integer>>();
 	private List<List<Integer>> clusters100 = new ArrayList<List<Integer>>();
@@ -41,17 +42,26 @@ public class GlobalSequenceGrouper {
 	
 	private boolean modified = true;
 
+	GlobalSequenceGrouper(Structure structure, int minSequenceLength) {
+		this.structure = structure;
+		this.minSequenceLength = minSequenceLength;
+		modified = true;
+	}
+	
 	public void setStructure(Structure structure) {
 		chains.clear();
 		caTraces.clear();
 		cbTraces.clear();
 		caCoords.clear();
 		cbCoords.clear();
-		clusters100.clear();
-		chainSequenceMap.clear();
-		sequenceNumberedCorrectly = true;
 		sequences.clear();
+		clusters100.clear();
+		sequenceMap.clear();
+		chainSequenceMap.clear();
+		sequenceNumberedCorrectly = true;	
+		unknownSequence = false;
 		modified = true;
+		
 		this.structure = structure;
 	}
 
@@ -63,14 +73,24 @@ public class GlobalSequenceGrouper {
 		modified = true;
 	}
 	
-	public List<Point3d[]> getCalphaTraces() {
+	public List<Point3d[]> getCalphaCoordinates() {
         run();
 		return caCoords;
 	}
 	
-	public List<Point3d[]> getCbetaTraces() {
+	public List<Point3d[]> getCbetaCoordinates() {
         run();
 		return cbCoords;
+	}
+	
+	public List<Atom[]> getCalphaTraces() {
+		run();
+		return caTraces;
+	}
+	
+	public List<Atom[]> getCbetaTraces() {
+		run();
+		return cbTraces;
 	}
 	
 	public List<Chain> getChains() {
@@ -79,9 +99,14 @@ public class GlobalSequenceGrouper {
 	}
 	
 	public boolean isSequenceNumberedCorrectly() {
+		run();
 		return sequenceNumberedCorrectly;
 	}
 	
+	public boolean isUnknownSequence() {
+		run();
+		return unknownSequence;
+	}
 	public List<String[]> getSequences() {
 		run();
 		return sequences;
@@ -92,12 +117,35 @@ public class GlobalSequenceGrouper {
 		return clusters100.size() == 1;
 	}
 	
+	public int getMultiplicity() {
+		run();
+		return clusters100.get(clusters100.size()-1).size();
+	}
+	
+	public List<String> getOrderedChainIDList() {
+		run();
+		List<String> chainIdList = new ArrayList<String>();
+
+		for (int i = 0; i < clusters100.size(); i++) {
+	        List<Integer> cluster = clusters100.get(i);
+	        for (int c: cluster) {
+	        	chainIdList.add(getChainId(c));
+	        }
+			
+		}
+		return chainIdList;
+	}
+	
+	private String getChainId(int index) {
+		Chain c = chains.get(index);
+		return c.getChainID();
+	}
+	
 	public String getCompositionFormula() {
+		run();
 		StringBuilder formula = new StringBuilder();
 		String alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-//		if (clusters100.size() > 26) {
-//			return "*" + clusters100.size();
-//		}
+
 		for (int i = 0; i < clusters100.size(); i++) {
 			String c = "?";
 			if (i < alpha.length()) {
@@ -118,6 +166,7 @@ public class GlobalSequenceGrouper {
     }
 
 	public List<Integer> getSequenceClusterIds() {
+		run();
 		Integer[] ids = new Integer[caCoords.size()];
 		
 		for (int id = 0; id < clusters100.size(); id++) {
@@ -130,6 +179,7 @@ public class GlobalSequenceGrouper {
 	}
 	
 	public List<Integer> getSequenceIds() {
+		run();
 		List<Integer> seqIds = new ArrayList<Integer>();
 		seqIds.addAll(chainSequenceMap.values());
 		Collections.sort(seqIds);
@@ -137,6 +187,7 @@ public class GlobalSequenceGrouper {
 	}
 	
 	public int hashCodeMD5() {
+		run();
 		List<String> seqs = new ArrayList<String>(sequenceMap.keySet());
 		Collections.sort(seqs);
 		
@@ -292,9 +343,10 @@ public class GlobalSequenceGrouper {
 
 		for (Atom a:  caTraces.get(index)) {
 			Group g = a.getGroup();
-//			if (! g.getPDBName().equals("UNK")) {
-			    residueNames.add(g.getResidueNumber() + g.getPDBName());
-//			}
+			if (g.getPDBName().equals("UNK")) {
+				unknownSequence = true;
+			}
+		    residueNames.add(g.getResidueNumber() + g.getPDBName());
 		}
 		return residueNames;
 	}

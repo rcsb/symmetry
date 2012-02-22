@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,7 +28,7 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava3.structure.dbscan.GetRepresentatives;
 import org.rcsb.fatcat.server.PdbChainKey;
 
-public class ScanPDBForQuarternarySymmetry {
+public class ScanPDBSeqClustersForQuarternarySymmetry {
 
 	private static String PDB_PATH = "C:/PDB/";
 	private static final int MIN_SEQUENCE_LENGTH = 24;
@@ -50,40 +51,57 @@ public class ScanPDBForQuarternarySymmetry {
 	//	p.setAcceptedAtomNames(new String[]{" CA ", " CB "});
 		cache.setFileParsingParams(p);
 
-		Map<Integer,String> pointGroupMap = new HashMap<Integer,String>();
+		Map<String,String> pointGroupMap = new HashMap<String,String>();
 
-
+        BlastClustReader reader = new BlastClustReader(100);
+        
 		Set<String> reps = GetRepresentatives.getAll();
 		System.out.println("Total representative PDBs: " + reps.size());
 
 		// uncommment the following lines to try just a few examples
-		reps.clear();
+//		reps.clear();
+//		reps.add("1AA7");
+//		reps.add("1B4A");
+//		reps.add("1C4U");
+//		reps.add("3IYN");
 //		reps.add("4HHB");
-//		reps.add("1STP");
-		reps.add("1OHR");
+//		reps.add("1IRD");
+//		reps.add("2DN2");
+//		reps.add("1E7W");
+//		reps.add("1E92");
+//		reps.add("2BF7");
+//		reps.add("2BFP");
+//		reps.add("2BFA");
+//		reps.add("2BFO");
+//		reps.add("3H4V");
+//		reps.add("2BFM");
+//		reps.add("1W0C");
 
 		boolean writeFile = false;
 		PrintWriter out = null;
+		PrintWriter out1 = null;
 		PrintWriter error = null;
 		try {
 			out = new PrintWriter(new FileWriter(PDB_PATH + "rep_sym.csv"));
+			out1 = new PrintWriter(new FileWriter(PDB_PATH + "rep_err.csv"));
 			error = new PrintWriter(new FileWriter(PDB_PATH + "error.txt"));
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 
 
-
-		
 		long t1 = System.nanoTime();
 
-
 		int multimer = 0;
+		int excluded = 0;
 		int total = 0;
+		
+		
 		for (String pdbId : reps){
 			System.out.println("------------- " + pdbId  + "-------------");
 			if (total == 0) {
-				out.println("pdbId,formula,cacount,chains,hashcode,match,method,pointgroup,symops,multiplicity,rmsdS,rmsdT,gts,symclass,asymcoeff,seqclusters,pgcomplete,bioassembly,time,seqNum,ligands");
+				out.println("pdbId,formula,signature,pointgroup,symops,multiplicity,isoquaternary,cacount,chains,method,rmsdS,rmsdT,gts,symclass,asymcoeff,bioassembly,time,ligands");
+				out1.println("pdbId,formula,signature,pointgroup,complete,symops,multiplicity,isoquaternary,cacount,chains,method,rmsdS,rmsdT,gts,symclass,asymcoeff,bioassembly,time,seqNum,unksequence,ligands");
 			}
 
 			if (pdbId.equals("1M4X")) continue; // largest PDB assembly, causes occasional GC error
@@ -106,24 +124,22 @@ public class ScanPDBForQuarternarySymmetry {
 				error.flush();
 				continue;
 			}
-
+			
 			boolean biologicalAssembly = structure.isBiologicalAssembly();
 
-			
-			
 			long tc1 = System.nanoTime();
 
 			// cluster sequences by sequence identity
 			GlobalSequenceGrouper grouper = new GlobalSequenceGrouper(structure, MIN_SEQUENCE_LENGTH);
-			int nClusters = grouper.getSequenceCluster100().size();
 			String formula = grouper.getCompositionFormula();
-			int hashCode = grouper.hashCodeMD5();
+			System.out.println("Formula: " + formula);
 			boolean sequenceNumberedCorrectly = grouper.isSequenceNumberedCorrectly();
+			boolean unknownSequence = grouper.isUnknownSequence();
 			
 			// create list of representative chains
-	        BlastClustReader reader = new BlastClustReader(100);
 			ProteinComplexSignature s = new ProteinComplexSignature(pdbId, grouper, reader);
             String signature = s.getComplexSignature();
+            // TODO use chain signatures to label interactions of ligands
 	
 			// determine point group
 			List<Point3d[]> caCoords = grouper.getCalphaCoordinates();
@@ -139,18 +155,19 @@ public class ScanPDBForQuarternarySymmetry {
 //			List<InteractingLigand> ligands = li.getInteractingLigands();
 //			List<String> iLigs = new ArrayList<String>();
 //			for (InteractingLigand lig: ligands) {
-//				iLigs.add(lig.getLigandCode());
-//				System.out.println(lig);
+//				iLigs.add(lig.toString());
 //			}
+//			Collections.sort(iLigs);
+			
 			
 			// check if all complexes with the same composition have the same point group
-			String pg = pointGroupMap.get(hashCode);
-			boolean consistent = true;
+			String pg = pointGroupMap.get(signature);
+			boolean isoQuaternary = true;
 			if (pg == null) {
-				pointGroupMap.put(hashCode, pointGroup);
+				pointGroupMap.put(signature, pointGroup);
 			} else {
 				if (!pg.equals(pointGroup)) {
-					consistent = false;
+					isoQuaternary = false;
 				}
 			}
 			String method = finder.getMethod();	
@@ -162,32 +179,46 @@ public class ScanPDBForQuarternarySymmetry {
 			float rmsdT = (float) rotationGroup.getAverageTraceRmsd();
 			float gts = (float) rotationGroup.getAverageTraceGtsMin();
 			
+			
 			// determine overall symmetry
 			Subunits subunits = finder.getSubunits();
 			MomentsOfInertia m = subunits.getMomentsOfInertia();
 			MomentsOfInertia.SymmetryClass symmetryClass = m.getSymmetryClass(0.05);
 			double asymmetryCoefficient = m.getAsymmetryParameter(0.05);
-			double multiplicity = 1;
+			
+			int order = rotationGroup.getOrder();
+			float multiplicity = 1;
+	
 			if (rotationGroup.getOrder() > 0) {
-				multiplicity = finder.getChainCount()/rotationGroup.getOrder();
+				multiplicity = grouper.getMultiplicity()/(float)order;
 			}
 
 			long tc2 = System.nanoTime();
 			long time = (tc2 - tc1)/1000000;
 			
 			// write .csv summary file
-			if (finder.getChainCount() > 1) {			
-				out.print(pdbId + "," + formula + "," + caCount + "," + finder.getChainCount() + "," + hashCode +  "," + consistent + "," + method + "," + pointGroup + "," + 
-						rotationGroup.getOrder()+ "," + multiplicity + "," + rmsd + "," + rmsdT + "," + gts + "," + symmetryClass + "," + asymmetryCoefficient + "," +
-						nClusters + "," + groupComplete + "," + 
-						structure.isBiologicalAssembly() + "," + time + "," + sequenceNumberedCorrectly);
-//				for (String l: iLigs) {
-//					out.print("," + l);
-//				}
-				System.out.print("," + li.toString());
+			if (finder.getChainCount() > 1 && groupComplete && sequenceNumberedCorrectly && !unknownSequence) {			
+				out.print(pdbId + "," + formula + "," + signature + "," + pointGroup + "," +
+						order + "," + multiplicity + "," + isoQuaternary + "," + caCount + "," + finder.getChainCount()  + "," + method  + "," + rmsd + "," + rmsdT + "," + gts + "," + symmetryClass + "," + asymmetryCoefficient + "," +
+						biologicalAssembly + "," + time);
+		//		for (String sl: iLigs) {
+		//			out.print("," + sl);
+		//		}
+				out.print("," + li.toString());
 				out.println();
 				out.flush();
 				multimer++;
+			} else if (finder.getChainCount() > 1) {
+				out1.print(pdbId + "," + formula + "," + signature + "," + pointGroup + "," + groupComplete + "," +
+						order + "," + multiplicity + "," + isoQuaternary + "," + caCount + "," + finder.getChainCount()  + "," + method  + "," + rmsd + "," + rmsdT + "," + gts + "," + symmetryClass + "," + asymmetryCoefficient + "," +
+						biologicalAssembly + "," + time + "," + sequenceNumberedCorrectly + "," + unknownSequence);
+		//		for (String sl: iLigs) {
+		//			out.print("," + sl);
+		//		}
+				out1.print("," + li.toString());
+				out1.println();
+				out1.flush();
+				excluded++;
 			}
 
 			//			if (total == 500) break;
@@ -208,6 +239,7 @@ public class ScanPDBForQuarternarySymmetry {
 		System.out.println("Multimers: " + multimer + "out of " + total);
 		System.out.println("Total structure: " + reps.size());
 		out.close();
+		out1.close();
 		error.close();
 	}
 

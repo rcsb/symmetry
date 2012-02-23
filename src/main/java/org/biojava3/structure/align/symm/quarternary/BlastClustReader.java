@@ -59,7 +59,8 @@ public class BlastClustReader {
 		// This appears to be the convention in the BlastClust files for lower case letters
 		String cId = new String(chainId);
         String chainIdLc = cId.toLowerCase();
-        if (chainIdLc.equals(chainId) && Character.isAlphabetic(chainId.codePointAt(0))) {
+//        if (chainIdLc.equals(chainId) && Character.isAlphabetic(chainId.codePointAt(0))) {
+        if (chainIdLc.equals(chainId) && !Character.isDigit(chainId.codePointAt(0))) {
         	cId = pdbId + "_" + chainIdLc + chainIdLc;
         } else {
         	cId = pdbId + "_" + chainId;

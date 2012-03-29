@@ -24,18 +24,13 @@
  */
 package org.biojava3.structure.align.symm.census;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 
@@ -54,7 +49,7 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.alignment.SubstitutionMatrixHelper;
 import org.biojava3.alignment.template.SubstitutionMatrix;
-import org.biojava3.changeux.IdentifyAllSymmetries;
+
 import org.biojava3.core.sequence.compound.AminoAcidCompound;
 import org.biojava3.core.util.ConcurrencyTools;
 import org.biojava3.structure.align.symm.CeSymm;
@@ -96,7 +91,7 @@ public class ScanSCOPForSymmetry {
 
 
 
-	
+
 
 
 	private void run() {
@@ -118,9 +113,6 @@ public class ScanSCOPForSymmetry {
 				census = new CensusResults();
 
 			List<String> knownResults = getKnownResults(census);
-			List<CensusResult> allResults = census.getData();
-			
-
 			int count = 0;
 
 			List<Future<CensusResult>> futureData = new ArrayList<Future<CensusResult>>();
@@ -140,7 +132,7 @@ public class ScanSCOPForSymmetry {
 				String name = first.getScopId();
 				if ( knownResults.contains(name))
 					continue;
-				
+
 				if ( name.equals("ds046__"))
 					continue;
 
@@ -160,7 +152,7 @@ public class ScanSCOPForSymmetry {
 			if ( o.exists())
 				o.delete();
 			SynchronizedOutFile outFile = new SynchronizedOutFile(o);
-			
+
 
 			ResultConverter.printHTMLHeader(outFile);
 
@@ -170,14 +162,9 @@ public class ScanSCOPForSymmetry {
 			Map<Character,Integer> classStats = new HashMap<Character, Integer>();
 			Map<Character,Integer> totalStats = new HashMap<Character, Integer>();
 
-			
-			// process know results again to make sure the stats are correct
-			for ( CensusResult result : allResults){
-				boolean isSymmetric = processResult(result, outFile,totalStats,classStats);
-				if ( isSymmetric)
-					withSymm++;
-					
-			}
+			List<CensusResult> allResults = census.getData();
+
+			withSymm = countNrSymm(outFile, withSymm, classStats, totalStats, allResults);
 
 			System.out.println("starting to process multi threaded results...");
 			for (Future<CensusResult> futureResult : futureData) {
@@ -186,11 +173,11 @@ public class ScanSCOPForSymmetry {
 				System.out.println("got result: " + result);
 				if ( result == null)
 					continue;
-							
+
 				boolean isSymmetric = processResult(result, outFile,totalStats,classStats);
 				if ( isSymmetric)
 					withSymm++;
-				
+
 				allResults.add(result);
 				//if ( withSymm > 5)
 				//	break;
@@ -222,13 +209,32 @@ public class ScanSCOPForSymmetry {
 
 	}
 
+
+
+
+
+
+	private int countNrSymm(SynchronizedOutFile outFile, int withSymm,
+			Map<Character, Integer> classStats,
+			Map<Character, Integer> totalStats, List<CensusResult> allResults)
+					throws IOException {
+		// process know results again to make sure the stats are correct
+		for ( CensusResult result : allResults){
+			boolean isSymmetric = processResult(result, outFile,totalStats,classStats);
+			if ( isSymmetric)
+				withSymm++;
+
+		}
+		return withSymm;
+	}
+
 	private boolean processResult(CensusResult result , SynchronizedOutFile outFile, Map<Character, Integer> totalStats,Map<Character,Integer> classStats) throws IOException{
-		
+
 		boolean isSymmetric = false;
-		
+
 		if ( result.getIsSignificant()){
 			isSymmetric = true;
-			
+
 		}
 
 		Character scopClass = result.getScopClass();
@@ -241,9 +247,14 @@ public class ScanSCOPForSymmetry {
 			trackStats(classStats,scopClass,1);
 		}
 		return isSymmetric;
-		
+
 	}
 
+	/** return the names of the domains that we already analyzed
+	 * 
+	 * @param census
+	 * @return
+	 */
 	private List<String> getKnownResults(CensusResults census) {
 
 		List<String> known = new ArrayList<String>();
@@ -268,14 +279,14 @@ public class ScanSCOPForSymmetry {
 		if (f.exists()) {
 			String xml = FileUtils.readFileAsString(filePath);
 			CensusResults data = CensusResults.fromXML(xml);
-			
+
 			System.out.println("read " + data.getData().size() + " results from disk...");
 			return data;
 		}
 		return null;
 	}
 
-	
+
 
 	private void writeResults(CensusResults census, String filePath){
 
@@ -300,7 +311,7 @@ public class ScanSCOPForSymmetry {
 		totalStats.put(scopClass, number);
 
 	}
-	
+
 	public static StructureAlignment getCeSymm(){
 
 

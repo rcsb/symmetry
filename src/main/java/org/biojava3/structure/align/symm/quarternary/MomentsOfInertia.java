@@ -86,6 +86,8 @@ public class MomentsOfInertia {
         double ia = principalMomentsOfInertia[0];
         double ib = principalMomentsOfInertia[1];
         double ic = principalMomentsOfInertia[2];
+//        System.out.println("c1: " + (ib - ia) / (ib + ia));
+//        System.out.println("c2: " + (ic - ib) / (ic + ib));
         boolean c1 = (ib - ia) / (ib + ia) < threshold;
         boolean c2 = (ic - ib) / (ic + ib) < threshold;
 

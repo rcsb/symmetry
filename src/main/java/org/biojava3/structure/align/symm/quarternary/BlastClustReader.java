@@ -12,13 +12,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
-import org.biojava.bio.structure.align.client.JFatCatClient;
-import org.biojava.bio.structure.align.util.HTTPConnectionTools;
-import org.biojava.bio.structure.align.xml.RepresentativeXMLConverter;
-import org.rcsb.fatcat.server.PdbChainKey;
 
 public class BlastClustReader {
 	private int sequenceIdentity = 0;

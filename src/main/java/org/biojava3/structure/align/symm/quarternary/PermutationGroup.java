@@ -1,7 +1,11 @@
 
 package org.biojava3.structure.align.symm.quarternary;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -78,5 +82,53 @@ public class PermutationGroup {
             }
         }
         return 0;
+    }
+    
+    public String getGroupTable() {
+    	StringBuilder builder = new StringBuilder();
+    	builder.append("  |");
+    	for (int i = 0; i < getOrder(); i++) {
+    		builder.append(" ");
+    		builder.append(i);
+    	}
+    	builder.append("\n");
+    	builder.append("---");
+    	for (int i = 0; i < getOrder(); i++) {
+    		builder.append("--");
+    	}
+    	builder.append("\n");
+    	for (int i = 0; i < getOrder(); i++) {
+    		builder.append(i);
+    		builder.append(" |");
+    		for (int j = 0; j < getOrder(); j++) {
+    			builder.append(" ");
+    			builder.append(permutations.indexOf(combine(permutations.get(i), permutations.get(j))));
+ //   			builder.append(i);
+    		}
+    		builder.append("\n");
+    	}
+    	return builder.toString();
+    }
+    
+    public int hashCode() {
+    	MessageDigest md = null;
+    	try {
+    		md = MessageDigest.getInstance("MD5");
+    	} catch (NoSuchAlgorithmException e1) {
+    		// TODO Auto-generated catch block
+    		e1.printStackTrace();
+    	}
+
+    	byte[] message = null;
+    	try {
+    		message = getGroupTable().getBytes("UTF-8");
+    	} catch (UnsupportedEncodingException e) {
+    		e.printStackTrace();
+    	}
+
+    	md.update(message);
+
+   // 	return md.digest().hashCode();	
+    	return getGroupTable().hashCode();
     }
 }

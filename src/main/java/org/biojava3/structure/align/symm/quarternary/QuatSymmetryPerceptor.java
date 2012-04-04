@@ -51,7 +51,7 @@ public class QuatSymmetryPerceptor {
     public RotationGroup getSymmetryOperations() {
         if (symmetryOperations.getOrder() == 0) {
             findSymmetryOperations();
-            symmetryOperations.sortByFoldDecending();
+            symmetryOperations.complete();
         }
         return symmetryOperations;
     }

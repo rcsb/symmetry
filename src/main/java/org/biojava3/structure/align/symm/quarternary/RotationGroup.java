@@ -44,18 +44,28 @@ public class RotationGroup {
     	modified = true;
     }
 
+    public void complete() {
+    	 if (modified) {
+    		 System.out.println("Completing rotation group");
+    		 if (rotations.size() > 0) {
+    			 findHighestOrderAxis();
+    			 setEAxis();
+    			 calcAxesDirections();
+    			 findHigherOrderAxes();
+    			 findTwoFoldsPerpendicular();
+    			 calcPointGroup();
+    			 sortByFoldDecending();
+    		 }
+    		 modified = false;
+    	 }
+    }
+    
     public String getPointGroup() {
         if (modified) {
             if (rotations.size() == 0) {
                 return "C1";
             }
-            findHighestOrderAxis();
-            setEAxis();
-            calcAxesDirections();
-            findHigherOrderAxes();
-            findTwoFoldsPerpendicular();
-            calcPointGroup();
-            modified = false;
+            complete();
         }
         return pointGroup;
     }
@@ -144,7 +154,9 @@ public class RotationGroup {
     private void setEAxis() {
         Rotation e = rotations.get(0);
         Rotation h = rotations.get(principalAxisIndex);
-        e.setAxisAngle(h.getAxisAngle());
+        e.setAxisAngle(new AxisAngle4d(h.getAxisAngle()));
+        e.getAxisAngle().angle = 0.0;
+        e.setFold(h.getFold());
     }
 
     private void findHigherOrderAxes() {
@@ -236,7 +248,17 @@ public class RotationGroup {
         Collections.sort(rotations, new Comparator<Rotation>() {
 			public int compare(Rotation o1, Rotation o2) {
 				// check this ???
-				return Math.round(Math.signum(o1.getFold() - o2.getFold()));
+				int delta = o1.getDirection() - o2.getDirection();
+				if (delta != 0) {
+					return delta;
+				}
+				delta = Math.round(Math.signum(o2.getFold() - o1.getFold()));
+				if (delta != 0) {
+					return delta;
+				}
+				
+				delta = (int)(Math.signum(o1.getAxisAngle().angle - o2.getAxisAngle().angle));
+				return delta;
 			}
         });
     }

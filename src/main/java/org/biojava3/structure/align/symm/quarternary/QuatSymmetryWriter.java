@@ -34,6 +34,20 @@ public class QuatSymmetryWriter {
 		out.close();
 	}
 	
+	public void writeTransformedStructureNotCentered(Matrix4d matrix, String fileName) {
+		Structure s = getTransformedStructureCentered(matrix);
+		FileConvert f = new FileConvert(s);
+		String pdbFile = f.toPDB();
+		PrintWriter out = null;
+		try {
+			out = new PrintWriter(new FileWriter(fileName));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		out.print(pdbFile);
+		out.close();
+	}
+	
 	private Structure getTransformedStructure(Matrix4d matrix) {
 		Structure s = structure.clone();
 		int models = 1;
@@ -47,6 +61,45 @@ public class QuatSymmetryWriter {
 					for (Atom a: g.getAtoms()) {
 						double[] coords = a.getCoords();
 						Point3d p = new Point3d(coords);
+						matrix.transform(p);
+                        p.get(coords);
+						a.setCoords(coords);
+					}
+				}
+			}
+		}
+		return s;
+	}
+	
+	private Structure getTransformedStructureCentered(Matrix4d matrix) {
+		Structure s = structure.clone();
+		int models = 1;
+		if (structure.isBiologicalAssembly()) {
+			models = s.nrModels();
+		}
+
+		int total = 0;
+		Point3d com = new Point3d();
+		for (int i = 0; i < models; i++) {	
+			for (Chain c: s.getChains(i)) {
+				for (Group g: c.getAtomGroups()) {
+					for (Atom a: g.getAtoms()) {
+						double[] coords = a.getCoords();
+						com.add(new Point3d(a.getCoords()));
+						total++;
+					}
+				}
+			}
+		}
+	    com.scale(1.0f/total);
+		
+		for (int i = 0; i < models; i++) {	
+			for (Chain c: s.getChains(i)) {
+				for (Group g: c.getAtomGroups()) {
+					for (Atom a: g.getAtoms()) {
+						double[] coords = a.getCoords();
+						Point3d p = new Point3d(coords);
+						p.sub(com);
 						matrix.transform(p);
                         p.get(coords);
 						a.setCoords(coords);

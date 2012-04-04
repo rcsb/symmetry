@@ -4,6 +4,7 @@ package org.biojava3.structure.align.symm.quarternary;
 import java.util.ArrayList;
 import java.util.List;
 import javax.vecmath.Point3d;
+import javax.vecmath.Vector3d;
 
 /**
  *
@@ -14,6 +15,7 @@ public class Subunits {
     private List<Point3d[]> cbCoords = new ArrayList<Point3d[]>();
     private List<Point3d> originalCenters = new ArrayList<Point3d>(0);
     private List<Point3d> centers = new ArrayList<Point3d>(0);
+    private List<Vector3d> unitVectors = new ArrayList<Vector3d>(0);
     private List<Integer> sequenceClusterIds = new ArrayList<Integer>(0);
     private Point3d centroid;
     MomentsOfInertia momentsOfInertia = new MomentsOfInertia();
@@ -53,8 +55,13 @@ public class Subunits {
         run();
         return centers;
     }
+    
+    public List<Vector3d> getUnitVectors() {
+        run();
+        return unitVectors;
+    }
 
-    public List<Point3d> getOrignalCenters() {
+    public List<Point3d> getOriginalCenters() {
         run();
         return originalCenters;
     }
@@ -95,6 +102,9 @@ public class Subunits {
             Point3d c = new Point3d(p);
             c.sub(centroid);
             centers.add(c);
+            Vector3d v = new Vector3d(c);
+            v.normalize();
+            unitVectors.add(v);
         }
     }
     

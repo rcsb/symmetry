@@ -1,19 +1,12 @@
 
 package org.biojava3.structure.align.symm.quarternary;
 
-import java.util.Arrays;
-
 import javax.vecmath.AxisAngle4d;
-import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.AtomImpl;
-import org.biojava.bio.structure.SVDSuperimposer;
-import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.jama.EigenvalueDecomposition;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava.bio.structure.jama.SingularValueDecomposition;
@@ -26,49 +19,6 @@ public final class SuperPosition {
     
     // this class cannot be instantiated
     private SuperPosition() {}
-    
-    
-    public static Matrix4d superposeSVD(Point3d[] x, Point3d[] y) {
-    	Atom[] a = new Atom[x.length];
-    	Atom[] b = new Atom[x.length];
-    	System.out.println("Superpose:");
-    	System.out.println(Arrays.toString(x));
-    	System.out.println(Arrays.toString(y));
-    	
-    	for (int i = 0; i < x.length; i++) {
-    		double[] c = new double[3];
-    		x[i].get(c);
-    		Atom ax = new AtomImpl();
-    		ax.setCoords(c);
-    		a[i] = ax;
-    		y[i].get(c);
-    		Atom bx = new AtomImpl();
-    		bx.setCoords(c);
-    		b[i] = bx;
-    	}
-    	SVDSuperimposer s = null;
-    	try {
-		     s = new SVDSuperimposer(a, b);
-		} catch (StructureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		Matrix rot = s.getRotation();
-		Atom t = s.getTranslation();
-		Matrix4d rotTrans = new Matrix4d();
-		for (int i = 0; i < 3; i++) {
-			for (int j = 0; j < 3; j++) {
-				rotTrans.setElement(i, j, rot.get(i, j));
-			}
-		}
-//		System.out.println(rotTrans);
-		rotTrans.setTranslation(new Vector3d(t.getX(), t.getY(), t.getZ()));	
-		 // transform coordinates
-        transform(rotTrans, x);
-		System.out.println(rotTrans);
-
-        return rotTrans;
-    }
     
     public static Matrix4d superpose(Point3d[] x, Point3d[] y) {
         //superpose x onto y
@@ -92,6 +42,47 @@ public final class SuperPosition {
         rotTrans.setTranslation(new Vector3d(ytrans));
         
         // tranform coordinates
+        transform(rotTrans, x);
+        
+        // TODO should include translation into transformation matrix
+
+        return rotTrans;
+    }
+    
+    public static Matrix4d superposeWithTranslation(Point3d[] x, Point3d[] y) {
+        //superpose x onto y
+             
+        // translate to origin
+    	Point3d[] xref = clonePoint3dArray(x);
+    	Point3d xtrans = centroid(xref);
+    	xtrans.negate();
+    	translate(xtrans, xref);
+
+    	Point3d[] yref = clonePoint3dArray(y);
+        Point3d ytrans = centroid(yref);
+        ytrans.negate();
+        translate(ytrans, yref); 
+        
+        // calculate rotational component (rotation around origin)
+        Quat4d q = quaternionOrientation(xref, yref);
+        q.conjugate();
+        Matrix4d rotTrans = new Matrix4d();
+        rotTrans.set(q);   
+ 
+        // combine with x -> origin translation
+        Matrix4d trans = new Matrix4d();
+        trans.setIdentity();
+        trans.setTranslation(new Vector3d(xtrans));
+        rotTrans.mul(rotTrans, trans);
+
+        // combine with origin -> y translation
+        ytrans.negate();  
+        Matrix4d transInverse = new Matrix4d(); 
+        transInverse.setIdentity();     
+        transInverse.setTranslation(new Vector3d(ytrans));
+        rotTrans.mul(transInverse, rotTrans);
+        
+        // transform x coordinates onto y coordinate frame
         transform(rotTrans, x);
 
         return rotTrans;

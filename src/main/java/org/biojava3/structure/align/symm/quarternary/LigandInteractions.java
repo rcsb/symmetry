@@ -17,19 +17,28 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 
 public class LigandInteractions {
-	Structure structure = null;
-	ProteinComplexSignature signature = null;
-	List<Chain> chains = new ArrayList<Chain>(0);
-	List<InteractingLigand> ligands = new ArrayList<InteractingLigand>();
+	private Structure structure = null;
+	private ProteinComplexSignature signature = null;
+	private List<Chain> chains = new ArrayList<Chain>(0);
+	private List<InteractingLigand> ligands = new ArrayList<InteractingLigand>();
+	private boolean modified = true;
+	private int interactionType = 0;
 
 	public LigandInteractions(Structure structure, ProteinComplexSignature signature) {
 		this.structure = structure;
 		this.signature = signature;
+		modified = true;
 	}
 	
 	public void setInteractingChains(List<Chain> chains) {
 		this.chains = chains;
+		modified = true;
 		System.out.println("Number of chains: " + chains.size());
+	}
+	
+	public int getInteractionType() {
+		run();
+		return interactionType;
 	}
 	
 //	public List<InteractingLigand> getInteractingLigands() {
@@ -54,25 +63,43 @@ public class LigandInteractions {
 	}
 	
 	private void run() {	
-		for (Group l: getLigands()) {
-			// calculate number of contact that each ligand makes with protein chains
-			InteractingLigand lig = new InteractingLigand(l);
-//			System.out.println("Ligand: " + l);
-			for (Chain c: chains) {
-				int contacts = getContacts(c,l);
-//				System.out.println(c.getChainID() + ": " + contacts);
-				if (contacts > 0) {
-					String compositionId = signature.getCompositionId(c.getChainID());
-					lig.addInteraction(c, compositionId, contacts);
+		if (modified) {
+			interactionType = 0;
+			boolean intraSubunit = false;
+			boolean interSubunit = false;
+			for (Group l: getLigands()) {
+				// calculate number of contact that each ligand makes with protein chains
+				InteractingLigand lig = new InteractingLigand(l);
+				//			System.out.println("Ligand: " + l);
+				for (Chain c: chains) {
+					int contacts = getContacts(c,l);
+					if (contacts > 5) {
+						String compositionId = signature.getCompositionId(c.getChainID());
+						lig.addInteraction(c, compositionId, contacts);
+					}
+				}
+
+				int count = lig.getInteractingSubunitCount();
+				if (count == 1) {
+					intraSubunit = true;
+				} else if (count > 1) {
+					interSubunit = true;
+				}
+				
+				if (count > 0) {
+					ligands.add(lig);
 				}
 			}
-
-			if (lig.getInteractingSubunitCount(0.2f) > 0) {
-				ligands.add(lig);
+			if (intraSubunit) {
+				interactionType += 1;
 			}
+			if (interSubunit) {
+				interactionType += 2;
+			}
+			modified = false;
 		}
 	}
-	
+	   
 	public String toString() {
 		run();
 		StringBuilder builder = new StringBuilder();
@@ -101,7 +128,6 @@ public class LigandInteractions {
 			} else {
 				count++;
 			}
-			System.out.println("Adding: " + lig.toString() + " count: " + count);
 			map.put(lig.toString(),count);
 		}
 		return map;

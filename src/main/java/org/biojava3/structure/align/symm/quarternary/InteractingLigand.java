@@ -27,21 +27,8 @@ public class InteractingLigand {
     	 return ligand.getPDBName();
      }
      
-     public int getInteractingSubunitCount(float interactingFraction) {   
-    	 int total = getTotalInteractions();
-    	 System.out.println("total: " + total);
-    	 if (total == 0) {
-    		 return 0;
-    	 }
-    	 
-    	 int subunitCount = 0;
-    	 for (Integer c: contacts) {
-    		 if ((float) c/(float)total > interactingFraction) {
-    			 subunitCount++;
-    		 }
-    	 }
-    	 System.out.println("Subunit count: " + subunitCount);
-    	 return subunitCount;
+     public int getInteractingSubunitCount() {   
+    	return chains.size();
      }
      
      public int getTotalInteractions() {
@@ -73,6 +60,6 @@ public class InteractingLigand {
 
     	 }
     	 builder.append("]");
-    	 return builder.toString();
+    	 return builder.toString().trim();
      }
 }

@@ -207,7 +207,7 @@ public class RunDataBaseSearch implements Runnable{
 
 		String name1 = "1hiv.A";
 
-		PdbChainKey key = PdbChainKey.fromName(name1);
+		PdbChainKey key = new PdbChainKey(name1);
 
 
 		try {

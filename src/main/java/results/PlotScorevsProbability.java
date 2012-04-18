@@ -18,18 +18,15 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.entity.ChartEntity;
 import org.jfree.chart.labels.CustomXYToolTipGenerator;
-import org.jfree.chart.plot.CategoryPlot;
+
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.category.BarRenderer;
+
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.urls.CustomXYURLGenerator;
-import org.jfree.chart.urls.XYURLGenerator;
-import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeries;
-import org.rcsb.fatcat.server.DbUtils;
+
 import org.rcsb.fatcat.server.PdbChainKey;
 import org.rcsb.fatcat.server.dao.DBAlignment;
 import org.rcsb.fatcat.server.dao.SplitDatabase;
@@ -134,7 +131,9 @@ public class PlotScorevsProbability {
 
 			PdbChainKey n1 = PdbChainKey.fromName(alig.getName1());
 			PdbChainKey n2 = PdbChainKey.fromName(alig.getName2());
+
 			String url = String.format(BASE_URL,n1.getPdbId(),n1.getChainId(),n2.getPdbId(),n2.getChainId());
+			
 			urls.add(url);
 
 		}

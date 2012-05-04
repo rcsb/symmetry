@@ -51,32 +51,32 @@ public class GlobalSequenceGrouper implements SequenceClusterer {
 	/* (non-Javadoc)
 	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#setStructure(org.biojava.bio.structure.Structure)
 	 */
-	@Override
-	public void setStructure(Structure structure) {
-		chains.clear();
-		caTraces.clear();
-		cbTraces.clear();
-		caCoords.clear();
-		cbCoords.clear();
-		sequences.clear();
-		clusters100.clear();
-		sequenceMap.clear();
-		chainSequenceMap.clear();
-		sequenceNumberedCorrectly = true;	
-		unknownSequence = false;
-		modified = true;
-		
-		this.structure = structure;
-	}
+//	@Override
+//	public void setStructure(Structure structure) {
+//		chains.clear();
+//		caTraces.clear();
+//		cbTraces.clear();
+//		caCoords.clear();
+//		cbCoords.clear();
+//		sequences.clear();
+//		clusters100.clear();
+//		sequenceMap.clear();
+//		chainSequenceMap.clear();
+//		sequenceNumberedCorrectly = true;	
+//		unknownSequence = false;
+//		modified = true;
+//		
+//		this.structure = structure;
+//	}
 
 	/* (non-Javadoc)
 	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#setMinSequenceLength(int)
 	 */
-	@Override
-	public void setMinSequenceLength(int minSequenceLength) {
-		this.minSequenceLength = minSequenceLength;
-		modified = true;
-	}
+//	@Override
+//	public void setMinSequenceLength(int minSequenceLength) {
+//		this.minSequenceLength = minSequenceLength;
+//		modified = true;
+//	}
 	
 	/* (non-Javadoc)
 	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#getCalphaCoordinates()
@@ -117,16 +117,6 @@ public class GlobalSequenceGrouper implements SequenceClusterer {
 	/* (non-Javadoc)
 	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#getChains()
 	 */
-	@Override
-	public List<Chain> getChains() {
-        run();
-		return chains;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#isSequenceNumberedCorrectly()
-	 */
-	@Override
 	public boolean isSequenceNumberedCorrectly() {
 		run();
 		return sequenceNumberedCorrectly;
@@ -135,7 +125,6 @@ public class GlobalSequenceGrouper implements SequenceClusterer {
 	/* (non-Javadoc)
 	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#isUnknownSequence()
 	 */
-	@Override
 	public boolean isUnknownSequence() {
 		run();
 		return unknownSequence;
@@ -143,7 +132,6 @@ public class GlobalSequenceGrouper implements SequenceClusterer {
 	/* (non-Javadoc)
 	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#getSequences()
 	 */
-	@Override
 	public List<String[]> getSequences() {
 		run();
 		return sequences;
@@ -216,11 +204,11 @@ public class GlobalSequenceGrouper implements SequenceClusterer {
 	/* (non-Javadoc)
 	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#getSequenceCluster100()
 	 */
-	@Override
-	public List<List<Integer>> getSequenceCluster100() {
-	    run();
-	    return clusters100;
-    }
+//	@Override
+//	public List<List<Integer>> getSequenceCluster100() {
+//	    run();
+//	    return clusters100;
+//    }
 
 	/* (non-Javadoc)
 	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#getSequenceClusterIds()
@@ -242,14 +230,14 @@ public class GlobalSequenceGrouper implements SequenceClusterer {
 	/* (non-Javadoc)
 	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#getSequenceIds()
 	 */
-	@Override
-	public List<Integer> getSequenceIds() {
-		run();
-		List<Integer> seqIds = new ArrayList<Integer>();
-		seqIds.addAll(chainSequenceMap.values());
-		Collections.sort(seqIds);
-		return seqIds;
-	}
+//	@Override
+//	public List<Integer> getSequenceIds() {
+//		run();
+//		List<Integer> seqIds = new ArrayList<Integer>();
+//		seqIds.addAll(chainSequenceMap.values());
+//		Collections.sort(seqIds);
+//		return seqIds;
+//	}
 	
 	public int hashCodeMD5() {
 		run();
@@ -530,7 +518,6 @@ public class GlobalSequenceGrouper implements SequenceClusterer {
 	/* (non-Javadoc)
 	 * @see org.biojava3.structure.align.symm.quarternary.SequenceClusterer#sortClusterBySize(java.util.List)
 	 */
-	@Override
 	public void sortClusterBySize(List<List<Integer>> clusters) {
 		Collections.sort(clusters, new Comparator<List<Integer>>() {
 			public int compare(List<Integer> l1, List<Integer> l2) {

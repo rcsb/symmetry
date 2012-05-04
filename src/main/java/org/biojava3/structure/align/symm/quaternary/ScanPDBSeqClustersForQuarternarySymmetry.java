@@ -73,8 +73,11 @@ public class ScanPDBSeqClustersForQuarternarySymmetry {
 
 		// uncommment the following lines to try just a few examples
 		reps.clear();
-//		reps.add("4HHB");
-		reps.add("2WRN"); // ribosome
+		reps.add("1FT8");
+//		reps.add("4HHB"); // 2 alpha, 2 beta
+//		reps.add("2BG9"); // acetylcholin receptor, 2 alpha, 1 beta, 1 delta, 1 gamma
+//		reps.add("2WRN"); // ribosome
+//		reps.add("3SYW"); // DNA, no protein chains
 //		reps.add("5CSC");
 //		reps.add("1B77");
 //		reps.add("1R0B");
@@ -165,12 +168,21 @@ public class ScanPDBSeqClustersForQuarternarySymmetry {
 			long tc1 = System.nanoTime();
 
 			// cluster sequences by sequence identity
-//			SequenceClusterer grouper = new GlobalSequenceGrouper(structure, MIN_SEQUENCE_LENGTH);
-			SequenceClusterer grouper = new GlobalSequenceGrouperNew(structure, MIN_SEQUENCE_LENGTH);
+			ProteinChainExtractor extractor = new ProteinChainExtractor(structure,  MIN_SEQUENCE_LENGTH);
+			List<Atom[]> cAlphas = extractor.getCalphaTraces();
+			List<String> chainIds = extractor.getChainIds();
+			GlobalSequenceGrouperNew grouperNew = new GlobalSequenceGrouperNew(cAlphas, chainIds);
+
+	//		SequenceClusterer grouper = new GlobalSequenceGrouper(structure, MIN_SEQUENCE_LENGTH);
+			SequenceClusterer grouper = grouperNew;			
 			String formula = grouper.getCompositionFormula();
 			System.out.println("Formula: " + formula);
-			boolean sequenceNumberedCorrectly = grouper.isSequenceNumberedCorrectly();
-			boolean unknownSequence = grouper.isUnknownSequence();
+			System.out.println(grouperNew);
+			// TODO remove these flags??
+//			boolean sequenceNumberedCorrectly = grouper.isSequenceNumberedCorrectly();
+			boolean sequenceNumberedCorrectly = true;
+//			boolean unknownSequence = grouper.isUnknownSequence();
+			boolean unknownSequence = false;
 			
 			// create list of representative chains
 			ProteinComplexSignature s100 = new ProteinComplexSignature(pdbId, grouper, reader100);
@@ -203,8 +215,9 @@ public class ScanPDBSeqClustersForQuarternarySymmetry {
 			RotationGroup rotationGroup = finder.getRotationGroup();	
 			String pointGroup = rotationGroup.getPointGroup();
 			
-			LigandInteractions li = new LigandInteractions(structure, s100);
-			li.setInteractingChains(grouper.getChains());
+//			LigandInteractions li = new LigandInteractions(structure, s100);
+			// TODO pass in list of chain ids instead of chains
+//			li.setInteractingChains(grouper.getChains());
 			
 			// check if all complexes with the same composition have the same point group
 			String pg = pointGroupMap.get(signature100);
@@ -248,8 +261,9 @@ public class ScanPDBSeqClustersForQuarternarySymmetry {
 				out.print(pdbId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature90 + "," + stoich90 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," +
 						order + "," + multiplicity + "," + isoQuaternary + "," + caCount + "," + finder.getChainCount() + "," + method  + "," + rmsd + "," + rmsdT + "," + gts + "," + symmetryClass + "," + asymmetryCoefficient + "," +
 						biologicalAssembly + "," + time);
-				out.print("," + li.toString());
-				out.print("," + li.getInteractionType());
+				// TODO
+		//		out.print("," + li.toString());
+		//		out.print("," + li.getInteractionType());
 				out.println();
 				out.flush();
 				multimer++;
@@ -257,8 +271,9 @@ public class ScanPDBSeqClustersForQuarternarySymmetry {
 				out1.print(pdbId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature90 + "," + stoich90 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," + groupComplete + "," +
 						order + "," + multiplicity + "," + isoQuaternary + "," + caCount + "," + finder.getChainCount() + "," + "," + method  + "," + rmsd + "," + rmsdT + "," + gts + "," + symmetryClass + "," + asymmetryCoefficient + "," +
 						biologicalAssembly + "," + time + "," + sequenceNumberedCorrectly + "," + unknownSequence);
-				out1.print("," + li.toString());
-				out1.print("," + li.getInteractionType());
+                // TODO
+		//		out1.print("," + li.toString());
+		//		out1.print("," + li.getInteractionType());
 				out1.println();
 				out1.flush();
 				excluded++;

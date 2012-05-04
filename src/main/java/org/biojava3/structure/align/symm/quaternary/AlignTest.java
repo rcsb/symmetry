@@ -1,20 +1,16 @@
 package org.biojava3.structure.align.symm.quaternary;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.biojava.bio.structure.PDBCrystallographicInfo;
 import org.biojava.bio.structure.PDBHeader;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
@@ -121,7 +117,7 @@ public class AlignTest {
 					if (s1 == null) {
 						continue;
 					}
-					PDBCrystallographicInfo info1 = s1.getCrystallographicInfo();
+			//		PDBCrystallographicInfo info1 = s1.getCrystallographicInfo();
 					PDBHeader header1 = s1.getPDBHeader();
 					String t1 = header1.getTechnique();
 				//	float r1 = header1.getResolution(); resolution is missing in BU files
@@ -138,7 +134,7 @@ public class AlignTest {
 							continue;
 						}
 						System.out.println("pdbIdI: " + pdbIdJ);
-						PDBCrystallographicInfo info2 = s2.getCrystallographicInfo();
+			//			PDBCrystallographicInfo info2 = s2.getCrystallographicInfo();
 						PDBHeader header2 = s2.getPDBHeader();
 						String t2 = header2.getTechnique();
 					//	float r2 = header2.getResolution();
@@ -149,7 +145,8 @@ public class AlignTest {
 				        out.println(pdbIdI + "," + pdbIdJ +"," + getComposition(pdbIdI) + "," + 
 				        		entry.getKey() + "," + 
 				        		rmsds[0] + "," + rmsds[1] + "," + deltaRmsd + "," +
-				        		getPointGroup(pdbIdI) + "," + info1.getSpaceGroup() + "," + info2.getSpaceGroup() + "," +
+				        		getPointGroup(pdbIdI) + "," +
+	//			        		info1.getSpaceGroup() + "," + info2.getSpaceGroup() + "," +
 				        		t1 + "," + t2 + "," +
 				        		getLigands(pdbIdI) + "," +
 				        		getLigands(pdbIdJ) + "," +

@@ -45,9 +45,9 @@ public class BAFileReaderTest {
 		
 		for (String pdbId : reps){
 //			
-//			if (!pdbId.equals("2DAZ")) {
-//				continue;
-//			}
+			if (!pdbId.equals("1FT8")) {
+				continue;
+			}
 			System.out.println("------------- " + pdbId  + "-------------");
 			if (pdbId.equals("1M4X")) continue; // largest PDB assembly, causes occasional GC error
 

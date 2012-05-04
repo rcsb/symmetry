@@ -115,7 +115,9 @@ public class ScanPDBForQuarternarySymmetry {
 
 			// cluster sequences by sequence identity
 			GlobalSequenceGrouper grouper = new GlobalSequenceGrouper(structure, MIN_SEQUENCE_LENGTH);
-			int nClusters = grouper.getSequenceCluster100().size();
+	//		int nClusters = grouper.getSequenceCluster100().size();
+			// TODO implement new sequence grouper class here
+			int nClusters = 0;
 			String formula = grouper.getCompositionFormula();
 			int hashCode = grouper.hashCodeMD5();
 			boolean sequenceNumberedCorrectly = grouper.isSequenceNumberedCorrectly();
@@ -134,8 +136,9 @@ public class ScanPDBForQuarternarySymmetry {
 			RotationGroup rotationGroup = finder.getRotationGroup();	
 			String pointGroup = rotationGroup.getPointGroup();
 			
-			LigandInteractions li = new LigandInteractions(structure, s);
-			li.setInteractingChains(grouper.getChains());
+			// TODO implement ligand interactions
+//			LigandInteractions li = new LigandInteractions(structure, s);
+//			li.setInteractingChains(grouper.getChains());
 //			List<InteractingLigand> ligands = li.getInteractingLigands();
 //			List<String> iLigs = new ArrayList<String>();
 //			for (InteractingLigand lig: ligands) {
@@ -184,7 +187,7 @@ public class ScanPDBForQuarternarySymmetry {
 //				for (String l: iLigs) {
 //					out.print("," + l);
 //				}
-				System.out.print("," + li.toString());
+	//			System.out.print("," + li.toString());
 				out.println();
 				out.flush();
 				multimer++;

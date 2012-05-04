@@ -218,11 +218,18 @@ public class AligQuaternaryStructure {
 	}
 	
 	private ClusterAlignment alignUniqueSequences(SequenceClusterer grouper1, SequenceClusterer grouper2) {
-		List<List<Integer>> clusters1 = grouper1.getSequenceCluster100();
+	//	List<List<Integer>> clusters1 = grouper1.getSequenceCluster100();
+		// TODO use new sequence grouper class
+		System.out.println("Need to integrate new sequence grouper class here ....");
+		System.exit(-1);
+		List<List<Integer>> clusters1 = null;
+		List<List<Integer>> clusters2 = null;
+		  
+		  
 	    List<Atom[]> ca1 = grouper1.getCalphaTraces();
   //      System.out.println("Cluster1: " + clusters1.size());
 
-        List<List<Integer>> clusters2 = grouper2.getSequenceCluster100();
+ //       List<List<Integer>> clusters2 = grouper2.getSequenceCluster100();
         List<Atom[]> ca2 = grouper2.getCalphaTraces();
  //       System.out.println("Cluster2: " + clusters2.size());
         clusterMap = new LinkedHashMap<Integer,Integer>();

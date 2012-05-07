@@ -1,29 +1,4 @@
-/**
- *                    BioJava development code
- *
- * This code may be freely distributed and modified under the
- * terms of the GNU Lesser General Public Licence.  This should
- * be distributed with the code.  If you do not have a copy,
- * see:
- *
- *      http://www.gnu.org/copyleft/lesser.html
- *
- * Copyright for this code is held jointly by the individual
- * authors.  These should be listed in @author doc comments.
- *
- * For more information on the BioJava project and its aims,
- * or to join the biojava-l mailing list, visit the home page
- * at:
- *
- *      http://www.biojava.org/
- *
- * Created on Sep 9, 2011
- * Created by Andreas Prlic
- *
- * @since 3.0.2
- */
 package org.biojava3.structure.align.symm.census;
-
 
 import java.io.File;
 import java.io.IOException;
@@ -31,35 +6,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.concurrent.Future;
 
-
-import org.biojava.bio.structure.align.StructureAlignment;
-import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
-import org.biojava.bio.structure.align.ce.CeParameters;
-
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
-
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
-import org.biojava.bio.structure.scop.ScopCategory;
+import org.biojava.bio.structure.domain.DomainProvider;
+import org.biojava.bio.structure.domain.DomainProviderFactory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.alignment.SubstitutionMatrixHelper;
-import org.biojava3.alignment.template.SubstitutionMatrix;
-
-import org.biojava3.core.sequence.compound.AminoAcidCompound;
 import org.biojava3.core.util.ConcurrencyTools;
-import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.utils.FileUtils;
+import org.rcsb.fatcat.server.PdbChainKey;
 
-public class ScanSCOPForSymmetry {
+public class ScanRepresentativesForSymmetry {
 
 	public static String newline = System.getProperty("line.separator");
-	//protected static ExecutorService pool;
+
 
 	static {
 		int maxThreads = Runtime.getRuntime().availableProcessors()-1;
@@ -78,9 +44,9 @@ public class ScanSCOPForSymmetry {
 
 		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
 
-
 		try {
-			ScanSCOPForSymmetry me = new ScanSCOPForSymmetry();
+
+			ScanRepresentativesForSymmetry me = new ScanRepresentativesForSymmetry();
 
 			me.run();
 
@@ -89,68 +55,66 @@ public class ScanSCOPForSymmetry {
 		}
 
 	}
-
-
-
-
-
-
 	private void run() {
 		AtomCache cache = new AtomCache();
-		
-		ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
-		
-		ScopDatabase scop = ScopFactory.getSCOP();
 
-		List<ScopDescription>superfamilies = scop.getByCategory(ScopCategory.Superfamily);
+		DomainProvider domainProvider = DomainProviderFactory.getDomainProvider();
 
-		System.out.println("got " + superfamilies.size() + " superfamilies");
+		SortedSet<String> representatives = domainProvider.getRepresentativeDomains();
 
 		String f = cache.getPath() + File.separator + "scopCensus.html";
 
-		String r = cache.getPath() + File.separator + "scopCensus.xml";
+		String resultsXmlFileLocation = cache.getPath() + File.separator + "scopCensus.xml";
+
+		System.out.println("results will be at " + resultsXmlFileLocation);
 		try {
 
-
-			CensusResults census = getExistingResults(r) ;
+			CensusResults census = getExistingResults(resultsXmlFileLocation) ;
 			if ( census == null)
 				census = new CensusResults();
 
 			List<String> knownResults = getKnownResults(census);
 			int count = 0;
 
+
+
 			List<Future<CensusResult>> futureData = new ArrayList<Future<CensusResult>>();
 
-			for (ScopDescription superfamily : superfamilies){
+			ScopDatabase scop = ScopFactory.getSCOP();
 
-				Character scopClass = superfamily.getClassificationId().charAt(0);
 
-				if ( scopClass > 'f')
-					continue;
+			for (String name: representatives){
+
+				PdbChainKey key = PdbChainKey.fromName(name);
+
 
 				count++;
-				int sunid = superfamily.getSunID();
-				List<ScopDomain> familyMembers = scop.getScopDomainsBySunid(sunid);
-				ScopDomain first = familyMembers.get(0);
+				//ScopDomain first = null;
+				ScopDescription superfamily = null;
+				if ( key.isScopName()) {
+					ScopDomain scopDomain = scop.getDomainByScopID(name);
+					int sunid = scopDomain.getSuperfamilyId();
+					superfamily = scop.getScopDescriptionBySunid(sunid);
+					//int sunid = superfamily.getSunID();
+					//List<ScopDomain> familyMembers = scop.getScopDomainsBySunid(sunid);
+					//first = familyMembers.get(0);
+				}
 
-				String name = first.getScopId();
 				if ( knownResults.contains(name))
 					continue;
 
 				if ( name.equals("ds046__"))
 					continue;
 
-				ScopSymmetryCalculation calc = new ScopSymmetryCalculation();
-				calc.setDomain(first);
+				SymmetryCalculationJob calc = new SymmetryCalculationJob();
+				calc.setName(name);
 				calc.setCache(cache);
 				calc.setScopDescription(superfamily);
 				calc.setCount(count);
 
-
 				Future<CensusResult> result = ConcurrencyTools.submit(calc);
 				futureData.add(result);
 			}
-
 
 			File o = new File(f);
 			if ( o.exists())
@@ -186,14 +150,14 @@ public class ScanSCOPForSymmetry {
 				//if ( withSymm > 5)
 				//	break;
 				if ( allResults.size() % 100 == 0)
-					writeResults(census, r);
+					writeResults(census, resultsXmlFileLocation);
 			} 
 
 			outFile.write("</tbody></table>");
 
 			census.setData(allResults);
 
-			writeResults(census, r);
+			writeResults(census, resultsXmlFileLocation);
 
 
 			System.out.println("===");
@@ -211,11 +175,10 @@ public class ScanSCOPForSymmetry {
 			e.printStackTrace();
 		}
 
+
+
+
 	}
-
-
-
-
 
 
 	private int countNrSymm(SynchronizedOutFile outFile, int withSymm,
@@ -231,6 +194,21 @@ public class ScanSCOPForSymmetry {
 		}
 		return withSymm;
 	}
+
+	public static CensusResults getExistingResults(String filePath) throws IOException {
+
+		File f = new File(filePath); 
+
+		if (f.exists()) {
+			String xml = FileUtils.readFileAsString(filePath);
+			CensusResults data = CensusResults.fromXML(xml);
+
+			System.out.println("read " + data.getData().size() + " results from disk...");
+			return data;
+		}
+		return null;
+	}
+
 
 	private boolean processResult(CensusResult result , SynchronizedOutFile outFile, Map<Character, Integer> totalStats,Map<Character,Integer> classStats) throws IOException{
 
@@ -254,6 +232,26 @@ public class ScanSCOPForSymmetry {
 
 	}
 
+	private void trackStats(Map<Character, Integer> totalStats,
+			Character scopClass, int i) {
+
+		Integer number = totalStats.get(scopClass);
+		if ( number == null) {
+			number = 0;
+
+		}
+
+		number += i;
+		totalStats.put(scopClass, number);
+	}
+	private void writeResults(CensusResults census, String filePath){
+
+		String xml = census.toXML();
+		//System.out.println(xml);
+		FileUtils.writeStringToFile(xml, filePath);
+		System.out.println("wrote " + census.getData().size() + " results to disk...");
+
+	}
 	/** return the names of the domains that we already analyzed
 	 * 
 	 * @param census
@@ -274,75 +272,4 @@ public class ScanSCOPForSymmetry {
 
 	}
 
-
-
-	public static CensusResults getExistingResults(String filePath) throws IOException {
-
-		File f = new File(filePath); 
-
-		if (f.exists()) {
-			String xml = FileUtils.readFileAsString(filePath);
-			CensusResults data = CensusResults.fromXML(xml);
-
-			System.out.println("read " + data.getData().size() + " results from disk...");
-			return data;
-		}
-		return null;
-	}
-
-
-
-	private void writeResults(CensusResults census, String filePath){
-
-		String xml = census.toXML();
-		//System.out.println(xml);
-		FileUtils.writeStringToFile(xml, filePath);
-		System.out.println("wrote " + census.getData().size() + " results to disk...");
-
-	}
-
-
-	private void trackStats(Map<Character, Integer> totalStats,
-			Character scopClass, int i) {
-
-		Integer number = totalStats.get(scopClass);
-		if ( number == null) {
-			number = 0;
-
-		}
-
-		number += i;
-		totalStats.put(scopClass, number);
-
-	}
-
-	public static StructureAlignment getCeSymm(){
-
-
-
-		CeSymm ceSymm = new CeSymm();
-		StructureAlignmentFactory.addAlgorithm(ceSymm);
-		CeParameters params = (CeParameters) ceSymm.getParameters();
-		if ( params == null) {
-			params = new CeParameters();
-			ceSymm.setParameters(params);
-		}
-
-
-
-		// here how to change the aa subst matrix, SDM is the default matrix
-		String matrixName = "PRLA000101";
-		SubstitutionMatrix<AminoAcidCompound> sdm = SubstitutionMatrixHelper.getMatrixFromAAINDEX(matrixName);			
-		params.setSubstitutionMatrix(sdm);
-		//SubstitutionMatrix<AminoAcidCompound> max = SubstitutionMatrixHelper.getBlosum85();
-		//params.setSubstitutionMatrix(max);		
-
-		// we over-weight sequence
-		params.setSeqWeight(2.0);
-
-		ceSymm.setParameters(params);
-
-		return ceSymm;
-	}
 }
-

@@ -34,7 +34,8 @@ import org.biojava3.structure.utils.SymmetryTools;
  */
 public class CeSymm extends AbstractStructureAlignment implements MatrixListener, StructureAlignment {
 	static final boolean debug = false;
-
+	boolean displayJmol = false;
+	
 	public static final String algorithmName = "jCE-symmetry";
 
 	public static final String version = "1.0";
@@ -50,7 +51,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	CeParameters params;
 	//int loopCount ;
 	int maxNrAlternatives = 1;
-	boolean displayJmol = false;
+	
 
 
 	public static void main(String[] args){
@@ -406,6 +407,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			afpChain.setTMScore(tmScore2);
 			try {
 				afpChain = CeCPMain.filterDuplicateAFPs(afpChain, calculator, ca1, ca2);
+				afpChain.setTMScore(tmScore2);
 			} catch (Exception e){
 				return afpChain;
 			}

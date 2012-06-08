@@ -11,6 +11,7 @@ import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
+
 /**
  *
  * @author Peter
@@ -184,6 +185,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 		double gts = scorer.calcGtsMinScore(transformation, permutation);
 
 	//	System.out.println("Permutation: " + permutation + " gts: " + gts + " subunitRmsd: " + rmsd);
+		// TODO Why is subunitRmsdThreshold not use here? It's used in the other solvers????
 //		if (rmsd <= subunitRmsdThreshold) {
 			// if there is a better solution, and there are already two solutions, 
 			// remove the last one so it can be replaced with a better solution

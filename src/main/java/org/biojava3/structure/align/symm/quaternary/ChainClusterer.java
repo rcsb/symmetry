@@ -9,12 +9,17 @@ import java.util.List;
 import javax.vecmath.Point3d;
 
 import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.Structure;
 
-public class GlobalSequenceGrouperNew implements SequenceClusterer {
+public class ChainClusterer  {
+	private Structure structure = null;
 	private double sequenceIdentityThreshold = 1.0;
+	private double alignmentFractionThreshold = 0.90; // same as BLASTClust
+	private int minimumSequenceLength = 24;
 	
 	private List<Atom[]> caUnaligned = new ArrayList<Atom[]>();
 	private List<String> chainIds = new ArrayList<String>();
+	private List<String> sequences = new ArrayList<String>();
 	private List<Atom[]> caAligned = new ArrayList<Atom[]>();
 	private List<Atom[]> cbAligned = new ArrayList<Atom[]>();
 	private List<Point3d[]> caCoords = new ArrayList<Point3d[]>();
@@ -24,16 +29,12 @@ public class GlobalSequenceGrouperNew implements SequenceClusterer {
 	
 	private boolean modified = true;
 
-	public GlobalSequenceGrouperNew(List<Atom[]> cAlphas, List<String> chainIds) {
-        this.caUnaligned = cAlphas;
-        this.chainIds = chainIds;
-        System.out.println("GlobalSequenceGrouperNew: " + cAlphas.size() + " " + chainIds);
-        System.out.println("C alphas: ");
-        for (Atom[] atoms: cAlphas) {
-        	System.out.println("Atoms: " + atoms.length);
-        }
+	public ChainClusterer(Structure structure, int minimumSequenceLength, double sequenceIdentityThreshold) {
+		this.structure = structure;
+		this.minimumSequenceLength = minimumSequenceLength;
+		this.sequenceIdentityThreshold = sequenceIdentityThreshold;
 		modified = true;
-	}
+	}	
 	
 	public List<Point3d[]> getCalphaCoordinates() {
         run();
@@ -112,12 +113,25 @@ public class GlobalSequenceGrouperNew implements SequenceClusterer {
 	
 	private void run() {
 		if (modified) {
+			extractProteinChains();
 			calcSequenceClusters();
 			calcAlignedSequences();
 			createCalphaTraces();
 			createCbetaTraces();
 			modified = false;
 		}
+	}
+	
+	private void extractProteinChains() {
+		ProteinChainExtractor extractor = new ProteinChainExtractor(structure,  minimumSequenceLength);
+		caUnaligned = extractor.getCalphaTraces();
+		chainIds  = extractor.getChainIds();
+		sequences = extractor.getSequences();
+	    System.out.println("ChainClusterer: " + caUnaligned.size() + " " + chainIds);
+        System.out.println("C alphas: ");
+        for (Atom[] atoms: caUnaligned) {
+        	System.out.println("Atoms: " + atoms.length);
+        }
 	}
 	
 	private void calcSequenceClusters() {
@@ -129,10 +143,9 @@ public class GlobalSequenceGrouperNew implements SequenceClusterer {
 				continue;
 			}
 			processed[i] = true;
-//			System.out.println("New cluster: " + i);
 			// create new sequence cluster
-            UniqueSequenceList seqList = new UniqueSequenceList(caUnaligned.get(i), chainIds.get(i));
-            SequenceAlignmentCluster seqCluster = new SequenceAlignmentCluster(sequenceIdentityThreshold);
+            UniqueSequenceList seqList = new UniqueSequenceList(caUnaligned.get(i), chainIds.get(i), sequences.get(i));
+            SequenceAlignmentCluster seqCluster = new SequenceAlignmentCluster(sequenceIdentityThreshold, alignmentFractionThreshold);
             seqCluster.addUniqueSequenceList(seqList);	
             seqClusters.add(seqCluster);
 			
@@ -141,11 +154,12 @@ public class GlobalSequenceGrouperNew implements SequenceClusterer {
             		continue;
             	}
             	for (SequenceAlignmentCluster c: seqClusters) {
-            		// add to existing sequence cluster
-            		if (c.addChain(caUnaligned.get(j), chainIds.get(j)))	{
- //           			System.out.println("Add " + j + " to existing cluster: with seq. count: " + c.getSequenceCount());
-            			processed[j] = true;
-            			break;
+            		// add to existing sequence cluster if there is a match
+            		if (c.isSequenceMatch(sequences.get(j))) {
+            			if (c.addChain(caUnaligned.get(j), chainIds.get(j), sequences.get(j))) {
+            				processed[j] = true;
+            				break;
+            			}
             		}
             	} 
             }
@@ -207,5 +221,10 @@ public class GlobalSequenceGrouperNew implements SequenceClusterer {
 				return Math.round(Math.signum(c2.getSequenceAlignmentLength() - c1.getSequenceAlignmentLength()));
 			}
 		});
+	}
+
+	public boolean containsUnknownSequence() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

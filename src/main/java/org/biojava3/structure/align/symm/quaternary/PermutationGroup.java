@@ -1,11 +1,7 @@
 
 package org.biojava3.structure.align.symm.quaternary;
 
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -111,24 +107,6 @@ public class PermutationGroup {
     }
     
     public int hashCode() {
-    	MessageDigest md = null;
-    	try {
-    		md = MessageDigest.getInstance("MD5");
-    	} catch (NoSuchAlgorithmException e1) {
-    		// TODO Auto-generated catch block
-    		e1.printStackTrace();
-    	}
-
-    	byte[] message = null;
-    	try {
-    		message = getGroupTable().getBytes("UTF-8");
-    	} catch (UnsupportedEncodingException e) {
-    		e.printStackTrace();
-    	}
-
-    	md.update(message);
-
-   // 	return md.digest().hashCode();	
     	return getGroupTable().hashCode();
     }
 }

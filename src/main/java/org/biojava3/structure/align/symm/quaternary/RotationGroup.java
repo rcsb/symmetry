@@ -137,6 +137,7 @@ public class RotationGroup {
                 highestOrder = s.getFold();
                 principalAxisIndex = i;
                 gts = s.getTraceGtsMin();
+                // TODO do we still need to check for GTS here?? Can we use RMSD instead
             } else if (s.getFold() >= highestOrder && s.getTraceGtsMin() > gts) {
                 highestOrder = s.getFold();
                 principalAxisIndex = i;

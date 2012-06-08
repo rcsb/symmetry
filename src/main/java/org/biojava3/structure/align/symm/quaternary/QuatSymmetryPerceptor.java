@@ -11,8 +11,6 @@ package org.biojava3.structure.align.symm.quaternary;
 public class QuatSymmetryPerceptor {
     private double subunitRmsdThreshold = 5.0f;
     private double rmsdThreshold = 5.0f;
-    // TODO what is the optimal value for gts?
-  //  private double gtsThreshold = 50.0f;
     private double gtsThreshold = 0.0f;
     private boolean pseudoSymmetryAllowed = false;
     private int maxOrder = 60;
@@ -109,15 +107,7 @@ public class QuatSymmetryPerceptor {
         	   method = "systematic";
         	   addCalphaRmsd();
         	}
-        }
-
-  //      solver.setRmsdThreshold(rmsdThreshold);
-  //      solver.setGtsThreshold(gtsThreshold);
-  //      solver.setPseudoSymmetryAllowed(pseudoSymmetryAllowed);
-  //      symmetryOperations = solver.getSymmetryOperations();
-  //      addCalphaRmsd();
-//        System.out.println("Rotation group complete: " + symmetryOperations.isComplete() + " order: " + symmetryOperations.getOrder());
-        
+        }    
     }
     
     private void addCalphaRmsd() {
@@ -133,15 +123,6 @@ public class QuatSymmetryPerceptor {
     			}
     			r.setTraceRmsd(rmsd);	
     		}
-    	}
-    }
-    
-    private void addCalphaRmsdOld() {
-    	QuatSuperpositionScorer scorer = new QuatSuperpositionScorer(subunits);
-    	for (int i = 0; i < symmetryOperations.getOrder(); i++) {
-    		Rotation r = symmetryOperations.getRotation(i);
-    		double rmsd = scorer.calcCalphaRMSD(r.getTransformation(), r.getPermutation());
-    		r.setTraceRmsd(rmsd);		
     	}
     }
 }

@@ -11,10 +11,12 @@ import org.biojava.bio.structure.StructureTools;
 public class ProteinChainExtractor  {
 	private Structure structure = null;
 	private int minSequenceLength = 24;
+	private boolean unknownSequence = false;
 	private boolean modified = true;
 	
 	private List<Atom[]> cAlphaTrace = new ArrayList<Atom[]>();	
 	private List<String> chainIds = new ArrayList<String>();
+	private List<String> sequences = new ArrayList<String>();
 
 	public ProteinChainExtractor(Structure structure, int minSequenceLength) {
 		this.structure = structure;
@@ -30,6 +32,15 @@ public class ProteinChainExtractor  {
 	public List<String> getChainIds() {
         run();
 		return chainIds;
+	}
+	
+	public List<String> getSequences() {
+		run();
+		return sequences;
+	}
+	
+	public boolean containsUnknownSequence() {
+		return unknownSequence;
 	}
 	
     private void run() {
@@ -48,12 +59,15 @@ public class ProteinChainExtractor  {
 		for (int i = 0; i < models; i++) {
 			for (Chain c : structure.getChains(i)) {
 				Atom[] ca = StructureTools.getAtomCAArray(c);
+				System.out.println("ProteinChainExtractor: SEQRES: " + c.getSeqResSequence());
 				if (containsUnknownResidues(ca)) {
 					ca = removeUnknownResidues(ca);
+					unknownSequence = true;
 				}
 				if (ca.length >= minSequenceLength) {
 				   cAlphaTrace.add(ca);
 				   chainIds.add(c.getChainID());
+				   sequences.add(c.getSeqResSequence());
 				}
 			}
 		}

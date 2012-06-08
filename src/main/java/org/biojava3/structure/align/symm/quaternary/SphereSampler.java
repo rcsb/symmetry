@@ -193,14 +193,14 @@ public final class SphereSampler {
 	private static int ntot = 7416;
 	private static int ncell = 309;
 	private static int nent = 18;
-	private static double maxrad = 10.07;
-	private static double coverage = 2.13338;
+//	private static double maxrad = 10.07;
+//	private static double coverage = 2.13338;
 	private static int[] k = { 0, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5};
 	private static int[] l = { 0, 1, 0, 2, 2, 1, 3, 3, 0, 2, 2, 4, 4, 4, 1, 3, 3, 5};
 	private static int[] m = { 0, 1, 0, 0, 2, 1, 1, 3, 0, 0, 2, 0, 2, 4, 1, 1, 3, 1};
-	private static double[] w = { 1.557196, 1.475638, 1.449892, 1.353190,
-			1.265726, 1.257478, 1.143450, 0.867360, 0.916638, 0.941799,
-			0.876165, 0.680232, 0.446640, 0.0, 0.0, 0.0, 0.0, 0.0};
+//	private static double[] w = { 1.557196, 1.475638, 1.449892, 1.353190,
+//			1.265726, 1.257478, 1.143450, 0.867360, 0.916638, 0.941799,
+//			0.876165, 0.680232, 0.446640, 0.0, 0.0, 0.0, 0.0, 0.0};
 	private static int[] mult = { 1, 8, 6, 12, 8, 24, 24, 8, 6, 24, 24, 12, 24, 8, 24, 48, 24, 24};
 	
 //	# Orientation set c48u309, number = 7416, radius = 10.07 degrees
@@ -297,36 +297,5 @@ public final class SphereSampler {
 		// for (int i = 0; i < s.size(); i++) {
 		// System.out.println(s.getOrientation(i) + ", " + s.getWeight(i));
 		// }
-	}
-
-	// a.Times(b) returns a * b
-	private static Quat4d times(Quat4d q1, Quat4d q2) {
-		double mw = q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z, mx = q1.w
-				* q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y, my = q1.w
-				* q2.y + q1.y * q2.w + q1.z * q2.x - q1.x * q2.z, mz = q1.w
-				* q2.z + q1.z * q2.w + q1.x * q2.y - q1.y * q2.x;
-		return new Quat4d(mw, mx, my, mz);
-	}
-
-	private void canonicalize(Quat4d q) {
-		// Normalize(); already normalized
-		// Make first biggest element positive
-		double mag = q.w;
-		if (Math.abs(q.x) > Math.abs(mag)) {
-			mag = q.x;
-		}
-		if (Math.abs(q.y) > Math.abs(mag)) {
-			mag = q.y;
-		}
-		if (Math.abs(q.z) > Math.abs(mag)) {
-			mag = q.z;
-		}
-		if (mag < 0) {
-			q.w *= -1;
-			q.x *= -1;
-			q.y *= -1;
-			q.z *= -1;
-		}
-		return;
 	}
 }

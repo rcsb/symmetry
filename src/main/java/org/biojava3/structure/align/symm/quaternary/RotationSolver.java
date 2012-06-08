@@ -11,6 +11,7 @@ import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
+
 /**
  *
  * @author Peter
@@ -156,7 +157,7 @@ public class RotationSolver implements QuatSymmetrySolver {
 		    // evaluate superposition of CA traces with GTS score
 		    double gts = scorer.calcGtsMinScore(transformation, permutation);
    //                 System.out.println("Complete: " + permutation + " gts: " + gts);
-		    if (gts > gtsThreshold) {
+	//	    if (gts > gtsThreshold) {
 		    	double caRmsd = scorer.calcCalphaRMSD(transformation, permutation);
 		    	if (caRmsd < 0.0 && !pseudoSymmetryAllowed) {
 		    		return false;
@@ -167,7 +168,7 @@ public class RotationSolver implements QuatSymmetrySolver {
 		    	Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, gts, fold);
 		        rotations.addRotation(symmetryOperation);
 		        return true;
-		    }
+//		    }
 		}
 		return false;
 	}

@@ -8,14 +8,16 @@ import org.biojava.bio.structure.Group;
 
 public class UniqueSequenceList {
 	private String sequenceString = "";
+	private String seqResSequence = "";
     private List<Integer> alignment1 = null;
     private List<Integer> alignment2 = null;
     private List<Atom[]> caAtoms = new ArrayList<Atom[]>();
     private List<String> chainIds = new ArrayList<String>();
     
-    public UniqueSequenceList(Atom[] cAlphaAtoms, String chainId) {
+    public UniqueSequenceList(Atom[] cAlphaAtoms, String chainId, String seqResSequence) {
     	this.caAtoms.add(cAlphaAtoms);
     	this.chainIds.add(chainId);
+    	this.seqResSequence = seqResSequence;
     	this.sequenceString =  getSequenceString(cAlphaAtoms);
     	this.alignment1 = new ArrayList<Integer>(cAlphaAtoms.length);
     	for (int i = 0; i < cAlphaAtoms.length; i++) {
@@ -35,14 +37,9 @@ public class UniqueSequenceList {
     	return sequenceString.equals(getSequenceString(caAlphaAtoms));
     }
     
-    public boolean addChain(Atom[] cAlphaAtoms, String chainId) {
-    	if (isMatch(cAlphaAtoms)) {
-    		this.caAtoms.add(cAlphaAtoms);
-        	this.chainIds.add(chainId); 
-    		return true;
-    	} else {
-    		return false;
-    	}
+    public void addChain(Atom[] cAlphaAtoms, String chainId) {
+    	this.caAtoms.add(cAlphaAtoms);
+    	this.chainIds.add(chainId); 
     }
     
     public int getChainCount() {
@@ -67,6 +64,11 @@ public class UniqueSequenceList {
 	public String getSequenceString() {
 		return sequenceString;
 	}
+	
+	public String getSeqResSequence() {
+		return seqResSequence;
+	}
+	
 	/**
 	 * @param sequenceString the sequenceString to set
 	 */

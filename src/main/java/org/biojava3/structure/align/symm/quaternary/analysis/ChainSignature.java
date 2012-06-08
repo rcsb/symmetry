@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.quaternary;
+package org.biojava3.structure.align.symm.quaternary.analysis;
 
 import java.util.List;
 

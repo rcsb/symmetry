@@ -9,7 +9,6 @@ import javax.vecmath.Vector3d;
 
 import org.biojava.bio.structure.jama.EigenvalueDecomposition;
 import org.biojava.bio.structure.jama.Matrix;
-import org.biojava.bio.structure.jama.SingularValueDecomposition;
 
 /**
  *
@@ -188,26 +187,11 @@ public final class SuperPosition {
         return center;
     }
     
-    private static Quat4d quaternionOrientationSVD(Point3d[] a, Point3d[] b)  {
-        Matrix m = calcFormMatrix(a, b);
-        SingularValueDecomposition eig = m.svd();
-        double[][] v = eig.getV().getArray();
-//        System.out.println(eig.getV());   
-//        System.out.println("q: " + v[0][3] + " " + v[1][3] +" " + v[2][3] + " " + v[3][3]);
-        Quat4d q = new Quat4d(v[2][3], v[1][3], v[0][3], v[3][3]);
- //       System.out.println("q: " + q); 
-        return q;
-    }
-    
     private static Quat4d quaternionOrientation(Point3d[] a, Point3d[] b)  {
         Matrix m = calcFormMatrix(a, b);
         EigenvalueDecomposition eig = m.eig();
-//        double[] e = eig.getRealEigenvalues();
-//        System.out.println("eigval: " + Arrays.toString(e));
         double[][] v = eig.getV().getArray();
-//        System.out.println(eig.getV()); 
         Quat4d q = new Quat4d(v[1][3], v[2][3], v[3][3], v[0][3]);
-//        System.out.println("q: " + q); 
         return q;
     }
     

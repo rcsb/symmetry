@@ -21,6 +21,7 @@ public class QuatSymmetryWriter {
 	}
 	
 	public void writeTransformedStructure(Matrix4d matrix, String fileName) {
+		System.out.println("Transformed structure: " + fileName);
 		Structure s = getTransformedStructure(matrix);
 		FileConvert f = new FileConvert(s);
 		String pdbFile = f.toPDB();
@@ -34,7 +35,7 @@ public class QuatSymmetryWriter {
 		out.close();
 	}
 	
-	public void writeTransformedStructureNotCentered(Matrix4d matrix, String fileName) {
+	public void writeTransformedStructureCentered(Matrix4d matrix, String fileName) {
 		Structure s = getTransformedStructureCentered(matrix);
 		FileConvert f = new FileConvert(s);
 		String pdbFile = f.toPDB();
@@ -84,7 +85,6 @@ public class QuatSymmetryWriter {
 			for (Chain c: s.getChains(i)) {
 				for (Group g: c.getAtomGroups()) {
 					for (Atom a: g.getAtoms()) {
-						double[] coords = a.getCoords();
 						com.add(new Point3d(a.getCoords()));
 						total++;
 					}

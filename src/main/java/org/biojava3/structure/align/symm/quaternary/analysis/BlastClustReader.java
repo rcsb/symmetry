@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.quaternary;
+package org.biojava3.structure.align.symm.quaternary.analysis;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -53,14 +53,13 @@ public class BlastClustReader {
 		// This appears to be the convention in the BlastClust files for lower case letters
 		String cId = new String(chainId);
         String chainIdLc = cId.toLowerCase();
-//        if (chainIdLc.equals(chainId) && Character.isAlphabetic(chainId.codePointAt(0))) {
+//        if (chainIdLc.equals(chainId) && Character.isAlphabetic(chainId.codePointAt(0))) { // not available in Java 5
         if (chainIdLc.equals(chainId) && !Character.isDigit(chainId.codePointAt(0))) {
         	cId = pdbId + "_" + chainIdLc + chainIdLc;
         } else {
         	cId = pdbId + "_" + chainId;
         }
 		
-		System.out.println(cId);
 		for (List<String> cluster: clusters) {
 			for (String chnId: cluster) {
 				if (chnId.equals(cId)) {
@@ -126,9 +125,10 @@ public class BlastClustReader {
 
 		try {
 			URL u = new URL(coreUrl + "bc-" + sequenceIdentity + ".out");
-			URLConnection connection = u.openConnection();
-			connection.setConnectTimeout(60000);
-			InputStream stream = connection.getInputStream();
+			InputStream stream = u.openStream();
+	//		URLConnection connection = u.openConnection();
+	//		connection.setConnectTimeout(60000);
+	//		InputStream stream = connection.getInputStream();
 
 			if (stream != null) {
 				BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
@@ -140,21 +140,25 @@ public class BlastClustReader {
 						List<String> cluster = Arrays.asList(line.split(" "));	
 						clusters.add(cluster);
 					}
+					reader.close();
+					stream.close();
 				} catch (IOException e) {
 					//e.printStackTrace();
 				} finally {
-					try {
-						stream.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+//					try {
+//						System.out.println("closing reader");
+//						reader.close();
+//						stream.close();
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
 				}
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
+		
 		return;
 	}
 	

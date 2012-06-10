@@ -18,44 +18,26 @@ import javax.vecmath.Vector3d;
  */
 public class C2RotationSolver implements QuatSymmetrySolver {
     private Subunits subunits = null;
-    private double subunitRmsdThreshold = 3.0f;
-    private double rmsdThreshold = 3.0f;
-    private double gtsThreshold = 50.0f;
-    private boolean pseudoSymmetryAllowed = false;
+    private double rmsdThreshold = 0.0f;
     private double distanceThreshold = 0.0f;
     private Vector3d centroid = new Vector3d();
     private Matrix4d centroidInverse = new Matrix4d();
     private Point3d[] originalCoords = null;
     private Point3d[] transformedCoords = null;
     private Matrix4d referenceTransformation = null;
-    private double bestGts = 0.0;
+    private double bestRmsd = Double.MAX_VALUE;
 
     private RotationGroup rotations = new RotationGroup();
     private QuatSuperpositionScorer scorer = null;
 
-    public C2RotationSolver(Subunits subunits) {
+    public C2RotationSolver(Subunits subunits, double rmsdThreshold) {
         if (subunits.getSubunitCount() != 2) {
     		throw new IllegalArgumentException("C2RotationSolver can only be applied to cases with 2 centers");
     	}
         this.subunits = subunits;
-    }
-
-    public void setRmsdThreshold(double rmsdThreshold) {
         this.rmsdThreshold = rmsdThreshold;
     }
-    
-    public void setSubunitRmsdThreshold(double subunitRmsdThreshold) {
-        this.subunitRmsdThreshold = subunitRmsdThreshold;
-    }
-
-    public void setGtsThreshold(double gtsThreshold) {
-        this.gtsThreshold = gtsThreshold;
-    }
-    
-    public void setPseudoSymmetryAllowed(boolean pseudoSymmetryAllowed) {
-		this.pseudoSymmetryAllowed = pseudoSymmetryAllowed;
-	}
-
+   
     public RotationGroup getSymmetryOperations() {
         if (rotations.getOrder() == 0) {
             solve();
@@ -76,11 +58,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 
         for (int i = 0; i < CircleSampler.getSphereCount(); i++) {
         	CircleSampler.getAxisAngle(i, sphereAngle);
-  //      	System.out.println("sample: " + i + " axisangle: " + sphereAngle);
-
-        	transformRotationAxis(sphereAngle);
-        	//sphereAngle.setAngle(Math.PI);
-        	
+        	transformRotationAxis(sphereAngle);    	
         	sphereAngle.angle = Math.PI;
         	transformation.set(sphereAngle);
         	for (int j = 0; j < n; j++) {
@@ -89,16 +67,13 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         	}
         	// get permutation of subunits and check validity/uniqueness
         	List<Integer> permutation = getPermutation();  
-        	if (permutation.size() == 2 && checkForPseudoSymmetry(permutation)) {
+        	if (permutation.size() == 2 && isAllowedPermutation(permutation)) {
         		evaluateSolution(permutation, transformation, sphereAngle);
         	}
         }
     }
     
-    private boolean checkForPseudoSymmetry(List<Integer> permutation) {
-    	if (pseudoSymmetryAllowed) {
-    		return true;
-    	}
+    private boolean isAllowedPermutation(List<Integer> permutation) {
     	List<Integer> seqClusterId = subunits.getSequenceClusterIds();
     	for (int i = 0; i < permutation.size(); i++) {
     		int j = permutation.get(i);
@@ -116,10 +91,9 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 		combineWithTranslation(transformation);
     	AxisAngle4d axisAngle = new AxisAngle4d();
     	double rmsd = 0.0;
-    	double gts = 100.0;
     	double caRmsd = 0.0;
     	int fold = 1; // ??
-        Rotation rotation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, gts, caRmsd, fold);
+        Rotation rotation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, caRmsd, fold);
         rotations.addRotation(rotation);
     }
     
@@ -178,34 +152,25 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 
 	private void evaluateSolution(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle) {
 		int fold = PermutationGroup.getOrder(permutation);
-		double rmsd = 0.0f; // should always be perfect for C2
+		double subunitRmsd = 0.0f; // should always be perfect for C2
 
 		combineWithTranslation(transformation);
-		// evaluate superposition of CA traces with GTS score
-		double gts = scorer.calcGtsMinScore(transformation, permutation);
-
-	//	System.out.println("Permutation: " + permutation + " gts: " + gts + " subunitRmsd: " + rmsd);
-		// TODO Why is subunitRmsdThreshold not use here? It's used in the other solvers????
-//		if (rmsd <= subunitRmsdThreshold) {
-			// if there is a better solution, and there are already two solutions, 
-			// remove the last one so it can be replaced with a better solution
-			if (gts > bestGts && rotations.getOrder() == 2) {
-				rotations.removeRotation(1);
-//				System.out.println("better gts: " + gts);
-				bestGts = gts;
-			}
-			double caRmsd = scorer.calcCalphaRMSD(transformation, permutation);
-	    	if (caRmsd < 0.0) {
-	    		return;
-	    	}
-	    	if (caRmsd > rmsdThreshold) {
-	            return;
-	    	}
-			if (rotations.getOrder() == 1) {
-				Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, gts, caRmsd, fold);
-				rotations.addRotation(symmetryOperation);
-			}
-//		}
+		double caRmsd = scorer.calcCalphaRMSD(transformation, permutation);
+		if (caRmsd < 0.0 || caRmsd > rmsdThreshold) {
+			return;
+		}
+		
+		// if there is a better solution, and there are already two solutions, 
+		// remove the last one so it can be replaced with a better solution
+		if (caRmsd < bestRmsd && caRmsd >= 0 && rotations.getOrder() == 2) {
+			rotations.removeRotation(1);
+			bestRmsd = caRmsd;
+		}
+		
+		if (rotations.getOrder() == 1) {
+			Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, subunitRmsd, caRmsd, fold);
+			rotations.addRotation(symmetryOperation);
+		}
 	}
 
     /**
@@ -219,13 +184,12 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         rotation.mul(rotation, centroidInverse);
     }
 
-    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double rmsd, double gts, double caRmsd, int fold) {
+    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double subunitRmsd, double caRmsd, int fold) {
         Rotation s = new Rotation();
         s.setPermutation(new ArrayList<Integer>(permutation));
         s.setTransformation(new Matrix4d(transformation));
         s.setAxisAngle(new AxisAngle4d(axisAngle));
-        s.setSubunitRmsd(rmsd);
-        s.setTraceGtsMin(gts);
+        s.setSubunitRmsd(subunitRmsd);
         s.setTraceRmsd(caRmsd);
         s.setFold(fold);
         return s;

@@ -18,10 +18,8 @@ import javax.vecmath.Vector3d;
  */
 public class SystematicSolver implements QuatSymmetrySolver {
     private Subunits subunits = null;
-    private double subunitRmsdThreshold = 3.0f;
+//    private double subunitRmsdThreshold = 3.0f;
     private double rmsdThreshold = 6.0f;
-    private double gtsThreshold = 50.0f;
-    private boolean pseudoSymmetryAllowed = false;
     private Point3d[] originalCoords = null;
     private Point3d[] transformedCoords = null;
     private RotationGroup rotations = new RotationGroup();
@@ -30,28 +28,17 @@ public class SystematicSolver implements QuatSymmetrySolver {
     private QuatSuperpositionScorer scorer = null;
     private Set<List<Integer>> hashCodes = new HashSet<List<Integer>>();
 
-    public SystematicSolver(Subunits subunits) {
+    public SystematicSolver(Subunits subunits, double rmsdThreshold) {
     	if (subunits.getSubunitCount()== 2) {
     		throw new IllegalArgumentException("SystematicSolver cannot be applied to subunits with 2 centers");
     	}
         this.subunits = subunits;
+        this.rmsdThreshold = rmsdThreshold;
     }
 
     public void setRmsdThreshold(double rmsdThreshold) {
         this.rmsdThreshold = rmsdThreshold;
     }
-    
-    public void setSubunitRmsdThreshold(double subunitRmsdThreshold) {
-        this.rmsdThreshold = subunitRmsdThreshold;
-    }
-
-    public void setGtsThreshold(double gtsThreshold) {
-        this.gtsThreshold = gtsThreshold;
-    }
-    
-    public void setPseudoSymmetryAllowed(boolean pseudoSymmetryAllowed) {
-		this.pseudoSymmetryAllowed = pseudoSymmetryAllowed;
-	}
 
     public RotationGroup getSymmetryOperations() {
         if (rotations.getOrder() == 0) {
@@ -105,7 +92,6 @@ public class SystematicSolver implements QuatSymmetrySolver {
         s.setTransformation(new Matrix4d(transformation));
         s.setAxisAngle(new AxisAngle4d(axisAngle));
         s.setSubunitRmsd(rmsd);
-        s.setTraceGtsMin(gts);
         s.setTraceRmsd(caRmsd);
         s.setFold(fold);
         return s;
@@ -138,13 +124,17 @@ public class SystematicSolver implements QuatSymmetrySolver {
     }
     
     private boolean isValidPermutation(List<Integer> permutation) {
+    	// if this permutation is a duplicate, return false
+    	if (hashCodes.contains(permutation)) {
+    		return false;
+    	}
         if (permutation.size() == 0) {
  //       	System.out.println("permutation size zero");
             return false;
         }
         
         // check if permutation is pseudosymmetric
-        if (! checkForPseudoSymmetry(permutation)) {
+        if (! isAllowedPermuation(permutation)) {
         	return false;
         }
         
@@ -162,10 +152,7 @@ public class SystematicSolver implements QuatSymmetrySolver {
         return hashCodes.add(permutation);
     }
 
-    private boolean checkForPseudoSymmetry(List<Integer> permutation) {
-    	if (pseudoSymmetryAllowed) {
-    		return true;
-    	}
+    private boolean isAllowedPermuation(List<Integer> permutation) {
     	List<Integer> seqClusterId = subunits.getSequenceClusterIds();
     	for (int i = 0; i < permutation.size(); i++) {
     		int j = permutation.get(i);
@@ -193,15 +180,16 @@ public class SystematicSolver implements QuatSymmetrySolver {
         }
  //               System.out.println("Complete: " + permutation + " rmsd: " + rmsd);
 		// check if it meets criteria and save symmetry operation
-		if (rmsd < subunitRmsdThreshold) {
+		if (rmsd < rmsdThreshold) {
 			// transform to original coordinate system
 		    combineWithTranslation(transformation);
 		    // evaluate superposition of CA traces with GTS score
-		    double gts = scorer.calcGtsMinScore(transformation, permutation);
+//		    double gts = scorer.calcGtsMinScore(transformation, permutation);
+		    double gts = 0;
 //                    System.out.println("Complete: " + permutation + " gts: " + gts);
 //		    if (gts > gtsThreshold) {
 		    	double caRmsd = scorer.calcCalphaRMSD(transformation, permutation);
-		    	if (caRmsd < 0.0 && !pseudoSymmetryAllowed) {
+		    	if (caRmsd < 0.0) {
 		    		return false;
 		    	}
 		    	if (caRmsd > rmsdThreshold) {

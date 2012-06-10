@@ -19,7 +19,7 @@ public class Subunits {
     private List<Vector3d> unitVectors = new ArrayList<Vector3d>(0);
     private List<Integer> sequenceClusterIds = new ArrayList<Integer>(0);
     private Point3d centroid;
-    MomentsOfInertia momentsOfInertia = new MomentsOfInertia();
+    private MomentsOfInertia momentsOfInertia = new MomentsOfInertia();
 
     public Subunits(List<Point3d[]> caCoords, List<Point3d[]> cbCoords, List<Integer> sequenceClusterIds) {
         this.caCoords = caCoords;
@@ -76,6 +76,7 @@ public class Subunits {
     	run();
     	return momentsOfInertia;
     }
+    
     private void run() {
         if (centers.size() > 0) {
             return;

@@ -94,24 +94,11 @@ public class RotationGroup {
     		double r = rotations.get(i).getTraceRmsd();
     		// if any invalid rmsd is found, stop
     		if (r < 0.0) {
-    			return -1.0;
+    			return r;
     		}
     		rmsd += rotations.get(i).getTraceRmsd();
     	}
     	return rmsd/(rotations.size()-1);
-    }
-    
-    public double getAverageTraceGtsMin() {
-    	if (rotations.size() < 2) {
-    		return 100.0;
-    	}
-    	double gts = 0;
-    	// note, this loop starts at 1, because we don't take into account 
-    	// gts of first operation (E)
-    	for (int i = 1; i < rotations.size(); i++) {
-    		gts += rotations.get(i).getTraceGtsMin();
-    	}
-    	return gts/(rotations.size()-1);
     }
     
     public boolean isComplete() {
@@ -130,22 +117,19 @@ public class RotationGroup {
     private void findHighestOrderAxis() {
         highestOrder = 1;
         principalAxisIndex = 0;
-        double gts = 0;
+        double rmsd  = Double.MAX_VALUE;
         for (int i = 0; i < rotations.size(); i++) {
             Rotation s = rotations.get(i);
             if (s.getFold() > highestOrder) {
                 highestOrder = s.getFold();
                 principalAxisIndex = i;
-                gts = s.getTraceGtsMin();
-                // TODO do we still need to check for GTS here?? Can we use RMSD instead
-            } else if (s.getFold() >= highestOrder && s.getTraceGtsMin() > gts) {
+                rmsd = s.getTraceRmsd();
+            } else if (s.getFold() >= highestOrder && s.getTraceRmsd() < rmsd) {
                 highestOrder = s.getFold();
                 principalAxisIndex = i;
-                gts = s.getTraceGtsMin();
+                rmsd = s.getTraceRmsd();
             }
         }
-//        System.out.println("highestOrderAxis: " + highestOrder);
-//        System.out.println("principalAxisIndex: " + principalAxisIndex);
     }
 
     /**

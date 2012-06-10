@@ -27,17 +27,15 @@ import org.biojava3.core.sequence.ProteinSequence;
 import org.biojava3.core.sequence.compound.AminoAcidCompound;
 
 public class SequenceAlignmentCluster {
-	private double sequenceIdentityThreshold = Double.NaN;
-	private double alignmentFractionThreshold = Double.NaN;
+	private QuatSymmetryParameters parameters = null;
 	private List<UniqueSequenceList> uniqueSequenceList = new ArrayList<UniqueSequenceList>();
 	private List<Atom[]> alignedCAlphaAtoms = null;
 	private List<Atom[]> alignedCBetaAtoms = null;
 	private int alignmentLength = 0;
 	private boolean modified = true;
 
-	public SequenceAlignmentCluster (double sequenceIdentityThreshold, double alignmentFractionThreshold) {
-		this.sequenceIdentityThreshold = sequenceIdentityThreshold;
-		this.alignmentFractionThreshold = alignmentFractionThreshold;
+	public SequenceAlignmentCluster (QuatSymmetryParameters parameters) {
+		this.parameters = parameters;
 	}
 	
 	/**
@@ -84,7 +82,7 @@ public class SequenceAlignmentCluster {
 		double sequenceIdentity = (double)pair.getNumIdenticals()/pair.getLength();
 		double alignmentLengthFraction = (double)pair.getLength()/Math.max(s1.getLength(), s2.getLength());
 		System.out.println("Ref seq. identity: " + sequenceIdentity + " fraction: " + alignmentLengthFraction);
-		return sequenceIdentity >= sequenceIdentityThreshold && alignmentLengthFraction >= alignmentFractionThreshold;
+		return sequenceIdentity >= parameters.getSequenceIdentityThreshold() && alignmentLengthFraction >= parameters.getAlignmentFractionThreshold();
 	}
 	
 	public boolean addChain(Atom[] cAlphaAtoms, String chainId, String sequence) {	

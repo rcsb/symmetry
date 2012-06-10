@@ -7,18 +7,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import org.biojava3.structure.align.symm.quaternary.ChainClusterer;
-
 public class ProteinComplexSignature {
 	private BlastClustReader blastClust = null;
 	private String pdbId = "";
-	private ChainClusterer grouper = null;
+	private List<String> chainIds = null;
 	private List<ChainSignature> chainSignatures = new ArrayList<ChainSignature>();
 	
 
-	public ProteinComplexSignature(String pdbId, ChainClusterer grouper, BlastClustReader blastClust) {
+	public ProteinComplexSignature(String pdbId, List<String> chainIds, BlastClustReader blastClust) {
 		this.pdbId = pdbId;
-		this.grouper = grouper;
+		this.chainIds = chainIds;
 		this.blastClust = blastClust;
 		
 		getChainSignatures();
@@ -61,7 +59,8 @@ public class ProteinComplexSignature {
 	
 		Map<String,Integer> mapCounts = new TreeMap<String,Integer>();
 		Map<String,List<String>> mapChainIds = new TreeMap<String, List<String>>();
-		for (String chainId: grouper.getOrderedChainIDList()) {
+
+		for (String chainId: chainIds) {
 			String rep = blastClust.getRepresentativeChain(pdbId, chainId);
 			Integer value = mapCounts.get(rep);
 			if (value == null) {

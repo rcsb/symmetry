@@ -10,10 +10,8 @@ import javax.vecmath.Matrix4d;
  * @author Peter
  */
 public class Rotation {
-
     private double subunitRmsd = Double.MAX_VALUE;
     private double traceRmsd = Double.MAX_VALUE;
-    private double traceGtsMin = Double.MAX_VALUE;
     private List<Integer> permutation;
     private Matrix4d transformation;
     private AxisAngle4d axisAngle;
@@ -91,20 +89,6 @@ public class Rotation {
     }
 
     /**
-     * @return the traceGtsMin
-     */
-    public double getTraceGtsMin() {
-        return traceGtsMin;
-    }
-
-    /**
-     * @param traceGtsMin the traceGtsMin to set
-     */
-    public void setTraceGtsMin(double traceGtsMin) {
-        this.traceGtsMin = traceGtsMin;
-    }
-
-    /**
      * @return the direction
      */
     public int getDirection() {
@@ -136,7 +120,6 @@ public class Rotation {
         StringBuilder sb = new StringBuilder();
         sb.append("fold: " + fold);
         sb.append(" orientation: " + direction);
-        sb.append(" GTS: " + traceGtsMin);
         sb.append(" RMSD: " + subunitRmsd);
         sb.append(" permutation: " + permutation);
         return sb.toString();

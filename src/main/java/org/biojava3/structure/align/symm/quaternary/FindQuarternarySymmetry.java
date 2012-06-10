@@ -2,74 +2,81 @@ package org.biojava3.structure.align.symm.quaternary;
 
 import java.util.List;
 
-import javax.vecmath.Point3d;
-
 import org.biojava.bio.structure.Structure;
 
 public class FindQuarternarySymmetry {
 	private Structure structure = null;
-	private List<Point3d[]> caCoords = null;
-	private List<Point3d[]> cbCoords = null;
-	private List<Integer> sequenceClusterIds = null;
-	private boolean pseudoSymmetryAllowed = false;
-	private Subunits subunits = null;
-	private ChainClusterer chainClusterer = null;
-	private RotationGroup symmetryOperations = null;
-	private String method = "";
-	private int minimumSequenceLength = 24;
-	private double sequenceIdentityThreshold = 1.0;
+	private QuatSymmetryParameters parameters = null;
 
-	public FindQuarternarySymmetry(Structure structure) {
-		this.structure = structure;
-	}
+	private RotationGroup rotationGroup = null;
+	private String compositionFormula = "";
+	private List<String> chainIds = null;
+	private Subunits subunits = null;
+	private String method = "";
 	
-	public void setPseudoSymmetryAllowed(boolean pseudoSymmetryAllowed) {
-		this.pseudoSymmetryAllowed = pseudoSymmetryAllowed;
+	private boolean modified = true;
+
+	public FindQuarternarySymmetry(Structure structure, QuatSymmetryParameters parameters) {
+		this.structure = structure;
+		this.parameters = parameters;
 	}
 
 	public RotationGroup getRotationGroup() {
 		run();
-        return symmetryOperations;
+        return rotationGroup;
+	}
+	
+	public String getCompositionFormula() {
+		run();
+		return compositionFormula;
+	}
+	
+	public List<String> getChainIds() {
+		run();
+		return chainIds;
 	}
 	
 	public Subunits getSubunits() {
+		run();
 		return subunits;
 	}
 	
-	public ChainClusterer getSequenceCluster() {
-		return chainClusterer;
-	}
-	
-	public int getChainCount() {
-		return caCoords.size();
-	}
-	
 	public String getMethod() {
+		run();
 		return method;
 	}
 	
-	public void setMinimumSequenceLength(int minimumSequenceLength) {
-		this.minimumSequenceLength = minimumSequenceLength;
+	private void run() {
+		if (modified) {
+			createSubunits();
+			determineRotationGroup();
+			modified = false;
+		}
 	}
-	
-	private boolean run() {
-		chainClusterer = new ChainClusterer(structure, minimumSequenceLength, sequenceIdentityThreshold);
-		String formula = chainClusterer.getCompositionFormula();
-		System.out.println("Formula: " + formula);
-		System.out.println(chainClusterer);
 
-		caCoords = chainClusterer.getCalphaCoordinates();
-		cbCoords = chainClusterer.getCbetaCoordinates();
-		sequenceClusterIds = chainClusterer.getSequenceClusterIds();
-	    subunits = new Subunits(caCoords, cbCoords, sequenceClusterIds);
-	    QuatSymmetryPerceptor perceptor = new QuatSymmetryPerceptor(subunits);
-	    perceptor.setPseudoSymmetryAllowed(pseudoSymmetryAllowed);
-	    symmetryOperations = perceptor.getSymmetryOperations();
-	    method = perceptor.getMethod();
+	private void createSubunits() {
+		ChainClusterer chainClusterer = new ChainClusterer(structure, parameters);
+		// TODO how about chains with UNK residues??
+		compositionFormula = chainClusterer.getCompositionFormula();
+		chainIds = chainClusterer.getChainIds();
+		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), chainClusterer.getCbetaCoordinates(), chainClusterer.getSequenceClusterIds());
+	}
 
-	           System.out.println("--- SymmetryOperations ---");;
-	           System.out.println(symmetryOperations);
-	    	              System.out.println(symmetryOperations.getPointGroup());
-	    return true;
+	private void determineRotationGroup() {
+		if (subunits.getSubunitCount() <= 1) {
+			rotationGroup =  new RotationGroup();
+			method = "none";
+			return;
+		} else if (subunits.getSubunitCount() == 2) {
+			method = "C2rotation";
+			QuatSymmetrySolver solver = new C2RotationSolver(subunits, parameters.getRmsdThreshold());
+			rotationGroup = solver.getSymmetryOperations();
+		} else {
+			System.out.println("Rotation solver");
+			method = "rotation";
+			QuatSymmetrySolver solver = new RotationSolver(subunits, parameters.getRmsdThreshold());
+			rotationGroup = solver.getSymmetryOperations();
+		}
+		// TODO use composition formula to calculate the maximum number of possible symmetry operations and check here -> try sys. solver?
 	}
 }

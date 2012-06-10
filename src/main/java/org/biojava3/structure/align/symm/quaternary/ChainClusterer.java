@@ -13,9 +13,7 @@ import org.biojava.bio.structure.Structure;
 
 public class ChainClusterer  {
 	private Structure structure = null;
-	private double sequenceIdentityThreshold = 1.0;
-	private double alignmentFractionThreshold = 0.90; // same as BLASTClust
-	private int minimumSequenceLength = 24;
+	private QuatSymmetryParameters parameters = null;
 	
 	private List<Atom[]> caUnaligned = new ArrayList<Atom[]>();
 	private List<String> chainIds = new ArrayList<String>();
@@ -29,10 +27,9 @@ public class ChainClusterer  {
 	
 	private boolean modified = true;
 
-	public ChainClusterer(Structure structure, int minimumSequenceLength, double sequenceIdentityThreshold) {
+	public ChainClusterer(Structure structure, QuatSymmetryParameters parameters) {
 		this.structure = structure;
-		this.minimumSequenceLength = minimumSequenceLength;
-		this.sequenceIdentityThreshold = sequenceIdentityThreshold;
+		this.parameters = parameters;
 		modified = true;
 	}	
 	
@@ -66,7 +63,7 @@ public class ChainClusterer  {
 		return seqClusters.get(seqClusters.size()-1).getSequenceCount();
 	}
 	
-	public List<String> getOrderedChainIDList() {
+	public List<String> getChainIds() {
 		run();
 		List<String> chainIdList = new ArrayList<String>();
 
@@ -123,7 +120,7 @@ public class ChainClusterer  {
 	}
 	
 	private void extractProteinChains() {
-		ProteinChainExtractor extractor = new ProteinChainExtractor(structure,  minimumSequenceLength);
+		ProteinChainExtractor extractor = new ProteinChainExtractor(structure,  parameters.getMinimumSequenceLength());
 		caUnaligned = extractor.getCalphaTraces();
 		chainIds  = extractor.getChainIds();
 		sequences = extractor.getSequences();
@@ -145,7 +142,7 @@ public class ChainClusterer  {
 			processed[i] = true;
 			// create new sequence cluster
             UniqueSequenceList seqList = new UniqueSequenceList(caUnaligned.get(i), chainIds.get(i), sequences.get(i));
-            SequenceAlignmentCluster seqCluster = new SequenceAlignmentCluster(sequenceIdentityThreshold, alignmentFractionThreshold);
+            SequenceAlignmentCluster seqCluster = new SequenceAlignmentCluster(parameters);
             seqCluster.addUniqueSequenceList(seqList);	
             seqClusters.add(seqCluster);
 			
@@ -221,10 +218,5 @@ public class ChainClusterer  {
 				return Math.round(Math.signum(c2.getSequenceAlignmentLength() - c1.getSequenceAlignmentLength()));
 			}
 		});
-	}
-
-	public boolean containsUnknownSequence() {
-		// TODO Auto-generated method stub
-		return false;
 	}
 }

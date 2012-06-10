@@ -18,7 +18,6 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 
 public class AlignTest {
-	private static String fileName = "c:/Users/Peter/Desktop/rep_sym 20120317.csv";
 	private static String PDB_PATH = "C:/PDB/";
 	private Map<String,List<String>> structureGroups = new HashMap<String,List<String>>();
 	private Map<String, String[]> csv = new HashMap<String,String[]>();

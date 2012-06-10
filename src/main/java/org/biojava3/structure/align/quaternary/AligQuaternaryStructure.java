@@ -4,11 +4,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
@@ -16,19 +14,18 @@ import javax.vecmath.Point3d;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.align.ce.CECalculator;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava3.structure.align.symm.quaternary.ChainClusterer;
+import org.biojava3.structure.align.symm.quaternary.QuatSymmetryParameters;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryWriter;
 import org.biojava3.structure.align.symm.quaternary.SuperPosition;
 
 public class AligQuaternaryStructure {
 	private static String PDB_PATH = "C:/PDB/";
-	private static final int MIN_SEQUENCE_LENGTH = 24;
-	private static final double SEQUENCE_IDENTITY_THRESHOLD = 1.0;
+	private static QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 	private Map<Integer,Integer> clusterMap = new LinkedHashMap<Integer,Integer>();
     private ClusterAlignment calign = new ClusterAlignment();
 	
@@ -38,13 +35,13 @@ public class AligQuaternaryStructure {
 		if (s1 == null) {
 			return bestRmsd;
 		}
-		ChainClusterer grouper1 = new ChainClusterer(s1, MIN_SEQUENCE_LENGTH, SEQUENCE_IDENTITY_THRESHOLD);
+		ChainClusterer grouper1 = new ChainClusterer(s1, parameters);
 
 		Structure s2 = getStructure(pdbId2);
 		if (s2 == null) {
 			return bestRmsd;
 		}
-		ChainClusterer grouper2 = new ChainClusterer(s2, MIN_SEQUENCE_LENGTH, SEQUENCE_IDENTITY_THRESHOLD);
+		ChainClusterer grouper2 = new ChainClusterer(s2, parameters);
 
 		ClusterAlignment alignment = alignUniqueSequences(grouper1, grouper2);
 
@@ -86,12 +83,12 @@ public class AligQuaternaryStructure {
 		if (s1 == null) {
 			return bestRmsd;
 		}
-		ChainClusterer grouper1 = new ChainClusterer(s1, MIN_SEQUENCE_LENGTH, SEQUENCE_IDENTITY_THRESHOLD);
+		ChainClusterer grouper1 = new ChainClusterer(s1, parameters);
 
 		if (s2 == null) {
 			return bestRmsd;
 		}
-		ChainClusterer grouper2 = new ChainClusterer(s2, MIN_SEQUENCE_LENGTH, SEQUENCE_IDENTITY_THRESHOLD);
+		ChainClusterer grouper2 = new ChainClusterer(s2, parameters);
 
 		ClusterAlignment alignment = alignUniqueSequences(grouper1, grouper2);
 
@@ -156,7 +153,7 @@ public class AligQuaternaryStructure {
 			
 			Point3d[] tpoints1 = getPoints(ca1);
 			Point3d[] tpoints2 = getPoints(ca2);
-			Matrix4d m = SuperPosition.superposeWithTranslation(tpoints1, tpoints2);
+//			Matrix4d m = SuperPosition.superposeWithTranslation(tpoints1, tpoints2);
 			double sum = SuperPosition.rmsd(tpoints1, tpoints2);
 			// "undo" RMSD to get raw sum of distance squares
 			sum *= sum;

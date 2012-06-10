@@ -10,7 +10,6 @@ import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.AtomImpl;
@@ -25,13 +24,13 @@ import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.align.symm.quaternary.ChainClusterer;
 import org.biojava3.structure.align.symm.quaternary.FindQuarternarySymmetry;
 import org.biojava3.structure.align.symm.quaternary.PermutationGenerator;
+import org.biojava3.structure.align.symm.quaternary.QuatSymmetryParameters;
 import org.biojava3.structure.align.symm.quaternary.RotationGroup;
 import org.biojava3.structure.align.symm.quaternary.Subunits;
 import org.biojava3.structure.align.symm.quaternary.SuperPosition;
 
 public class SubunitMapper {
-	private static final int MIN_SEQUENCE_LENGTH = 24;
-	private static final double SEQUENCE_IDENTITY_THRESHOLD = 1.0;
+	private QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 	private Structure structure1 = null;
 	private Structure structure2 = null;
 	
@@ -166,9 +165,9 @@ public class SubunitMapper {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		ChainClusterer seqGroup1 = new ChainClusterer(structure1, MIN_SEQUENCE_LENGTH, SEQUENCE_IDENTITY_THRESHOLD);
+		ChainClusterer seqGroup1 = new ChainClusterer(structure1, parameters);
 		List<Atom[]> cas1 = seqGroup1.getCalphaTraces();
-		ChainClusterer seqGroup2 = new ChainClusterer(structure2, MIN_SEQUENCE_LENGTH, SEQUENCE_IDENTITY_THRESHOLD);
+		ChainClusterer seqGroup2 = new ChainClusterer(structure2, parameters);
 		List<Atom[]> cas2 = seqGroup2.getCalphaTraces();
 		
 	
@@ -321,8 +320,7 @@ public class SubunitMapper {
 //		List<Point3d[]> caCoords = seqGroup.getCalphaCoordinates();
 //		List<Point3d[]> cbCoords = seqGroup.getCbetaCoordinates();
 //		List<Integer> sequenceClusterIds = seqGroup.getSequenceClusterIds();
-		FindQuarternarySymmetry finder = new FindQuarternarySymmetry(structure);
-		finder.setPseudoSymmetryAllowed(false);
+		FindQuarternarySymmetry finder = new FindQuarternarySymmetry(structure, parameters);
 		return finder;
 	}
 	

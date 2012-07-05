@@ -160,9 +160,9 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 			return;
 		}
 		
-		// if there is a better solution, and there are already two solutions, 
-		// remove the last one so it can be replaced with a better solution
-		if (caRmsd < bestRmsd && caRmsd >= 0 && rotations.getOrder() == 2) {
+		// if there is a better (lower RMSD) solution, remove the second solution and replace
+		// it with this solution. Note, by convention, the first solution is E and should not be changed.
+		if (caRmsd < bestRmsd && rotations.getOrder() == 2) {
 			rotations.removeRotation(1);
 			bestRmsd = caRmsd;
 		}

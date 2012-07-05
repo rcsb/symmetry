@@ -1,5 +1,7 @@
 package org.biojava3.structure.align.symm.quaternary;
 
+import java.util.Random;
+
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.GMatrix;
 import javax.vecmath.Matrix4d;
@@ -10,71 +12,130 @@ import javax.vecmath.Vector3d;
 import org.biojava.bio.structure.Structure;
 
 public class AxisTransformation {
-	private static double scaleFactor = 1;
+	private static Vector3d X_AXIS = new Vector3d(1,0,0);
+	private static Vector3d Z_AXIS = new Vector3d(0,0,1);
 	
 	public static Matrix4d getTransformation(Structure structure, Subunits subunits, RotationGroup rotationGroup) {
-		if (rotationGroup.getPointGroup().equals("C1")) {
-			Matrix4d identity = new Matrix4d();
-			identity.setIdentity();
-			return identity;
+		if (subunits.getSubunitCount() == 0) {
+			Matrix4d m = new Matrix4d();
+			m.setIdentity();
+			return m;
 		}
+		if (rotationGroup.getPointGroup().equals("C1")) {
+			return getTransformationByInertiaAxes(subunits);
+		} else {
+	     	return getTransformationBySymmetryAxes(subunits, rotationGroup);
+		}
+	}
+	
+	public static String getJmolTransformation(Matrix4d matrix) {
+		Quat4d q = new Quat4d();
+		matrix.get(q);
+		return "rotate quaternion {" + jMolFloat(q.x) + " " + jMolFloat(q.y) + " " + jMolFloat(q.z) + " " + jMolFloat(q.w) + "}";
+	}
+
+	private static Matrix4d getTransformationBySymmetryAxes(Subunits subunits, RotationGroup rotationGroup) {
+		
+		// orientation of subunit symmetry axes at the centroid of the subunits
 		Point3d[] refPoints = new Point3d[3];
+		
 		// first reference point is centroid of subunits
 		refPoints[0] = new Point3d(subunits.getCentroid());
-//		System.out.println("r0: " + refPoints[0]);
 		
 		// second reference point is along the principal axis
-		Rotation rotation = rotationGroup.getRotation(0);
-		AxisAngle4d axisAngle = rotation.getAxisAngle();
-		Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
-		v.normalize();
-		refPoints[1] = new Point3d(v);
-		refPoints[1].scaleAdd(scaleFactor, refPoints[0]);
-//		System.out.println("r1: " + refPoints[1]);
-
+		Vector3d principalAxis = getPrincipalAxis(rotationGroup);		
+		refPoints[1] = new Point3d(subunits.getCentroid());
+		refPoints[1].add(principalAxis);
 		
-		// third reference point is along the line from the centroid of the structure to the centroid of the first subunit
-		Vector3d ortho = new Vector3d();
-		ortho.sub(subunits.getOriginalCenters().get(0), refPoints[0]);
-		ortho.normalize();
-		ortho.cross(v, ortho);
-		ortho.normalize();
+		// third reference point is along an orthogonal rotation axis (if available), otherwise, an orthogonal vector
+		// to a subunit center is used.
 		
-		refPoints[2] = new Point3d(ortho);
-		refPoints[2].scaleAdd(scaleFactor, refPoints[0]);
+		// if rotation group has orthogonal axis, use it for alignment
+		Vector3d orthogonalAxis = getOrthogonalAxis(rotationGroup);
+		if (orthogonalAxis == null) {
+			System.out.println("Ortho is null");
+			// need a consistent reference point in case subunits are scrambled in multimers (i.e. use largest subunit)?
+			orthogonalAxis = new Vector3d();
+			orthogonalAxis.sub(subunits.getOriginalCenters().get(0), refPoints[0]);
+		}
+		orthogonalAxis.normalize();
+		orthogonalAxis.cross(principalAxis, orthogonalAxis);
+		orthogonalAxis.normalize();
 		
-		double dp =  v.dot(new Vector3d(0,0,1));
-		if (dp < -0.99 || dp > 0.99) {
-			System.out.println("Axis vs. z: " + v.dot(new Vector3d(0,0,1)));
-			Vector3d yp = new Vector3d(0, 1, 0);
-			System.out.println("Angle with Y axis: " + Math.toDegrees(yp.angle(ortho)));
-			double angle = yp.angle(ortho);
-			AxisAngle4d aa = new AxisAngle4d(new Vector3d(0,0,1), angle);
+		refPoints[2] = new Point3d(subunits.getCentroid());
+		refPoints[2].add(orthogonalAxis);
+		
+		// check if subunits are already co-linear with principal axis, for example 1A6D, bioassembly 1
+		double dp =  Z_AXIS.dot(principalAxis);
+		if (Math.abs(dp) > 0.99999) {
+			System.out.println("Axis vs. z: " + dp);
+			System.out.println("Angle with Y axis: " + Math.toDegrees(X_AXIS.angle(orthogonalAxis)));
+			double angle = X_AXIS.angle(orthogonalAxis);
+			AxisAngle4d aa = new AxisAngle4d(Z_AXIS, angle);
 			Matrix4d m = new Matrix4d();
 			m.set(aa);
 			return m;
 		}
-//		System.out.println("r2: " + refPoints[2]);
-//		System.out.println("Dot product: " + v.dot(ortho));
 		
-		// center - y-axis - z-axis are the new coordinates
+		//  y,z axis centered at the centroid of the subunits
 		Point3d[] coordPoints = new Point3d[3];
-		coordPoints[0] = new Point3d(refPoints[0]);
-//		System.out.println("c0: " + coordPoints[0]);
-		coordPoints[1] = new Point3d(0, 0, 1);
-		coordPoints[1].scaleAdd(scaleFactor, refPoints[0]);
-//		System.out.println("c1: " + coordPoints[1]);
-		coordPoints[2] = new Point3d(0, 1, 0);
-		coordPoints[2].scaleAdd(scaleFactor, refPoints[0]);
-//		System.out.println("c2: " + coordPoints[2]);
+		coordPoints[0] = new Point3d(subunits.getCentroid());
+		coordPoints[1] = new Point3d(subunits.getCentroid());
+		coordPoints[1].add(Z_AXIS);
+		coordPoints[2] = new Point3d(subunits.getCentroid());
+		coordPoints[2].add(X_AXIS);
+		
+		// align principal axis with z axis and perpendicular axis with y axis
 		Matrix4d matrix = SuperPosition.superposeWithTranslation(refPoints, coordPoints);
-//		Matrix4d matrix = SuperPosition.superpose(refPoints, coordPoints);
-//		System.out.println(matrix);
-//		System.out.println("After superposition rmsd: " + SuperPosition.rmsd(refPoints, coordPoints));
-//		System.out.println("r0: " + refPoints[0]);
-//		System.out.println("r1: " + refPoints[1]);
-//		System.out.println("r2: " + refPoints[2]);
 
+		return matrix;
+	}
+
+	private static Vector3d getPrincipalAxis(RotationGroup rotationGroup) {
+		Rotation rotation = rotationGroup.getRotation(0);
+		AxisAngle4d axisAngle = rotation.getAxisAngle();
+		Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
+		v.normalize();
+		return v;
+	}
+	
+	private static Vector3d getOrthogonalAxis(RotationGroup rotationGroup) {
+		// find first axis that is orthogonal to principal axis (direction = 1)
+		for (int i = 0; i < rotationGroup.getOrder(); i++) {
+			if (rotationGroup.getRotation(i).getDirection() == 1) {
+				AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
+				Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
+				v.normalize();
+				return v;
+			}
+		}
+		return null;
+	}
+	
+	private static Matrix4d getTransformationByInertiaAxes(Subunits subunits) {
+		System.out.println("getTransformationByInertiaAxes");
+		Vector3d[] inertiaVectors = subunits.getMomentsOfInertia().getPrincipalAxes();
+		
+		// orientation of subunit inertia vectors center at the centroid of the subunits
+		Point3d[] refPoints = new Point3d[inertiaVectors.length];
+		for (int i = 0; i < inertiaVectors.length; i++) {
+			refPoints[i] = new Point3d(inertiaVectors[i]);
+			refPoints[i].add(subunits.getCentroid());
+		}
+	
+		// x,y,z axis center at the centroid of the subunits
+		Point3d[] coordPoints = new Point3d[3];
+		coordPoints[0] = new Point3d(1, 0, 0);
+		coordPoints[0].add(subunits.getCentroid());
+		coordPoints[1] = new Point3d(0, 1, 0);
+		coordPoints[1].add(subunits.getCentroid());
+		coordPoints[2] = new Point3d(0, 0, 1);
+		coordPoints[2].add(subunits.getCentroid());
+
+		// align inertia axis with x,y,z axis
+		System.out.println("Superposition");
+		Matrix4d matrix = SuperPosition.superposeWithTranslation(refPoints, coordPoints);
+         System.out.println("return");
 		return matrix;
 	}
 	
@@ -88,9 +149,132 @@ public class AxisTransformation {
 		return m.trace();
 	}
 	
-	public static String getJmolQuat(Matrix4d matrix) {
-		Quat4d q = new Quat4d();
-		matrix.get(q);
-		return "rotate quaternion {" + q.x + " " + q.y + " " + q.z + " " + q.w + "}";
+	
+	public static String getSymmetryAxesJmol(Subunits subunits, RotationGroup rotationGroup) {
+		double radius = subunits.getMomentsOfInertia().getRadiusOfGyration() * 1.5;
+		StringBuilder s = new StringBuilder();
+		int n = rotationGroup.getOrder();
+		float diameter = 2;
+		String color = "white";
+
+		for (int i = 0; i < n; i++) {
+			Rotation rotation = rotationGroup.getRotation(i);
+			
+			// don't draw redundant n-fold rotations around principal axis
+			if (i > 0 && rotation.getDirection() == 0) {
+				continue;
+			}
+			
+			AxisAngle4d axisAngle = rotation.getAxisAngle();
+			Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
+			v.normalize();
+		
+			Point3d p1 = new Point3d(v);
+			p1.scaleAdd(-radius, subunits.getCentroid());
+
+			Point3d p2 = new Point3d(v);
+			p2.scaleAdd(radius, subunits.getCentroid());
+
+			s.append("draw");
+			s.append(" c");
+			s.append(i);
+			s.append(" cylinder {");
+			s.append(jMolFloat(p1.x));
+			s.append(" ");
+			s.append(jMolFloat(p1.y));
+			s.append(" ");
+			s.append(jMolFloat(p1.z));
+			s.append("} {");
+			s.append(jMolFloat(p2.x));
+			s.append(" ");
+			s.append(jMolFloat(p2.y));
+			s.append(" ");
+			s.append(jMolFloat(p2.z));
+			s.append("} diameter ");
+			s.append(diameter);
+			s.append(" color ");
+			s.append(color);
+			if (i < n-1) {
+				s.append(";");
+			}
+			diameter = 0.1f;
+			color = "gray";
+//			s.append(getPolygonJmol(p1, p2, v, rotation.getFold()));
+//			s.append(";");
+		}
+	
+		return s.toString();
+	}
+	
+	private static String getPolygonJmol(Point3d p1, Point3d p2, Vector3d axis, int n) {
+		StringBuilder s = new StringBuilder();
+		s.append("Polygon ");
+		s.append(n+1);
+		s.append(" ");
+		
+		s.append("{");
+    	s.append(p1.x);
+    	s.append(" ");
+    	s.append(p1.y);
+    	s.append(" ");
+    	s.append(p1.z);
+      	s.append("}");
+
+        Vector3d[] v = getPolygon(axis, n);
+        // create vertex list
+        for (int i = 0; i < n; i++) {
+        	s.append("{");
+        	s.append(v[i].x);
+        	s.append(" ");
+        	s.append(v[i].y);
+        	s.append(" ");
+        	s.append(v[i].z);
+          	s.append("}");
+        }
+        
+        // create face list
+        for (int i = 0; i < n-1; i++) {
+        	s.append("[");
+        	s.append(0);
+        	s.append(" ");
+        	s.append(i);
+        	s.append(" ");
+        	s.append(i+1);
+        	s.append(" ");
+        	s.append(0);
+           	s.append("]");
+        }
+   
+		return s.toString();
+	}
+	
+	private static Vector3d[] getPolygon(Vector3d axis, int n) {
+		Vector3d perp = getPerpendicularVector(axis);
+
+		AxisAngle4d axisAngle = new AxisAngle4d(axis, 0);
+		Vector3d[] vectors = new Vector3d[n];
+		for (int i = 0; i < n; i++) {
+			axisAngle.setAngle(i * 2 * Math.PI/n);
+			vectors[i] = new Vector3d(perp);	
+			Matrix4d m = new Matrix4d();
+			m.set(axisAngle);
+			m.transform(vectors[i]);
+		}
+		return vectors;
+	}
+
+	private static Vector3d getPerpendicularVector(Vector3d axis) {
+		Random r = new Random();
+		Vector3d perp = new Vector3d(r.nextDouble(), r.nextDouble(), r.nextDouble());
+		perp.cross(perp, axis);
+		perp.normalize();
+		return perp;
+	}
+	
+	private static float jMolFloat(double f) {
+		if (Math.abs(f) < 1.0E-5) {
+			return 0.0f;
+		}
+		return (float)f;
 	}
 }

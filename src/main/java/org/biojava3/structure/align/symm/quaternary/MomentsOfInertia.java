@@ -77,6 +77,34 @@ public class MomentsOfInertia {
         }
         return principalAxes;
     }
+    // The effective value of this distance for a certain body is known as its radius of
+    // gyration with respect to the given axis. The radius of gyration corresponding to Ijj
+    // is defined as
+    // http://www.eng.auburn.edu/~marghitu/MECH2110/C_4.pdf
+    // radius of gyration k(j) = sqrt(I(j)/m)
+    public double[] getElipsisRadii() {
+    	double m = 0;
+    	for (int i = 0, n = points.size(); i < n; i++) {
+             m += masses.get(i);
+    	}
+    	double[] r = new double[3];
+    	for (int i = 0; i < 3; i++) {
+    		r[i] = 1.0/Math.sqrt(principalMomentsOfInertia[i]);
+    	}
+    	return r;
+    }
+    
+    public double getRadiusOfGyration() {
+    	Point3d c = centerOfMass();
+    	Point3d t = new Point3d();
+    	double sum = 0;
+    	for (int i = 0, n = points.size(); i < n; i++) {
+    		t.set(points.get(i));
+    		sum += t.distanceSquared(c);
+    	}
+    	sum /= points.size();
+    	return Math.sqrt(sum);
+    }
 
     public SymmetryClass getSymmetryClass(double threshold) {
         if (modified) {

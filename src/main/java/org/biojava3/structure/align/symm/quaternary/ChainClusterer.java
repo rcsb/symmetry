@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.vecmath.Point3d;
 
@@ -95,6 +98,33 @@ public class ChainClusterer  {
 		return formula.toString();
 	}
 
+	public List<Integer> getFolds() {
+		run();
+		List<Integer> denominators = new ArrayList<Integer>();
+        Set<Integer> nominators = new TreeSet<Integer>();
+		int nChains = caCoords.size();
+		
+		for (int id = 0; id < seqClusters.size(); id++) {
+			int seqCount = seqClusters.get(id).getSequenceCount();
+			nominators.add(seqCount);
+		}
+		
+		// find common denominators
+		for (int d = 1; d <= nChains; d++) {
+			int count = 0;
+			for (Iterator<Integer> iter = nominators.iterator(); iter.hasNext();) {
+				if (iter.next() % d == 0) {
+					count++;
+				}
+			}
+			if (count == nominators.size()) {
+				denominators.add(d);
+			}
+		}
+		
+		return denominators;
+	}
+	
 	public List<Integer> getSequenceClusterIds() {
 		run();
 		List<Integer> list = new ArrayList<Integer>();
@@ -111,6 +141,10 @@ public class ChainClusterer  {
 	private void run() {
 		if (modified) {
 			extractProteinChains();
+			if (caUnaligned.size() == 0) {
+				modified = false;
+				return;
+			}
 			calcSequenceClusters();
 			calcAlignedSequences();
 			createCalphaTraces();
@@ -152,7 +186,7 @@ public class ChainClusterer  {
             	}
             	for (SequenceAlignmentCluster c: seqClusters) {
             		// add to existing sequence cluster if there is a match
-            		if (c.isSequenceMatch(sequences.get(j))) {
+            		if (c.isSequenceMatch(sequences.get(j)) || parameters.isStructuralAlignmentOnly()) {
             			if (c.addChain(caUnaligned.get(j), chainIds.get(j), sequences.get(j))) {
             				processed[j] = true;
             				break;

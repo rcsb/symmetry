@@ -14,17 +14,20 @@ import javax.vecmath.Vector3d;
 public class Subunits {
     private List<Point3d[]> caCoords = new ArrayList<Point3d[]>();
     private List<Point3d[]> cbCoords = new ArrayList<Point3d[]>();
+    private List<Integer> sequenceClusterIds = new ArrayList<Integer>(0);
+    private List<Integer> folds = new ArrayList<Integer>(0);
     private List<Point3d> originalCenters = new ArrayList<Point3d>(0);
     private List<Point3d> centers = new ArrayList<Point3d>(0);
     private List<Vector3d> unitVectors = new ArrayList<Vector3d>(0);
-    private List<Integer> sequenceClusterIds = new ArrayList<Integer>(0);
+
     private Point3d centroid;
     private MomentsOfInertia momentsOfInertia = new MomentsOfInertia();
 
-    public Subunits(List<Point3d[]> caCoords, List<Point3d[]> cbCoords, List<Integer> sequenceClusterIds) {
+    public Subunits(List<Point3d[]> caCoords, List<Point3d[]> cbCoords, List<Integer> sequenceClusterIds, List<Integer> folds) {
         this.caCoords = caCoords;
         this.cbCoords = cbCoords;
         this.sequenceClusterIds = sequenceClusterIds;
+        this.folds = folds;
     }
 
     public List<Point3d[]> getTraces() {
@@ -42,6 +45,10 @@ public class Subunits {
     
     public List<Integer> getSequenceClusterIds() {
     	return sequenceClusterIds;
+    }
+    
+    public List<Integer>getFolds() {
+    	return folds;
     }
     
     public int getCalphaCount() {

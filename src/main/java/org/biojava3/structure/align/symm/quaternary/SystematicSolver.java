@@ -36,9 +36,9 @@ public class SystematicSolver implements QuatSymmetrySolver {
         this.rmsdThreshold = rmsdThreshold;
     }
 
-    public void setRmsdThreshold(double rmsdThreshold) {
-        this.rmsdThreshold = rmsdThreshold;
-    }
+//    public void setRmsdThreshold(double rmsdThreshold) {
+//        this.rmsdThreshold = rmsdThreshold;
+//    }
 
     public RotationGroup getSymmetryOperations() {
         if (rotations.getOrder() == 0) {

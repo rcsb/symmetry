@@ -2,6 +2,7 @@ package org.biojava3.structure.align.symm.quaternary;
 
 public class QuatSymmetryParameters {
 	private int minimumSequenceLength = 24;
+	private boolean structuralAlignmentOnly = false;
 	private double sequenceIdentityThreshold = 1.0;
 	private double alignmentFractionThreshold = 0.9;
 	private double rmsdThreshold = 5.0;
@@ -54,4 +55,17 @@ public class QuatSymmetryParameters {
 	public void setRmsdThreshold(double rmsdThreshold) {
 		this.rmsdThreshold = rmsdThreshold;
 	}
+	/**
+	 * @return the structuralAlignmentOnly
+	 */
+	public boolean isStructuralAlignmentOnly() {
+		return structuralAlignmentOnly;
+	}
+	/**
+	 * @param structuralAlignmentOnly the structuralAlignmentOnly to set
+	 */
+	public void setStructuralAlignmentOnly(boolean structuralAlignmentOnly) {
+		this.structuralAlignmentOnly = structuralAlignmentOnly;
+	}
+	
 }

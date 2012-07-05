@@ -150,6 +150,24 @@ public class RotationSolver implements QuatSymmetrySolver {
         if (n % 60 == 0 && isSpherical()) {
            n = 60;
         }
+        List<Integer> folds = subunits.getFolds();
+        List<Double> angles = new ArrayList<Double>(folds.size()-1);
+
+        // note this loop starts at 1, we do ignore 1-fold symmetry, which is the first entry
+        for (int fold: folds) {
+        	if (fold > 0 && fold <= n) {
+        		angles.add(2* Math.PI/fold);
+        	}
+        }
+        return angles;
+    }
+    
+    private List<Double> getAnglesOld() {
+        int n = subunits.getSubunitCount();
+        // for spherical symmetric cases, n cannot be higher than 60
+        if (n % 60 == 0 && isSpherical()) {
+           n = 60;
+        }
         List<Double> angles = new ArrayList<Double>(n+1);
 
         for (int i = 0; i < n; i++) {

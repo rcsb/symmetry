@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import javax.vecmath.AxisAngle4d;
+import javax.vecmath.Matrix4d;
 import javax.vecmath.Vector3d;
 
 /**
@@ -37,6 +38,20 @@ public class RotationGroup {
     public void addRotation(Rotation rotation) {
         rotations.add(rotation);
         modified = true;
+    }
+    
+    public void setC1() {
+    	Rotation r = new Rotation();
+        r.setPermutation(new ArrayList<Integer>(0));
+        Matrix4d m = new Matrix4d();
+        m.setIdentity();
+        r.setTransformation(m);
+        r.setAxisAngle(new AxisAngle4d());
+        r.setSubunitRmsd(0.0);
+        r.setTraceRmsd(0.0);
+        r.setFold(1);
+        rotations.add(r);
+        pointGroup = "C1";
     }
     
     public void removeRotation(int index) {

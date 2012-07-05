@@ -141,6 +141,15 @@ public class SequenceAlignmentCluster {
 		run();
 		return alignedCBetaAtoms;
 	}
+	
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		for (UniqueSequenceList u: uniqueSequenceList) {
+			builder.append(u.toString());
+			builder.append("\n");
+		}
+		return builder.toString();
+	}
 
 	private void run() {
 		if (modified) {
@@ -150,23 +159,6 @@ public class SequenceAlignmentCluster {
 			createAlignedCBetaAtoms();	
 			modified = false;
 		}
-	}
-
-	public List<Atom[]> getCbetaAtoms() {
-		return new ArrayList<Atom[]>();
-	}
-
-	public List<Integer> getSubunitEquivalenceClasses() {
-		return new ArrayList<Integer>();
-	}
-
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		for (UniqueSequenceList u: uniqueSequenceList) {
-			builder.append(u.toString());
-			builder.append("\n");
-		}
-		return builder.toString();
 	}
 	
 	private boolean exactMatch(Atom[] cAlphaAtoms, String chainId) {
@@ -267,9 +259,6 @@ public class SequenceAlignmentCluster {
 		}
 		return false;
 	}
-	
-	
-	
 
 	private AFPChain alignPairBySequence(Atom[] ca1Seq, Atom[] ca2Seq) {
 		SmithWaterman3Daligner aligner = new SmithWaterman3Daligner();

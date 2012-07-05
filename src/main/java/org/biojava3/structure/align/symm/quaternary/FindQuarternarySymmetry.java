@@ -13,6 +13,7 @@ public class FindQuarternarySymmetry {
 	private List<String> chainIds = null;
 	private Subunits subunits = null;
 	private String method = "";
+	private int maxFolds = 1;
 	
 	private boolean modified = true;
 
@@ -31,9 +32,19 @@ public class FindQuarternarySymmetry {
 		return compositionFormula;
 	}
 	
+	public int getChainCount() {
+		run();
+		return chainIds.size();
+	}
+	
 	public List<String> getChainIds() {
 		run();
 		return chainIds;
+	}
+	
+	public int getMaxFolds() {
+		run();
+		return maxFolds;
 	}
 	
 	public Subunits getSubunits() {
@@ -59,24 +70,35 @@ public class FindQuarternarySymmetry {
 		// TODO how about chains with UNK residues??
 		compositionFormula = chainClusterer.getCompositionFormula();
 		chainIds = chainClusterer.getChainIds();
-		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), chainClusterer.getCbetaCoordinates(), chainClusterer.getSequenceClusterIds());
+		if (chainIds.size() == 0) {
+			maxFolds = 0;
+			return;
+		}
+		List<Integer> folds = chainClusterer.getFolds();
+		maxFolds = folds.get(folds.size()-1);
+		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
+				chainClusterer.getCbetaCoordinates(), 
+				chainClusterer.getSequenceClusterIds(),
+				folds);
 	}
 
 	private void determineRotationGroup() {
-		if (subunits.getSubunitCount() <= 1) {
-			rotationGroup =  new RotationGroup();
-			method = "none";
+		if (chainIds.size() == 0) {
 			return;
-		} else if (subunits.getSubunitCount() == 2) {
+		}
+		if (subunits.getFolds().size() == 1) {
+			// no symmetry possible, create empty ("C1") rotation group
+			method = "norotation";
+			rotationGroup =  new RotationGroup();
+			rotationGroup.setC1();
+		} else if (subunits.getSubunitCount() == 2 && subunits.getFolds().contains(2)) {
 			method = "C2rotation";
 			QuatSymmetrySolver solver = new C2RotationSolver(subunits, parameters.getRmsdThreshold());
 			rotationGroup = solver.getSymmetryOperations();
 		} else {
-			System.out.println("Rotation solver");
 			method = "rotation";
 			QuatSymmetrySolver solver = new RotationSolver(subunits, parameters.getRmsdThreshold());
 			rotationGroup = solver.getSymmetryOperations();
 		}
-		// TODO use composition formula to calculate the maximum number of possible symmetry operations and check here -> try sys. solver?
 	}
 }

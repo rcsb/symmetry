@@ -35,10 +35,9 @@ import org.biojava3.structure.align.symm.quaternary.Subunits;
 public class ScanPdb implements Runnable {
 	private static String PDB_PATH = "C:/PDB/";
 	private static final int MIN_SEQUENCE_LENGTH = 24;
-	private boolean STRUCTURAL_ALIGNMENT_ONLY = false;
 	private static final double SEQUENCE_IDENTITY_THRESHOLD = 1.0;
 	private static final double ALIGNMENT_FRACTION_THRESHOLD = 0.9;
-	private static final double RMSD_THRESHOLD = 6.5;
+	private static final double RMSD_THRESHOLD = 5.0;
 
 	public ScanPdb () {
 	}
@@ -180,7 +179,6 @@ public class ScanPdb implements Runnable {
 
 				QuatSymmetryParameters params = new QuatSymmetryParameters();
 				params.setMinimumSequenceLength(MIN_SEQUENCE_LENGTH);
-				params.setStructuralAlignmentOnly(STRUCTURAL_ALIGNMENT_ONLY);
 				params.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
 				params.setAlignmentFractionThreshold(ALIGNMENT_FRACTION_THRESHOLD);
 				params.setRmsdThreshold(RMSD_THRESHOLD);

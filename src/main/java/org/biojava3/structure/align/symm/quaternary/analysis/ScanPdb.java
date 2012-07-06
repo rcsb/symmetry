@@ -122,11 +122,15 @@ public class ScanPdb implements Runnable {
 				continue;
 			}
 
-			if (!pdbId.equals("3KO1")) continue; // Dn
+//			if (!pdbId.equals("1A0S")) continue; // C3
+//			if (!pdbId.equals("1B44")) continue; // C5
 //			if (!pdbId.equals("2Y9J")) continue; // C24 ?
+//			if (!pdbId.equals("4HHB")) continue; // D2
+//			if (!pdbId.equals("1A2V")) continue; // D3
 //			if (!pdbId.equals("2WCD")) continue; // D12
-//			if (!pdbId.equals("1AEW")) continue; // T
-//			if (!pdbId.equals("1A34")) continue; // I
+//			if (!pdbId.equals("1AEW")) continue; // T // interesting case, look for Cd along symmetry axes
+//			if (!pdbId.equals("1A34")) continue; // I // dito
+//			if (!pdbId.equals("3KK5")) continue; // I
 //			if (!pdbId.equals("1COA")) continue; // D6
 //			if (!pdbId.equals("1A5K")) continue; // dot= -0.9
 //			if (!pdbId.equals("1M5Q")) continue; 
@@ -253,14 +257,14 @@ public class ScanPdb implements Runnable {
 				if (chainCount > 1 && groupComplete) {			
 					out.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature90 + "," + stoich90 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," +
 							order + "," + caCount + "," + chainCount + "," + rmsd + "," + rmsdT + "," + symmetryClass + "," + asymmetryCoefficient + "," +
-							biologicalAssembly + "," + time + "," + jmol + "," + jmolAxes + "," + trace);
+						    time + "," + jmol + "," + jmolAxes + "," + trace);
 							out.println();
 							out.flush();
 							multimer++;
 				} else if (chainCount > 1) {
 					out1.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature90 + "," + stoich90 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," + groupComplete + "," +
 							order + "," + caCount + "," + chainCount  + "," + rmsd + "," + rmsdT + "," + symmetryClass + "," + asymmetryCoefficient + "," +
-							biologicalAssembly + "," + time + "," + jmol + "," + jmolAxes + "," + trace);
+						    time + "," + jmol + "," + jmolAxes + "," + trace);
 					out1.println();
 					out1.flush();
 					excluded++;

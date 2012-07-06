@@ -13,6 +13,7 @@ import org.biojava.bio.structure.Structure;
 
 public class AxisTransformation {
 	private static Vector3d X_AXIS = new Vector3d(1,0,0);
+	private static Vector3d Y_AXIS = new Vector3d(0,1,0);
 	private static Vector3d Z_AXIS = new Vector3d(0,0,1);
 	
 	public static Matrix4d getTransformation(Structure structure, Subunits subunits, RotationGroup rotationGroup) {
@@ -125,11 +126,11 @@ public class AxisTransformation {
 	
 		// x,y,z axis center at the centroid of the subunits
 		Point3d[] coordPoints = new Point3d[3];
-		coordPoints[0] = new Point3d(1, 0, 0);
+		coordPoints[0] = new Point3d(X_AXIS);
 		coordPoints[0].add(subunits.getCentroid());
-		coordPoints[1] = new Point3d(0, 1, 0);
+		coordPoints[1] = new Point3d(Y_AXIS);
 		coordPoints[1].add(subunits.getCentroid());
-		coordPoints[2] = new Point3d(0, 0, 1);
+		coordPoints[2] = new Point3d(Z_AXIS);
 		coordPoints[2].add(subunits.getCentroid());
 
 		// align inertia axis with x,y,z axis
@@ -151,10 +152,10 @@ public class AxisTransformation {
 	
 	
 	public static String getSymmetryAxesJmol(Subunits subunits, RotationGroup rotationGroup) {
-		double radius = subunits.getMomentsOfInertia().getRadiusOfGyration() * 1.5;
+		double radius = subunits.getMomentsOfInertia().getRadiusOfGyration() * 1.2;
 		StringBuilder s = new StringBuilder();
 		int n = rotationGroup.getOrder();
-		float diameter = 2;
+		float diameter = 1;
 		String color = "white";
 
 		for (int i = 0; i < n; i++) {
@@ -194,71 +195,85 @@ public class AxisTransformation {
 			s.append(diameter);
 			s.append(" color ");
 			s.append(color);
-			if (i < n-1) {
-				s.append(";");
-			}
+			s.append(";");
+
 			diameter = 0.1f;
 			color = "gray";
-//			s.append(getPolygonJmol(p1, p2, v, rotation.getFold()));
-//			s.append(";");
+			s.append(getPolygonJmol(i, p1, p2, v, rotation.getFold()));
+			s.append(getPolygonJmol(i + n, p2, p1, v, rotation.getFold()));
 		}
 	
 		return s.toString();
 	}
 	
-	private static String getPolygonJmol(Point3d p1, Point3d p2, Vector3d axis, int n) {
+	private static String getPolygonJmol(int index, Point3d p1, Point3d p2, Vector3d axis, int n) {
 		StringBuilder s = new StringBuilder();
-		s.append("Polygon ");
+		s.append("draw p");
+		s.append(index);
+		s.append(" ");
+		s.append("polygon");
+		s.append(" ");
 		s.append(n+1);
 		s.append(" ");
 		
 		s.append("{");
-    	s.append(p1.x);
+    	s.append(jMolFloat(p1.x));
     	s.append(" ");
-    	s.append(p1.y);
+    	s.append(jMolFloat(p1.y));
     	s.append(" ");
-    	s.append(p1.z);
+    	s.append(jMolFloat(p1.z));
       	s.append("}");
 
-        Vector3d[] v = getPolygon(axis, n);
+        Vector3d[] v = getPolygon(axis, p1, n);
         // create vertex list
         for (int i = 0; i < n; i++) {
         	s.append("{");
-        	s.append(v[i].x);
+        	s.append(jMolFloat(v[i].x));
         	s.append(" ");
-        	s.append(v[i].y);
+        	s.append(jMolFloat(v[i].y));
         	s.append(" ");
-        	s.append(v[i].z);
+        	s.append(jMolFloat(v[i].z));
           	s.append("}");
         }
         
         // create face list
-        for (int i = 0; i < n-1; i++) {
+        s.append(" ");
+        s.append(n);
+        s.append(" ");
+        for (int i = 1; i <= n; i++) {
         	s.append("[");
         	s.append(0);
         	s.append(" ");
         	s.append(i);
         	s.append(" ");
-        	s.append(i+1);
+        	if (i < n) {
+              s.append(i+1);
+        	} else {
+              s.append(1);
+        	}
         	s.append(" ");
-        	s.append(0);
+        	s.append(7);
            	s.append("]");
         }
+        s.append(" mesh");
+		s.append(" color red;");
    
 		return s.toString();
 	}
 	
-	private static Vector3d[] getPolygon(Vector3d axis, int n) {
+	private static Vector3d[] getPolygon(Vector3d axis, Point3d point, int n) {
 		Vector3d perp = getPerpendicularVector(axis);
 
 		AxisAngle4d axisAngle = new AxisAngle4d(axis, 0);
 		Vector3d[] vectors = new Vector3d[n];
+		System.out.println("Drawing polygon: " + n);
 		for (int i = 0; i < n; i++) {
 			axisAngle.setAngle(i * 2 * Math.PI/n);
 			vectors[i] = new Vector3d(perp);	
 			Matrix4d m = new Matrix4d();
 			m.set(axisAngle);
 			m.transform(vectors[i]);
+			vectors[i].add(point);
 		}
 		return vectors;
 	}

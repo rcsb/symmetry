@@ -89,7 +89,7 @@ public class MomentsOfInertia {
     	}
     	double[] r = new double[3];
     	for (int i = 0; i < 3; i++) {
-    		r[i] = 1.0/Math.sqrt(principalMomentsOfInertia[i]);
+    		r[i] = Math.sqrt(principalMomentsOfInertia[i]/m);
     	}
     	return r;
     }

@@ -154,9 +154,10 @@ public class AxisTransformation {
 	public static String getSymmetryAxesJmol(Subunits subunits, RotationGroup rotationGroup) {
 		double radius = subunits.getMomentsOfInertia().getRadiusOfGyration() * 1.2;
 		StringBuilder s = new StringBuilder();
+		
 		int n = rotationGroup.getOrder();
-		float diameter = 1;
-		String color = "white";
+		float diameter = 0.5f;
+		String color = "red";
 
 		for (int i = 0; i < n; i++) {
 			Rotation rotation = rotationGroup.getRotation(i);
@@ -167,13 +168,12 @@ public class AxisTransformation {
 			}
 			
 			AxisAngle4d axisAngle = rotation.getAxisAngle();
-			Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
-			v.normalize();
-		
-			Point3d p1 = new Point3d(v);
+			Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
+
+			Point3d p1 = new Point3d(axis);
 			p1.scaleAdd(-radius, subunits.getCentroid());
 
-			Point3d p2 = new Point3d(v);
+			Point3d p2 = new Point3d(axis);
 			p2.scaleAdd(radius, subunits.getCentroid());
 
 			s.append("draw");
@@ -198,15 +198,39 @@ public class AxisTransformation {
 			s.append(";");
 
 			diameter = 0.1f;
-			color = "gray";
-			s.append(getPolygonJmol(i, p1, p2, v, rotation.getFold()));
-			s.append(getPolygonJmol(i + n, p2, p1, v, rotation.getFold()));
+			color = "red";
+			
+			p1 = new Point3d(axis);
+			p1.scaleAdd(-radius*0.95, subunits.getCentroid());
+
+			p2 = new Point3d(axis);
+			p2.scaleAdd(radius*0.95, subunits.getCentroid());
+			
+			Vector3d referenceAxis = getReferenceAxis(rotationGroup, axis, rotation.getDirection());
+			s.append(getPolygonJmol(i, p1, p2, axis, referenceAxis, rotation.getFold()));
+			s.append(getPolygonJmol(i + n, p2, p1, axis, referenceAxis, rotation.getFold()));
 		}
 	
 		return s.toString();
 	}
 	
-	private static String getPolygonJmol(int index, Point3d p1, Point3d p2, Vector3d axis, int n) {
+	private static Vector3d getReferenceAxis(RotationGroup rotationGroup, Vector3d axis, int direction) {
+		for (int i = 0; i < rotationGroup.getOrder(); i++) {
+			Rotation rotation = rotationGroup.getRotation(i);
+			if (rotation.getDirection() != direction) {
+		        AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
+		        Vector3d ref = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
+		        // minor symmetry axis should be perpendicular
+		        if (direction == 1) {
+		        	ref.cross(axis, ref);
+		        }
+		        return ref;
+			}
+		}
+		return getPerpendicularVector(axis);
+	}
+	
+	private static String getPolygonJmol(int index, Point3d p1, Point3d p2, Vector3d axis, Vector3d referenceAxis, int n) {
 		StringBuilder s = new StringBuilder();
 		s.append("draw p");
 		s.append(index);
@@ -224,7 +248,7 @@ public class AxisTransformation {
     	s.append(jMolFloat(p1.z));
       	s.append("}");
 
-        Vector3d[] v = getPolygon(axis, p1, n);
+        Vector3d[] v = getPolygon(axis, referenceAxis, p1, n);
         // create vertex list
         for (int i = 0; i < n; i++) {
         	s.append("{");
@@ -261,8 +285,11 @@ public class AxisTransformation {
 		return s.toString();
 	}
 	
-	private static Vector3d[] getPolygon(Vector3d axis, Point3d point, int n) {
-		Vector3d perp = getPerpendicularVector(axis);
+	private static Vector3d[] getPolygon(Vector3d axis, Vector3d referenceAxis, Point3d point, int n) {
+//		Vector3d perp = getPerpendicularVector(axis);
+		Vector3d perp = new Vector3d(referenceAxis);
+		perp.scale(2);
+//		perp.cross(perp,axis);
 
 		AxisAngle4d axisAngle = new AxisAngle4d(axis, 0);
 		Vector3d[] vectors = new Vector3d[n];

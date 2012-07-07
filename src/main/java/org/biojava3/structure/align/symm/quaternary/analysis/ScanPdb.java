@@ -126,11 +126,12 @@ public class ScanPdb implements Runnable {
 //			if (!pdbId.equals("1B44")) continue; // C5
 //			if (!pdbId.equals("2Y9J")) continue; // C24 ?
 //			if (!pdbId.equals("4HHB")) continue; // D2
-//			if (!pdbId.equals("1A2V")) continue; // D3
+//			if (!pdbId.equals("1Q2V")) continue; // D8
+//			if (!pdbId.equals("2WCD")) continue; // D12
 //			if (!pdbId.equals("2WCD")) continue; // D12
 //			if (!pdbId.equals("1AEW")) continue; // T // interesting case, look for Cd along symmetry axes
 //			if (!pdbId.equals("1A34")) continue; // I // dito
-//			if (!pdbId.equals("3KK5")) continue; // I
+//			if (!pdbId.equals("1M4X")) continue; // I
 //			if (!pdbId.equals("1COA")) continue; // D6
 //			if (!pdbId.equals("1A5K")) continue; // dot= -0.9
 //			if (!pdbId.equals("1M5Q")) continue; 

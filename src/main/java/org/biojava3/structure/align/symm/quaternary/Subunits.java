@@ -58,6 +58,18 @@ public class Subunits {
     	}
     	return count;
     }
+    
+    public int getLargestSubunit() {
+    	int index = -1;
+    	int maxLength = 0;
+    	for (int i = 0; i < caCoords.size(); i++) {
+    		int length = caCoords.get(i).length;
+    		if (length > maxLength) {
+    			index = i;
+    		}
+    	}
+    	return index;
+    }
 
     public List<Point3d> getCenters() {
         run();

@@ -69,7 +69,7 @@ public class FindQuarternarySymmetry {
 		ChainClusterer chainClusterer = new ChainClusterer(structure, parameters);
 		// TODO how about chains with UNK residues??
 		compositionFormula = chainClusterer.getCompositionFormula();
-		chainIds = chainClusterer.getChainIds();
+		chainIds = chainClusterer.getChainIdsInClusterOrder();
 		if (chainIds.size() == 0) {
 			maxFolds = 0;
 			return;

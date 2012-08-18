@@ -35,7 +35,7 @@ import org.biojava3.structure.align.symm.quaternary.Subunits;
 public class ScanPdb implements Runnable {
 	private static String PDB_PATH = "C:/PDB/";
 	private static final int MIN_SEQUENCE_LENGTH = 24;
-	private static final double SEQUENCE_IDENTITY_THRESHOLD = 1.0;
+	private static final double SEQUENCE_IDENTITY_THRESHOLD = 0.3;
 	private static final double ALIGNMENT_FRACTION_THRESHOLD = 0.9;
 	private static final double RMSD_THRESHOLD = 5.0;
 
@@ -122,15 +122,19 @@ public class ScanPdb implements Runnable {
 				continue;
 			}
 
+//			if (!pdbId.equals("1B44")) continue;
+//			if (!pdbId.equals("4EAM")) continue;
 //			if (!pdbId.equals("1A0S")) continue; // C3
+//			if (!pdbId.equals("1A5K")) continue; // C3
 //			if (!pdbId.equals("1B44")) continue; // C5
 //			if (!pdbId.equals("2Y9J")) continue; // C24 ?
-//			if (!pdbId.equals("4HHB")) continue; // D2
-//			if (!pdbId.equals("1Q2V")) continue; // D8
-//			if (!pdbId.equals("2WCD")) continue; // D12
+//			if (!pdbId.equals("4HHB")) continue; // C2/D2
+//			if (!pdbId.equals("1A95")) continue; // D2
+			if (!pdbId.equals("1A3G")) continue; // D3 good example for showing sym. axes
+//			if (!pdbId.equals("1Q2V")) continue; // D8 // problem: C2 axes are too long ??
 //			if (!pdbId.equals("2WCD")) continue; // D12
 //			if (!pdbId.equals("1AEW")) continue; // T // interesting case, look for Cd along symmetry axes
-//			if (!pdbId.equals("1A34")) continue; // I // dito
+//			if (!pdbId.equals("1A34")) continue; // I // dito 2x principal axes????
 //			if (!pdbId.equals("1M4X")) continue; // I
 //			if (!pdbId.equals("1COA")) continue; // D6
 //			if (!pdbId.equals("1A5K")) continue; // dot= -0.9
@@ -210,14 +214,17 @@ public class ScanPdb implements Runnable {
 				int order = rotationGroup.getOrder();
 				
 				Subunits subunits = finder.getSubunits();
+				List<String> chainIds = finder.getChainIds();
 				int chainCount = subunits.getCenters().size();
-				Matrix4d matrix = AxisTransformation.getTransformation(structure, subunits, rotationGroup);
-				System.out.println("Transformation:");
+				AxisTransformation at = new AxisTransformation(subunits, rotationGroup, chainIds);
+				Matrix4d matrix = at.getTransformation();
+	//			System.out.println("Transformation:");
 	//			System.out.println(matrix);
-				String jmol = AxisTransformation.getJmolTransformation(matrix);
-				System.out.println(jmol);
+				String jmolTransform = at.getJmolTransformation();
+				System.out.println(jmolTransform);
 				double trace = AxisTransformation.getTrace(matrix);
-				String jmolAxes = AxisTransformation.getSymmetryAxesJmol(subunits, rotationGroup);
+				String jmolAxes = at.getJmolSymmetryAxes();
+				System.out.println("Subunit colors: " + at.getJmolSubunitColors());
 				
 				// determine overall symmetry
 			
@@ -226,7 +233,7 @@ public class ScanPdb implements Runnable {
 				double asymmetryCoefficient = m.getAsymmetryParameter(0.001);
 
 				// create list of representative chains
-				List<String> chainIds = finder.getChainIds();
+	//			List<String> chainIds = finder.getChainIds();
 				ProteinComplexSignature s100 = new ProteinComplexSignature(pdbId, chainIds, reader100);
 				String signature100 = s100.getComplexSignature();
 				String stoich100 = s100.getComplexStoichiometry();
@@ -258,14 +265,14 @@ public class ScanPdb implements Runnable {
 				if (chainCount > 1 && groupComplete) {			
 					out.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature90 + "," + stoich90 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," +
 							order + "," + caCount + "," + chainCount + "," + rmsd + "," + rmsdT + "," + symmetryClass + "," + asymmetryCoefficient + "," +
-						    time + "," + jmol + "," + jmolAxes + "," + trace);
+						    time + "," + jmolTransform + "," + jmolAxes + "," + trace);
 							out.println();
 							out.flush();
 							multimer++;
 				} else if (chainCount > 1) {
 					out1.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature90 + "," + stoich90 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," + groupComplete + "," +
 							order + "," + caCount + "," + chainCount  + "," + rmsd + "," + rmsdT + "," + symmetryClass + "," + asymmetryCoefficient + "," +
-						    time + "," + jmol + "," + jmolAxes + "," + trace);
+						    time + "," + jmolTransform + "," + jmolAxes + "," + trace);
 					out1.println();
 					out1.flush();
 					excluded++;

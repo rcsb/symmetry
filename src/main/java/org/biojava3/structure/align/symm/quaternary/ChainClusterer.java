@@ -66,7 +66,7 @@ public class ChainClusterer  {
 		return seqClusters.get(seqClusters.size()-1).getSequenceCount();
 	}
 	
-	public List<String> getChainIds() {
+	public List<String> getChainIdsInClusterOrder() {
 		run();
 		List<String> chainIdList = new ArrayList<String>();
 
@@ -77,6 +77,10 @@ public class ChainClusterer  {
 	        }
 		}
 		return chainIdList;
+	}
+	
+	public List<String> getChainIds() {
+		return chainIds;
 	}
 	
 	public String getCompositionFormula() {

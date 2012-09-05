@@ -34,8 +34,9 @@ import org.biojava3.structure.align.symm.quaternary.Subunits;
 
 public class ScanPdb implements Runnable {
 	private static String PDB_PATH = "C:/PDB/";
+	private static final int MIN_CHAINS = 1;
 	private static final int MIN_SEQUENCE_LENGTH = 24;
-	private static final double SEQUENCE_IDENTITY_THRESHOLD = 0.3;
+	private static final double SEQUENCE_IDENTITY_THRESHOLD = 0.90;
 	private static final double ALIGNMENT_FRACTION_THRESHOLD = 0.9;
 	private static final double RMSD_THRESHOLD = 5.0;
 
@@ -64,7 +65,7 @@ public class ScanPdb implements Runnable {
 		System.out.println("Reading blastclust files");
 
 		BlastClustReader reader100 = new BlastClustReader(100);
-		BlastClustReader reader90 = new BlastClustReader(90);
+		BlastClustReader reader95 = new BlastClustReader(95);
 		BlastClustReader reader70 = new BlastClustReader(70);
 		BlastClustReader reader40 = new BlastClustReader(40);
 
@@ -100,8 +101,8 @@ public class ScanPdb implements Runnable {
 		int total = 0;
 		int err = 0;
 
-		out.println("pdbId,bioassembly,formula,signature100,stoichiometry100,types100,signature90,stoichiometry90,types90,signature70,stoichiometry70,types70,signature40,stoichiometry40,types40,pointgroup,symops,cacount,chains,rmsdS,rmsdT,symclass,asymcoeff,time,jmol,jmolaxes,trace");
-		out1.println("pdbId,bioassembly,formula,signature100,stoichiometry100,types100,signature90,stoichiometry90,types90,signature70,stoichiometry70,types70,signature40,stoichiometry40,types40,pointgroup,complete,symops,cacount,chains,rmsdS,rmsdT,symclass,asymcoeff,time,seqNum,jmol,jmolaxes,trace");
+		out.println("pdbId,bioassembly,formula,signature100,stoichiometry100,types100,signature95,stoichiometry95,types95,signature70,stoichiometry70,types70,signature40,stoichiometry40,types40,pointgroup,symops,cacount,chains,rmsdS,rmsdT,symclass,asymcoeff,time,jmol,jmolaxes,trace");
+		out1.println("pdbId,bioassembly,formula,signature100,stoichiometry100,types100,signature95,stoichiometry95,types95,signature70,stoichiometry70,types70,signature40,stoichiometry40,types40,pointgroup,complete,symops,cacount,chains,rmsdS,rmsdT,symclass,asymcoeff,time,seqNum,jmol,jmolaxes,trace");
 
 		System.out.println("Getting PdbEntryInfo");
 		List<PdbEntryInfo> list = PdbEntryInfoParser.getPdbEntryInfo();
@@ -122,6 +123,9 @@ public class ScanPdb implements Runnable {
 				continue;
 			}
 
+			
+//			if (!pdbId.equals("1ZOD")) continue;
+//			if (!pdbId.equals("1A9S")) continue; // good example
 //			if (!pdbId.equals("1B44")) continue;
 //			if (!pdbId.equals("4EAM")) continue;
 //			if (!pdbId.equals("1A0S")) continue; // C3
@@ -130,7 +134,7 @@ public class ScanPdb implements Runnable {
 //			if (!pdbId.equals("2Y9J")) continue; // C24 ?
 //			if (!pdbId.equals("4HHB")) continue; // C2/D2
 //			if (!pdbId.equals("1A95")) continue; // D2
-			if (!pdbId.equals("1A3G")) continue; // D3 good example for showing sym. axes
+//			if (!pdbId.equals("1A3G")) continue; // D3 good example for showing sym. axes
 //			if (!pdbId.equals("1Q2V")) continue; // D8 // problem: C2 axes are too long ??
 //			if (!pdbId.equals("2WCD")) continue; // D12
 //			if (!pdbId.equals("1AEW")) continue; // T // interesting case, look for Cd along symmetry axes
@@ -155,7 +159,8 @@ public class ScanPdb implements Runnable {
 			int bioAssemblyCount = entry.getBioAssemblyCount();
 			System.out.println("Bioassemblies: " + bioAssemblyCount);
 			int n = Math.max(bioAssemblyCount, 1);
-			for (int i = 0; i < n; i++) {			
+			for (int i = 0; i < n; i++) {		
+				System.out.println("Bioassembly: " + i);
 				Structure structure = null;
 				int bioassemblyId = 0;
 				try {
@@ -181,8 +186,6 @@ public class ScanPdb implements Runnable {
 					err++;
 					continue;
 				}
-
-				boolean biologicalAssembly = structure.isBiologicalAssembly();
 
 				long tc1 = System.nanoTime(); 	
 
@@ -238,10 +241,10 @@ public class ScanPdb implements Runnable {
 				String signature100 = s100.getComplexSignature();
 				String stoich100 = s100.getComplexStoichiometry();
 				int types100 = s100.getSubunitTypeCount();
-				ProteinComplexSignature s90 = new ProteinComplexSignature(pdbId, chainIds, reader90);
-				String signature90 = s90.getComplexSignature();
-				String stoich90 = s90.getComplexStoichiometry();
-				int types90 = s90.getSubunitTypeCount();
+				ProteinComplexSignature s95 = new ProteinComplexSignature(pdbId, chainIds, reader95);
+				String signature95 = s95.getComplexSignature();
+				String stoich95 = s95.getComplexStoichiometry();
+				int types90 = s95.getSubunitTypeCount();
 				System.out.println("sign100: " + signature100 + ":" + stoich100);
 				ProteinComplexSignature s70 = new ProteinComplexSignature(pdbId, chainIds, reader70);
 				String signature70 = s70.getComplexSignature();
@@ -262,15 +265,17 @@ public class ScanPdb implements Runnable {
 
 				
 				// write .csv summary file
-				if (chainCount > 1 && groupComplete) {			
-					out.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature90 + "," + stoich90 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," +
+				if (chainCount >= MIN_CHAINS && groupComplete) {			
+					out.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature95 + "," + stoich95 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," +
 							order + "," + caCount + "," + chainCount + "," + rmsd + "," + rmsdT + "," + symmetryClass + "," + asymmetryCoefficient + "," +
 						    time + "," + jmolTransform + "," + jmolAxes + "," + trace);
 							out.println();
 							out.flush();
-							multimer++;
-				} else if (chainCount > 1) {
-					out1.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature90 + "," + stoich90 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," + groupComplete + "," +
+							if (chainCount > 1) {
+								multimer++;
+							}
+				} else if (chainCount >= MIN_CHAINS) {
+					out1.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature95 + "," + stoich95 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," + groupComplete + "," +
 							order + "," + caCount + "," + chainCount  + "," + rmsd + "," + rmsdT + "," + symmetryClass + "," + asymmetryCoefficient + "," +
 						    time + "," + jmolTransform + "," + jmolAxes + "," + trace);
 					out1.println();

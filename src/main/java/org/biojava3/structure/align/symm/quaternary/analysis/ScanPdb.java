@@ -227,7 +227,6 @@ public class ScanPdb implements Runnable {
 				System.out.println(jmolTransform);
 				double trace = AxisTransformation.getTrace(matrix);
 				String jmolAxes = at.getJmolSymmetryAxes();
-				System.out.println("Subunit colors: " + at.getJmolSubunitColors());
 				
 				// determine overall symmetry
 			

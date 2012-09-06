@@ -1,23 +1,16 @@
 package org.biojava3.structure.align.symm.quaternary;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import javax.vecmath.AxisAngle4d;
-import javax.vecmath.Color4f;
 import javax.vecmath.GMatrix;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
-
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.domain.pdp.GetDistanceMatrix;
-import org.jcolorbrewer.ColorBrewer;
 
 public class AxisTransformation {
 	private static Vector3d X_AXIS = new Vector3d(1,0,0);
@@ -391,10 +384,10 @@ public class AxisTransformation {
 	public String getJmolSubunitColors() {
 		List<Integer> clusterIds = subunits.getSequenceClusterIds();
 		Integer entityCount = Collections.max(clusterIds) + 1;
-		ColorBrewer[] palette = ColorBrewer.getSequentialColorPalettes(true);
-		ColorBrewer testPalette = ColorBrewer.PuOr;
-		System.out.println("Entity count: " + entityCount);
-		Color[] c = testPalette.getColorPalette(entityCount);
+//		ColorBrewer[] palette = ColorBrewer.getSequentialColorPalettes(true);
+//		ColorBrewer testPalette = ColorBrewer.PuOr;
+//		System.out.println("Entity count: " + entityCount);
+//		Color[] c = testPalette.getColorPalette(entityCount);
 		StringBuilder s = new StringBuilder();
 //		List<String> chainIds = getChainIdsInRotationOrder();
 		for (int i = 0; i < chainIds.size(); i++) {
@@ -405,11 +398,11 @@ public class AxisTransformation {
 //			s.append("color ");
 			s.append("[");
 			int index = clusterIds.get(i);
-			s.append(c[index].getRed());
+	//		s.append(c[index].getRed());
 			s.append(",");
-			s.append(c[index].getGreen());
+	//		s.append(c[index].getGreen());
 			s.append(",");
-			s.append(c[index].getBlue());
+	//		s.append(c[index].getBlue());
 			s.append("]");
 			s.append(";");
 		}
@@ -429,7 +422,8 @@ public class AxisTransformation {
 		Matrix4d m = new Matrix4d();
 
 		for (int i = 0; i < n; i++) {
-			axisAngle.setAngle(i * 2 * Math.PI/n);
+	//		axisAngle.setAngle(i * 2 * Math.PI/n);
+			axisAngle.angle = i * 2 * Math.PI/n;
 			vectors[i] = new Vector3d(perp);		
 			m.set(axisAngle);
 			m.transform(vectors[i]);

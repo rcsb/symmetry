@@ -46,9 +46,9 @@ public class PermutationGroup {
         	int m = permutations.size();
  //       	System.out.println("completeGroup iteration");
         	completeGroup();
-        	if (permutations.size() > m) {
-        		System.out.println("complete group iteration: " + m +"/" + permutations.size());
-        	}
+ //       	if (permutations.size() > m) {
+ //       		System.out.println("complete group iteration: " + m +"/" + permutations.size());
+  //      	}
         }
     }
 

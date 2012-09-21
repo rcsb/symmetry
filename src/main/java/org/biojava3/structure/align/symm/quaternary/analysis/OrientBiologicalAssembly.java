@@ -89,7 +89,6 @@ public class OrientBiologicalAssembly {
 			e.printStackTrace();
 			System.exit(-1);
 		}
-		out.println("transformation");
 		out.println(matrix);
 		out.flush();
 		out.close();

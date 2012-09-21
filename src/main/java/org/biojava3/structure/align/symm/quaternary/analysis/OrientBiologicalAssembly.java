@@ -85,9 +85,7 @@ public class OrientBiologicalAssembly {
 		params.setAlignmentFractionThreshold(ALIGNMENT_FRACTION_THRESHOLD);
 		params.setRmsdThreshold(RMSD_THRESHOLD);
 
-
 		FindQuarternarySymmetry finder = new FindQuarternarySymmetry(structure, params);	
-
 
 		RotationGroup rotationGroup = new RotationGroup();
 		if (finder.getChainCount() > 0) {
@@ -133,7 +131,7 @@ public class OrientBiologicalAssembly {
 		String name = f.getName();
 		name = name.substring(0, name.indexOf('.'));
 		Character lastChar = outputDirectory.charAt(outputDirectory.length()-1);
-		if (lastChar.equals('/')) {
+		if (lastChar.equals('/') || lastChar.equals('\\')) {
 			return outputDirectory + name;
 		} else {
 			return outputDirectory + "\\" + name;

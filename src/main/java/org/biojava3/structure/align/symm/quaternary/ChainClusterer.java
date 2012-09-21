@@ -22,9 +22,9 @@ public class ChainClusterer  {
 	private List<String> chainIds = new ArrayList<String>();
 	private List<String> sequences = new ArrayList<String>();
 	private List<Atom[]> caAligned = new ArrayList<Atom[]>();
-	private List<Atom[]> cbAligned = new ArrayList<Atom[]>();
+//	private List<Atom[]> cbAligned = new ArrayList<Atom[]>();
 	private List<Point3d[]> caCoords = new ArrayList<Point3d[]>();
-	private List<Point3d[]> cbCoords = new ArrayList<Point3d[]>();
+//	private List<Point3d[]> cbCoords = new ArrayList<Point3d[]>();
 
 	List<SequenceAlignmentCluster> seqClusters = new ArrayList<SequenceAlignmentCluster>();
 	
@@ -41,20 +41,20 @@ public class ChainClusterer  {
 		return caCoords;
 	}
 	
-	public List<Point3d[]> getCbetaCoordinates() {
-        run();
-		return cbCoords;
-	}
+//	public List<Point3d[]> getCbetaCoordinates() {
+//        run();
+//		return cbCoords;
+//	}
 	
 	public List<Atom[]> getCalphaTraces() {
 		run();
 		return caAligned;
 	}
 	
-	public List<Atom[]> getCbetaTraces() {
-		run();
-		return cbAligned;
-	}
+//	public List<Atom[]> getCbetaTraces() {
+//		run();
+//		return cbAligned;
+//	}
 	
 	public boolean isHomomeric() {
 		run();
@@ -152,7 +152,7 @@ public class ChainClusterer  {
 			calcSequenceClusters();
 			calcAlignedSequences();
 			createCalphaTraces();
-			createCbetaTraces();
+//			createCbetaTraces();
 			modified = false;
 		}
 	}
@@ -162,11 +162,11 @@ public class ChainClusterer  {
 		caUnaligned = extractor.getCalphaTraces();
 		chainIds  = extractor.getChainIds();
 		sequences = extractor.getSequences();
-	    System.out.println("ChainClusterer: " + caUnaligned.size() + " " + chainIds);
-        System.out.println("C alphas: ");
-        for (Atom[] atoms: caUnaligned) {
-        	System.out.println("Atoms: " + atoms.length);
-        }
+//	    System.out.println("Sequence clusters: " + chainIds);
+//        System.out.println("C alphas: ");
+//        for (Atom[] atoms: caUnaligned) {
+//        	System.out.println("Atoms: " + atoms.length);
+//        }
 	}
 	
 	private void calcSequenceClusters() {
@@ -205,10 +205,10 @@ public class ChainClusterer  {
 	
 	private void calcAlignedSequences() {
 		caAligned = new ArrayList<Atom[]>();
-		cbAligned = new ArrayList<Atom[]>();
+//		cbAligned = new ArrayList<Atom[]>();
 		for (SequenceAlignmentCluster cluster: seqClusters) {
 			caAligned.addAll(cluster.getAlignedCalphaAtoms());	
-			cbAligned.addAll(cluster.getAlignedCBetaAtoms());
+//			cbAligned.addAll(cluster.getAlignedCBetaAtoms());
 		}
 	}
 	
@@ -222,15 +222,15 @@ public class ChainClusterer  {
 		}
 	}
 	
-	private void createCbetaTraces() {
-		for (Atom[] atoms: cbAligned) {
-			Point3d[] trace = new Point3d[atoms.length];
-			for (int j = 0; j < atoms.length; j++) {
-				trace[j] = new Point3d(atoms[j].getCoords());
-			}
-			cbCoords.add(trace);
-		}
-	}
+//	private void createCbetaTraces() {
+//		for (Atom[] atoms: cbAligned) {
+//			Point3d[] trace = new Point3d[atoms.length];
+//			for (int j = 0; j < atoms.length; j++) {
+//				trace[j] = new Point3d(atoms[j].getCoords());
+//			}
+//			cbCoords.add(trace);
+//		}
+//	}
 
 	public String toString() {
 		StringBuilder builder = new StringBuilder();

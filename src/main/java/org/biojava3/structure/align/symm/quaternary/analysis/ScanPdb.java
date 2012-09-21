@@ -124,7 +124,7 @@ public class ScanPdb implements Runnable {
 			}
 
 			
-//			if (!pdbId.equals("1ZOD")) continue;
+			if (!pdbId.equals("1M4X")) continue;
 //			if (!pdbId.equals("1A9S")) continue; // good example
 //			if (!pdbId.equals("1B44")) continue;
 //			if (!pdbId.equals("4EAM")) continue;
@@ -221,8 +221,8 @@ public class ScanPdb implements Runnable {
 				int chainCount = subunits.getCenters().size();
 				AxisTransformation at = new AxisTransformation(subunits, rotationGroup, chainIds);
 				Matrix4d matrix = at.getTransformation();
-	//			System.out.println("Transformation:");
-	//			System.out.println(matrix);
+				System.out.println("Transformation:");
+				System.out.println(matrix);
 				String jmolTransform = at.getJmolTransformation();
 				System.out.println(jmolTransform);
 				double trace = AxisTransformation.getTrace(matrix);

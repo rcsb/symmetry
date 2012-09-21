@@ -77,9 +77,12 @@ public class FindQuarternarySymmetry {
 		List<Integer> folds = chainClusterer.getFolds();
 		maxFolds = folds.get(folds.size()-1);
 		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
-				chainClusterer.getCbetaCoordinates(), 
 				chainClusterer.getSequenceClusterIds(),
 				folds);
+//		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
+//				chainClusterer.getCbetaCoordinates(), 
+//				chainClusterer.getSequenceClusterIds(),
+//				folds);
 	}
 
 	private void determineRotationGroup() {

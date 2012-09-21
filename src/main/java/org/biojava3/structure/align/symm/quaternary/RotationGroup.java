@@ -61,7 +61,6 @@ public class RotationGroup {
 
     public void complete() {
     	 if (modified) {
-    		 System.out.println("Completing rotation group");
     		 if (rotations.size() > 0) {
     			 findHighestOrderAxis();
     			 setEAxis();

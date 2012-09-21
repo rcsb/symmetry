@@ -13,7 +13,7 @@ import javax.vecmath.Vector3d;
  */
 public class Subunits {
     private List<Point3d[]> caCoords = new ArrayList<Point3d[]>();
-    private List<Point3d[]> cbCoords = new ArrayList<Point3d[]>();
+//    private List<Point3d[]> cbCoords = new ArrayList<Point3d[]>();
     private List<Integer> sequenceClusterIds = new ArrayList<Integer>(0);
     private List<Integer> folds = new ArrayList<Integer>(0);
     private List<Point3d> originalCenters = new ArrayList<Point3d>(0);
@@ -23,9 +23,10 @@ public class Subunits {
     private Point3d centroid;
     private MomentsOfInertia momentsOfInertia = new MomentsOfInertia();
 
-    public Subunits(List<Point3d[]> caCoords, List<Point3d[]> cbCoords, List<Integer> sequenceClusterIds, List<Integer> folds) {
+//    public Subunits(List<Point3d[]> caCoords, List<Point3d[]> cbCoords, List<Integer> sequenceClusterIds, List<Integer> folds) {
+      public Subunits(List<Point3d[]> caCoords, List<Integer> sequenceClusterIds, List<Integer> folds) {
         this.caCoords = caCoords;
-        this.cbCoords = cbCoords;
+//        this.cbCoords = cbCoords;
         this.sequenceClusterIds = sequenceClusterIds;
         this.folds = folds;
     }
@@ -34,9 +35,9 @@ public class Subunits {
         return caCoords;
     }
     
-    public List<Point3d[]> getCBCoords() {
-        return cbCoords;
-    }
+//    public List<Point3d[]> getCBCoords() {
+//        return cbCoords;
+//    }
 
     public int getSubunitCount() {
         run();

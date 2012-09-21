@@ -63,7 +63,7 @@ public class AxisTransformation {
 		// if rotation group has orthogonal axis, use it for alignment
 		referenceAxis = getMinorRotationAxis(rotationGroup);
 		if (referenceAxis == null) {
-			System.out.println("Ortho is null");
+//			System.out.println("Ortho is null");
 			referenceAxis = getSubunitReferenceAxis();
 		}
 		referenceAxis.cross(principalAxis, referenceAxis); // make it perpendicular

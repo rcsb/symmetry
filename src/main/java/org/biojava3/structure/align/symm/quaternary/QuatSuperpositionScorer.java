@@ -33,7 +33,7 @@ public class QuatSuperpositionScorer {
         double cbDistanceSq = 0;
         Point3d t = new Point3d();
         List<Point3d[]> traces = subunits.getTraces();
-        List<Point3d[]> cbCoords = subunits.getCBCoords();
+//        List<Point3d[]> cbCoords = subunits.getCBCoords();
         int reverseAlignments = 0;
         
         for (int i = 0; i < traces.size(); i++) {
@@ -54,21 +54,21 @@ public class QuatSuperpositionScorer {
             }
             
             // calculate CB RMSD
-            Point3d[] cbOrig = cbCoords.get(i);
-            cbLen += cbOrig.length;
+//            Point3d[] cbOrig = cbCoords.get(i);
+ //           cbLen += cbOrig.length;
                     
    //         System.out.println("compare: " + i + " - " + permutation.get(i));
 
             // transform each CB trace
-            Point3d[] cbPerm = cbCoords.get(permutation.get(i));
-            for (int j = 0; j < cbPerm.length; j++) {
-                t.set(cbPerm[j]);
-                transformation.transform(t);
-                cbDistanceSq += cbOrig[j].distanceSquared(t);
+//            Point3d[] cbPerm = cbCoords.get(permutation.get(i));
+//            for (int j = 0; j < cbPerm.length; j++) {
+//                t.set(cbPerm[j]);
+//                transformation.transform(t);
+//                cbDistanceSq += cbOrig[j].distanceSquared(t);
 //                if (distanceSq > 16) {
  //                   System.out.println(orig[j] + " - " + t);
  //               }
-            }
+//            }
          // N -> Cterminal vector for original coordinates
             
    //         int first = 4; 

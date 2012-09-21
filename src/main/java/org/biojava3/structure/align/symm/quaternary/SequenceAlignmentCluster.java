@@ -30,7 +30,7 @@ public class SequenceAlignmentCluster {
 	private QuatSymmetryParameters parameters = null;
 	private List<UniqueSequenceList> uniqueSequenceList = new ArrayList<UniqueSequenceList>();
 	private List<Atom[]> alignedCAlphaAtoms = null;
-	private List<Atom[]> alignedCBetaAtoms = null;
+//	private List<Atom[]> alignedCBetaAtoms = null;
 	private int alignmentLength = 0;
 	private boolean modified = true;
 
@@ -74,14 +74,14 @@ public class SequenceAlignmentCluster {
 			Alignments.getPairwiseAligner(s1, s2, PairwiseSequenceAlignerType.LOCAL, penalty, matrix);
 
 		SequencePair<ProteinSequence, AminoAcidCompound> pair = smithWaterman.getPair();
-		System.out.println("Len1: " + referenceSequence.length() + " - " + s1.getLength());
-		System.out.println("Len2: " + sequence.length() + " - " + s2.getLength());
-		System.out.println("Length: " + pair.getLength() + "idenities: " + pair.getNumIdenticals());
+//		System.out.println("Len1: " + referenceSequence.length() + " - " + s1.getLength());
+//		System.out.println("Len2: " + sequence.length() + " - " + s2.getLength());
+//		System.out.println("Length: " + pair.getLength() + "idenities: " + pair.getNumIdenticals());
 		if (pair.getLength() == 0)
 			return false;
 		double sequenceIdentity = (double)pair.getNumIdenticals()/pair.getLength();
 		double alignmentLengthFraction = (double)pair.getLength()/Math.max(s1.getLength(), s2.getLength());
-		System.out.println("Ref seq. identity: " + sequenceIdentity + " fraction: " + alignmentLengthFraction);
+//		System.out.println("Ref seq. identity: " + sequenceIdentity + " fraction: " + alignmentLengthFraction);
 		return sequenceIdentity >= parameters.getSequenceIdentityThreshold() && alignmentLengthFraction >= parameters.getAlignmentFractionThreshold();
 	}
 	
@@ -137,10 +137,10 @@ public class SequenceAlignmentCluster {
 		return alignedCAlphaAtoms;
 	}
 	
-	public List<Atom[]> getAlignedCBetaAtoms() {
-		run();
-		return alignedCBetaAtoms;
-	}
+//	public List<Atom[]> getAlignedCBetaAtoms() {
+//		run();
+//		return alignedCBetaAtoms;
+//	}
 	
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -153,7 +153,7 @@ public class SequenceAlignmentCluster {
 
 	private void run() {
 		if (modified) {
-			alignedCBetaAtoms = null;
+//			alignedCBetaAtoms = null;
 			alignedCAlphaAtoms = null;
 			createAlignedCAlphaAtoms();
 			createAlignedCBetaAtoms();	
@@ -170,7 +170,7 @@ public class SequenceAlignmentCluster {
 				for (int i = 0; i < cAlphaAtoms.length; i++) {
 					align.add(i);
 				}
-				System.out.println("SequenceAlignmentCluster: found exact match");
+//				System.out.println("SequenceAlignmentCluster: found exact match");
 				return true;
 			}
 		}
@@ -191,7 +191,7 @@ public class SequenceAlignmentCluster {
 			List<Integer> alig2 = new ArrayList<Integer>();
 			Atom[] referenceAtoms = u.getReferenceChain();
 			int inCommon = alignByAtomSequence(referenceAtoms, cAlphaAtoms, alig1, alig2);
-			System.out.println("in common: "  + inCommon);
+//			System.out.println("in common: "  + inCommon);
 
 			UniqueSequenceList seqList = new UniqueSequenceList(cAlphaAtoms, chainId, sequence);
 			seqList.setAlignment1(alig1);
@@ -221,7 +221,7 @@ public class SequenceAlignmentCluster {
 			System.out.println("AFPChain is null");
 		}
 
-		System.out.println("Smith-Waterman: Seq. identity: " + identity + " rmsd: " + rmsd + " Alignment length: " + afp.getOptLength());
+		System.out.println("Smith-Waterman: seq. identity: " + (float)identity + " RMSD: " + (float)rmsd + " alignment length: " + afp.getOptLength());
 //		System.out.println(afp.getAlnseq1());
 //		System.out.println(afp.getAlnseq2());
 		if (identity < 1.0) {
@@ -233,7 +233,7 @@ public class SequenceAlignmentCluster {
 			}
 			identity = afp.getIdentity();
 			rmsd = afp.getChainRmsd();
-			System.out.println("CE: Seq. identity: " + identity + " rmsd: " + rmsd + " Alignment length: " + afp.getOptLength());
+			System.out.println("CE            : seq. identity: " + (float)identity + " RMSD: " + (float)rmsd + " alignment length: " + afp.getOptLength());
 //			System.out.println(afp.getAlnseq1());
 //			System.out.println(afp.getAlnseq2());
 		}
@@ -413,24 +413,24 @@ public class SequenceAlignmentCluster {
 		
 //		System.out.println("CBs in common: " + inCommon);
 		// copy only atoms that are in common in all chains
-		alignedCBetaAtoms = new ArrayList<Atom[]>();
-		for (int j = 0; j < cbetas.size(); j++) {
-			cb = cbetas.get(j);
-			Atom[] cbatoms = new Atom[inCommon.size()];
-			int index = 0;
-			for (int i = 0; i < cb.length; i++) {
-			   if (inCommon.contains(i)) {
-//				   if (cb[i] == null) {
-//					   System.out.println("Adding null: " + index);
-//				   }
-				   cbatoms[index] = cb[i];
-				   index++;
-			   }
-			}
-//			System.out.println("index: " + index);
-			alignedCBetaAtoms.add(cbatoms);
-			System.out.println("Cbeta: " + cbatoms.length);
-		}
+//		alignedCBetaAtoms = new ArrayList<Atom[]>();
+//		for (int j = 0; j < cbetas.size(); j++) {
+//			cb = cbetas.get(j);
+//			Atom[] cbatoms = new Atom[inCommon.size()];
+//			int index = 0;
+//			for (int i = 0; i < cb.length; i++) {
+//			   if (inCommon.contains(i)) {
+////				   if (cb[i] == null) {
+////					   System.out.println("Adding null: " + index);
+////				   }
+//				   cbatoms[index] = cb[i];
+//				   index++;
+//			   }
+//			}
+////			System.out.println("index: " + index);
+//			alignedCBetaAtoms.add(cbatoms);
+//			System.out.println("Cbeta: " + cbatoms.length);
+//		}
 	}
 	
 	private List<Integer> getReferenceResidueIndices() {

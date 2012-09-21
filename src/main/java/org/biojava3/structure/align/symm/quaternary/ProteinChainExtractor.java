@@ -59,12 +59,12 @@ public class ProteinChainExtractor  {
 		for (int i = 0; i < models; i++) {
 			for (Chain c : structure.getChains(i)) {
 				Atom[] ca = StructureTools.getAtomCAArray(c);
-				System.out.println("Chain " + c.getChainID() + ": " + c.getSeqResSequence());
 				if (containsUnknownResidues(ca)) {
 					ca = removeUnknownResidues(ca);
 					unknownSequence = true;
 				}
 				if (ca.length >= minSequenceLength) {
+				   System.out.println("Chain " + c.getChainID() + ": " + c.getSeqResSequence());
 				   cAlphaTrace.add(ca);
 				   chainIds.add(c.getChainID());
 				   sequences.add(c.getSeqResSequence());

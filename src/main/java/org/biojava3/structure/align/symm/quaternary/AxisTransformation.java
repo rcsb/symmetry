@@ -32,7 +32,7 @@ public class AxisTransformation {
 	}
 	
 	public Matrix4d getTransformation() {
-		if (subunits.getSubunitCount() == 0) {
+		if (subunits == null || subunits.getSubunitCount() == 0) {
             transformationMatrix.setIdentity();
 		} else if (rotationGroup.getPointGroup().equals("C1")) {
 			transformationMatrix = getTransformationByInertiaAxes();
@@ -75,8 +75,8 @@ public class AxisTransformation {
 		// check if subunits are already co-linear with principal axis, for example 1A6D, bioassembly 1
 		double dp =  Z_AXIS.dot(principalAxis);
 		if (Math.abs(dp) > 0.99999) {
-			System.out.println("Axis vs. z: " + dp);
-			System.out.println("Angle with Y axis: " + Math.toDegrees(Y_AXIS.angle(referenceAxis)));
+//			System.out.println("Axis vs. z: " + dp);
+//			System.out.println("Angle with Y axis: " + Math.toDegrees(Y_AXIS.angle(referenceAxis)));
 			double angle = Y_AXIS.angle(referenceAxis);
 			AxisAngle4d aa = new AxisAngle4d(Z_AXIS, angle);
 			Matrix4d m = new Matrix4d();
@@ -123,15 +123,12 @@ public class AxisTransformation {
 		
 		Point3d probe = new Point3d();
 		Point3d centroid = subunits.getCentroid();
-		System.out.println("centroid: " + centroid);
+//		System.out.println("centroid: " + centroid);
 		for (Point3d[] list: subunits.getTraces()) {
 			for (Point3d p: list) {
 				probe.set(p);
-				// TODO aren't the traces already centered??
 				probe.sub(centroid);
 				transformationMatrix.transform(probe);
-		//		probe.sub(centroid);	
-		//		System.out.println("probe: " + probe);
 				xMin = Math.min(xMin, probe.x);
 				xMax = Math.max(xMax, probe.x);
 				yMin = Math.min(yMin, probe.y);
@@ -144,12 +141,11 @@ public class AxisTransformation {
 		}
 		double[] dimensions = new double[2];
 		dimensions[0] = axisScale * 0.5 * (zMax - zMin); // half of dimension along z-axis (principal rotation axis)
-		dimensions[1] = axisScale * Math.sqrt(xyRadiusMaxSq); // max radius for rotation in x-y plane
-		dimensions[1] = axisScale * 0.5 * Math.max((xMax-xMin), (yMax-yMin));
-		System.out.println("dimensions: " + Arrays.toString(dimensions));
-		System.out.println("centroid: " + centroid);
-		System.out.println("x min/max: " + xMin + " " + xMax);
-		System.out.println("y min/max: " + yMin + " " + yMax);
+		dimensions[1] = axisScale * 0.5 * Math.max((xMax-xMin), (yMax-yMin)); // max radius for rotation in x-y plane
+//		System.out.println("dimensions: " + Arrays.toString(dimensions));
+//		System.out.println("centroid: " + centroid);
+//		System.out.println("x min/max: " + xMin + " " + xMax);
+//		System.out.println("y min/max: " + yMin + " " + yMax);
 		return dimensions;
 	}
 	
@@ -208,6 +204,9 @@ public class AxisTransformation {
 		StringBuilder s = new StringBuilder();
 		
 		int n = rotationGroup.getOrder();
+		if (n == 0) {
+			return s.toString();
+		}
 		double[] dimensions = getDimensions();
 		float diameter = 0.5f;
 		double radius = 0;

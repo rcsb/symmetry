@@ -10,6 +10,8 @@ import java.util.List;
 import javax.vecmath.Matrix4d;
 
 import org.biojava.bio.structure.Structure;
+import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.align.symm.quaternary.AxisTransformation;
@@ -28,6 +30,10 @@ public class OrientBiologicalAssembly {
 	private String outputDirectory = "";
 
 	public OrientBiologicalAssembly (String fileName, String outputDirectory) {
+		
+		// initialize the PDB_DIR env variable
+		AtomCache cache = new AtomCache();
+		
 		this.fileName = fileName;
 		this.outputDirectory = outputDirectory;
 	}

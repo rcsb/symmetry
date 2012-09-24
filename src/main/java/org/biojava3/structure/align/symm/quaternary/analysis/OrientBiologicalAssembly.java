@@ -24,13 +24,12 @@ public class OrientBiologicalAssembly {
 	private String outputDirectory = "";
 
 	public OrientBiologicalAssembly (String fileName, String outputDirectory) {		
-
 		this.fileName = fileName;
 		this.outputDirectory = outputDirectory;
 	}
 
 	public static void main(String[] args) {
-		System.out.println("Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
+		System.out.println("OrientBiologicalAssembly V 0.1: Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
 		System.out.println();
 		if (args.length != 2) {
 			System.out.println("Usage: OrientBiologicalAssembly pdbFile outputDirectory");
@@ -101,7 +100,7 @@ public class OrientBiologicalAssembly {
 			System.out.println("Symmetry RMSD: " + (float) rotationGroup.getAverageTraceRmsd());
 		} 
 
-		AxisTransformation at = new AxisTransformation(finder.getSubunits(), rotationGroup, finder.getChainIds());
+		AxisTransformation at = new AxisTransformation(finder.getSubunits(), rotationGroup);
 	
 		System.out.println();
 		String prefix = getBaseFileName();

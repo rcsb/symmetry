@@ -219,13 +219,12 @@ public class ScanPdb implements Runnable {
 				Subunits subunits = finder.getSubunits();
 				List<String> chainIds = finder.getChainIds();
 				int chainCount = subunits.getCenters().size();
-				AxisTransformation at = new AxisTransformation(subunits, rotationGroup, chainIds);
+				AxisTransformation at = new AxisTransformation(subunits, rotationGroup);
 				Matrix4d matrix = at.getTransformation();
 				System.out.println("Transformation:");
 				System.out.println(matrix);
 				String jmolTransform = at.getJmolTransformation();
 				System.out.println(jmolTransform);
-				double trace = AxisTransformation.getTrace(matrix);
 				String jmolAxes = at.getJmolSymmetryAxes();
 				
 				// determine overall symmetry
@@ -267,7 +266,7 @@ public class ScanPdb implements Runnable {
 				if (chainCount >= MIN_CHAINS && groupComplete) {			
 					out.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature95 + "," + stoich95 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," +
 							order + "," + caCount + "," + chainCount + "," + rmsd + "," + rmsdT + "," + symmetryClass + "," + asymmetryCoefficient + "," +
-						    time + "," + jmolTransform + "," + jmolAxes + "," + trace);
+						    time + "," + jmolTransform + "," + jmolAxes);
 							out.println();
 							out.flush();
 							if (chainCount > 1) {
@@ -276,7 +275,7 @@ public class ScanPdb implements Runnable {
 				} else if (chainCount >= MIN_CHAINS) {
 					out1.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature95 + "," + stoich95 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," + groupComplete + "," +
 							order + "," + caCount + "," + chainCount  + "," + rmsd + "," + rmsdT + "," + symmetryClass + "," + asymmetryCoefficient + "," +
-						    time + "," + jmolTransform + "," + jmolAxes + "," + trace);
+						    time + "," + jmolTransform + "," + jmolAxes);
 					out1.println();
 					out1.flush();
 					excluded++;

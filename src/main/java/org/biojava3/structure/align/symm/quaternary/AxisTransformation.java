@@ -1,10 +1,5 @@
 package org.biojava3.structure.align.symm.quaternary;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.GMatrix;
 import javax.vecmath.Matrix4d;
@@ -19,16 +14,14 @@ public class AxisTransformation {
 	
 	private Subunits subunits = null;
 	private RotationGroup rotationGroup = null;
-	private List<String> chainIds = null;
 	
 	private Matrix4d transformationMatrix = new Matrix4d();
 	private Vector3d principalAxis = new Vector3d();
 	private Vector3d referenceAxis = new Vector3d();
 	
-	public AxisTransformation(Subunits subunits, RotationGroup rotationGroup, List<String> chainIds) {
+	public AxisTransformation(Subunits subunits, RotationGroup rotationGroup) {
 		this.subunits = subunits;
 		this.rotationGroup = rotationGroup;
-		this.chainIds = chainIds;
 	}
 	
 	public Matrix4d getTransformation() {
@@ -42,8 +35,6 @@ public class AxisTransformation {
 		return transformationMatrix;
 	}
 	
-	
-
 	private Matrix4d getTransformationBySymmetryAxes() {
 		
 		// orientation of subunit symmetry axes at the centroid of the subunits
@@ -63,7 +54,6 @@ public class AxisTransformation {
 		// if rotation group has orthogonal axis, use it for alignment
 		referenceAxis = getMinorRotationAxis(rotationGroup);
 		if (referenceAxis == null) {
-//			System.out.println("Ortho is null");
 			referenceAxis = getSubunitReferenceAxis();
 		}
 		referenceAxis.cross(principalAxis, referenceAxis); // make it perpendicular
@@ -112,7 +102,6 @@ public class AxisTransformation {
 
 	private double[] getDimensions() {
 		double axisScale = 1.2;
-
 		double xMin = Double.MAX_VALUE;
 		double xMax = Double.MIN_VALUE;
 		double yMin = Double.MAX_VALUE;
@@ -123,7 +112,7 @@ public class AxisTransformation {
 		
 		Point3d probe = new Point3d();
 		Point3d centroid = subunits.getCentroid();
-//		System.out.println("centroid: " + centroid);
+
 		for (Point3d[] list: subunits.getTraces()) {
 			for (Point3d p: list) {
 				probe.set(p);
@@ -142,10 +131,7 @@ public class AxisTransformation {
 		double[] dimensions = new double[2];
 		dimensions[0] = axisScale * 0.5 * (zMax - zMin); // half of dimension along z-axis (principal rotation axis)
 		dimensions[1] = axisScale * 0.5 * Math.max((xMax-xMin), (yMax-yMin)); // max radius for rotation in x-y plane
-//		System.out.println("dimensions: " + Arrays.toString(dimensions));
-//		System.out.println("centroid: " + centroid);
-//		System.out.println("x min/max: " + xMin + " " + xMax);
-//		System.out.println("y min/max: " + yMin + " " + yMax);
+		
 		return dimensions;
 	}
 	
@@ -366,47 +352,6 @@ public class AxisTransformation {
 		return s.toString();
 	}
 	
-	
-	private List<String> getChainIdsInRotationOrder() {
-		System.out.println("Chain ids: " + chainIds);
-		List<String> chainOrder = new ArrayList<String>();
-		for (int i = 0; i < rotationGroup.getOrder(); i++) {
-			System.out.println("Angle: " + rotationGroup.getRotation(i).getAxisAngle().angle);
-			System.out.println("Permutation: " + rotationGroup.getRotation(i).getPermutation());
-			List<Integer> permutation = rotationGroup.getRotation(i).getPermutation();
-			int index = permutation.get(0);
-			chainOrder.add(chainIds.get(index));
-		}
-		return chainOrder;
-	}
-	
-	public String getJmolSubunitColors() {
-		List<Integer> clusterIds = subunits.getSequenceClusterIds();
-		Integer entityCount = Collections.max(clusterIds) + 1;
-//		ColorBrewer[] palette = ColorBrewer.getSequentialColorPalettes(true);
-//		ColorBrewer testPalette = ColorBrewer.PuOr;
-//		System.out.println("Entity count: " + entityCount);
-//		Color[] c = testPalette.getColorPalette(entityCount);
-		StringBuilder s = new StringBuilder();
-//		List<String> chainIds = getChainIdsInRotationOrder();
-		for (int i = 0; i < chainIds.size(); i++) {
-			s.append("select (chain=");
-			s.append(chainIds.get(i));
-			s.append(");");
-			s.append("color cartoon ");
-//			s.append("color ");
-			s.append("[");
-			int index = clusterIds.get(i);
-	//		s.append(c[index].getRed());
-			s.append(",");
-	//		s.append(c[index].getGreen());
-			s.append(",");
-	//		s.append(c[index].getBlue());
-			s.append("]");
-			s.append(";");
-		}
-		return s.toString();
-	}
 	private Vector3d[] getPolygonVertices(Vector3d axis, Vector3d referenceAxis, Point3d center, int n) {
 		Vector3d perp = new Vector3d(axis);
 		// if axis coincides with principal axis, use the reference axis to orient polygon
@@ -443,7 +388,7 @@ public class AxisTransformation {
 		return (float)f;
 	}
 	
-	public static double getTrace(Matrix4d matrix) {
+	private static double getTrace(Matrix4d matrix) {
 		GMatrix m = new GMatrix(4,4);
 		m.set(matrix);
 		System.out.println("Trace: " + m.trace());

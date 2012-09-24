@@ -70,16 +70,17 @@ public class OrientBiologicalAssembly {
 		pdbreader.setFileParsingParameters(p);
 
 		Structure structure = null;
-		try{ 
+		try { 
 			structure = pdbreader.getStructure(fileName);
-			boolean isBioassembly = !getBioassemblyId().isEmpty();
-			structure.setBiologicalAssembly(isBioassembly);
+			structure.setBiologicalAssembly(isBioassembly());
 		} catch (Exception e){
 			e.printStackTrace();
 			System.exit(-1);
 		}
 		return structure;
 	}
+
+	
 
 	private void orient(Structure structure) {	
 		QuatSymmetryParameters params = new QuatSymmetryParameters();
@@ -130,6 +131,10 @@ public class OrientBiologicalAssembly {
 			last = index;
 		}
 		return fileName.substring(first, last);
+	}
+	
+	private boolean isBioassembly() {
+		return !getBioassemblyId().isEmpty();
 	}
 
 	private static void writeFile(String fileName, String text) {

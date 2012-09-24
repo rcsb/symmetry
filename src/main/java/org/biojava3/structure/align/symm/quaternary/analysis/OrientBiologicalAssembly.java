@@ -23,11 +23,8 @@ public class OrientBiologicalAssembly {
 	private String fileName = "";
 	private String outputDirectory = "";
 
-	public OrientBiologicalAssembly (String fileName, String outputDirectory) {
-		
-		// initialize the PDB_DIR env variable
-		AtomCache cache = new AtomCache();
-		
+	public OrientBiologicalAssembly (String fileName, String outputDirectory) {		
+
 		this.fileName = fileName;
 		this.outputDirectory = outputDirectory;
 	}
@@ -37,6 +34,10 @@ public class OrientBiologicalAssembly {
 		System.out.println();
 		if (args.length != 2) {
 			System.out.println("Usage: OrientBiologicalAssembly pdbFile outputDirectory");
+			System.exit(-1);
+		}
+		if (!args[0].contains(".pdb")) {
+			System.err.println("Input file must be a .pdb or a pdb.gz file");
 			System.exit(-1);
 		}
 		OrientBiologicalAssembly orienter = new OrientBiologicalAssembly(args[0], args[1]);
@@ -57,6 +58,9 @@ public class OrientBiologicalAssembly {
 	}
 
 	private Structure readStructure() {
+		// initialize the PDB_DIR env variable
+		AtomCache cache = new AtomCache();
+		
 		FileParsingParameters p = new FileParsingParameters();
 		p.setStoreEmptySeqRes(true);
 		p.setLoadChemCompInfo(true);
@@ -69,9 +73,8 @@ public class OrientBiologicalAssembly {
 		Structure structure = null;
 		try{ 
 			structure = pdbreader.getStructure(fileName);
-			System.out.println("Is bioassembly: "  + isBioassembly());
-			structure.setBiologicalAssembly(isBioassembly());
-
+			boolean isBioassembly = !getBioassemblyId().isEmpty();
+			structure.setBiologicalAssembly(isBioassembly);
 		} catch (Exception e){
 			e.printStackTrace();
 			System.exit(-1);
@@ -101,30 +104,33 @@ public class OrientBiologicalAssembly {
 		AxisTransformation at = new AxisTransformation(finder.getSubunits(), rotationGroup, finder.getChainIds());
 	
 		System.out.println();
-		String outName = getBaseFileName() + "_4x4transformation.txt";
+		String prefix = getBaseFileName();
+		String bioassemblyId = getBioassemblyId();
+		if (! bioassemblyId.isEmpty()) {
+		    prefix += "_" + getBioassemblyId();
+		}
+		System.out.println("Bioassembly id: " + getBioassemblyId());
+		String outName = prefix + "_4x4transformation.txt";
 		System.out.println("Writing 4x4 transformation to: " + outName);
 		writeFile(outName, at.getTransformation().toString());
 		
-		outName = getBaseFileName() + "_JmolTransformation.txt";
+		outName = prefix + "_JmolTransformation.txt";
 		System.out.println("Writing Jmol transformation to: " + outName);
 		writeFile(outName, at.getJmolTransformation());
 		
-		outName = getBaseFileName() + "_JmolSymmetryAxes.txt";
+		outName = prefix + "_JmolSymmetryAxes.txt";
 		System.out.println("Writing Jmol symmetry axes to: " + outName);
 		writeFile(outName, at.getJmolSymmetryAxes());
 	}
 	
-	private boolean isBioassembly() {
-		int index = fileName.indexOf(".pdb");
-		if (index < 0) {
-			System.err.println("Input file must be a .pdb file");
-			System.exit(-1);
+	private String getBioassemblyId() {
+		int first = fileName.indexOf(".pdb") + 4;
+		int last = fileName.length();
+		int index = fileName.indexOf(".gz");
+		if (index > 0) {
+			last = index;
 		}
-		boolean bioassembly = false;
-		if (index + 4 < fileName.length() && Character.isDigit(fileName.charAt(index+4))) {
-			bioassembly = true;	
-		}
-		return bioassembly;
+		return fileName.substring(first, last);
 	}
 
 	private static void writeFile(String fileName, String text) {

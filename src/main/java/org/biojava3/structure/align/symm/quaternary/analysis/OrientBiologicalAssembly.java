@@ -107,7 +107,7 @@ public class OrientBiologicalAssembly {
 		String prefix = getBaseFileName();
 		String bioassemblyId = getBioassemblyId();
 		if (! bioassemblyId.isEmpty()) {
-		    prefix += "_" + getBioassemblyId();
+		    prefix += "_" + bioassemblyId;
 		}
 		System.out.println("Bioassembly id: " + getBioassemblyId());
 		String outName = prefix + "_4x4transformation.txt";

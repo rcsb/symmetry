@@ -80,8 +80,6 @@ public class OrientBiologicalAssembly {
 		return structure;
 	}
 
-	
-
 	private void orient(Structure structure) {	
 		QuatSymmetryParameters params = new QuatSymmetryParameters();
 		params.setMinimumSequenceLength(MIN_SEQUENCE_LENGTH);

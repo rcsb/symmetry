@@ -4,21 +4,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.util.List;
-
-import javax.vecmath.Matrix4d;
 
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.align.symm.quaternary.AxisTransformation;
 import org.biojava3.structure.align.symm.quaternary.FindQuarternarySymmetry;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryParameters;
 import org.biojava3.structure.align.symm.quaternary.RotationGroup;
-import org.biojava3.structure.align.symm.quaternary.Subunits;
 
 public class OrientBiologicalAssembly {
 	private static final int MIN_SEQUENCE_LENGTH = 24;
@@ -57,25 +51,26 @@ public class OrientBiologicalAssembly {
 		System.out.println("Symmetry RMSD threshold        : " +  RMSD_THRESHOLD);
 		System.out.println();
 
-		Structure structure = readStructure(fileName);
+		Structure structure = readStructure();
 		System.out.println("Protein chains used for alignment:");
 		orient(structure);
 	}
 
-	private static Structure readStructure(String filename) {
+	private Structure readStructure() {
 		FileParsingParameters p = new FileParsingParameters();
 		p.setStoreEmptySeqRes(true);
 		p.setLoadChemCompInfo(true);
 		p.setAtomCaThreshold(Integer.MAX_VALUE);
 		p.setAcceptedAtomNames(new String[]{" CA "});
-		//		p.setAcceptedAtomNames(new String[]{" CA ", " CB "});
 
 		PDBFileReader pdbreader = new PDBFileReader();
 		pdbreader.setFileParsingParameters(p);
+
 		Structure structure = null;
 		try{ 
-			structure = pdbreader.getStructure(filename);
-			structure.setBiologicalAssembly(true);
+			structure = pdbreader.getStructure(fileName);
+			System.out.println("Is bioassembly: "  + isBioassembly());
+			structure.setBiologicalAssembly(isBioassembly());
 
 		} catch (Exception e){
 			e.printStackTrace();
@@ -117,6 +112,19 @@ public class OrientBiologicalAssembly {
 		outName = getBaseFileName() + "_JmolSymmetryAxes.txt";
 		System.out.println("Writing Jmol symmetry axes to: " + outName);
 		writeFile(outName, at.getJmolSymmetryAxes());
+	}
+	
+	private boolean isBioassembly() {
+		int index = fileName.indexOf(".pdb");
+		if (index < 0) {
+			System.err.println("Input file must be a .pdb file");
+			System.exit(-1);
+		}
+		boolean bioassembly = false;
+		if (index + 4 < fileName.length() && Character.isDigit(fileName.charAt(index+4))) {
+			bioassembly = true;	
+		}
+		return bioassembly;
 	}
 
 	private static void writeFile(String fileName, String text) {

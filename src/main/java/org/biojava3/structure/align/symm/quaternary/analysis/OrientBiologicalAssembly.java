@@ -29,7 +29,7 @@ public class OrientBiologicalAssembly {
 	}
 
 	public static void main(String[] args) {
-		System.out.println("OrientBiologicalAssembly V 0.1: Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
+		System.out.println("OrientBiologicalAssembly V 0.2: Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
 		System.out.println();
 		if (args.length != 2) {
 			System.out.println("Usage: OrientBiologicalAssembly pdbFile outputDirectory");
@@ -156,7 +156,7 @@ public class OrientBiologicalAssembly {
 		if (lastChar.equals('/') || lastChar.equals('\\')) {
 			return outputDirectory + name;
 		} else {
-			return outputDirectory + "\\" + name;
+			return outputDirectory + File.pathSeparatorChar + name;
 		}
 	}
 }

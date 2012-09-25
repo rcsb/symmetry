@@ -165,7 +165,6 @@ public class RotationGroup {
                higherOrderRotationAxis++;
             }
         }
-//        System.out.println("higherOrderRotationAxis: " + higherOrderRotationAxis);
     }
 
     private void calcAxesDirections() {
@@ -185,11 +184,9 @@ public class RotationGroup {
            if (Math.abs(pv.dot(av)) > 0.9f) {
                // co-linear with principal axis
                s.setDirection(0);
-//               System.out.println("Axis co-linear: " + axis + " - " + pa);
            } else {
                // not co-linear or perpendicular to principal axis
                s.setDirection(1);
-  //             System.out.println("Axis perpendicular: " + axis + " - " + pa);
            }
         }
         rotations.get(0).setDirection(0); // set the E axis to the principal axis (by definition)
@@ -197,13 +194,11 @@ public class RotationGroup {
 
     private void findTwoFoldsPerpendicular() {
         twoFoldsPerpendicular = 0;
-        // s.getFold() == 0 -> include E
         for (Rotation s: rotations) {
             if (s.getFold() == 2 && s.getDirection() == 1) {
                 twoFoldsPerpendicular++;
             }
         }
-//        System.out.println("twoFoldsPerpendicular: " + twoFoldsPerpendicular);
     }
 
     private void calcPointGroup() {
@@ -246,7 +241,6 @@ public class RotationGroup {
     public void sortByFoldDecending() {
         Collections.sort(rotations, new Comparator<Rotation>() {
 			public int compare(Rotation o1, Rotation o2) {
-				// check this ???
 				int delta = o1.getDirection() - o2.getDirection();
 				if (delta != 0) {
 					return delta;

@@ -124,7 +124,7 @@ public class ScanPdbNew implements Runnable {
 			}
 
 			
-//			if (!pdbId.equals("1ZOD")) continue;
+			if (!pdbId.equals("3T88")) continue;
 //			if (!pdbId.equals("1A9S")) continue; // good example
 //			if (!pdbId.equals("1B44")) continue;
 //			if (!pdbId.equals("4EAM")) continue;

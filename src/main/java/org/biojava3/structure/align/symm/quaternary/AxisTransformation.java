@@ -11,69 +11,69 @@ public class AxisTransformation {
 	private static Vector3d X_AXIS = new Vector3d(1,0,0);
 	private static Vector3d Y_AXIS = new Vector3d(0,1,0);
 	private static Vector3d Z_AXIS = new Vector3d(0,0,1);
-	
+
 	private Subunits subunits = null;
 	private RotationGroup rotationGroup = null;
-	
+
 	private Matrix4d transformationMatrix = new Matrix4d();
 	private Vector3d principalAxis = new Vector3d();
 	private Vector3d referenceAxis = new Vector3d();
-	
+
 	public AxisTransformation(Subunits subunits, RotationGroup rotationGroup) {
 		this.subunits = subunits;
 		this.rotationGroup = rotationGroup;
 	}
-	
+
 	public Matrix4d getTransformation() {
 		if (subunits == null || subunits.getSubunitCount() == 0) {
-            transformationMatrix.setIdentity();
+			transformationMatrix.setIdentity();
 		} else if (rotationGroup.getPointGroup().equals("C1")) {
 			transformationMatrix = getTransformationByInertiaAxes();
 		} else {
-	     	transformationMatrix = getTransformationBySymmetryAxes();
+			transformationMatrix = getTransformationBySymmetryAxes();
 		}
 		return transformationMatrix;
 	}
-	
+
 	private Matrix4d getTransformationBySymmetryAxes() {
-		
+
 		// orientation of subunit symmetry axes at the centroid of the subunits
 		Point3d[] refPoints = new Point3d[3];
-		
+
 		// first reference point is centroid of subunits
 		refPoints[0] = new Point3d(subunits.getCentroid());
-		
+
 		// second reference point is along the principal axis
-		principalAxis = getPrincipalRotationAxis(rotationGroup);		
+		principalAxis = getPrincipalRotationAxis();		
 		refPoints[1] = new Point3d(subunits.getCentroid());
 		refPoints[1].add(principalAxis);
-		
+
 		// third reference point is along an orthogonal rotation axis (if available), otherwise, an orthogonal vector
 		// to a subunit center is used.
-		
+
 		// if rotation group has orthogonal axis, use it for alignment
-		referenceAxis = getMinorRotationAxis(rotationGroup);
+		referenceAxis = getMinorRotationAxis();
 		if (referenceAxis == null) {
 			referenceAxis = getSubunitReferenceAxis();
 		}
 		referenceAxis.cross(principalAxis, referenceAxis); // make it perpendicular
 		referenceAxis.normalize();
-		
+
 		refPoints[2] = new Point3d(subunits.getCentroid());
 		refPoints[2].add(referenceAxis);
-		
+
 		// check if subunits are already co-linear with principal axis, for example 1A6D, bioassembly 1
 		double dp =  Z_AXIS.dot(principalAxis);
 		if (Math.abs(dp) > 0.99999) {
-//			System.out.println("Axis vs. z: " + dp);
-//			System.out.println("Angle with Y axis: " + Math.toDegrees(Y_AXIS.angle(referenceAxis)));
+			//			System.out.println("Axis vs. z: " + dp);
+			//			System.out.println("Angle with Y axis: " + Math.toDegrees(Y_AXIS.angle(referenceAxis)));
 			double angle = Y_AXIS.angle(referenceAxis);
 			AxisAngle4d aa = new AxisAngle4d(Z_AXIS, angle);
 			Matrix4d m = new Matrix4d();
 			m.set(aa);
 			return m;
 		}
-		
+
 		//  y,z axis centered at the centroid of the subunits
 		Point3d[] coordPoints = new Point3d[3];
 		coordPoints[0] = new Point3d(subunits.getCentroid());
@@ -81,7 +81,7 @@ public class AxisTransformation {
 		coordPoints[1].add(Z_AXIS);
 		coordPoints[2] = new Point3d(subunits.getCentroid());
 		coordPoints[2].add(Y_AXIS);
-		
+
 		// align principal axis with z axis and perpendicular axis with x axis
 		Matrix4d matrix = SuperPosition.superposeWithTranslation(refPoints, coordPoints);
 
@@ -109,7 +109,7 @@ public class AxisTransformation {
 		double zMin = Double.MAX_VALUE;
 		double zMax = Double.MIN_VALUE;
 		double xyRadiusMaxSq = Double.MIN_VALUE;
-		
+
 		Point3d probe = new Point3d();
 		Point3d centroid = subunits.getCentroid();
 
@@ -121,7 +121,7 @@ public class AxisTransformation {
 				xMin = Math.min(xMin, probe.x);
 				xMax = Math.max(xMax, probe.x);
 				yMin = Math.min(yMin, probe.y);
-			    yMax = Math.max(yMax, probe.y);
+				yMax = Math.max(yMax, probe.y);
 				zMin = Math.min(zMin, probe.z);
 				zMax = Math.max(zMax, probe.z);
 				double rSq = probe.x*probe.x + probe.y*probe.y;
@@ -131,19 +131,19 @@ public class AxisTransformation {
 		double[] dimensions = new double[2];
 		dimensions[0] = axisScale * 0.5 * (zMax - zMin); // half of dimension along z-axis (principal rotation axis)
 		dimensions[1] = axisScale * 0.5 * Math.max((xMax-xMin), (yMax-yMin)); // max radius for rotation in x-y plane
-		
+
 		return dimensions;
 	}
-	
-	private static Vector3d getPrincipalRotationAxis(RotationGroup rotationGroup) {
+
+	private Vector3d getPrincipalRotationAxis() {
 		Rotation rotation = rotationGroup.getRotation(0); // the rotation around the principal axis is the first rotation
 		AxisAngle4d axisAngle = rotation.getAxisAngle();
 		Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 		v.normalize();
 		return v;
 	}
-	
-	private static Vector3d getMinorRotationAxis(RotationGroup rotationGroup) {
+
+	private Vector3d getMinorRotationAxis() {
 		// find axis that is not the rotation principal axis (direction = 1)
 		for (int i = 0; i < rotationGroup.getOrder(); i++) {
 			if (rotationGroup.getRotation(i).getDirection() == 1) {
@@ -155,17 +155,35 @@ public class AxisTransformation {
 		}
 		return null;
 	}
-	
+
+	private int getPrincipalRotationAxisFold() {
+		if (rotationGroup.getOrder() == 0) {
+			return 1;
+		}
+		Rotation rotation = rotationGroup.getRotation(0); // the rotation around the principal axis is the first rotation
+		return rotation.getFold();
+	}
+
+	private int getMinorRotationAxisFold() {
+		// find axis that is not the rotation principal axis (direction = 1)
+		for (int i = 0; i < rotationGroup.getOrder(); i++) {
+			if (rotationGroup.getRotation(i).getDirection() == 1) {
+				return rotationGroup.getRotation(i).getFold();
+			}
+		}
+		return 1;
+	}
+
 	private Matrix4d getTransformationByInertiaAxes() {
 		Vector3d[] inertiaVectors = subunits.getMomentsOfInertia().getPrincipalAxes();
-		
+
 		// orientation of subunit inertia vectors center at the centroid of the subunits
 		Point3d[] refPoints = new Point3d[inertiaVectors.length];
 		for (int i = 0; i < inertiaVectors.length; i++) {
 			refPoints[i] = new Point3d(inertiaVectors[i]);
 			refPoints[i].add(subunits.getCentroid());
 		}
-	
+
 		// x,y,z axis center at the centroid of the subunits
 		Point3d[] coordPoints = new Point3d[3];
 		coordPoints[0] = new Point3d(X_AXIS);
@@ -179,16 +197,17 @@ public class AxisTransformation {
 		Matrix4d matrix = SuperPosition.superposeWithTranslation(refPoints, coordPoints);
 		return matrix;
 	}
-	
+
 	public String getJmolTransformation() {
 		Quat4d q = new Quat4d();
 		transformationMatrix.get(q);
-		return "rotate quaternion {" + jMolFloat(q.x) + " " + jMolFloat(q.y) + " " + jMolFloat(q.z) + " " + jMolFloat(q.w) + "}";
+		return "rotate quaternion {" + jMolFloat(q.x) + " " + jMolFloat(q.y) + " " + jMolFloat(q.z) + " " + jMolFloat(q.w) + "};";
 	}
-	
+
 	public String getJmolSymmetryAxes() {
 		StringBuilder s = new StringBuilder();
-		
+
+
 		int n = rotationGroup.getOrder();
 		if (n == 0) {
 			return s.toString();
@@ -201,7 +220,7 @@ public class AxisTransformation {
 		for (int i = 0; i < n; i++) {
 			Rotation rotation = rotationGroup.getRotation(i);
 			int direction =  rotation.getDirection();
-			
+
 			// don't draw redundant n-fold rotations around principal axis
 			if (i > 0 && direction == 0) {
 				continue;
@@ -216,7 +235,7 @@ public class AxisTransformation {
 				color = "royalblue";
 				diameter = 0.25f;
 			}
-			
+
 			AxisAngle4d axisAngle = rotation.getAxisAngle();
 			Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 
@@ -252,7 +271,7 @@ public class AxisTransformation {
 
 			p2 = new Point3d(axis);
 			p2.scaleAdd(radius*0.95, subunits.getCentroid());
-			
+
 			if (rotation.getFold() == 2) {
 				s.append(getLineJmol(i, p1, axis, color));
 				s.append(getLineJmol(i + n, p2, axis, color));
@@ -261,10 +280,126 @@ public class AxisTransformation {
 				s.append(getPolygonJmol(i + n, p2, axis, rotation.getFold(), color));
 			}
 		}
-	
+
 		return s.toString();
 	}
+
+	public String getJmolAnimation(int delay) {
+		StringBuilder s = new StringBuilder();
+		s.append(getJmolTransformation());
+
+		int fold  = getPrincipalRotationAxisFold();
+		if (fold == 1) {
+			return s.toString();
+		}
+		s.append("set echo top center;");
+		s.append("echo Front view;");
+        s.append("color echo white;");
+        s.append("font echo 24 sanserif;");
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+
+		s.append("set echo top center;");
+		s.append("echo ");
+		s.append(fold);
+		s.append("-fold rotation;");
+        s.append("color echo red;");
+		s.append(getJmolSymmetryAxes());
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+		// rotate around principal axis
+		fold  = getPrincipalRotationAxisFold();
+		float angle = 360.0f/fold;
+
+		s.append("move 0 0 ");
+		s.append(angle);
+		s.append(" 0 0 0 0 0 3;");
+
+		// align minor axis with z-axis
+		fold  = getMinorRotationAxisFold();
+		if (fold > 1) {
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+			s.append("set echo top center;");
+			s.append("echo Side view;");
+            s.append("color echo white;");
+
+			// align minor axis with z-axis
+			s.append("move 0 90 0 0 0 0 0 0 3;");
+
+			// rotate around minor axis
+			fold  = getMinorRotationAxisFold();
+
+			angle = 360.0f/fold;
+			s.append("delay ");
+			s.append(delay); 
+			s.append(";");
+			s.append("set echo top center;");
+			s.append("echo ");
+			s.append(fold);
+			s.append("-fold rotation;");
+	        s.append("color echo royalblue;");
+	        
+			// align minor axis with z-axis
+			s.append("move 0 0 ");
+			s.append(angle);
+			s.append(" 0 0 0 0 0 3;");
+
+			// rotate back into original position
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+			s.append("set echo top center;");
+			s.append("echo Front view;");
+	        s.append("color echo white;");
+			s.append("move 0 90 0 0 0 0 0 0 3;");
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+			s.append("set echo top center;");
+			s.append("echo;");
+		} else {
+	//		s.append("set echo top center;");
+	//		s.append("echo Front view;");
 	
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+			s.append("set echo top center;");
+			s.append("echo Side view 1;");
+	        s.append("color echo white;");
+			s.append("move 0 90 0 0 0 0 0 0 3;");
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+			s.append("set echo top center;");
+			s.append("echo Back view;");
+			s.append("move 0 90 0 0 0 0 0 0 3;");
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+			s.append("set echo top center;");
+			s.append("echo Side view 2;");
+			s.append("move 0 90 0 0 0 0 0 0 3;");
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+			s.append("set echo top center;");
+			s.append("echo Front view;");
+			s.append("move 0 90 0 0 0 0 0 0 3;");
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+			s.append("set echo top center;");
+			s.append("echo;");
+		}
+
+		return s.toString();
+	}
+
 	private String getLineJmol(int index, Point3d center, Vector3d axis, String color) {
 		StringBuilder s = new StringBuilder();
 		s.append("draw l");
@@ -273,26 +408,26 @@ public class AxisTransformation {
 		s.append("line");
 		s.append(" ");
 
-        Vector3d[] vertexes = getPolygonVertices(axis, referenceAxis, center, 2);
-        // create vertex list
-        for (Vector3d v: vertexes) {
-        	s.append("{");
-        	s.append(jMolFloat(v.x));
-        	s.append(" ");
-        	s.append(jMolFloat(v.y));
-        	s.append(" ");
-        	s.append(jMolFloat(v.z));
-          	s.append("}");
-        }
-      
-        s.append(" width 0.5 ");
+		Vector3d[] vertexes = getPolygonVertices(axis, referenceAxis, center, 2);
+		// create vertex list
+		for (Vector3d v: vertexes) {
+			s.append("{");
+			s.append(jMolFloat(v.x));
+			s.append(" ");
+			s.append(jMolFloat(v.y));
+			s.append(" ");
+			s.append(jMolFloat(v.z));
+			s.append("}");
+		}
+
+		s.append(" width 0.5 ");
 		s.append(" color ");
 		s.append(color);
 		s.append(";");
-   
+
 		return s.toString();
 	}
-	
+
 	private String getPolygonJmol(int index, Point3d center, Vector3d axis, int n, String color) {
 		StringBuilder s = new StringBuilder();
 		s.append("draw p");
@@ -311,47 +446,47 @@ public class AxisTransformation {
 		s.append(jMolFloat(center.z));
 		s.append("}");
 
-        Vector3d[] vertexes = getPolygonVertices(axis, referenceAxis, center, n);
-        // create vertex list
-        for (Vector3d v: vertexes) {
-        	s.append("{");
-        	s.append(jMolFloat(v.x));
-        	s.append(" ");
-        	s.append(jMolFloat(v.y));
-        	s.append(" ");
-        	s.append(jMolFloat(v.z));
-          	s.append("}");
-        }
-        
-        // create face list
-        s.append(" ");
-        s.append(n);
-        s.append(" ");
+		Vector3d[] vertexes = getPolygonVertices(axis, referenceAxis, center, n);
+		// create vertex list
+		for (Vector3d v: vertexes) {
+			s.append("{");
+			s.append(jMolFloat(v.x));
+			s.append(" ");
+			s.append(jMolFloat(v.y));
+			s.append(" ");
+			s.append(jMolFloat(v.z));
+			s.append("}");
+		}
 
-        for (int i = 1; i <= n; i++) {
-        	s.append("[");
-        	s.append(0);
-        	s.append(" ");
-        	s.append(i);
-        	s.append(" ");
-        	if (i < n) {
-        		s.append(i+1);
-        	} else {
-        		s.append(1);
-        	}
-        	s.append(" ");
-        	s.append(7);
-        	s.append("]");
-        }
+		// create face list
+		s.append(" ");
+		s.append(n);
+		s.append(" ");
 
-        s.append(" mesh");
+		for (int i = 1; i <= n; i++) {
+			s.append("[");
+			s.append(0);
+			s.append(" ");
+			s.append(i);
+			s.append(" ");
+			if (i < n) {
+				s.append(i+1);
+			} else {
+				s.append(1);
+			}
+			s.append(" ");
+			s.append(7);
+			s.append("]");
+		}
+
+		s.append(" mesh");
 		s.append(" color translucent ");
 		s.append(color);
 		s.append(";");
-   
+
 		return s.toString();
 	}
-	
+
 	private Vector3d[] getPolygonVertices(Vector3d axis, Vector3d referenceAxis, Point3d center, int n) {
 		Vector3d perp = new Vector3d(axis);
 		// if axis coincides with principal axis, use the reference axis to orient polygon
@@ -366,7 +501,7 @@ public class AxisTransformation {
 		Matrix4d m = new Matrix4d();
 
 		for (int i = 0; i < n; i++) {
-	//		axisAngle.setAngle(i * 2 * Math.PI/n);
+			//		axisAngle.setAngle(i * 2 * Math.PI/n);
 			axisAngle.angle = i * 2 * Math.PI/n;
 			vectors[i] = new Vector3d(perp);		
 			m.set(axisAngle);
@@ -375,7 +510,7 @@ public class AxisTransformation {
 		}
 		return vectors;
 	}
-	
+
 	/**
 	 * Returns a lower precision floating point number for Jmol
 	 * @param f
@@ -387,7 +522,7 @@ public class AxisTransformation {
 		}
 		return (float)f;
 	}
-	
+
 	private static double getTrace(Matrix4d matrix) {
 		GMatrix m = new GMatrix(4,4);
 		m.set(matrix);

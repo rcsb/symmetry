@@ -119,6 +119,10 @@ public class OrientBiologicalAssembly {
 		outName = prefix + "_JmolSymmetryAxes.txt";
 		System.out.println("Writing Jmol symmetry axes to: " + outName);
 		writeFile(outName, at.getJmolSymmetryAxes());
+		
+		outName = prefix + "_JmolAnimation.txt";
+		System.out.println("Writing Jmol animation to: " + outName);
+		writeFile(outName, at.getJmolAnimation(2));
 	}
 	
 	private String getBioassemblyId() {

@@ -10,6 +10,7 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava3.changeux.IdentifyAllSymmetries;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.protodomain.Protodomain;
 import org.biojava3.structure.utils.SymmetryTools;
 import org.rcsb.fatcat.server.PdbChainKey;
 
@@ -100,6 +101,10 @@ public class SymmetryCalculationJob implements Callable<CensusResult> {
 			}
 
 			int order = CeSymm.getSymmetryOrder(afpChain);
+			
+			String protodomain = Protodomain.fromSymmetryAlignment(afpChain, ca1, 1, cache).toString();
+			
+			/*
 			String protodomain = "";
 			if ( afpChain.getOptLength() > 0 ) {
 				
@@ -123,6 +128,8 @@ public class SymmetryCalculationJob implements Callable<CensusResult> {
 				protodomain += "." + chainId + "_";
 				protodomain+= g1.getResidueNumber().toString()  + "-" + g2.getResidueNumber().toString();
 			}
+			*/
+			
 			//System.out.println(isSymmetric + " : " + name + " " +  domain + " : "  );
 
 			//StringBuffer str = printTabbedResult(afpChain, isSymmetric, superfamily,name1, count);

@@ -35,6 +35,7 @@ import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava3.changeux.IdentifyAllSymmetries;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.protodomain.Protodomain;
 import org.biojava3.structure.utils.SymmetryTools;
 
 public class SymmetryCalculation implements Callable<CensusResult>{
@@ -127,7 +128,9 @@ public class SymmetryCalculation implements Callable<CensusResult>{
 
 			int order = CeSymm.getSymmetryOrder(afpChain);
 
+			String protodomain = Protodomain.fromSymmetryAlignment(afpChain, ca1, 1, cache).toString();
 
+			/*
 			int[]optLen = afpChain.getOptLen();
 			int[][][] optAln = afpChain.getOptAln();
 			int p1 = optAln[0][0][0];
@@ -143,6 +146,7 @@ public class SymmetryCalculation implements Callable<CensusResult>{
 			String protodomain = domain.getPdbId();
 			protodomain += "." + chainId + "_";
 			protodomain+= g1.getResidueNumber().toString()  + "-" + g2.getResidueNumber().toString();
+			*/
 			
 			//System.out.println(isSymmetric + " : " + name + " " +  domain + " : "  );
 			

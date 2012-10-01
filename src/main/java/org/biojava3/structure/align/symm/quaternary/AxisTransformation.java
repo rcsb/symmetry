@@ -262,7 +262,8 @@ public class AxisTransformation {
 			s.append(jMolFloat(p2.z));
 			s.append("} diameter ");
 			s.append(diameter);
-			s.append(" color translucent ");
+	//		s.append(" color translucent ");
+			s.append(" color ");
 			s.append(color);
 			s.append(";");
 
@@ -285,21 +286,114 @@ public class AxisTransformation {
 	}
 
 	public String getJmolAnimation(int delay) {
+		String animation = "";
+		String pointGroup = rotationGroup.getPointGroup();
+		if (pointGroup.startsWith("C")) {
+			animation = getJmolAnimationCyclic(delay);
+		} else if (pointGroup.startsWith("D")) {
+			animation = getJmolAnimationDihedral(delay);
+		} else if (pointGroup.startsWith("O")) {
+		    animation = getJmolAnimationOctahedral(delay);
+	    } else if (pointGroup.startsWith("I")) {
+		    animation = getJmolAnimationIcosahedral(delay);
+	    }
+		return animation;
+	}
+	
+	private String getJmolAnimationCyclic(int delay) {
 		StringBuilder s = new StringBuilder();
-		s.append(getJmolTransformation());
-
-		int fold  = getPrincipalRotationAxisFold();
-		if (fold == 1) {
-			return s.toString();
-		}
+		s.append(getJmolTransformation());	
+		
+		// show Front view
 		s.append("set echo top center;");
 		s.append("echo Front view;");
-        s.append("color echo white;");
-        s.append("font echo 24 sanserif;");
+		s.append("color echo white;");
+		s.append("font echo 24 sanserif;");
 		s.append("delay ");
 		s.append(delay); 
 		s.append(";");
 
+		int fold  = getPrincipalRotationAxisFold();
+		if (fold > 1) {
+			// show symmetry axes
+			s.append("set echo top center;");
+			s.append("echo ");
+			s.append(fold);
+			s.append("-fold rotation;");
+			s.append("color echo red;");
+			s.append(getJmolSymmetryAxes());
+			s.append("delay ");
+			s.append(delay); 
+			s.append(";");
+
+			// rotate around principal axis
+			fold  = getPrincipalRotationAxisFold();
+			float angle = 360.0f/fold;
+			s.append("move 0 0 ");
+			s.append(angle);
+			s.append(" 0 0 0 0 0 3;");
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+		}
+		
+		// show Side view 1
+		s.append("set echo top center;");
+		s.append("echo Side view 1;");
+		s.append("color echo white;");
+		s.append("move 0 90 0 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		
+		// show Back view
+		s.append("set echo top center;");
+		s.append("echo Back view;");
+		s.append("move 0 90 0 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		
+		// show Side view 2
+		s.append("set echo top center;");
+		s.append("echo Side view 2;");
+		s.append("move 0 90 0 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		
+		// show Front view
+		s.append("set echo top center;");
+		s.append("echo Front view;");
+		s.append("move 0 90 0 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		s.append("set echo top center;");
+		s.append("echo;");
+
+		return s.toString();
+	}
+	
+	public String getJmolAnimationDihedral(int delay) {
+		StringBuilder s = new StringBuilder();
+		s.append(getJmolTransformation());
+
+	    // show front view
+		s.append("set echo top center;");
+		s.append("echo Front view;");
+        s.append("color echo white;");
+        s.append("font echo 24 sanserif;");
+        s.append("set echo bottom center;");
+		s.append("echo Point group ");
+		s.append(rotationGroup.getPointGroup());
+		s.append(";");
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+
+		// show symmetry axes
+		int fold  = getPrincipalRotationAxisFold();
 		s.append("set echo top center;");
 		s.append("echo ");
 		s.append(fold);
@@ -309,30 +403,28 @@ public class AxisTransformation {
 		s.append("delay ");
 		s.append(delay); 
 		s.append(";");
+		
 		// rotate around principal axis
-		fold  = getPrincipalRotationAxisFold();
 		float angle = 360.0f/fold;
-
 		s.append("move 0 0 ");
 		s.append(angle);
 		s.append(" 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
 
 		// align minor axis with z-axis
 		fold  = getMinorRotationAxisFold();
 		if (fold > 1) {
-			s.append("delay ");
-			s.append(delay);
-			s.append(";");
+			// show side view
 			s.append("set echo top center;");
 			s.append("echo Side view;");
             s.append("color echo white;");
-
 			// align minor axis with z-axis
 			s.append("move 0 90 0 0 0 0 0 0 3;");
 
 			// rotate around minor axis
 			fold  = getMinorRotationAxisFold();
-
 			angle = 360.0f/fold;
 			s.append("delay ");
 			s.append(delay); 
@@ -342,60 +434,210 @@ public class AxisTransformation {
 			s.append(fold);
 			s.append("-fold rotation;");
 	        s.append("color echo royalblue;");
-	        
-			// align minor axis with z-axis
 			s.append("move 0 0 ");
 			s.append(angle);
 			s.append(" 0 0 0 0 0 3;");
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+			
+			// rotate back
+			s.append("set echo top center;");
+			s.append("echo Front view;");
+	        s.append("color echo white;");
+			s.append("move 0 0 ");
+			s.append(360.0-angle);
+			s.append(" 0 0 0 0 0 3;");
+			
+			// show Front view
+			s.append("move 0 -90 0 0 0 0 0 0 3;");
+			s.append("delay ");
+			s.append(delay);
+			s.append(";");
+			s.append("set echo top center;");
+			s.append("echo;");
+		} 
 
-			// rotate back into original position
-			s.append("delay ");
-			s.append(delay);
-			s.append(";");
-			s.append("set echo top center;");
-			s.append("echo Front view;");
-	        s.append("color echo white;");
-			s.append("move 0 90 0 0 0 0 0 0 3;");
-			s.append("delay ");
-			s.append(delay);
-			s.append(";");
-			s.append("set echo top center;");
-			s.append("echo;");
-		} else {
-	//		s.append("set echo top center;");
-	//		s.append("echo Front view;");
+		return s.toString();
+	}
 	
-			s.append("delay ");
-			s.append(delay);
-			s.append(";");
-			s.append("set echo top center;");
-			s.append("echo Side view 1;");
-	        s.append("color echo white;");
-			s.append("move 0 90 0 0 0 0 0 0 3;");
-			s.append("delay ");
-			s.append(delay);
-			s.append(";");
-			s.append("set echo top center;");
-			s.append("echo Back view;");
-			s.append("move 0 90 0 0 0 0 0 0 3;");
-			s.append("delay ");
-			s.append(delay);
-			s.append(";");
-			s.append("set echo top center;");
-			s.append("echo Side view 2;");
-			s.append("move 0 90 0 0 0 0 0 0 3;");
-			s.append("delay ");
-			s.append(delay);
-			s.append(";");
-			s.append("set echo top center;");
-			s.append("echo Front view;");
-			s.append("move 0 90 0 0 0 0 0 0 3;");
-			s.append("delay ");
-			s.append(delay);
-			s.append(";");
-			s.append("set echo top center;");
-			s.append("echo;");
-		}
+	public String getJmolAnimationOctahedral(int delay) {
+		StringBuilder s = new StringBuilder();
+		s.append(getJmolTransformation());
+
+	    // show front view
+		s.append("set echo top center;");
+		s.append("echo Front view: C4-axis;");
+        s.append("color echo white;");
+        s.append("font echo 24 sanserif;");
+        s.append("set echo bottom center;");
+		s.append("echo Point group ");
+		s.append("O (4,3,2)");
+		s.append(";");
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+
+		// show symmetry axes
+		s.append("set echo top center;");
+		s.append("echo 4-fold rotation;");
+        s.append("color echo red;");
+		s.append(getJmolSymmetryAxes());
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+		
+		// rotate around principal axis
+		s.append("move 0 0 90 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+
+		// align minor axis with z-axis
+
+		// show side view (45 deg.)
+		s.append("set echo top center;");
+		s.append("echo Diagonal view: C3-axis;");
+	    s.append("color echo white;");
+		s.append("move 0 45 0 0 0 0 0 0 3;");
+		s.append("move 35.3 0 0 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+		s.append("set echo top center;");
+		s.append("echo 3-fold rotation;");
+		s.append("color echo royalblue;");
+		
+//		if (true) {
+//			return s.toString();
+//		}
+		s.append("move 0 0 120 0 0 0 0 0 3;");
+		
+		// side view
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+		s.append("set echo top center;");
+		s.append("echo Side view: C2-axis;");
+	    s.append("color echo white;");
+		s.append("move -35.3 0 0 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		
+		// 2-fold rotation
+		s.append("set echo top center;");
+		s.append("echo 2-fold rotation;");
+		s.append("color echo royalblue;");
+		s.append("move 0 0 180 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+
+		// show Front view
+		s.append("set echo top center;");
+		s.append("echo Front view;");
+		s.append("color echo white;");
+		s.append("move 90 0 0 0 0 0 0 0 3;");
+		s.append("move 0 0 45 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		s.append("set echo top center;");
+		s.append("echo;");
+
+		return s.toString();
+	}
+
+	public String getJmolAnimationIcosahedral(int delay) {
+		StringBuilder s = new StringBuilder();
+		s.append(getJmolTransformation());
+
+	    // show front view
+		s.append("set echo top center;");
+		s.append("echo Front view: C5-axis;");
+        s.append("color echo white;");
+        s.append("font echo 24 sanserif;");
+        s.append("set echo bottom center;");
+		s.append("echo Point group ");
+		s.append("I (5,3,2)");
+		s.append(";");
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+
+		// show symmetry axes
+		s.append("set echo top center;");
+		s.append("echo 5-fold rotation;");
+        s.append("color echo red;");
+		s.append(getJmolSymmetryAxes());
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+		
+		// rotate around principal axis
+		s.append("move 0 0 72 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+
+		// align minor axis with z-axis
+
+		// show side view (45 deg.)
+		s.append("set echo top center;");
+		s.append("echo Diagonal view: C3-axis;");
+	    s.append("color echo white;");
+		s.append("move 0 37.5 0 0 0 0 0  0 3;");
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+		
+		s.append("set echo top center;");
+		s.append("echo 3-fold rotation;");
+		s.append("color echo royalblue;");
+		s.append("move 0 0 120 0 0 0 0 0 3;");
+	
+	//	if (true) {
+	//		return s.toString();
+	//	}
+		// side view
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+		s.append("set echo top center;");
+		s.append("echo Side view: C2-axis;");
+	    s.append("color echo white;");
+		s.append("move 0 0 -120 0 0 0 0 0 1;");
+		s.append("move 0 -37.5 0 0 0 0 0 0 1;");
+		s.append("move 0 0 72 0 0 0 0 0 1;");
+		s.append("move 90 0 0 0 0 0 0 0 1;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		
+		// 2-fold rotation
+		s.append("set echo top center;");
+		s.append("echo 2-fold rotation;");
+		s.append("color echo royalblue;");
+	    s.append("move 0 0 180 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		
+	//	if (true) {
+	//		return s.toString();
+	//	}
+
+		// show Front view
+		s.append("set echo top center;");
+		s.append("echo Front view;");
+		s.append("color echo white;");
+		s.append("move -90 0 0 0 0 0 0 0 3;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		s.append("set echo top center;");
+		s.append("echo;");
 
 		return s.toString();
 	}
@@ -480,7 +722,8 @@ public class AxisTransformation {
 		}
 
 		s.append(" mesh");
-		s.append(" color translucent ");
+	//	s.append(" color translucent ");
+		s.append(" color ");
 		s.append(color);
 		s.append(";");
 

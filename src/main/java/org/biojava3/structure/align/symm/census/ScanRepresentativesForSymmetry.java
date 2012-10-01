@@ -18,6 +18,7 @@ import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.bio.structure.scop.ScopInstallation;
 import org.biojava3.core.util.ConcurrencyTools;
 import org.biojava3.structure.utils.FileUtils;
 import org.rcsb.fatcat.server.PdbChainKey;
@@ -40,10 +41,13 @@ public class ScanRepresentativesForSymmetry {
 
 	public static void main(String[] args){
 
-		String path =  "/Users/andreas/WORK/PDB/";
+		String path =  "/Users/ap3/WORK/PDB/";
 
 		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
 
+		ScopDatabase scop = new ScopInstallation();
+		ScopFactory.setScopDatabase(scop);
+		
 		try {
 
 			ScanRepresentativesForSymmetry me = new ScanRepresentativesForSymmetry();
@@ -74,6 +78,8 @@ public class ScanRepresentativesForSymmetry {
 				census = new CensusResults();
 
 			List<String> knownResults = getKnownResults(census);
+			
+			System.out.println("got " + knownResults.size() + " known results");
 			int count = 0;
 
 
@@ -138,10 +144,13 @@ public class ScanRepresentativesForSymmetry {
 			for (Future<CensusResult> futureResult : futureData) {
 
 				CensusResult result = futureResult.get();
-				System.out.println("got result: " + result);
+				
+				
 				if ( result == null)
 					continue;
 
+				System.out.println("got result: " + result);
+				
 				boolean isSymmetric = processResult(result, outFile,totalStats,classStats);
 				if ( isSymmetric)
 					withSymm++;
@@ -167,6 +176,10 @@ public class ScanRepresentativesForSymmetry {
 				Integer total = totalStats.get(scopClass);
 				Integer symm  = classStats.get(scopClass);
 				System.out.println(scopClass);
+				if (total == null)
+					total = 0;
+				if ( symm == null)
+					symm = 0;
 				System.out.println("Class: " + scopClass + " " + String.format("%.2f",(symm/(float)total))  + "%");
 			}
 
@@ -220,7 +233,8 @@ public class ScanRepresentativesForSymmetry {
 		}
 
 		Character scopClass = result.getScopClass();
-
+		if ( scopClass == null)
+			scopClass='p';
 		String html = ResultConverter.toHTML(result);
 		//System.out.println(str.toString());
 		outFile.write(html + newline);

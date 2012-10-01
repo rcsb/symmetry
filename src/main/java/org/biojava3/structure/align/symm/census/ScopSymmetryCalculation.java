@@ -88,6 +88,12 @@ public class ScopSymmetryCalculation implements Callable<CensusResult>{
 			String name2 = domain.getScopId();
 
 			Atom[] ca1 = cache.getAtoms(name1);
+			
+			if ( ca1.length < 20) {
+				System.out.println(" ... ignoring " + name1);
+				return null;
+			}
+			
 			Atom[] ca2 = cache.getAtoms(name2);
 
 			boolean isSymmetric = false;
@@ -105,7 +111,6 @@ public class ScopSymmetryCalculation implements Callable<CensusResult>{
 			if ( IdentifyAllSymmetries.isSignificant(afpChain)) {
 
 				if ( angle > 20) {
-
 
 					isSymmetric = true;
 				}
@@ -135,9 +140,9 @@ public class ScopSymmetryCalculation implements Callable<CensusResult>{
 			//StringBuffer str = printTabbedResult(afpChain, isSymmetric, superfamily,name1, count);
 			//StringBuffer str = printHTMLResult(afpChain, isSymmetric, superfamily,name1, count, angle);
 			
-			CensusResult result = convertResult(afpChain, isSymmetric, scopDescription, name1, count, angle, order, protodomain);
+			CensusResult result = convertResult(afpChain, isSymmetric, scopDescription, name1, count, angle, order, protodomain, domain);
 			
-			//System.out.println(result);
+			System.out.println(result);
 			return result;
 		} catch (Exception e){
 			e.printStackTrace();
@@ -151,7 +156,7 @@ public class ScopSymmetryCalculation implements Callable<CensusResult>{
 	}
 
 	private CensusResult convertResult(AFPChain afpChain, boolean isSymmetric, ScopDescription superfamily, 
-			String name, int count, double angle , int order, String protodomain){
+			String name, int count, double angle , int order, String protodomain, ScopDomain domain){
 
 		String description  = superfamily.getDescription();
 		Character scopClass = superfamily.getClassificationId().charAt(0);
@@ -175,6 +180,7 @@ public class ScopSymmetryCalculation implements Callable<CensusResult>{
 		r.setScopClass(scopClass);
 		r.setOrder(order);
 		r.setProtoDomain(protodomain);
+		r.setSunid(domain.getSunid());
 		
 		return r;
 	}

@@ -89,7 +89,8 @@ public class ResultConverter {
 		str.append("<td>");
 		if ( isSymmetric)
 			str.append("<b>");
-		str.append("<a href=\"http://scop.mrc-lmb.cam.ac.uk/scop/search.cgi?sid="+name+"\">");
+		str.append("<a href=\"http://scop.berkeley.edu/sunid="+r.getSunid()+"\">");
+		//str.append("<a href=\"http://scop.mrc-lmb.cam.ac.uk/scop/search.cgi?sid="+name+"\">");
 		str.append(r.getClassificationId());
 		str.append("</a>");
 		if ( isSymmetric)

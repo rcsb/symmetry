@@ -59,6 +59,7 @@ public class CensusResult implements Serializable  {
 	String description;
 	Character scopClass;
 	String protoDomain;
+	Integer sunid;
 	
 	public Integer getRank() {
 		return rank;
@@ -316,5 +317,13 @@ public class CensusResult implements Serializable  {
 		return f.exists();
 		
 	}
+	public Integer getSunid() {
+		return sunid;
+	}
+	public void setSunid(Integer sunid) {
+		this.sunid = sunid;
+	}
+	
+	
 
 }

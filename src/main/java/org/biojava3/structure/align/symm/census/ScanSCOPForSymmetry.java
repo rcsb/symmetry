@@ -74,7 +74,7 @@ public class ScanSCOPForSymmetry {
 
 	public static void main(String[] args){
 
-		String path =  "/Users/andreas/WORK/PDB/";
+		String path =  "/Users/ap3/WORK/PDB/";
 
 		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
 
@@ -202,6 +202,10 @@ public class ScanSCOPForSymmetry {
 			for (Character scopClass: totalStats.keySet()){
 				Integer total = totalStats.get(scopClass);
 				Integer symm  = classStats.get(scopClass);
+				if ( total == null)
+					total = 0;
+				if ( symm == null)
+					symm = 0;
 				System.out.println(scopClass);
 				System.out.println("Class: " + scopClass + " " + String.format("%.2f",(symm/(float)total))  + "%");
 			}

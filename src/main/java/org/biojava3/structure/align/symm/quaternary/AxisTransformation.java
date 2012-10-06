@@ -268,7 +268,8 @@ public class AxisTransformation {
 		coordPoints[0].add(subunits.getCentroid());
 		coordPoints[1] = new Point3d(Y_AXIS);
 		coordPoints[1].add(subunits.getCentroid());
-		coordPoints[2] = new Point3d(Z_AXIS);
+//		coordPoints[2] = new Point3d(Z_AXIS);
+		coordPoints[2] = new Point3d(X_AXIS);
 		coordPoints[2].add(subunits.getCentroid());
 
 		// align inertia axis with x,y,z axis

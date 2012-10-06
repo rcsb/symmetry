@@ -123,11 +123,11 @@ public class ScanPdbNew implements Runnable {
 				continue;
 			}
 
-			if (!pdbId.equals("3LSV")) continue; // C1 (A)	
+//			if (!pdbId.equals("3LSV")) continue; // C1 (A)	
 //			if (!pdbId.equals("1VFB")) continue; // C1 (A)	
 //			if (!pdbId.equals("1J1X")) continue; // C1 (A)
 //			if (!pdbId.equals("1B27")) continue; // C2(AB) 2 BAs
-//			if (!pdbId.equals("1S6V")) continue; // C1(AB) 2 BAs
+			if (!pdbId.equals("1S6V")) continue; // C1(AB) 2 BAs
 //			if (!pdbId.equals("1AFA")) continue;
 //			if (!pdbId.equals("3T88")) continue;
 //			if (!pdbId.equals("1A9S")) continue; // good example

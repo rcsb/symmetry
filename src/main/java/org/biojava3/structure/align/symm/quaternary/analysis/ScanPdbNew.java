@@ -36,7 +36,7 @@ public class ScanPdbNew implements Runnable {
 	private static String PDB_PATH = "C:/PDB/";
 	private static final int MIN_CHAINS = 1;
 	private static final int MIN_SEQUENCE_LENGTH = 24;
-	private static final double SEQUENCE_IDENTITY_THRESHOLD = 0.90;
+	private static final double SEQUENCE_IDENTITY_THRESHOLD = 0.30;
 	private static final double ALIGNMENT_FRACTION_THRESHOLD = 0.9;
 	private static final double RMSD_THRESHOLD = 5.0;
 
@@ -123,8 +123,13 @@ public class ScanPdbNew implements Runnable {
 				continue;
 			}
 
-			
-			if (!pdbId.equals("3T88")) continue;
+			if (!pdbId.equals("3LSV")) continue; // C1 (A)	
+//			if (!pdbId.equals("1VFB")) continue; // C1 (A)	
+//			if (!pdbId.equals("1J1X")) continue; // C1 (A)
+//			if (!pdbId.equals("1B27")) continue; // C2(AB) 2 BAs
+//			if (!pdbId.equals("1S6V")) continue; // C1(AB) 2 BAs
+//			if (!pdbId.equals("1AFA")) continue;
+//			if (!pdbId.equals("3T88")) continue;
 //			if (!pdbId.equals("1A9S")) continue; // good example
 //			if (!pdbId.equals("1B44")) continue;
 //			if (!pdbId.equals("4EAM")) continue;
@@ -232,7 +237,9 @@ public class ScanPdbNew implements Runnable {
 				MomentsOfInertia m = subunits.getMomentsOfInertia();
 				MomentsOfInertia.SymmetryClass symmetryClass = m.getSymmetryClass(0.2);
 				double asymmetryCoefficient = m.getAsymmetryParameter(0.001);
+			
 
+				if (true == false) {
 				// create list of representative chains
 	//			List<String> chainIds = finder.getChainIds();
 				ProteinComplexSignature s100 = new ProteinComplexSignature(pdbId, chainIds, reader100);
@@ -279,6 +286,7 @@ public class ScanPdbNew implements Runnable {
 					out1.println();
 					out1.flush();
 					excluded++;
+				}
 				}
 
 				//			if (total == 500) break;		

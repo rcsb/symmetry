@@ -1,7 +1,10 @@
 package org.biojava3.structure.align.symm.quaternary;
 
+import java.util.Arrays;
+
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.GMatrix;
+import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
@@ -18,6 +21,15 @@ public class AxisTransformation {
 	private Matrix4d transformationMatrix = new Matrix4d();
 	private Vector3d principalAxis = new Vector3d();
 	private Vector3d referenceAxis = new Vector3d();
+	
+	private double xMin = Double.MAX_VALUE;
+	private double xMax = Double.MIN_VALUE;
+	private double yMin = Double.MAX_VALUE;
+	private double yMax = Double.MIN_VALUE;
+	private double zMin = Double.MAX_VALUE;
+	private double zMax = Double.MIN_VALUE;
+	
+	boolean modified = true;
 
 	public AxisTransformation(Subunits subunits, RotationGroup rotationGroup) {
 		this.subunits = subunits;
@@ -25,13 +37,31 @@ public class AxisTransformation {
 	}
 
 	public Matrix4d getTransformation() {
+		if (modified) {
+           run();   
+		}
+		return transformationMatrix;
+	}
+	
+	private void run () {
+		calcTransformation();
+		calcBoundaries();
+		modified = false;
+	}
+	
+	private Matrix4d calcTransformation() {
 		if (subunits == null || subunits.getSubunitCount() == 0) {
 			transformationMatrix.setIdentity();
 		} else if (rotationGroup.getPointGroup().equals("C1")) {
 			transformationMatrix = getTransformationByInertiaAxes();
 		} else {
 			transformationMatrix = getTransformationBySymmetryAxes();
+			// for cyclic geometry, set a canonical view for the Z direction
+			if (rotationGroup.getPointGroup().startsWith("C")) {
+				setZDirection(transformationMatrix);
+			}
 		}
+
 		return transformationMatrix;
 	}
 
@@ -102,13 +132,20 @@ public class AxisTransformation {
 
 	private double[] getDimensions() {
 		double axisScale = 1.2;
-		double xMin = Double.MAX_VALUE;
-		double xMax = Double.MIN_VALUE;
-		double yMin = Double.MAX_VALUE;
-		double yMax = Double.MIN_VALUE;
-		double zMin = Double.MAX_VALUE;
-		double zMax = Double.MIN_VALUE;
-		double xyRadiusMaxSq = Double.MIN_VALUE;
+		double[] dimensions = new double[2];
+		dimensions[0] = axisScale * 0.5 * (zMax - zMin); // half of dimension along z-axis (principal rotation axis)
+		dimensions[1] = axisScale * 0.5 * Math.max((xMax-xMin), (yMax-yMin)); // max radius for rotation in x-y plane
+
+		return dimensions;
+	}
+
+	private void calcBoundaries() {
+		xMin = Double.MAX_VALUE;
+		xMax = Double.MIN_VALUE;
+		yMin = Double.MAX_VALUE;
+		yMax = Double.MIN_VALUE;
+		zMin = Double.MAX_VALUE;
+		zMax = Double.MIN_VALUE;
 
 		Point3d probe = new Point3d();
 		Point3d centroid = subunits.getCentroid();
@@ -124,15 +161,39 @@ public class AxisTransformation {
 				yMax = Math.max(yMax, probe.y);
 				zMin = Math.min(zMin, probe.z);
 				zMax = Math.max(zMax, probe.z);
-				double rSq = probe.x*probe.x + probe.y*probe.y;
-				xyRadiusMaxSq = Math.max(xyRadiusMaxSq, rSq);
 			}
 		}
-		double[] dimensions = new double[2];
-		dimensions[0] = axisScale * 0.5 * (zMax - zMin); // half of dimension along z-axis (principal rotation axis)
-		dimensions[1] = axisScale * 0.5 * Math.max((xMax-xMin), (yMax-yMin)); // max radius for rotation in x-y plane
+	}
+	
+	private Matrix4d setZDirection(Matrix4d matrix) {
+		calcBoundaries();
+		
+		Point3d probe = new Point3d();
+		Point3d centroid = subunits.getCentroid();
+		
+		double center = zMin + (zMax - zMin)/2;
+		double sum1 = 0;
+		double sum2 = 0;
+		for (Point3d[] list: subunits.getTraces()) {
+			for (Point3d p: list) {
+				probe.set(p);
+				probe.sub(centroid);
+				transformationMatrix.transform(probe);
+                if (probe.z < center) {
+                	sum1 += probe.x*probe.x + probe.y*probe.y;
+                } else {
+                	sum2 += probe.x*probe.x + probe.y*probe.y;
+                }
+			}
+		}
+		
+		if (sum2 > sum1) {
+			Matrix4d rot = new Matrix4d();
+			rot.set(new AxisAngle4d(0, 1, 0, -Math.PI));
+			matrix.mul(rot);
+		}
 
-		return dimensions;
+		return matrix;
 	}
 
 	private Vector3d getPrincipalRotationAxis() {
@@ -174,19 +235,36 @@ public class AxisTransformation {
 		return 1;
 	}
 
+	private Vector3d[] momentsOfInertia() {
+        MomentsOfInertia moi = new MomentsOfInertia();
+
+		for (Point3d[] list: subunits.getTraces()) {
+			for (Point3d p: list) {
+				moi.addPoint(p, 1.0);
+			}
+		}
+//		System.out.println("Moi: rog" + moi.getRadiusOfGyration());
+//		System.out.println("Moi: moi" + Arrays.toString(moi.getPrincipalMomentsOfInertia()));
+//		System.out.println("Elipsis radii: " + Arrays.toString(moi.getElipsisRadii()));
+		return moi.getPrincipalAxes();
+	}
+	
 	private Matrix4d getTransformationByInertiaAxes() {
-		Vector3d[] inertiaVectors = subunits.getMomentsOfInertia().getPrincipalAxes();
+		Vector3d[] inertiaVectors = momentsOfInertia();
+		drawInertiaAxes(subunits.getCentroid(), inertiaVectors);
 
 		// orientation of subunit inertia vectors center at the centroid of the subunits
 		Point3d[] refPoints = new Point3d[inertiaVectors.length];
-		for (int i = 0; i < inertiaVectors.length; i++) {
-			refPoints[i] = new Point3d(inertiaVectors[i]);
-			refPoints[i].add(subunits.getCentroid());
+		refPoints[0] = subunits.getCentroid();
+		for (int i = 0; i < inertiaVectors.length-1; i++) {
+			refPoints[i+1] = new Point3d(inertiaVectors[i]);
+			refPoints[i+1].add(subunits.getCentroid());
 		}
 
 		// x,y,z axis center at the centroid of the subunits
 		Point3d[] coordPoints = new Point3d[3];
-		coordPoints[0] = new Point3d(X_AXIS);
+//		coordPoints[0] = new Point3d(X_AXIS);
+		coordPoints[0] = new Point3d();
 		coordPoints[0].add(subunits.getCentroid());
 		coordPoints[1] = new Point3d(Y_AXIS);
 		coordPoints[1].add(subunits.getCentroid());
@@ -197,8 +275,45 @@ public class AxisTransformation {
 		Matrix4d matrix = SuperPosition.superposeWithTranslation(refPoints, coordPoints);
 		return matrix;
 	}
+	
+	private void drawInertiaAxes(Point3d center, Vector3d[] axes) {
+		StringBuilder s = new StringBuilder();
+		
+		for (int i = 0; i < axes.length; i++) {
+			s.append("draw l");
+			s.append(i);
+			s.append(" ");
+			s.append("line");
+			s.append(" ");
+			s.append("{");
+			s.append(jMolFloat(center.x));
+			s.append(" ");
+			s.append(jMolFloat(center.y));
+			s.append(" ");
+			s.append(jMolFloat(center.z));
+			s.append("}");
+			s.append("{");
+			Vector3d v = new Vector3d(axes[i]);
+			v.scale(20);
+			v.add(center);
+			s.append(jMolFloat(v.x));
+			s.append(" ");
+			s.append(jMolFloat(v.y));
+			s.append(" ");
+			s.append(jMolFloat(v.z));
+			s.append("}");
+			s.append(" width 0.5 ");
+			s.append(" color white");
+			s.append(";");
+		}
+
+		System.out.println(s);
+	}
 
 	public String getJmolTransformation() {
+		if (modified) {
+			run();
+		}
 		Quat4d q = new Quat4d();
 		transformationMatrix.get(q);
 		return "rotate quaternion {" + jMolFloat(q.x) + " " + jMolFloat(q.y) + " " + jMolFloat(q.z) + " " + jMolFloat(q.w) + "};";
@@ -206,7 +321,6 @@ public class AxisTransformation {
 
 	public String getJmolSymmetryAxes() {
 		StringBuilder s = new StringBuilder();
-
 
 		int n = rotationGroup.getOrder();
 		if (n == 0) {
@@ -292,6 +406,8 @@ public class AxisTransformation {
 			animation = getJmolAnimationCyclic(delay);
 		} else if (pointGroup.startsWith("D")) {
 			animation = getJmolAnimationDihedral(delay);
+		} else if (pointGroup.startsWith("T")) {
+			animation = getJmolAnimationTetrahedral(delay);
 		} else if (pointGroup.startsWith("O")) {
 		    animation = getJmolAnimationOctahedral(delay);
 	    } else if (pointGroup.startsWith("I")) {
@@ -331,7 +447,7 @@ public class AxisTransformation {
 			float angle = 360.0f/fold;
 			s.append("move 0 0 ");
 			s.append(angle);
-			s.append(" 0 0 0 0 0 3;");
+			s.append(" 0 0 0 0 0 4;");
 			s.append("delay ");
 			s.append(delay);
 			s.append(";");
@@ -341,7 +457,7 @@ public class AxisTransformation {
 		s.append("set echo top center;");
 		s.append("echo Side view 1;");
 		s.append("color echo white;");
-		s.append("move 0 90 0 0 0 0 0 0 3;");
+		s.append("move 90 0 0 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -349,7 +465,7 @@ public class AxisTransformation {
 		// show Back view
 		s.append("set echo top center;");
 		s.append("echo Back view;");
-		s.append("move 0 90 0 0 0 0 0 0 3;");
+		s.append("move 90 0 0 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -357,7 +473,7 @@ public class AxisTransformation {
 		// show Side view 2
 		s.append("set echo top center;");
 		s.append("echo Side view 2;");
-		s.append("move 0 90 0 0 0 0 0 0 3;");
+		s.append("move 90 0 0 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -365,7 +481,7 @@ public class AxisTransformation {
 		// show Front view
 		s.append("set echo top center;");
 		s.append("echo Front view;");
-		s.append("move 0 90 0 0 0 0 0 0 3;");
+		s.append("move 90 0 0 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -408,20 +524,20 @@ public class AxisTransformation {
 		float angle = 360.0f/fold;
 		s.append("move 0 0 ");
 		s.append(angle);
-		s.append(" 0 0 0 0 0 3;");
+		s.append(" 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
 
 		// align minor axis with z-axis
 		fold  = getMinorRotationAxisFold();
-		if (fold > 1) {
+		if (fold > 1) { // TODO is this still needed??
 			// show side view
 			s.append("set echo top center;");
 			s.append("echo Side view;");
             s.append("color echo white;");
 			// align minor axis with z-axis
-			s.append("move 0 90 0 0 0 0 0 0 3;");
+			s.append("move 90 0 0 0 0 0 0 0 4;");
 
 			// rotate around minor axis
 			fold  = getMinorRotationAxisFold();
@@ -436,7 +552,7 @@ public class AxisTransformation {
 	        s.append("color echo royalblue;");
 			s.append("move 0 0 ");
 			s.append(angle);
-			s.append(" 0 0 0 0 0 3;");
+			s.append(" 0 0 0 0 0 4;");
 			s.append("delay ");
 			s.append(delay);
 			s.append(";");
@@ -447,16 +563,79 @@ public class AxisTransformation {
 	        s.append("color echo white;");
 			s.append("move 0 0 ");
 			s.append(360.0-angle);
-			s.append(" 0 0 0 0 0 3;");
+			s.append(" 0 0 0 0 0 0;");
 			
 			// show Front view
-			s.append("move 0 -90 0 0 0 0 0 0 3;");
+			s.append("move -90 0 0 0 0 0 0 0 4;");
 			s.append("delay ");
 			s.append(delay);
 			s.append(";");
 			s.append("set echo top center;");
 			s.append("echo;");
 		} 
+
+		return s.toString();
+	}
+	
+	public String getJmolAnimationTetrahedral(int delay) {
+		StringBuilder s = new StringBuilder();
+		s.append(getJmolTransformation());
+
+	    // show front view
+		s.append("set echo top center;");
+		s.append("echo Front view: C3-axis;");
+        s.append("color echo white;");
+        s.append("font echo 24 sanserif;");
+        s.append("set echo bottom center;");
+		s.append("echo Point group ");
+		s.append("T (2,3)");
+		s.append(";");
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+
+		// show symmetry axes
+		s.append("set echo top center;");
+		s.append("echo 3-fold rotation;");
+        s.append("color echo red;");
+		s.append(getJmolSymmetryAxes());
+		s.append("delay ");
+		s.append(delay); 
+		s.append(";");
+		
+		// rotate around principal axis
+		s.append("move 0 0 120 0 0 0 0 0 4;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		
+		s.append("set echo top center;");
+		s.append("echo Edge view: C2-axis;");
+	    s.append("color echo white;");
+		s.append("move 0 -54.735 0 0 0 0 0 0 4;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		
+		// rotate around 2-fold axis
+		s.append("set echo top center;");
+		s.append("echo 2-fold rotation;");
+        s.append("color echo blue;");
+        s.append("move 0 0 180 0 0 0 0 0 4;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+
+		// rotate back to front view
+		s.append("echo Front view: C3-axis;");
+        s.append("color echo white;");
+        s.append("move 0 0 -180 0 0 0 0 0 0;");
+		s.append("move 0 54.735 0 0 0 0 0 0 4;");
+		s.append("delay ");
+		s.append(delay);
+		s.append(";");
+		s.append("set echo top center;");
+		s.append("echo;");
 
 		return s.toString();
 	}
@@ -488,7 +667,7 @@ public class AxisTransformation {
 		s.append(";");
 		
 		// rotate around principal axis
-		s.append("move 0 0 90 0 0 0 0 0 3;");
+		s.append("move 0 0 90 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -499,19 +678,15 @@ public class AxisTransformation {
 		s.append("set echo top center;");
 		s.append("echo Diagonal view: C3-axis;");
 	    s.append("color echo white;");
-		s.append("move 0 45 0 0 0 0 0 0 3;");
-		s.append("move 35.3 0 0 0 0 0 0 0 3;");
+		s.append("move 0 45 0 0 0 0 0 0 0;");
+		s.append("move 35.3 0 0 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay); 
 		s.append(";");
 		s.append("set echo top center;");
 		s.append("echo 3-fold rotation;");
 		s.append("color echo royalblue;");
-		
-//		if (true) {
-//			return s.toString();
-//		}
-		s.append("move 0 0 120 0 0 0 0 0 3;");
+		s.append("move 0 0 120 0 0 0 0 0 4;");
 		
 		// side view
 		s.append("delay ");
@@ -520,7 +695,7 @@ public class AxisTransformation {
 		s.append("set echo top center;");
 		s.append("echo Side view: C2-axis;");
 	    s.append("color echo white;");
-		s.append("move -35.3 0 0 0 0 0 0 0 3;");
+		s.append("move -35.3 0 0 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -529,7 +704,7 @@ public class AxisTransformation {
 		s.append("set echo top center;");
 		s.append("echo 2-fold rotation;");
 		s.append("color echo royalblue;");
-		s.append("move 0 0 180 0 0 0 0 0 3;");
+		s.append("move 0 0 180 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -538,8 +713,8 @@ public class AxisTransformation {
 		s.append("set echo top center;");
 		s.append("echo Front view;");
 		s.append("color echo white;");
-		s.append("move 90 0 0 0 0 0 0 0 3;");
-		s.append("move 0 0 45 0 0 0 0 0 3;");
+		s.append("move 90 0 0 0 0 0 0 0 0;");
+		s.append("move 0 0 45 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -576,7 +751,7 @@ public class AxisTransformation {
 		s.append(";");
 		
 		// rotate around principal axis
-		s.append("move 0 0 72 0 0 0 0 0 3;");
+		s.append("move 0 0 72 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -587,7 +762,7 @@ public class AxisTransformation {
 		s.append("set echo top center;");
 		s.append("echo Diagonal view: C3-axis;");
 	    s.append("color echo white;");
-		s.append("move 0 37.5 0 0 0 0 0  0 3;");
+		s.append("move 0 37.5 0 0 0 0 0  0 4;");
 		s.append("delay ");
 		s.append(delay); 
 		s.append(";");
@@ -595,11 +770,8 @@ public class AxisTransformation {
 		s.append("set echo top center;");
 		s.append("echo 3-fold rotation;");
 		s.append("color echo royalblue;");
-		s.append("move 0 0 120 0 0 0 0 0 3;");
+		s.append("move 0 0 120 0 0 0 0 0 4;");
 	
-	//	if (true) {
-	//		return s.toString();
-	//	}
 		// side view
 		s.append("delay ");
 		s.append(delay); 
@@ -607,10 +779,10 @@ public class AxisTransformation {
 		s.append("set echo top center;");
 		s.append("echo Side view: C2-axis;");
 	    s.append("color echo white;");
-		s.append("move 0 0 -120 0 0 0 0 0 1;");
-		s.append("move 0 -37.5 0 0 0 0 0 0 1;");
-		s.append("move 0 0 72 0 0 0 0 0 1;");
-		s.append("move 90 0 0 0 0 0 0 0 1;");
+		s.append("move 0 0 -120 0 0 0 0 0 0;");
+		s.append("move 0 -37.5 0 0 0 0 0 0 0;");
+		s.append("move 0 0 72 0 0 0 0 0 0;");
+		s.append("move 90 0 0 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -619,20 +791,16 @@ public class AxisTransformation {
 		s.append("set echo top center;");
 		s.append("echo 2-fold rotation;");
 		s.append("color echo royalblue;");
-	    s.append("move 0 0 180 0 0 0 0 0 3;");
+	    s.append("move 0 0 180 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
 		
-	//	if (true) {
-	//		return s.toString();
-	//	}
-
 		// show Front view
 		s.append("set echo top center;");
 		s.append("echo Front view;");
 		s.append("color echo white;");
-		s.append("move -90 0 0 0 0 0 0 0 3;");
+		s.append("move -90 0 0 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");

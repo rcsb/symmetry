@@ -80,13 +80,21 @@ public class OrientBiologicalAssembly {
 		return structure;
 	}
 
-	private void orient(Structure structure) {	
+	
+	public QuatSymmetryParameters getDefaultParameters(){
 		QuatSymmetryParameters params = new QuatSymmetryParameters();
 		params.setMinimumSequenceLength(MIN_SEQUENCE_LENGTH);
 		params.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
 		params.setAlignmentFractionThreshold(ALIGNMENT_FRACTION_THRESHOLD);
 		params.setRmsdThreshold(RMSD_THRESHOLD);
-
+		
+		return params;
+	}
+	
+	private void orient(Structure structure) {	
+		
+		QuatSymmetryParameters params = getDefaultParameters();
+		
 		FindQuarternarySymmetry finder = new FindQuarternarySymmetry(structure, params);	
 
 		RotationGroup rotationGroup = new RotationGroup();

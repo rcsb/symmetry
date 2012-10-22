@@ -15,10 +15,10 @@ import org.biojava3.structure.align.symm.quaternary.QuatSymmetryParameters;
 import org.biojava3.structure.align.symm.quaternary.RotationGroup;
 
 public class OrientBiologicalAssembly {
-	private static final int MIN_SEQUENCE_LENGTH = 24;
-	private static final double SEQUENCE_IDENTITY_THRESHOLD = 0.30;
-	private static final double ALIGNMENT_FRACTION_THRESHOLD = 0.9;
-	private static final double RMSD_THRESHOLD = 5.0;
+	public static final int MIN_SEQUENCE_LENGTH = 24;
+	public static final double SEQUENCE_IDENTITY_THRESHOLD = 0.30;
+	public static final double ALIGNMENT_FRACTION_THRESHOLD = 0.9;
+	public static final double RMSD_THRESHOLD = 5.0;
 
 	private String fileName = "";
 	private String outputDirectory = "";

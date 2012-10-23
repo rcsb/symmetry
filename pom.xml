@@ -79,12 +79,6 @@
 			
 		</dependency>
 		<dependency>
-			<groupId>org.biojava</groupId>
-			<artifactId>sequenceui</artifactId>
-			<version>2012.07-SNAPSHOT</version>
-			
-		</dependency>
-		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>ava-core</artifactId>
 			<version>2012-05-21-SNAPSHOT</version>

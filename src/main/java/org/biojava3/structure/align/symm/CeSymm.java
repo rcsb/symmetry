@@ -409,6 +409,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 				afpChain = CeCPMain.filterDuplicateAFPs(afpChain, calculator, ca1, ca2);
 				afpChain.setTMScore(tmScore2);
 			} catch (Exception e){
+				e.printStackTrace();
 				return afpChain;
 			}
 

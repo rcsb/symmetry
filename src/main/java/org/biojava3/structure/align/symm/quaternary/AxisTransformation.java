@@ -251,8 +251,14 @@ public class AxisTransformation {
 	}
 
 	private Point3d calcGeometricCenter() {
-		Point3d geometricCenter = new Point3d(xMin + (xMax-xMin)*0.5, yMin +(yMax-yMin)*0.5, zMin + (zMax-zMin)*0.5);
-		transformationMatrix.transform(geometricCenter);
+		Point3d geometricCenter = new Point3d();
+	
+		if (rotationGroup.getPointGroup().startsWith("C")) {
+	//		geometricCenter = new Point3d(xMin + (xMax-xMin)*0.5, yMin +(yMax-yMin)*0.5, zMin + (zMax-zMin)*0.5);
+	//		geometricCenter = new Point3d(0, 0, zMin + (zMax-zMin)*0.5);
+	//		transformationMatrix.transform(geometricCenter);
+		}
+		
 		geometricCenter.add(subunits.getCentroid());
 		return geometricCenter;
 	}
@@ -552,7 +558,7 @@ public class AxisTransformation {
 			AxisAngle4d axisAngle = rotation.getAxisAngle();
 			Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 			
-			s.append(JmolGeometricObjects.getSymmetryAxis(i, rotation.getFold(), principalAxis, referenceAxis, radius, diameter, color, center, axis));
+			s.append(JmolGeometricObjects.getSymmetryAxis(i, rotationGroup.getPointGroup(), rotation.getFold(), principalAxis, referenceAxis, radius, diameter, color, center, axis));
 						
 			if (color.isEmpty()) {
 			Point3d p1 = new Point3d(axis);
@@ -668,7 +674,7 @@ public class AxisTransformation {
 				radius = getXYRadius();
 			}
 			// TODO the center for Cn should be the geometric center, not the centroid (part of revereseTransformationMatrix)
-			s.append(JmolGeometricObjects.getJmolPlainPolygon(100, fold, getZRadius()*2, radius, calcPrismTransformation()));
+			s.append(JmolGeometricObjects.getJmolWirePrism(100, fold, getZRadius()*2, radius, calcPrismTransformation()));
 			s.append("delay ");
 			s.append(delay); 
 			s.append(";");
@@ -766,7 +772,7 @@ public class AxisTransformation {
 		} else {
 			radius = getXYRadius();
 		}
-		s.append(JmolGeometricObjects.getJmolPlainPolygon(100, fold, getZRadius()*2, radius, reverseTransformationMatrix));
+		s.append(JmolGeometricObjects.getJmolWirePrism(100, fold, getZRadius()*2, radius, reverseTransformationMatrix));
 		s.append("delay ");
 		s.append(delay); 
 		s.append(";");
@@ -857,6 +863,12 @@ public class AxisTransformation {
 		s.append(PRINCIPAL_AXIS_COLOR);
 		s.append(";");
 		s.append(getJmolSymmetryAxes());
+
+		double radius = Math.max(getZRadius(), getXYRadius());
+		System.out.println("zMaxRad: " + getZRadius());
+		System.out.println("xyMaxRad: " + getXYRadius());
+		radius = JmolGeometricObjects.tetrahedronInRadiusToOutRadius(radius);
+		s.append(JmolGeometricObjects.getJmolWireTetrahedron(100, radius, reverseTransformationMatrix));
 		s.append("delay ");
 		s.append(delay); 
 		s.append(";");
@@ -870,7 +882,12 @@ public class AxisTransformation {
 		s.append("set echo top center;");
 		s.append("echo Edge view: C2-axis;");
 		s.append("color echo white;");
-		s.append("move 0 -54.735 0 0 0 0 0 0 4;");
+		double tetrahedralAngle = Math.toDegrees(Math.acos(-1.0/3.0));
+		double angle = 180 - 0.5 * tetrahedralAngle;
+		System.out.println("tetaangle: " + angle);
+		s.append("move ");
+		s.append(jMolFloat(angle));
+		s.append(" 0 0 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -890,7 +907,9 @@ public class AxisTransformation {
 		s.append("echo Front view: C3-axis;");
 		s.append("color echo white;");
 		s.append("move 0 0 -180 0 0 0 0 0 0;");
-		s.append("move 0 54.735 0 0 0 0 0 0 4;");
+		s.append("move ");
+		s.append(jMolFloat(-angle));
+		s.append(" 0 0 0 0 0 0 0 4;");
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -931,6 +950,9 @@ public class AxisTransformation {
 		s.append(PRINCIPAL_AXIS_COLOR);
 		s.append(";");
 		s.append(getJmolSymmetryAxes());
+		double radius = Math.max(getZRadius(), getXYRadius());
+		radius = JmolGeometricObjects.octahedronInRadiusToOutRadius(radius);
+		s.append(JmolGeometricObjects.getJmolWireOctahedron(100, radius, reverseTransformationMatrix));
 		
 		s.append("delay ");
 		s.append(delay); 

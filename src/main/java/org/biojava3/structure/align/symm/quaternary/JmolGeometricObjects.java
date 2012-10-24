@@ -15,113 +15,205 @@ import javax.vecmath.Vector3d;
  */
 public final class JmolGeometricObjects {
 
-	public static String getJmolPlainPolygon(int index, int n, double height, double radius, Matrix4d transformation) {
+	public static String getJmolWirePrism(int index, int n, double height, double radius, Matrix4d transformation) {
 		String color = "orange";
 		StringBuilder s = new StringBuilder();
 
-		System.out.println("PlainPolygon: " + n + " " + height + " " + radius);
-		System.out.println(transformation);
+		// calculate polygon vertices
 		Point3d center1 = new Point3d(0, 0, -height/2);
 		Point3d[] polygon1 = getPolygonVertices(n, radius, center1);
 		for (int i = 0; i < polygon1.length; i++) {
 			transformation.transform(polygon1[i]);
 		}
-
-		s.append("draw l");
-		s.append(index);
-		s.append(" ");
-		s.append("line"); 	
-		s.append(" ");
-
-		// create vertex list
-		for (Point3d v: polygon1) {
-			s.append("{");
-			s.append(jMolFloat(v.x));
-			s.append(" ");
-			s.append(jMolFloat(v.y));
-			s.append(" ");
-			s.append(jMolFloat(v.z));
-			s.append("}");
-		}
-
-		s.append("{");
-		s.append(jMolFloat(polygon1[0].x));
-		s.append(" ");
-		s.append(jMolFloat(polygon1[0].y));
-		s.append(" ");
-		s.append(jMolFloat(polygon1[0].z));
-		s.append("}");
-		s.append(" color ");
-		s.append(" ");
-		s.append(color);
-		s.append(";");
-
 		Point3d center2 = new Point3d(0,0,height/2);
-		System.out.println("getJmolPlainPolygon radius: " + radius);
 		Point3d[] polygon2 = getPolygonVertices(n, radius, center2);
 		for (int i = 0; i < polygon2.length; i++) {
 			transformation.transform(polygon2[i]);
 		}
 
+		// draw first polygon
 		s.append("draw l");
-		s.append(index+1);
-		s.append(" ");
-		s.append("line"); 	
-		s.append(" ");
-
-		for (Point3d v: polygon2) {
-			s.append("{");
-			s.append(jMolFloat(v.x));
-			s.append(" ");
-			s.append(jMolFloat(v.y));
-			s.append(" ");
-			s.append(jMolFloat(v.z));
-			s.append("}");
+		s.append(index);
+		s.append(" line ");
+		for (Point3d p: polygon1) {
+			s.append(getJmolPoint(p));
 		}
-
-		s.append("{");
-		s.append(jMolFloat(polygon2[0].x));
-		s.append(" ");
-		s.append(jMolFloat(polygon2[0].y));
-		s.append(" ");
-		s.append(jMolFloat(polygon2[0].z));
-		s.append("}");
+		s.append(getJmolPoint(polygon1[0]));
 		s.append(" color ");
 		s.append(" ");
 		s.append(color);
 		s.append(";");
 
-		for (int i = 0; i < polygon1.length; i++) {
-			Point3d v1 = polygon1[i];
-			Point3d v2 = polygon2[i];
+		// draw second polygon
+		s.append("draw l");
+		s.append(index+1);
+		s.append(" line "); 	
+		for (Point3d p: polygon2) {
+			s.append(getJmolPoint(p));
+		}
+		s.append(getJmolPoint(polygon2[0]));
+		s.append(" color ");
+		s.append(color);
+		s.append(";");
 
+		// connect the two polygons
+		for (int i = 0; i < polygon1.length; i++) {
 			s.append("draw l");
 			s.append(index+2+i);
 			s.append(" line ");
-
-			s.append("{");
-			s.append(jMolFloat(v1.x));
-			s.append(" ");
-			s.append(jMolFloat(v1.y));
-			s.append(" ");
-			s.append(jMolFloat(v1.z));
-			s.append("}");
-			s.append("{");
-			s.append(jMolFloat(v2.x));
-			s.append(" ");
-			s.append(jMolFloat(v2.y));
-			s.append(" ");
-			s.append(jMolFloat(v2.z));
-			s.append("}");
+			s.append(getJmolPoint(polygon1[i]));
+			s.append(getJmolPoint(polygon2[i]));
 			s.append(" color ");
 			s.append(color);
 			s.append(";");
-
 		}
 		return s.toString();
 	}
+	
+	public static String getJmolWireTetrahedron(int index, double radius, Matrix4d transformation) {
+		String color = "orange";
+		StringBuilder s = new StringBuilder();
 
-	public static String getSymmetryAxis(int index, int n, Vector3d principalAxis, Vector3d referenceAxis, double radius, float diameter, String color, Point3d center, Vector3d axis) {
+		System.out.println("WireTetrahedron: "  + radius);
+		System.out.println(transformation);
+
+		Point3d[] tetrahedron = getTetrahedronVertices(radius);
+		for (int i = 0; i < tetrahedron.length; i++) {
+			transformation.transform(tetrahedron[i]);
+		}
+
+		for (int i = 0; i < tetrahedron.length-1; i++) {
+			for (int j = i+1; j < tetrahedron.length; j++) {
+				s.append("draw l");
+				s.append(index+i + 4*j);
+				s.append(" ");
+				s.append("line"); 	
+				s.append(" ");
+
+				s.append("{");
+				s.append(jMolFloat(tetrahedron[i].x));
+				s.append(" ");
+				s.append(jMolFloat(tetrahedron[i].y));
+				s.append(" ");
+				s.append(jMolFloat(tetrahedron[i].z));
+				s.append("}");
+
+				s.append("{");
+				s.append(jMolFloat(tetrahedron[j].x));
+				s.append(" ");
+				s.append(jMolFloat(tetrahedron[j].y));
+				s.append(" ");
+				s.append(jMolFloat(tetrahedron[j].z));
+				s.append("}");
+				s.append(" color ");
+				s.append(" ");
+				s.append(color);
+				s.append(";");
+			}
+		}
+
+		return s.toString();
+	}
+	
+	public static String getJmolWireOctahedron(int index, double radius, Matrix4d transformation) {
+		String color = "orange";
+		StringBuilder s = new StringBuilder();
+
+		System.out.println("WireOctagon: "  + radius);
+
+		Point3d[] octahedron = getOctadronVertices(radius);
+		for (int i = 0; i < octahedron.length; i++) {
+			transformation.transform(octahedron[i]);
+		}
+
+		s.append("draw l");
+		s.append(index);
+		s.append(" line ");
+		s.append(getJmolPoint(octahedron[0]));
+		s.append(getJmolPoint(octahedron[2]));
+		s.append(getJmolPoint(octahedron[1]));
+		s.append(getJmolPoint(octahedron[3]));
+		s.append(getJmolPoint(octahedron[0]));
+		s.append(getJmolPoint(octahedron[5]));
+		s.append(getJmolPoint(octahedron[1]));
+		s.append(getJmolPoint(octahedron[4]));
+		s.append(getJmolPoint(octahedron[0]));		
+		s.append(" color ");
+		s.append(color);
+		s.append(";");
+		
+		s.append("draw l");
+		s.append(index+1);
+		s.append(" line "); 	
+		s.append(getJmolPoint(octahedron[2]));
+		s.append(getJmolPoint(octahedron[5]));
+		s.append(getJmolPoint(octahedron[3]));
+		s.append(getJmolPoint(octahedron[4]));
+		s.append(getJmolPoint(octahedron[2]));
+		s.append(" color ");
+		s.append(color);
+		s.append(";");
+
+		return s.toString();
+	}
+
+	private static double polygonInRadiusToOutRadius(int n, double inradius) {
+	    double side = inradius * 2 * Math.tan(Math.PI/n);
+	    return side / (2 * Math.sin(Math.PI/n));
+	}
+	
+	/**
+	 * Converts the radius of a sphere that fits inside of an octahedron
+	 * to the radius that circumscribes the octagon
+	 * @param inRadius
+	 * @return
+	 */
+	public static double octahedronInRadiusToOutRadius(double inRadius) {
+		// calculate length of side of ocathedron from inscribed sphere
+		double side = 6 * inRadius / Math.sqrt(6);
+		side = 2 * inRadius; // mid radius
+		// calculate radius of a circumscribed sphere
+		return side * 0.5 * Math.sqrt(2);
+	}
+	
+	/**
+	 * Converts the radius of a sphere that fits inside of an octahedron
+	 * to the radius that circumscribes the octagon
+	 * @param inRadius
+	 * @return
+	 */
+	public static double tetrahedronInRadiusToOutRadius(double inRadius) {
+		// calculate length of side of tetrahedron from inscribed sphere
+	//	double side = inRadius * Math.sqrt(24.0);
+		double side = inRadius * Math.sqrt(8.0); // mid radius
+		// calculate radius of a circumscribed sphere
+		return Math.sqrt(3.0/8.0) * side;
+	}
+	
+	
+	private static String getJmolPoint(Point3d point) {
+		StringBuilder s = new StringBuilder();
+		s.append("{");
+		s.append(jMolFloat(point.x));
+		s.append(" ");
+		s.append(jMolFloat(point.y));
+		s.append(" ");
+		s.append(jMolFloat(point.z));
+		s.append("}");
+		return s.toString();
+	}
+
+	public static String getSymmetryAxis(int index, String pointGroup, int n, Vector3d principalAxis, Vector3d referenceAxis, double radius, float diameter, String color, Point3d center, Vector3d axis) {
+		if (pointGroup.startsWith("C")) {
+			radius = polygonInRadiusToOutRadius(n, radius);
+		}
+		if (pointGroup.equals("T")) {
+			radius = tetrahedronInRadiusToOutRadius(radius);
+		}
+		if (pointGroup.equals("O")) {
+			radius = octahedronInRadiusToOutRadius(radius);
+		}
+		
 		Point3d p1 = new Point3d(axis);
 		p1.scaleAdd(-radius, center);
 
@@ -306,6 +398,53 @@ public final class JmolGeometricObjects {
 		}
 		return vertices;
 	}
+	
+	/**
+	 * Returns the vertices of an n-fold polygon of given radius and center	
+	 * @param n
+	 * @param radius
+	 * @param center
+	 * @return
+	 */
+	private static Point3d[] getOctadronVertices(double radius) {
+		Point3d[] octagon = new Point3d[6];
+	    octagon[0] = new Point3d(-radius, 0, 0);
+	    octagon[1] = new Point3d( radius, 0, 0);
+	    octagon[2] = new Point3d(0, -radius, 0);
+	    octagon[3] = new Point3d(0,  radius, 0);
+	    octagon[4] = new Point3d(0, 0, -radius);
+	    octagon[5] = new Point3d(0, 0,  radius);
+
+		return octagon;
+	};
+	
+	/**
+	 * Returns the vertices of an n-fold polygon of given radius and center	
+	 * @param n
+	 * @param radius
+	 * @param center
+	 * @return
+	 */
+	private static Point3d[] getTetrahedronVertices(double radius) {
+		double a = radius/Math.sqrt(2);
+	    Point3d[] tetrahedron = new Point3d[4];
+		tetrahedron[0] = new Point3d(-radius, 0, -a);
+		tetrahedron[1] = new Point3d( radius, 0, -a);
+		tetrahedron[2] = new Point3d(0, -radius, a);
+		tetrahedron[3] = new Point3d(0,  radius, a);
+		Point3d centroid = SuperPosition.centroid(tetrahedron);
+		// rotate tetrahedron to align one vertex with the +z axis
+		Matrix3d m = new Matrix3d();
+		double tetrahedralAngle = Math.acos(-1.0/3.0);
+		m.rotX(0.5 * tetrahedralAngle);
+		for (Point3d p: tetrahedron) {
+			p.sub(centroid);
+			m.transform(p);
+		}
+
+		return tetrahedron;
+	};
+
 	/**
 	 * Returns a lower precision floating point number for Jmol
 	 * @param f

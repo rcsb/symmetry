@@ -15,7 +15,7 @@ public class DemoCeSymm {
 		AtomCache cache = new AtomCache();
 
 		//String name = "d1jlya1";
-		String name="1tim.A";
+		String name="1XWY.A";
 
 		CeSymm ceSymm = new CeSymm();
 

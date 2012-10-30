@@ -11,6 +11,7 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.align.symm.quaternary.AxisTransformation;
 import org.biojava3.structure.align.symm.quaternary.FindQuarternarySymmetry;
+import org.biojava3.structure.align.symm.quaternary.JmolScriptGenerator;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryParameters;
 import org.biojava3.structure.align.symm.quaternary.RotationGroup;
 
@@ -108,6 +109,7 @@ public class OrientBiologicalAssembly {
 		} 
 
 		AxisTransformation at = new AxisTransformation(finder.getSubunits(), rotationGroup);
+		JmolScriptGenerator script = new JmolScriptGenerator(at, finder.getSubunits(), rotationGroup);
 	
 		System.out.println();
 		String prefix = getBaseFileName();
@@ -122,15 +124,15 @@ public class OrientBiologicalAssembly {
 		
 		outName = prefix + "_JmolTransformation.txt";
 		System.out.println("Writing Jmol transformation to: " + outName);
-		writeFile(outName, at.getJmolTransformation());
+		writeFile(outName, script.getJmolTransformation());
 		
 		outName = prefix + "_JmolSymmetryAxes.txt";
 		System.out.println("Writing Jmol symmetry axes to: " + outName);
-		writeFile(outName, at.getJmolSymmetryAxes());
+		writeFile(outName, script.getJmolSymmetryAxes());
 		
 		outName = prefix + "_JmolAnimation.txt";
 		System.out.println("Writing Jmol animation to: " + outName);
-		writeFile(outName, at.getJmolAnimation(2));
+		writeFile(outName, script.getJmolAnimation(2));
 	}
 	
 	private String getBioassemblyId() {

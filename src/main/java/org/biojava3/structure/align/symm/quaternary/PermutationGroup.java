@@ -41,14 +41,8 @@ public class PermutationGroup {
             }
         }
         // repeat iteratively until no new permutation are created
-        // the  following 
         if (permutations.size() > n) {
-        	int m = permutations.size();
- //       	System.out.println("completeGroup iteration");
         	completeGroup();
- //       	if (permutations.size() > m) {
- //       		System.out.println("complete group iteration: " + m +"/" + permutations.size());
-  //      	}
         }
     }
 

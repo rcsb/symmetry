@@ -2,10 +2,10 @@
 package org.biojava3.structure.align.symm.quaternary;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
@@ -159,29 +159,6 @@ public class RotationSolver implements QuatSymmetrySolver {
         		angles.add(2* Math.PI/fold);
         	}
         }
-        return angles;
-    }
-    
-    private List<Double> getAnglesOld() {
-        int n = subunits.getSubunitCount();
-        // for spherical symmetric cases, n cannot be higher than 60
-        if (n % 60 == 0 && isSpherical()) {
-           n = 60;
-        }
-        List<Double> angles = new ArrayList<Double>(n+1);
-
-        for (int i = 0; i < n; i++) {
-           angles.add(i * 2* Math.PI/n);
-        }
-
-        // if the maximum symmetry number is odd, add a 2-fold axis. This
-        // is required for Dn symmetry, where there are perpendicular
-        // 2-fold axes.
-        if (n % 2 != 0) {
-            angles.add((double)Math.PI);
-            Collections.sort(angles);
-        }
-        
         return angles;
     }
     

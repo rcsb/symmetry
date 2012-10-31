@@ -27,7 +27,7 @@ public class JmolScriptGenerator {
 		this.rotationGroup = rotationGroup;
 	}
 	
-	private String jmolDrawInertiaAxes() {
+	public String jmolDrawInertiaAxes() {
 		StringBuilder s = new StringBuilder();
 		Point3d centroid = axisTransformation.calcGeometricCenter();
 		Vector3d[] axes = axisTransformation.getPrincipalAxesOfInertia();
@@ -151,7 +151,7 @@ public class JmolScriptGenerator {
 		String pointGroup = rotationGroup.getPointGroup();
 		if (pointGroup.equals("C1")) {
 			animation = getJmolAnimationC1(delay);
-		} else if (pointGroup.startsWith("C2")) {
+		} else if (pointGroup.equals("C2")) {
 			animation = getJmolAnimationC2(delay);
 		} else if (pointGroup.startsWith("C")) {
 			animation = getJmolAnimationCyclic(delay);
@@ -615,6 +615,7 @@ public class JmolScriptGenerator {
 		Octahedron o = new Octahedron();
 		o.setMidRadius(radius);
 		s.append(JmolScriptGenerator.getJmolWirePolyhedron(100, o, axisTransformation.getReverseTransformation()));
+		s.append(drawAxis(300, o.getC4Axis(1.2)));
 		s.append("delay ");
 		s.append(delay); 
 		s.append(";");
@@ -631,6 +632,7 @@ public class JmolScriptGenerator {
 		s.append("color echo white;");
 		s.append("move 0 45 0 0 0 0 0 0 0;");
 		s.append("move 35.3 0 0 0 0 0 0 0 4;");
+		s.append(drawAxis(301, o.getC3Axis(1.2)));
 		s.append("delay ");
 		s.append(delay); 
 		s.append(";");
@@ -649,6 +651,7 @@ public class JmolScriptGenerator {
 		s.append("echo Side view: C2-axis;");
 		s.append("color echo white;");
 		s.append("move -35.3 0 0 0 0 0 0 0 4;");
+		s.append(drawAxis(302, o.getC2Axis(1.2)));
 		s.append("delay ");
 		s.append(delay);
 		s.append(";");
@@ -795,7 +798,7 @@ public class JmolScriptGenerator {
 			for (int i: lineLoop) {
 				s.append(getJmolPoint(vertices[i]));
 			}
-			s.append(" width 2.0");
+			s.append(" width 0.75");
 			s.append(" color ");
 			s.append(color);
 			s.append(";");
@@ -867,6 +870,28 @@ public class JmolScriptGenerator {
 			s.append(getPolygonJmol(index, p1, principalAxis, referenceAxis, axis, n, color, polygonRadius));
 			s.append(getPolygonJmol(index + n + 1, p2, principalAxis, referenceAxis, axis, n, color, polygonRadius));
 		}
+
+		return s.toString();
+	}
+	
+	private String drawAxis(int index, Point3d axis) {
+		StringBuilder s = new StringBuilder();
+		s.append("draw l");
+		s.append(index);
+		s.append(" ");
+		s.append("line");
+		s.append(" ");
+		Point3d v1 = new Point3d(axis);
+		Point3d v2 = new Point3d(axis);
+		v2.negate();
+		Matrix4d m = axisTransformation.getReverseTransformation();
+		m.transform(v1);
+		m.transform(v2);
+		s.append(getJmolPoint(v1));
+		s.append(getJmolPoint(v2));
+//		s.append(" width 0.25 ");
+		s.append(" color purple");
+		s.append(";");
 
 		return s.toString();
 	}

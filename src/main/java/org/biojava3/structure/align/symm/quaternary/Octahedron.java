@@ -90,6 +90,18 @@ public class Octahedron implements Polyhedron {
 		return Arrays.asList(lineLoop1);
 	}
 	
+	public Point3d getC4Axis(double scale) {
+		return new Point3d(0, 0, cirumscribedRadius*scale);
+	}
+	public Point3d getC3Axis(double scale) {
+		double s = 1/Math.sqrt(1 + Math.sqrt(2));
+		return new Point3d(cirumscribedRadius*scale*s, cirumscribedRadius*scale*s, cirumscribedRadius*scale*s);
+	}
+	public Point3d getC2Axis(double scale) {
+		double s = 1/Math.sqrt(2);
+		return new Point3d(cirumscribedRadius*scale*s, cirumscribedRadius*scale*s, 0);
+	}
+	
 	private static double getSideLengthFromInscribedRadius(double radius) {
 		return radius * 6 / Math.sqrt(6);
 	}

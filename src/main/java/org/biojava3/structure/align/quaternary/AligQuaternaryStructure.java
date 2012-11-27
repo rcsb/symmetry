@@ -18,10 +18,10 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
+import org.biojava3.structure.align.symm.geometry.SuperPosition;
 import org.biojava3.structure.align.symm.quaternary.ChainClusterer;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryParameters;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryWriter;
-import org.biojava3.structure.align.symm.quaternary.SuperPosition;
 
 public class AligQuaternaryStructure {
 	private static String PDB_PATH = "C:/PDB/";

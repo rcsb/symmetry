@@ -21,13 +21,13 @@ import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
 import org.biojava.bio.structure.jama.Matrix;
+import org.biojava3.structure.align.symm.geometry.SuperPosition;
 import org.biojava3.structure.align.symm.quaternary.ChainClusterer;
 import org.biojava3.structure.align.symm.quaternary.FindQuarternarySymmetry;
 import org.biojava3.structure.align.symm.quaternary.PermutationGenerator;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryParameters;
 import org.biojava3.structure.align.symm.quaternary.RotationGroup;
 import org.biojava3.structure.align.symm.quaternary.Subunits;
-import org.biojava3.structure.align.symm.quaternary.SuperPosition;
 
 public class SubunitMapper {
 	private QuatSymmetryParameters parameters = new QuatSymmetryParameters();

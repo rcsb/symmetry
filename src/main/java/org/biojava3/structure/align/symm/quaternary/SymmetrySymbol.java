@@ -3,8 +3,6 @@
  */
 package org.biojava3.structure.align.symm.quaternary;
 
-import javax.vecmath.AxisAngle4d;
-import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 

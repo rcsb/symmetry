@@ -4,6 +4,7 @@
 package org.biojava3.structure.align.symm.jmolScript;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.vecmath.AxisAngle4d;
@@ -17,7 +18,7 @@ import org.biojava3.structure.align.symm.geometry.Polyhedron;
 import org.biojava3.structure.align.symm.quaternary.AxisTransformation;
 import org.biojava3.structure.align.symm.quaternary.Rotation;
 import org.biojava3.structure.align.symm.quaternary.RotationGroup;
-import org.biojava3.structure.align.symm.quaternary.SymmetrySymbol;
+import org.biojava3.structure.align.symm.quaternary.Subunits;
 
 /**
  * @author Peter
@@ -41,14 +42,72 @@ public abstract class JmolSymmetryScriptGenerator {
 	}
 
 	abstract public int getDefaultZoom();
-
-	public String deleteSymmetryAxes() {return new String();};
-	public String deleteInertiaAxes() {return new String();};
 	
+	/**
+	 * Returns an instance of a JmolSymmetryScriptGenerator, based on the point group of a structure (factory method)
+	 * @param axisTransformation
+	 * @param rotationGroup
+	 * @return instance of JmolSymmetryScriptGenerator
+	 */
+	public static JmolSymmetryScriptGenerator getInstance(AxisTransformation axisTransformation, RotationGroup rotationGroup) {
+		String pointGroup = rotationGroup.getPointGroup();
+		if (pointGroup.equals("C1")) {
+			return new JmolSymmetryScriptGeneratorC1(axisTransformation, rotationGroup);
+		} else if (pointGroup.startsWith("C")) {
+			return new JmolSymmetryScriptGeneratorCn(axisTransformation, rotationGroup);
+		} else if (pointGroup.startsWith("D")) {
+			return new JmolSymmetryScriptGeneratorCn(axisTransformation, rotationGroup);
+		} else if (pointGroup.equals("T")) {
+			return new JmolSymmetryScriptGeneratorT(axisTransformation, rotationGroup);
+		} else if (pointGroup.equals("O")) {
+			return new JmolSymmetryScriptGeneratorO(axisTransformation, rotationGroup);
+		} else if (pointGroup.equals("I")) {
+			return new JmolSymmetryScriptGeneratorI(axisTransformation, rotationGroup);
+		} 
+		
+		return null;
+	}
+	
+	/**
+	 * Returns a Jmol script to set the default orientation for a structure
+	 * @return Jmol script
+	 */
+	public String setDefaultOrientation() {	
+		StringBuilder s = new StringBuilder();
+		s.append(setCentroid());
+		
+		// calculate  orientation
+		Matrix3d m = polyhedron.getViewMatrix(0);
+		m.mul(axisTransformation.getRotationMatrix());
+		Quat4d q = new Quat4d();
+		q.set(m);
+		
+		// set orientation
+		s.append("moveto 4 quaternion {");
+		s.append(jMolFloat(q.x));
+		s.append(" ");
+		s.append(jMolFloat(q.y));
+		s.append(" ");
+		s.append(jMolFloat(q.z));
+		s.append(" ");
+		s.append(jMolFloat(q.w));
+		s.append("};");
+		return s.toString();
+	}
+	
+	/**
+	 * Returns the number of orientations available for this structure
+	 * @return number of orientations
+	 */
 	public int getOrientationCount() {
 		return polyhedron.getViewCount();
 	}
 	
+	/**
+	 * Returns a Jmol script that sets a specific orientation
+	 * @param index orientation index
+	 * @return Jmol script
+	 */
 	public String setOrientation(int index) {	
 		StringBuilder s = new StringBuilder();
 		s.append(setCentroid());
@@ -74,19 +133,13 @@ public abstract class JmolSymmetryScriptGenerator {
 		return s.toString();
 	}
 	
-	public String drawOrientationName(int index, String color) {
-		StringBuilder s = new StringBuilder();
-		s.append("set echo top center;");
-		s.append("color echo ");
-		s.append(color);
-		s.append(";");
-		s.append("font echo 24 sanserif;");
-		s.append("echo ");
-		s.append(polyhedron.getViewName(index));
-		s.append(";");
-		return s.toString();
-	}
 
+
+	/**
+	 * Returns a Jmol script that draws an invisible polyhedron around a structure.
+	 * Use showPolyhedron() and hidePolyhedron() to toggle visibility.
+	 * @return Jmol script
+	 */
 	public String drawPolyhedron() {
 		StringBuilder s = new StringBuilder();
 
@@ -122,15 +175,141 @@ public abstract class JmolSymmetryScriptGenerator {
 		return "draw polyhedron* on;";
 	}
 	
+	/**
+	 * Returns a Jmol script that draws symmetry or inertia axes for a structure.
+	 * Use showAxes() and hideAxes() to toggle visibility.
+	 * @return Jmol script
+	 */
+	public String drawAxes() {
+		if (rotationGroup.getPointGroup().equals("C1")) {
+			return drawInertiaAxes();
+		} else {
+			return drawSymmetryAxes();
+		}
+	}
+	
+	/**
+	 * Returns a Jmol script to hide axes
+	 * @return Jmol script
+	 */
 	public String hideAxes() {
 		return "draw axes* off;";
 	}
 	
+	/**
+	 * Returns a Jmol script to show axes
+	 * @return Jmol script
+	 */
 	public String showAxes() {
 		return "draw axes* on;";
 	}
 	
-	public String drawInertiaAxes() {
+	/**
+	 * Returns a Jmol script that displays a symmetry polyhedron and symmetry axes
+	 * and then loop through different orientations
+	 * @return Jmol script
+	 */
+	public String playOrientations() {
+		StringBuilder s = new StringBuilder();
+		
+		// draw point group
+		s.append(drawFooter("Point group" + rotationGroup.getPointGroup(), "white"));
+		
+		// draw polygon
+		s.append(drawPolyhedron()); // draw invisibly
+		s.append(showPolyhedron());
+//		s.append(hidePolyhedron());
+			
+		// draw axes
+		s.append(drawAxes());
+		s.append(showAxes());
+//		s.append(hideAxes());
+		
+		// loop over all orientations with 4 sec. delay
+		for (int i = 0; i < getOrientationCount(); i++) {
+			s.append(deleteHeader());
+			s.append(setOrientation(i));
+			s.append(drawHeader(polyhedron.getViewName(i), "white"));
+			s.append("delay 4;");
+		}
+		
+		// go back to first orientation
+		s.append(deleteHeader());
+		s.append(setOrientation(0));
+		s.append(drawHeader(polyhedron.getViewName(0), "white"));
+		
+		return s.toString();
+	}
+
+	
+	
+	
+	
+	/**
+	 * Returns a Jmol script that colors the subunits of a structure by differen colors
+	 * @return
+	 */
+	public String colorBySubunit() {
+		// TODO incomplete prototype, try to use ColorBrewer here ...
+		StringBuilder s = new StringBuilder();
+	    Subunits subunits = axisTransformation.getSubunits();
+	    List<Integer> modelNumbers = subunits.getModelNumbers();
+	    List<String> chainIds = subunits.getChainIds();
+	    List<String> colors = Arrays.asList("yellow","orange","red","green","blue","purple");
+	    int colorIndex = 0;
+		for (int i = 0; i < subunits.getSubunitCount(); i++) {
+			s.append("select chain=");
+			s.append(chainIds.get(i));
+			s.append(" and model=");
+			if (i == colors.size()) {
+				colorIndex = 0;
+			} else {
+				colorIndex++;
+			}
+			s.append(modelNumbers.get(i)+1);
+			s.append(";");
+			s.append("color cartoon ");
+			s.append(colors.get(colorIndex));
+			s.append(";");
+		}
+		return s.toString();
+	}
+	
+	/**
+	 * Returns a Jmol script that colors subunits by their sequence cluster ids.
+	 * @return Jmol script
+	 */
+	public String colorBySequenceCluster() {
+		// TODO incomplete prototype, try to use ColorBrewer here ...
+		StringBuilder s = new StringBuilder();
+	    Subunits subunits = axisTransformation.getSubunits();
+	    List<Integer> modelNumbers = subunits.getModelNumbers();
+	    List<String> chainIds = subunits.getChainIds();
+	    List<Integer> seqClusterIds = subunits.getSequenceClusterIds();
+	    List<String> colors = Arrays.asList("yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple");
+		for (int i = 0; i < subunits.getSubunitCount(); i++) {
+			s.append("select chain=");
+			s.append(chainIds.get(i));
+			s.append(" and model=");
+			s.append((modelNumbers.get(i)+1));
+			s.append(";");
+			s.append("color cartoon ");
+			s.append(colors.get(seqClusterIds.get(i)));
+			s.append(";");
+		}
+		return s.toString();
+	}
+	
+	/**
+	 * Return a Jmol script that colors subunits to highlight the symmetry within a structure
+	 * @return Jmol script
+	 */
+	public String colorBySymmetry() {
+		return "";
+	}
+	
+	
+	private String drawInertiaAxes() {
 		StringBuilder s = new StringBuilder();
 		Point3d centroid = axisTransformation.calcGeometricCenter();
 		Vector3d[] axes = axisTransformation.getPrincipalAxesOfInertia();
@@ -143,11 +322,11 @@ public abstract class JmolSymmetryScriptGenerator {
 			s.append(" ");
 			Point3d v1 = new Point3d(axes[i]);
 			if (i == 0) {
-				v1.scale(1.2*axisTransformation.getDimension().y);
+				v1.scale(AXIS_SCALE_FACTOR*axisTransformation.getDimension().y);
 			} else if (i == 1) {
-				v1.scale(1.2*axisTransformation.getDimension().x);
+				v1.scale(AXIS_SCALE_FACTOR*axisTransformation.getDimension().x);
 			} else if (i == 2) {
-				v1.scale(1.2*axisTransformation.getDimension().z);
+				v1.scale(AXIS_SCALE_FACTOR*axisTransformation.getDimension().z);
 			}
 			Point3d v2 = new Point3d(v1);
 			v2.negate();
@@ -161,65 +340,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		}
         return s.toString();
 	};
-	
-	public String drawPointGroupName(String color) {
-		StringBuilder s = new StringBuilder();
-		s.append("set echo bottom center;");
-		s.append("color echo ");
-		s.append(color);
-		s.append(";");
-		s.append("font echo 24 sanserif;");
-		s.append("echo Point group ");
-		s.append(rotationGroup.getPointGroup());
-		s.append(";");
-		return s.toString();
-	}
-	
-	public String playOrientations() {
-		StringBuilder s = new StringBuilder();
-		
-		// TODO point group name is not displayed???
-		s.append(drawPointGroupName("white"));
-		
-		// draw polygon
-		s.append(drawPolyhedron());
-		s.append(showPolyhedron());
-		s.append(hidePolyhedron());
-	//	s.append(showPolyhedron());
-			
-		// draw axes
-		s.append(drawAxes());
-		s.append(showAxes());
-		s.append(hideAxes());
-//		s.append(showAxes());
-		
-		// loop over all orientations
-		for (int i = 0; i < getOrientationCount(); i++) {
-			s.append("echo ;");
-			s.append(setOrientation(i));
-			s.append(drawOrientationName(i, "white"));
-			s.append("delay 4;");
-		}
-		
-		// go back to first orientation
-		s.append("echo ;");
-		s.append(setOrientation(0));
-		s.append(drawOrientationName(0, "white"));
-		
-		s.append(drawPointGroupName("white"));
-		
-		return s.toString();
-	}
-
-	public String drawAxes() {
-		if (rotationGroup.getPointGroup().equals("C1")) {
-			return drawInertiaAxes();
-		} else {
-			return drawSymmetryAxes();
-		}
-	}
-	
-	public String drawSymmetryAxes() {
+	private String drawSymmetryAxes() {
 		StringBuilder s = new StringBuilder();
 
 		int n = rotationGroup.getOrder();
@@ -266,8 +387,9 @@ public abstract class JmolSymmetryScriptGenerator {
 
 		return s.toString();
 	}
+
 	
-	public String getSymmetryAxis(int i, int j, String pointGroup, int n, Vector3d principalAxis, Vector3d referenceAxis, double radius, float diameter, String color, Point3d center, Vector3d axis) {
+	private String getSymmetryAxis(int i, int j, String pointGroup, int n, Vector3d principalAxis, Vector3d referenceAxis, double radius, float diameter, String color, Point3d center, Vector3d axis) {
 		boolean drawPolygon = true;
 		
 		Point3d p1 = new Point3d(axis);
@@ -310,7 +432,6 @@ public abstract class JmolSymmetryScriptGenerator {
 
 		return s.toString();
 	}
-	
 	private static String getPolygonJmol(int index, Point3d center, Vector3d principalAxis, Vector3d referenceAxis, Vector3d axis, int n, String color, double radius) {
 		StringBuilder s = new StringBuilder();
 		s.append("draw axesSymbol");
@@ -513,23 +634,36 @@ public abstract class JmolSymmetryScriptGenerator {
 //		return s.toString();
 //	}
 	
-	public static JmolSymmetryScriptGenerator getInstance(AxisTransformation axisTransformation, RotationGroup rotationGroup) {
-		String pointGroup = rotationGroup.getPointGroup();
-		if (pointGroup.equals("C1")) {
-			return new JmolSymmetryScriptGeneratorC1(axisTransformation, rotationGroup);
-		} else if (pointGroup.startsWith("C")) {
-			return new JmolSymmetryScriptGeneratorCn(axisTransformation, rotationGroup);
-		} else if (pointGroup.startsWith("D")) {
-			return new JmolSymmetryScriptGeneratorCn(axisTransformation, rotationGroup);
-		} else if (pointGroup.equals("T")) {
-			return new JmolSymmetryScriptGeneratorT(axisTransformation, rotationGroup);
-		} else if (pointGroup.equals("O")) {
-			return new JmolSymmetryScriptGeneratorO(axisTransformation, rotationGroup);
-		} else if (pointGroup.equals("I")) {
-			return new JmolSymmetryScriptGeneratorI(axisTransformation, rotationGroup);
-		} 
-		
-		return null;
+	
+	
+	private String drawHeader(String text, String color) {
+		StringBuilder s = new StringBuilder();
+		s.append("set echo top center;");
+		s.append("color echo ");
+		s.append(color);
+		s.append(";");
+		s.append("font echo 24 sanserif;");
+		s.append("echo ");
+		s.append(text);
+		s.append(";");
+		return s.toString();
+	}
+	
+	private String deleteHeader() {
+		return "set echo top center;echo ;";
+	}
+	
+	private String drawFooter(String text, String color) {
+		StringBuilder s = new StringBuilder();
+		s.append("set echo bottom center;");
+		s.append("color echo ");
+		s.append(color);
+		s.append(";");
+		s.append("font echo 24 sanserif;");
+		s.append("echo Point group ");
+		s.append(rotationGroup.getPointGroup());
+		s.append(";");
+		return s.toString();
 	}
 	
 	private String setCentroid() {

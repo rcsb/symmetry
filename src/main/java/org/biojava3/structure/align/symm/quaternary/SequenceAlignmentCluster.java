@@ -85,19 +85,19 @@ public class SequenceAlignmentCluster {
 		return sequenceIdentity >= parameters.getSequenceIdentityThreshold() && alignmentLengthFraction >= parameters.getAlignmentFractionThreshold();
 	}
 	
-	public boolean addChain(Atom[] cAlphaAtoms, String chainId, String sequence) {	
+	public boolean addChain(Atom[] cAlphaAtoms, String chainId, int modelNumber, String sequence) {	
 		// check if new chain exactly matches an existing sequence, then add it to the cluster
-		if (exactMatch(cAlphaAtoms, chainId)) {
+		if (exactMatch(cAlphaAtoms, chainId, modelNumber)) {
 			modified = true;
 			return true;
 		}
 		// check is SEQRES are identical
-		if (identityMatch(cAlphaAtoms, chainId, sequence)) {
+		if (identityMatch(cAlphaAtoms, chainId, modelNumber, sequence)) {
 			modified = true;
 			return true;
 		}
 		// if not an exact match, try a sequence similarity match
-		if (similarityMatch(cAlphaAtoms, chainId, sequence)) {
+		if (similarityMatch(cAlphaAtoms, chainId, modelNumber, sequence)) {
 			modified = true;
 			return true;
 		}
@@ -132,6 +132,16 @@ public class SequenceAlignmentCluster {
 		return ids;
 	}
 	
+	public List<Integer> getModelNumbers() {
+		List<Integer> numbers = new ArrayList<Integer>();
+		for (UniqueSequenceList list: uniqueSequenceList) {
+			for (int i = 0, n = list.getChainCount(); i < n; i++) {
+				numbers.add(list.getModelNumber(i));
+			}
+		}
+		return numbers;
+	}
+	
 	public List<Atom[]> getAlignedCalphaAtoms() {
 		run();
 		return alignedCAlphaAtoms;
@@ -161,10 +171,10 @@ public class SequenceAlignmentCluster {
 		}
 	}
 	
-	private boolean exactMatch(Atom[] cAlphaAtoms, String chainId) {
+	private boolean exactMatch(Atom[] cAlphaAtoms, String chainId, int modelNumber) {
 		for (UniqueSequenceList u: uniqueSequenceList) {
 			if (u.isMatch(cAlphaAtoms)) {
-			    u.addChain(cAlphaAtoms, chainId);
+			    u.addChain(cAlphaAtoms, chainId, modelNumber);
 				List<Integer> align = new ArrayList<Integer>(cAlphaAtoms.length);
 				// add identity sequence alignment
 				for (int i = 0; i < cAlphaAtoms.length; i++) {
@@ -177,7 +187,7 @@ public class SequenceAlignmentCluster {
 		return false;
 	}
 	
-	private boolean identityMatch(Atom[] cAlphaAtoms, String chainId, String sequence) {
+	private boolean identityMatch(Atom[] cAlphaAtoms, String chainId, int modelNumber, String sequence) {
 		UniqueSequenceList u = uniqueSequenceList.get(0);
 
 		// check for 100% identity match of reference sequence
@@ -193,7 +203,7 @@ public class SequenceAlignmentCluster {
 			int inCommon = alignByAtomSequence(referenceAtoms, cAlphaAtoms, alig1, alig2);
 //			System.out.println("in common: "  + inCommon);
 
-			UniqueSequenceList seqList = new UniqueSequenceList(cAlphaAtoms, chainId, sequence);
+			UniqueSequenceList seqList = new UniqueSequenceList(cAlphaAtoms, chainId, modelNumber, sequence);
 			seqList.setAlignment1(alig1);
 			seqList.setAlignment2(alig2);
 			//			System.out.println(alig1);
@@ -205,7 +215,7 @@ public class SequenceAlignmentCluster {
 		return false;
 	}
 
-	private boolean similarityMatch(Atom[] cAlphaAtoms, String chainId, String sequence) {
+	private boolean similarityMatch(Atom[] cAlphaAtoms, String chainId, int modelNumber, String sequence) {
 		UniqueSequenceList u = uniqueSequenceList.get(0);
 		Atom[] referenceAtoms = u.getReferenceChain();		
 		AFPChain afp = alignPairBySequence(referenceAtoms, cAlphaAtoms);
@@ -239,7 +249,7 @@ public class SequenceAlignmentCluster {
 		}
 		int[][][] alignment = afp.getOptAln();
 		if (alignment != null) {
-			UniqueSequenceList seqList = new UniqueSequenceList(cAlphaAtoms, chainId, sequence);
+			UniqueSequenceList seqList = new UniqueSequenceList(cAlphaAtoms, chainId, modelNumber, sequence);
 			List<Integer> align1 = new ArrayList<Integer>(alignment[0][0].length);
 			for (Integer a1: alignment[0][0]) {
 				align1.add(a1);

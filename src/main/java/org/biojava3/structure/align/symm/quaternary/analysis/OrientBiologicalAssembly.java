@@ -108,8 +108,7 @@ public class OrientBiologicalAssembly {
 			System.out.println("Symmetry RMSD: " + (float) rotationGroup.getAverageTraceRmsd());
 		} 
 			
-		
-		
+			
 		System.out.println();
 		String prefix = getBaseFileName();
 		String bioassemblyId = getBioassemblyId();
@@ -134,7 +133,14 @@ public class OrientBiologicalAssembly {
 	private String animate(FindQuarternarySymmetry finder,
 			RotationGroup rotationGroup, AxisTransformation at) {
 
+		// use factory method to get point group specific instance of script generator
 		JmolSymmetryScriptGenerator script = JmolSymmetryScriptGenerator.getInstance(at, rotationGroup);
+		
+		// here are some example calls to generate various Jmol scripts
+//		System.out.println(script.colorBySubunit());
+		System.out.println(script.colorBySequenceCluster());
+		System.out.println(script.setDefaultOrientation());
+		
 		return script.playOrientations();
 	}
 	

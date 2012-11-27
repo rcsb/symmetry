@@ -1,5 +1,14 @@
 package org.biojava3.structure.align.symm.quaternary;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
@@ -83,6 +92,9 @@ public class AxisTransformation {
 		return xyRadiusMax;
 	}
 
+	public Subunits getSubunits() {
+		return subunits;
+	}
 
 	private void run () {
 		if (modified) {
@@ -91,6 +103,7 @@ public class AxisTransformation {
 			calcReferenceAxis();
 			calcTransformation();
 			calcBoundaries();
+//			calcZorder();
 			modified = false;
 		}
 	}
@@ -281,14 +294,16 @@ public class AxisTransformation {
 		minBoundary.y = Double.MAX_VALUE;
 		maxBoundary.x = Double.MIN_VALUE;
 		minBoundary.z = Double.MAX_VALUE;
-		maxBoundary.x = Double.MIN_VALUE;
+		maxBoundary.z = Double.MIN_VALUE;
 
 		Point3d probe = new Point3d();
 		Point3d centroid = subunits.getCentroid();
 
 		for (Point3d[] list: subunits.getTraces()) {
 			for (Point3d p: list) {
+				// TODO does transformation matrix contain translation already??
 				probe.sub(p, centroid); // apply transformation at origin of coordinate system
+//				probe.set(p);
 				transformationMatrix.transform(probe);
 
 				minBoundary.x  = Math.min(minBoundary.x, probe.x);
@@ -300,6 +315,64 @@ public class AxisTransformation {
 				xyRadiusMax = Math.max(xyRadiusMax, Math.sqrt(probe.x*probe.x + probe.y * probe.y));
 			}
 		}
+		System.out.println("Min: " + minBoundary);
+		System.out.println("Max: " + maxBoundary);
+	}
+	
+	/**
+	 * Calculates 
+	 */
+	private void calcZorder() {
+		if (subunits == null || subunits.getSubunitCount() == 0) {
+			return;
+		}
+		
+		int n = subunits.getSubunitCount();
+		double[] zCentroid = new double[n];
+		boolean[] used = new boolean[n];
+		Arrays.fill(used,  false);
+
+		Point3d probe = new Point3d();
+		Point3d centroid = subunits.getCentroid();
+		double zMin = Double.MAX_VALUE;
+
+		int k = 0;
+		for (Point3d p: subunits.getCenters()) {
+				// TODO does transformation matrix contain translation already??
+				probe.sub(p, centroid); // apply transformation at origin of coordinate system
+//				probe.set(p);
+				transformationMatrix.transform(probe);
+				zCentroid[k] = probe.z;
+				zMin = Math.min(probe.z, zMin);
+				k++;
+		}
+		
+	   Map<Integer, List<Integer>> clusters = new TreeMap<Integer, List<Integer>>();
+	   for (int i = 0; i < n; i++) {
+		   if (used[i]) continue;	   
+		   for (int j = i+1; j < n; j++) {
+			   if (used[j]) continue;
+			   double d = Math.abs(zCentroid[j]-zCentroid[i]);
+			   if (d < 2) {
+				   List<Integer> cluster = clusters.get(i);
+				   if (cluster == null) {
+					   cluster = new ArrayList<Integer>();
+					   clusters.put(i, cluster);
+					   cluster.add(i);
+	//				   System.out.println("New cluster: " + i);
+					   used[i] = true;
+				   }
+				   cluster.add(j);
+	//			   System.out.println("Add to cluster: " + i + " : " + j);
+				   used[j] = true;
+			   }
+		   }
+	   }
+//	   for (Iterator<Entry<Integer, List<Integer>>> iter = clusters.entrySet().iterator(); iter.hasNext();) {
+//		   System.out.println(iter.next());
+//	   }
+		
+//		System.out.println("zOrder: " + Arrays.toString(zCentroid));
 	}
 
 	/*
@@ -312,7 +385,7 @@ public class AxisTransformation {
 
 		// TODO can we just use the z-min/z-max distances to create canonical view?
 		Point3d probe = new Point3d();
-//		Point3d centroid = subunits.getCentroid();
+		Point3d centroid = subunits.getCentroid();
 		// TODO centroid required?
 //		centroid = new Point3d();
 
@@ -323,7 +396,8 @@ public class AxisTransformation {
 		for (Point3d[] list: subunits.getTraces()) { // loop over all subunits
 			for (Point3d p: list) {			
 				// align points with z-axis (principal rotation axis)
-//				probe.sub(p, centroid);
+				probe.sub(p, centroid);
+//				probe.set(p);
 				transformationMatrix.transform(probe);
 				
 				// calculate the distance square for each
@@ -342,9 +416,7 @@ public class AxisTransformation {
 		// narrower part faces the viewer. This new orientation 
 		// provides the least occluded view along the z-axis.
 //		System.out.println("setZDirection: " + sum1 + "/" + sum2);
-	//	if (sum2 > sum1) {
-		// TODO seems like -z direction is towards the viewer?? check 3LSV
- 		if (sum1 > sum2) { 
+		if (sum2 > sum1) {
 			Matrix4d rot = new Matrix4d();
 			rot.rotY(-Math.PI);
 			rot.mul(matrix);
@@ -402,8 +474,7 @@ public class AxisTransformation {
 				Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 				double d = v.dot(principalRotationAxis);
 				if (rotationGroup.getRotation(i).getFold() == 3) {
-					// the dot product 0 is between to adjacent 4-fold axis
-//					System.out.println("dot product: " + d);
+					// the dot product 0 is between to adjacent 3-fold axes
 					if (d > 0.3 && d < 0.9) {
 						return v;
 					}
@@ -418,8 +489,7 @@ public class AxisTransformation {
 				Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 				double d = v.dot(principalRotationAxis);
 				if (rotationGroup.getRotation(i).getFold() == 4) {
-					// the dot product 0 is between to adjacent 4-fold axis
-//					System.out.println("dot product: " + d);
+					// the dot product 0 is between to adjacent 4-fold axes
 					if (d >= 0 && d < 0.1 ) {
 						return v;
 					}
@@ -429,18 +499,12 @@ public class AxisTransformation {
 	}
 	
 	private Vector3d getReferenceAxisIcosahedral() {
-//		for (int i = 0; i < rotationGroup.getOrder(); i++) {
-//			AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
-//			Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
-//			if (rotationGroup.getRotation(i).getFold() == 2)
-//           System.out.println("Angles: " + v.angle(principalRotationAxis) + " " + Math.toDegrees(v.angle(principalRotationAxis)));
-//    	}
 		for (int i = 0; i < rotationGroup.getOrder(); i++) {
 				AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
 				Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 				double d = v.dot(principalRotationAxis);
 				if (rotationGroup.getRotation(i).getFold() == 5) {
-					// the dot product of 0.447.. is between to adjacent 5-fold axis
+					// the dot product of 0.447.. is between to adjacent 5-fold axes
 					if (d > 0.447 && d < 0.448) {
 						return v;
 					}

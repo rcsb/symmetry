@@ -13,10 +13,12 @@ public class UniqueSequenceList {
     private List<Integer> alignment2 = null;
     private List<Atom[]> caAtoms = new ArrayList<Atom[]>();
     private List<String> chainIds = new ArrayList<String>();
+    private List<Integer> modelNumbers = new ArrayList<Integer>();
     
-    public UniqueSequenceList(Atom[] cAlphaAtoms, String chainId, String seqResSequence) {
+    public UniqueSequenceList(Atom[] cAlphaAtoms, String chainId, int modelNumber, String seqResSequence) {
     	this.caAtoms.add(cAlphaAtoms);
     	this.chainIds.add(chainId);
+    	this.modelNumbers.add(modelNumber);
     	this.seqResSequence = seqResSequence;
     	this.sequenceString =  getSequenceString(cAlphaAtoms);
     	this.alignment1 = new ArrayList<Integer>(cAlphaAtoms.length);
@@ -37,9 +39,10 @@ public class UniqueSequenceList {
     	return sequenceString.equals(getSequenceString(caAlphaAtoms));
     }
     
-    public void addChain(Atom[] cAlphaAtoms, String chainId) {
+    public void addChain(Atom[] cAlphaAtoms, String chainId, int modelNumber) {
     	this.caAtoms.add(cAlphaAtoms);
     	this.chainIds.add(chainId); 
+    	this.modelNumbers.add(modelNumber);
     }
     
     public int getChainCount() {
@@ -52,6 +55,10 @@ public class UniqueSequenceList {
     
     public String getChainId(int index) {
     	return chainIds.get(index);
+    }
+    
+    public int getModelNumber(int index) {
+    	return modelNumbers.get(index);
     }
     
     public Atom[] getReferenceChain() {

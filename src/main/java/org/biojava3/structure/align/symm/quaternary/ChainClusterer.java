@@ -80,6 +80,20 @@ public class ChainClusterer  {
 		return chainIdList;
 	}
 	
+	
+	public List<Integer> getModelNumbersInClusterOrder() {
+		run();
+		List<Integer> modNumbers = new ArrayList<Integer>();
+
+		for (int i = 0; i < seqClusters.size(); i++) {
+	        SequenceAlignmentCluster cluster = seqClusters.get(i);
+	        for (Integer number: cluster.getModelNumbers()) {
+	        	modNumbers.add(number);
+	        }
+		}
+		return modNumbers;
+	}
+	
 	public List<String> getChainIds() {
 		return chainIds;
 	}
@@ -185,7 +199,7 @@ public class ChainClusterer  {
 			}
 			processed[i] = true;
 			// create new sequence cluster
-            UniqueSequenceList seqList = new UniqueSequenceList(caUnaligned.get(i), chainIds.get(i), sequences.get(i));
+            UniqueSequenceList seqList = new UniqueSequenceList(caUnaligned.get(i), chainIds.get(i), modelNumbers.get(i), sequences.get(i));
             SequenceAlignmentCluster seqCluster = new SequenceAlignmentCluster(parameters);
             seqCluster.addUniqueSequenceList(seqList);	
             seqClusters.add(seqCluster);
@@ -197,7 +211,7 @@ public class ChainClusterer  {
             	for (SequenceAlignmentCluster c: seqClusters) {
             		// add to existing sequence cluster if there is a match
             		if (c.isSequenceMatch(sequences.get(j)) || parameters.isStructuralAlignmentOnly()) {
-            			if (c.addChain(caUnaligned.get(j), chainIds.get(j), sequences.get(j))) {
+            			if (c.addChain(caUnaligned.get(j), chainIds.get(j), modelNumbers.get(j), sequences.get(j))) {
             				processed[j] = true;
             				break;
             			}

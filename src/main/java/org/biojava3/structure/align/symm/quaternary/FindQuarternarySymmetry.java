@@ -79,8 +79,14 @@ public class FindQuarternarySymmetry {
 		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
 				chainClusterer.getSequenceClusterIds(),
 				folds,
-				chainClusterer.getChainIds(),
-				chainClusterer.getModelNumbers());
+				chainClusterer.getChainIdsInClusterOrder(),
+				chainClusterer.getModelNumbersInClusterOrder());
+		maxFolds = folds.get(folds.size()-1);
+//		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
+//				chainClusterer.getSequenceClusterIds(),
+//				folds,
+//				chainClusterer.getChainIds(),
+//				chainClusterer.getModelNumbers());
 //		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
 //				chainClusterer.getCbetaCoordinates(), 
 //				chainClusterer.getSequenceClusterIds(),

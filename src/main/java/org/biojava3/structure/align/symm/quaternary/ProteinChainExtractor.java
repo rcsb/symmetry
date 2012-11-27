@@ -16,6 +16,7 @@ public class ProteinChainExtractor  {
 	
 	private List<Atom[]> cAlphaTrace = new ArrayList<Atom[]>();	
 	private List<String> chainIds = new ArrayList<String>();
+	private List<Integer> modelNumbers = new ArrayList<Integer>();
 	private List<String> sequences = new ArrayList<String>();
 
 	public ProteinChainExtractor(Structure structure, int minSequenceLength) {
@@ -32,6 +33,11 @@ public class ProteinChainExtractor  {
 	public List<String> getChainIds() {
         run();
 		return chainIds;
+	}
+	
+	public List<Integer> getModelNumbers() {
+        run();
+		return modelNumbers;
 	}
 	
 	public List<String> getSequences() {
@@ -65,8 +71,10 @@ public class ProteinChainExtractor  {
 				}
 				if (ca.length >= minSequenceLength) {
 				   System.out.println("Chain " + c.getChainID() + ": " + c.getSeqResSequence());
+//				   System.out.println("Number CA atoms: " + ca.length);
 				   cAlphaTrace.add(ca);
 				   chainIds.add(c.getChainID());
+				   modelNumbers.add(i);
 				   sequences.add(c.getSeqResSequence());
 				}
 			}

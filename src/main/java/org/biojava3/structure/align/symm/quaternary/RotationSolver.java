@@ -11,6 +11,10 @@ import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
+import org.biojava3.structure.align.symm.geometry.MomentsOfInertia;
+import org.biojava3.structure.align.symm.geometry.SphereSampler;
+import org.biojava3.structure.align.symm.geometry.SuperPosition;
+
 
 /**
  *
@@ -29,6 +33,8 @@ public class RotationSolver implements QuatSymmetrySolver {
 
     private RotationGroup rotations = new RotationGroup();
     private QuatSuperpositionScorer scorer = null;
+    
+//    private SuperPositionQCP sp = null;
 
     public RotationSolver(Subunits subunits, double rmsdThreshold) {
     	if (subunits.getSubunitCount()== 2) {
@@ -36,6 +42,7 @@ public class RotationSolver implements QuatSymmetrySolver {
     	}
         this.subunits = subunits;
         this.rmsdThreshold =  rmsdThreshold;
+//        sp = new SuperPositionQCP();
     }
 
 	public RotationGroup getSymmetryOperations() {
@@ -126,10 +133,30 @@ public class RotationSolver implements QuatSymmetrySolver {
 		int fold = PermutationGroup.getOrder(permutation);
 		// get optimal transformation and axisangle by superimposing subunits
 		AxisAngle4d axisAngle = new AxisAngle4d();
+		
+		// ---
+//		long t1 = System.nanoTime();
+//		// are these coordinates precentered??
+//		sp.set(transformedCoords, originalCoords);
+//		sp.setCentered(true);
+//		double subunitRmsd = sp.getRmsd();
+//		long t2 = System.nanoTime();
+	    // ----
 		Matrix4d transformation = SuperPosition.superposeAtOrigin(transformedCoords, originalCoords, axisAngle);
 		double subunitRmsd = SuperPosition.rmsd(transformedCoords, originalCoords);
+	//	long t3 = System.nanoTime();
+		// --
+//		System.out.println(" new rmsd: " + subunitRmsd);
+//		System.out.println(" new: " + (t2-t1));
+		// --
 		
 		if (subunitRmsd < rmsdThreshold) {
+//			Matrix4d transformation = sp.getTransformationMatrix();
+//			transformedCoords = sp.getTransformedCoordinates();
+//			axisAngle.set(transformation);
+//			
+//			long t3 = System.nanoTime();
+//			System.out.println(" total time: " + (t3-t1));
 			// transform to original coordinate system
 			combineWithTranslation(transformation);
 			// evaluate superposition of CA traces with GTS score

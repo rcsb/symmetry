@@ -1,9 +1,13 @@
 package org.biojava3.structure.align.symm.quaternary;
 
 import javax.vecmath.AxisAngle4d;
+import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
+
+import org.biojava3.structure.align.symm.geometry.MomentsOfInertia;
+import org.biojava3.structure.align.symm.geometry.SuperPosition;
 
 public class AxisTransformation {
 	private static Vector3d X_AXIS = new Vector3d(1,0,0);
@@ -19,12 +23,8 @@ public class AxisTransformation {
 	private Vector3d referenceAxis = new Vector3d();
 	private Vector3d[] principalAxesOfInertia = null;
 
-	private double xMin = Double.MAX_VALUE;
-	private double xMax = Double.MIN_VALUE;
-	private double yMin = Double.MAX_VALUE;
-	private double yMax = Double.MIN_VALUE;
-	private double zMin = Double.MAX_VALUE;
-	private double zMax = Double.MIN_VALUE;
+	private Vector3d minBoundary = new Vector3d();
+	private Vector3d maxBoundary = new Vector3d();
 	private double xyRadiusMax = Double.MIN_VALUE;
 
 	boolean modified = true;
@@ -39,51 +39,47 @@ public class AxisTransformation {
 		return transformationMatrix;
 	}
 	
+	public Matrix3d getRotationMatrix() {
+		run();
+		Matrix3d m = new Matrix3d();
+		transformationMatrix.getRotationScale(m);
+	    return m;
+	}
+	
 	public Matrix4d getReverseTransformation() {
 		run();   
 		return reverseTransformationMatrix;
 	}
 	
 	public Vector3d getPrincipalRotationAxis() {
+		run();
 		return principalRotationAxis;
 	}
 	
 	public Vector3d getRotationReferenceAxis() {
+		run();
 		return referenceAxis;
 	}
 	
 	public Vector3d[] getPrincipalAxesOfInertia() {
+		run();
 		return principalAxesOfInertia;
 	}
 	
-	/**
-	 * Returns the x-radius
-	 * @return double radius in z-direction
-	 */
-	public double getXRadius() {
-		return 0.5 * (xMax - xMin); // half of dimension along z-axis (principal rotation axis)
+	public Vector3d getDimension() {
+		run();
+		Vector3d dimension = new Vector3d();
+		dimension.sub(maxBoundary, minBoundary);
+		dimension.scale(0.5);
+		return dimension;
 	}
-	/**
-	 * Returns the y-radius
-	 * @return double radius in z-direction
-	 */
-	public double getYRadius() {
-		return 0.5 * (yMax - yMin); // half of dimension along z-axis (principal rotation axis)
-	}
-	
-	/**
-	 * Returns the z-radius
-	 * @return double radius in z-direction
-	 */
-	public double getZRadius() {
-		return 0.5 * (zMax - zMin); // half of dimension along z-axis (principal rotation axis)
-	}
-	
+
 	/**
 	 * Returns the radius for drawing the minor rotation axis in the xy-plane
 	 * @return double radius in xy-plane
 	 */
 	public double getXYRadius() {
+		run();
 		return xyRadiusMax;
 	}
 
@@ -106,8 +102,8 @@ public class AxisTransformation {
 			transformationMatrix.setIdentity();
 		} else if (rotationGroup.getPointGroup().equals("C1")) {
 			transformationMatrix = getTransformationByInertiaAxes();
-		} else if (rotationGroup.getPointGroup().equals("C2")) {
-			transformationMatrix = getTransformationByC2SymmetryAxes();;
+//		} else if (rotationGroup.getPointGroup().equals("C2")) {
+//			transformationMatrix = getTransformationByC2SymmetryAxes();;
 		} else {
 			transformationMatrix = getTransformationBySymmetryAxes();
 			// for cyclic geometry, set a canonical view for the Z direction
@@ -120,7 +116,6 @@ public class AxisTransformation {
 	}
 
 	private Matrix4d getTransformationBySymmetryAxes() {
-	//	principalAxis = getPrincipalRotationAxis();
 		calcReferenceAxis();
 
 		Point3d[] refPoints = new Point3d[2];
@@ -168,10 +163,7 @@ public class AxisTransformation {
 	}
 	
 	private Matrix4d alignAxes(Point3d[] refPoints, Point3d[] coordPoints) {
-//		System.out.print("P0: " + refPoints[0] + " ");
-	
 		Vector3d v1 = new Vector3d(refPoints[0]);
-//		System.out.println("V0 len: " + v1.length());
 		Vector3d v2 = new Vector3d(coordPoints[0]);
 		Matrix4d m1 = new Matrix4d();
 		AxisAngle4d a = new AxisAngle4d();
@@ -183,11 +175,9 @@ public class AxisTransformation {
 			Point3d v = refPoints[i];
 			m1.transform(v);
 		}
-		System.out.println(refPoints[0]);
+		
 		v1 = new Vector3d(refPoints[1]);
-//		System.out.println("V1 len: " + v1.length());
 		v2 = new Vector3d(coordPoints[1]);
-//		System.out.print("P1: " + refPoints[1] + " ");
 		axis.cross(v1,v2);
 		a.set(axis, v1.angle(v2));
 		Matrix4d m2 = new Matrix4d();
@@ -195,9 +185,9 @@ public class AxisTransformation {
 		for (Point3d v: refPoints) {
 			m2.transform(v);
 		}
-		System.out.println(refPoints[1]);
+
 		if (SuperPosition.rmsd(refPoints, coordPoints) > 0.01) {
-			System.out.println("Warning: aligment with coordiante system is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
+			System.out.println("Warning: aligment with coordinate system is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
 		}
 		m2.mul(m1);
 		return m2;
@@ -211,7 +201,7 @@ public class AxisTransformation {
 		// set translation vector to centroid
 		Point3d centroid = subunits.getCentroid();
 		reverseTransformationMatrix.setColumn(3, centroid.x, centroid.y, centroid.z, 1);
-		System.out.println("ReverseTransformation: " + reverseTransformationMatrix);
+//		System.out.println("ReverseTransformation: " + reverseTransformationMatrix);
 //		System.out.println("Centroid: " + subunits.getCentroid());
 	}
 
@@ -248,6 +238,7 @@ public class AxisTransformation {
 	 * @return
 	 */
 	public Matrix4d calcPrismTransformation() {
+		run();
 	    Matrix4d geometricCentered = new Matrix4d(reverseTransformationMatrix);
 		// reset translation vector
 		geometricCentered.setColumn(3, 0, 0, 0, 1);
@@ -255,8 +246,8 @@ public class AxisTransformation {
 		Point3d geometricCenter = calcGeometricCenter();
 		
 		geometricCentered.setColumn(3, geometricCenter.x, geometricCenter.y, geometricCenter.z, 1);
-		System.out.println("GeometricCentered: " + geometricCentered);
-		System.out.println("Centroid: " + subunits.getCentroid());
+//		System.out.println("GeometricCentered: " + geometricCentered);
+//		System.out.println("Centroid: " + subunits.getCentroid());
 		return geometricCentered;
 	}
 
@@ -264,7 +255,10 @@ public class AxisTransformation {
 		Point3d geometricCenter = new Point3d();
 	
 		if (rotationGroup.getPointGroup().equals("C1")) {
-			geometricCenter = new Point3d(xMin + getXRadius(), yMin + getYRadius(), zMin + getZRadius());
+			geometricCenter.set(getDimension());
+			geometricCenter.add(minBoundary);
+//			geometricCenter = new Point3d(xMin + getXRadius(), yMin + getYRadius(), zMin + getZRadius());
+			
 			// TODO does this transformation include the translational component??
 			transformationMatrix.transform(geometricCenter);
 		}
@@ -272,7 +266,8 @@ public class AxisTransformation {
 		geometricCenter.add(subunits.getCentroid());
 		return geometricCenter;
 	}
- 	/**
+	
+	/**
 	 * Calculates the min and max boundaries of the structure after it has been
 	 * transformed into its canonical orientation.
 	 */
@@ -280,12 +275,13 @@ public class AxisTransformation {
 		if (subunits == null || subunits.getSubunitCount() == 0) {
 			return;
 		}
-		xMin = Double.MAX_VALUE;
-		xMax = Double.MIN_VALUE;
-		yMin = Double.MAX_VALUE;
-		yMax = Double.MIN_VALUE;
-		zMin = Double.MAX_VALUE;
-		zMax = Double.MIN_VALUE;
+		
+		minBoundary.x = Double.MAX_VALUE;
+		maxBoundary.x = Double.MIN_VALUE;
+		minBoundary.y = Double.MAX_VALUE;
+		maxBoundary.x = Double.MIN_VALUE;
+		minBoundary.z = Double.MAX_VALUE;
+		maxBoundary.x = Double.MIN_VALUE;
 
 		Point3d probe = new Point3d();
 		Point3d centroid = subunits.getCentroid();
@@ -295,18 +291,15 @@ public class AxisTransformation {
 				probe.sub(p, centroid); // apply transformation at origin of coordinate system
 				transformationMatrix.transform(probe);
 
-				xMin = Math.min(xMin, probe.x);
-				xMax = Math.max(xMax, probe.x);
-				yMin = Math.min(yMin, probe.y);
-				yMax = Math.max(yMax, probe.y);
-				zMin = Math.min(zMin, probe.z);
-				zMax = Math.max(zMax, probe.z);
+				minBoundary.x  = Math.min(minBoundary.x, probe.x);
+				maxBoundary.x = Math.max(maxBoundary.x, probe.x);
+				minBoundary.y  = Math.min(minBoundary.y, probe.y);
+				maxBoundary.y = Math.max(maxBoundary.y, probe.y);
+				minBoundary.z = Math.min(minBoundary.z, probe.z);
+				maxBoundary.z = Math.max(maxBoundary.z, probe.z);
 				xyRadiusMax = Math.max(xyRadiusMax, Math.sqrt(probe.x*probe.x + probe.y * probe.y));
 			}
 		}
-		System.out.println("xMin: " + xMin + " xMax: " + xMax);
-		System.out.println("yMin: " + yMin + " yMax: " + yMax);
-		System.out.println("zMin: " + zMin + " zMax: " + zMax);
 	}
 
 	/*
@@ -319,18 +312,18 @@ public class AxisTransformation {
 
 		// TODO can we just use the z-min/z-max distances to create canonical view?
 		Point3d probe = new Point3d();
-		Point3d centroid = subunits.getCentroid();
+//		Point3d centroid = subunits.getCentroid();
 		// TODO centroid required?
-		centroid = new Point3d();
+//		centroid = new Point3d();
 
 		// find the center along the z-axis
-		double center = zMin + (zMax - zMin)/2;
+		double center = minBoundary.z + (maxBoundary.z - minBoundary.z)/2;
 		double sum1 = 0;
 		double sum2 = 0;
 		for (Point3d[] list: subunits.getTraces()) { // loop over all subunits
 			for (Point3d p: list) {			
 				// align points with z-axis (principal rotation axis)
-				probe.sub(p, centroid);
+//				probe.sub(p, centroid);
 				transformationMatrix.transform(probe);
 				
 				// calculate the distance square for each
@@ -348,11 +341,15 @@ public class AxisTransformation {
 		// a 180 degree rotation around the y-axis so that the 
 		// narrower part faces the viewer. This new orientation 
 		// provides the least occluded view along the z-axis.
-		if (sum2 > sum1) {
+//		System.out.println("setZDirection: " + sum1 + "/" + sum2);
+	//	if (sum2 > sum1) {
+		// TODO seems like -z direction is towards the viewer?? check 3LSV
+ 		if (sum1 > sum2) { 
 			Matrix4d rot = new Matrix4d();
-			rot.set(new AxisAngle4d(0, 1, 0, -Math.PI));
-			matrix.mul(rot);
-			System.out.println("Changing z direction");
+			rot.rotY(-Math.PI);
+			rot.mul(matrix);
+			matrix.set(rot);
+//			System.out.println("Changing z direction");
 		}
 
 		return matrix;
@@ -378,21 +375,66 @@ public class AxisTransformation {
 	 */
 	private Vector3d getMinorRotationAxis() {
 		// find axis that is not the rotation principal axis (direction = 1)
-    	if (rotationGroup.getPointGroup().equals("I")) {
-			return getReferenceAxisIcosahedral();
+		if (rotationGroup.getPointGroup().equals("T")) {
+			return getReferenceAxisTetrahedral();
+		} else if (rotationGroup.getPointGroup().equals("O")) {
+			return getReferenceAxisOctahedral();
+		} else if (rotationGroup.getPointGroup().equals("I")) {
+			return getReferenceAxisIcosahedral();		
 		}
+    	int maxFold = rotationGroup.getRotation(0).getFold();
+    	// TODO how about D2, where minor axis = 2 = principal axis??
 		for (int i = 0; i < rotationGroup.getOrder(); i++) {
-			if (rotationGroup.getRotation(i).getDirection() == 1) {
+			if (rotationGroup.getRotation(i).getDirection() == 1 && rotationGroup.getRotation(i).getFold() < maxFold) {
 				AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
 				Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 				v.normalize();
+//				System.out.println("Minor rotation axis: " + rotationGroup.getRotation(i).getFold());
 				return v;
 			}
 		}
 		return null; 
 	}
 	
+	private Vector3d getReferenceAxisTetrahedral() {
+		for (int i = 0; i < rotationGroup.getOrder(); i++) {
+				AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
+				Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
+				double d = v.dot(principalRotationAxis);
+				if (rotationGroup.getRotation(i).getFold() == 3) {
+					// the dot product 0 is between to adjacent 4-fold axis
+//					System.out.println("dot product: " + d);
+					if (d > 0.3 && d < 0.9) {
+						return v;
+					}
+				}
+		}
+		return null;
+	}
+	
+	private Vector3d getReferenceAxisOctahedral() {
+		for (int i = 0; i < rotationGroup.getOrder(); i++) {
+				AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
+				Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
+				double d = v.dot(principalRotationAxis);
+				if (rotationGroup.getRotation(i).getFold() == 4) {
+					// the dot product 0 is between to adjacent 4-fold axis
+//					System.out.println("dot product: " + d);
+					if (d >= 0 && d < 0.1 ) {
+						return v;
+					}
+				}
+		}
+		return null;
+	}
+	
 	private Vector3d getReferenceAxisIcosahedral() {
+//		for (int i = 0; i < rotationGroup.getOrder(); i++) {
+//			AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
+//			Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
+//			if (rotationGroup.getRotation(i).getFold() == 2)
+//           System.out.println("Angles: " + v.angle(principalRotationAxis) + " " + Math.toDegrees(v.angle(principalRotationAxis)));
+//    	}
 		for (int i = 0; i < rotationGroup.getOrder(); i++) {
 				AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
 				Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
@@ -430,7 +472,7 @@ public class AxisTransformation {
 		// align inertia axis with y-x axis
 		Matrix4d matrix = alignAxes(refPoints, coordPoints);
 		if (SuperPosition.rmsd(refPoints, coordPoints) > 0.01) {
-			System.out.println("Warning: aligment with coordiante system is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
+			System.out.println("Warning: aligment with coordinate system is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
 		}
 		
 		calcReverseMatrix(matrix);

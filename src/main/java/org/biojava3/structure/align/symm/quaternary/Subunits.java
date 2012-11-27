@@ -2,9 +2,13 @@
 package org.biojava3.structure.align.symm.quaternary;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
+
+import org.biojava3.structure.align.symm.geometry.MomentsOfInertia;
+import org.biojava3.structure.align.symm.geometry.SuperPosition;
 
 
 /**
@@ -12,23 +16,27 @@ import javax.vecmath.Vector3d;
  * @author Peter
  */
 public class Subunits {
-    private List<Point3d[]> caCoords = new ArrayList<Point3d[]>();
+    private List<Point3d[]> caCoords = Collections.emptyList();
 //    private List<Point3d[]> cbCoords = new ArrayList<Point3d[]>();
-    private List<Integer> sequenceClusterIds = new ArrayList<Integer>(0);
-    private List<Integer> folds = new ArrayList<Integer>(0);
-    private List<Point3d> originalCenters = new ArrayList<Point3d>(0);
-    private List<Point3d> centers = new ArrayList<Point3d>(0);
-    private List<Vector3d> unitVectors = new ArrayList<Vector3d>(0);
+    private List<Integer> sequenceClusterIds = Collections.emptyList();
+    private List<String> chainIds = Collections.emptyList();
+    private List<Integer> modelNumbers =  Collections.emptyList();
+    private List<Integer> folds = Collections.emptyList();
+    private List<Point3d> originalCenters = new ArrayList<Point3d>();
+    private List<Point3d> centers = new ArrayList<Point3d>();
+    private List<Vector3d> unitVectors = new ArrayList<Vector3d>();
 
     private Point3d centroid;
     private MomentsOfInertia momentsOfInertia = new MomentsOfInertia();
 
 //    public Subunits(List<Point3d[]> caCoords, List<Point3d[]> cbCoords, List<Integer> sequenceClusterIds, List<Integer> folds) {
-      public Subunits(List<Point3d[]> caCoords, List<Integer> sequenceClusterIds, List<Integer> folds) {
+      public Subunits(List<Point3d[]> caCoords, List<Integer> sequenceClusterIds, List<Integer> folds, List<String> chainIds, List<Integer> modelNumbers) {
         this.caCoords = caCoords;
 //        this.cbCoords = cbCoords;
         this.sequenceClusterIds = sequenceClusterIds;
         this.folds = folds;
+        this.chainIds = chainIds;
+        this.modelNumbers = modelNumbers;
     }
 
     public List<Point3d[]> getTraces() {
@@ -46,6 +54,14 @@ public class Subunits {
     
     public List<Integer> getSequenceClusterIds() {
     	return sequenceClusterIds;
+    }
+    
+    public List<String> getChainIds() {
+    	return chainIds;
+    }
+    
+    public List<Integer> getModelNumbers() {
+    	return modelNumbers;
     }
     
     public List<Integer>getFolds() {

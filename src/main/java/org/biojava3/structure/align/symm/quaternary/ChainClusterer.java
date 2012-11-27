@@ -20,6 +20,7 @@ public class ChainClusterer  {
 	
 	private List<Atom[]> caUnaligned = new ArrayList<Atom[]>();
 	private List<String> chainIds = new ArrayList<String>();
+	private List<Integer> modelNumbers = new ArrayList<Integer>();
 	private List<String> sequences = new ArrayList<String>();
 	private List<Atom[]> caAligned = new ArrayList<Atom[]>();
 //	private List<Atom[]> cbAligned = new ArrayList<Atom[]>();
@@ -81,6 +82,10 @@ public class ChainClusterer  {
 	
 	public List<String> getChainIds() {
 		return chainIds;
+	}
+	
+	public List<Integer> getModelNumbers() {
+		return modelNumbers;
 	}
 	
 	public String getCompositionFormula() {
@@ -162,6 +167,7 @@ public class ChainClusterer  {
 		caUnaligned = extractor.getCalphaTraces();
 		chainIds  = extractor.getChainIds();
 		sequences = extractor.getSequences();
+		modelNumbers = extractor.getModelNumbers();
 //	    System.out.println("Sequence clusters: " + chainIds);
 //        System.out.println("C alphas: ");
 //        for (Atom[] atoms: caUnaligned) {

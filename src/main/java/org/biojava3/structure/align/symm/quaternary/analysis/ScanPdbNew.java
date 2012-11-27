@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Set;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix4d;
@@ -23,18 +24,19 @@ import org.biojava.bio.structure.StructureImpl;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBParseException;
+import org.biojava3.structure.align.symm.geometry.MomentsOfInertia;
+import org.biojava3.structure.align.symm.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava3.structure.align.symm.quaternary.AxisTransformation;
 import org.biojava3.structure.align.symm.quaternary.FindQuarternarySymmetry;
-import org.biojava3.structure.align.symm.quaternary.JmolScriptGenerator;
-import org.biojava3.structure.align.symm.quaternary.MomentsOfInertia;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryParameters;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryWriter;
 import org.biojava3.structure.align.symm.quaternary.Rotation;
 import org.biojava3.structure.align.symm.quaternary.RotationGroup;
 import org.biojava3.structure.align.symm.quaternary.Subunits;
+import org.biojava3.structure.dbscan.GetRepresentatives;
 
 public class ScanPdbNew implements Runnable {
-	private static String PDB_PATH = "C:/PDB/";
+	private static String PDB_PATH = "C:/Users/Peter/Documents/PDB/";
 	private static final int MIN_CHAINS = 1;
 	private static final int MIN_SEQUENCE_LENGTH = 24;
 	private static final double SEQUENCE_IDENTITY_THRESHOLD = 0.30;
@@ -102,19 +104,21 @@ public class ScanPdbNew implements Runnable {
 		int total = 0;
 		int err = 0;
 
-		out.println("pdbId,bioassembly,formula,signature100,stoichiometry100,types100,signature95,stoichiometry95,types95,signature70,stoichiometry70,types70,signature40,stoichiometry40,types40,pointgroup,symops,cacount,chains,rmsdS,rmsdT,symclass,asymcoeff,time,jmol,jmolaxes,trace");
-		out1.println("pdbId,bioassembly,formula,signature100,stoichiometry100,types100,signature95,stoichiometry95,types95,signature70,stoichiometry70,types70,signature40,stoichiometry40,types40,pointgroup,complete,symops,cacount,chains,rmsdS,rmsdT,symclass,asymcoeff,time,seqNum,jmol,jmolaxes,trace");
+		out.println("pdbId,bioassembly,formula,signature100,stoichiometry100,types100,signature95,stoichiometry95,types95,signature70,stoichiometry70,types70,signature40,stoichiometry40,types40,pointgroup,symops,cacount,chains,rmsdS,rmsdT,symclass,asymcoeff,time,rx,ry,rz,bin2,jmol,jmolaxes");
+		out1.println("pdbId,bioassembly,formula,signature100,stoichiometry100,types100,signature95,stoichiometry95,types95,signature70,stoichiometry70,types70,signature40,stoichiometry40,types40,pointgroup,complete,symops,cacount,chains,rmsdS,rmsdT,symclass,asymcoeff,time,rx,ry,rz,bin2,jmol,jmolaxes");
 
 		System.out.println("Getting PdbEntryInfo");
-		List<PdbEntryInfo> list = PdbEntryInfoParser.getPdbEntryInfo();
+//		List<PdbEntryInfo> list = PdbEntryInfoParser.getPdbEntryInfo();
       
         boolean skip = false;
         String restartId = "3THS";
+        Set<String> set = GetRepresentatives.getAll();
 
-		for (int k = 0; k < list.size(); k++) {	
-			PdbEntryInfo entry = list.get(k);
-			total++;
-			String pdbId = entry.getPdbId();
+//		for (int k = 0; k < list.size(); k++) {	
+//			PdbEntryInfo entry = list.get(k);
+//			total++;
+//			String pdbId = entry.getPdbId();
+        for (String pdbId: set) {
 			
 			if (skip && pdbId.equals(restartId)) {
 				skip = false;
@@ -128,7 +132,7 @@ public class ScanPdbNew implements Runnable {
 //			if (!pdbId.equals("1VFB")) continue; // C1 (A)	
 //			if (!pdbId.equals("1J1X")) continue; // C1 (A)
 //			if (!pdbId.equals("1B27")) continue; // C2(AB) 2 BAs
-			if (!pdbId.equals("1S6V")) continue; // C1(AB) 2 BAs
+//			if (!pdbId.equals("1S6V")) continue; // C1(AB) 2 BAs
 //			if (!pdbId.equals("1AFA")) continue;
 //			if (!pdbId.equals("3T88")) continue;
 //			if (!pdbId.equals("1A9S")) continue; // good example
@@ -162,7 +166,8 @@ public class ScanPdbNew implements Runnable {
 
 			System.out.println("------------- " + pdbId  + "-------------");
 
-			int bioAssemblyCount = entry.getBioAssemblyCount();
+		//	int bioAssemblyCount = entry.getBioAssemblyCount();
+			int bioAssemblyCount = 1; // do only first bioassembly
 			System.out.println("Bioassemblies: " + bioAssemblyCount);
 			int n = Math.max(bioAssemblyCount, 1);
 			for (int i = 0; i < n; i++) {		
@@ -226,13 +231,14 @@ public class ScanPdbNew implements Runnable {
 				List<String> chainIds = finder.getChainIds();
 				int chainCount = subunits.getCenters().size();
 				AxisTransformation at = new AxisTransformation(subunits, rotationGroup);
+				float rx = (float) at.getDimension().x;
+				float ry = (float) at.getDimension().y;
+				float rz = (float) at.getDimension().z;
+				int bin2 = Math.round(rz)/2 + 1000*(Math.round(ry)/2) + 1000000*(Math.round(rx)/2);
 				Matrix4d matrix = at.getTransformation();
-	//			System.out.println("Transformation:");
-	//			System.out.println(matrix);
-				JmolScriptGenerator script = new JmolScriptGenerator(at, subunits, rotationGroup);
-				String jmolTransform = script.getJmolTransformation();
-				System.out.println(jmolTransform);
-				String jmolAxes = script.getJmolSymmetryAxes();
+				JmolSymmetryScriptGenerator g = JmolSymmetryScriptGenerator.getInstance(at, rotationGroup);
+                String jmolTransform = g.setOrientation(0);
+				String jmolAxes = "";
 				
 				// determine overall symmetry
 			
@@ -241,7 +247,7 @@ public class ScanPdbNew implements Runnable {
 				double asymmetryCoefficient = m.getAsymmetryParameter(0.001);
 			
 
-				if (true == false) {
+	//			if (true == false) {
 				// create list of representative chains
 	//			List<String> chainIds = finder.getChainIds();
 				ProteinComplexSignature s100 = new ProteinComplexSignature(pdbId, chainIds, reader100);
@@ -275,7 +281,7 @@ public class ScanPdbNew implements Runnable {
 				if (chainCount >= MIN_CHAINS && groupComplete) {			
 					out.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature95 + "," + stoich95 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," +
 							order + "," + caCount + "," + chainCount + "," + rmsd + "," + rmsdT + "," + symmetryClass + "," + asymmetryCoefficient + "," +
-						    time + "," + jmolTransform + "," + jmolAxes + ",");
+						    time + "," + rx + ","  + ry + "," + rz + "," + bin2 + "," + jmolTransform + "," + jmolAxes + ",");
 							out.println();
 							out.flush();
 							if (chainCount > 1) {
@@ -284,12 +290,12 @@ public class ScanPdbNew implements Runnable {
 				} else if (chainCount >= MIN_CHAINS) {
 					out1.print(pdbId + "," + bioassemblyId + "," + formula + "," + signature100 + "," + stoich100 + "," + types100 + "," + signature95 + "," + stoich95 + "," + types90 + "," + signature70 + "," + stoich70  + "," + types70 + "," + signature40 + "," + stoich40 + "," + types40 + "," + pointGroup + "," + groupComplete + "," +
 							order + "," + caCount + "," + chainCount  + "," + rmsd + "," + rmsdT + "," + symmetryClass + "," + asymmetryCoefficient + "," +
-						    time + "," + jmolTransform + "," + jmolAxes + ",");
+						    time + "," + rx + ","  + ry + "," + rz + "," + bin2 + "," + jmolTransform + "," + jmolAxes + ",");
 					out1.println();
 					out1.flush();
 					excluded++;
 				}
-				}
+	//			}
 
 				//			if (total == 500) break;		
 				

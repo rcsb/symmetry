@@ -11,6 +11,9 @@ import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
+import org.biojava3.structure.align.symm.geometry.MomentsOfInertia;
+import org.biojava3.structure.align.symm.geometry.SuperPosition;
+
 
 /**
  *

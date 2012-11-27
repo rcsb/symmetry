@@ -23,10 +23,9 @@ import org.biojava.bio.structure.StructureImpl;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBParseException;
+import org.biojava3.structure.align.symm.geometry.MomentsOfInertia;
 import org.biojava3.structure.align.symm.quaternary.AxisTransformation;
 import org.biojava3.structure.align.symm.quaternary.FindQuarternarySymmetry;
-import org.biojava3.structure.align.symm.quaternary.JmolScriptGenerator;
-import org.biojava3.structure.align.symm.quaternary.MomentsOfInertia;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryParameters;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryWriter;
 import org.biojava3.structure.align.symm.quaternary.Rotation;
@@ -224,10 +223,9 @@ public class ScanPdb implements Runnable {
 				Matrix4d matrix = at.getTransformation();
 				System.out.println("Transformation:");
 				System.out.println(matrix);
-				JmolScriptGenerator script = new JmolScriptGenerator(at, subunits, rotationGroup);
-				String jmolTransform = script.getJmolTransformation();
+				String jmolTransform = "";
 				System.out.println(jmolTransform);
-				String jmolAxes = script.getJmolSymmetryAxes();
+				String jmolAxes = "";
 				
 				// determine overall symmetry
 			

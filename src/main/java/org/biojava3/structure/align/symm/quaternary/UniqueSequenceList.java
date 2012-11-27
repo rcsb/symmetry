@@ -111,6 +111,7 @@ public class UniqueSequenceList {
 			}
 		}
 		
+//		System.out.println("getSequenceString: " + builder.toString());
 		return builder.toString();
 	}
      

@@ -9,9 +9,9 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
+import org.biojava3.structure.align.symm.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava3.structure.align.symm.quaternary.AxisTransformation;
 import org.biojava3.structure.align.symm.quaternary.FindQuarternarySymmetry;
-import org.biojava3.structure.align.symm.quaternary.JmolScriptGenerator;
 import org.biojava3.structure.align.symm.quaternary.QuatSymmetryParameters;
 import org.biojava3.structure.align.symm.quaternary.RotationGroup;
 
@@ -29,8 +29,8 @@ public class OrientBiologicalAssembly {
 		this.outputDirectory = outputDirectory;
 	}
 
-	public static void main(String[] args) {
-		System.out.println("OrientBiologicalAssembly V 0.4: Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
+	public static void main(String[] args) {		
+		System.out.println("OrientBiologicalAssembly V 0.5: Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
 		System.out.println();
 		if (args.length != 2) {
 			System.out.println("Usage: OrientBiologicalAssembly pdbFile outputDirectory");
@@ -107,32 +107,35 @@ public class OrientBiologicalAssembly {
 			System.out.println("Point group  : " + rotationGroup.getPointGroup());		
 			System.out.println("Symmetry RMSD: " + (float) rotationGroup.getAverageTraceRmsd());
 		} 
-
-		AxisTransformation at = new AxisTransformation(finder.getSubunits(), rotationGroup);
-		JmolScriptGenerator script = new JmolScriptGenerator(at, finder.getSubunits(), rotationGroup);
-	
+			
+		
+		
 		System.out.println();
 		String prefix = getBaseFileName();
 		String bioassemblyId = getBioassemblyId();
 		if (! bioassemblyId.isEmpty()) {
 		    prefix += "_" + bioassemblyId;
 		}
+		
 		System.out.println("Bioassembly id: " + getBioassemblyId());
+		
+		AxisTransformation at = new AxisTransformation(finder.getSubunits(), rotationGroup);
+		
 		String outName = prefix + "_4x4transformation.txt";
 		System.out.println("Writing 4x4 transformation to: " + outName);
 		writeFile(outName, at.getTransformation().toString());
 		
-		outName = prefix + "_JmolTransformation.txt";
-		System.out.println("Writing Jmol transformation to: " + outName);
-		writeFile(outName, script.getJmolTransformation());
-		
-		outName = prefix + "_JmolSymmetryAxes.txt";
-		System.out.println("Writing Jmol symmetry axes to: " + outName);
-		writeFile(outName, script.getJmolSymmetryAxes());
-		
 		outName = prefix + "_JmolAnimation.txt";
 		System.out.println("Writing Jmol animation to: " + outName);
-		writeFile(outName, script.getJmolAnimation(2));
+		writeFile(outName, animate(finder, rotationGroup, at));
+		
+	}
+
+	private String animate(FindQuarternarySymmetry finder,
+			RotationGroup rotationGroup, AxisTransformation at) {
+
+		JmolSymmetryScriptGenerator script = JmolSymmetryScriptGenerator.getInstance(at, rotationGroup);
+		return script.playOrientations();
 	}
 	
 	private String getBioassemblyId() {

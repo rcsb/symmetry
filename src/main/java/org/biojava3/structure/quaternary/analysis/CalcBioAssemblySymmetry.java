@@ -38,7 +38,7 @@ public class CalcBioAssemblySymmetry {
 	
 	FindQuarternarySymmetry finder ;
 	RotationGroup rotationGroup;
-	AxisTransformation axistTransformation;
+	AxisTransformation axisTransformation;
 	
 	public CalcBioAssemblySymmetry(){
 	}
@@ -58,14 +58,18 @@ public class CalcBioAssemblySymmetry {
 			System.out.println("Symmetry RMSD: " + (float) rotationGroup.getAverageTraceRmsd());
 		} 
 					
-		axistTransformation = new AxisTransformation(finder.getSubunits(), rotationGroup);
+		axisTransformation = new AxisTransformation(finder.getSubunits(), rotationGroup);
 		
 	}
 	
 	public  String animate() {
 
+		if ( axisTransformation == null){
+			orient();
+		}
+		
 		// use factory method to get point group specific instance of script generator
-		JmolSymmetryScriptGenerator script = JmolSymmetryScriptGenerator.getInstance(axistTransformation, rotationGroup);
+		JmolSymmetryScriptGenerator script = JmolSymmetryScriptGenerator.getInstance(axisTransformation, rotationGroup);
 		
 		// here are some example calls to generate various Jmol scripts
 		// System.out.println(script.colorBySubunit());
@@ -118,13 +122,13 @@ public class CalcBioAssemblySymmetry {
 	}
 
 
-	public AxisTransformation getAxistTransformation() {
-		return axistTransformation;
+	public AxisTransformation getAxisTransformation() {
+		return axisTransformation;
 	}
 
 
-	public void setAxistTransformation(AxisTransformation axistTransformation) {
-		this.axistTransformation = axistTransformation;
+	public void setAxisTransformation(AxisTransformation axistTransformation) {
+		this.axisTransformation = axistTransformation;
 	}
 
 
@@ -133,7 +137,7 @@ public class CalcBioAssemblySymmetry {
 		bioAssembly = null;
 		finder = null;
 		rotationGroup = null;
-		axistTransformation = null;
+		axisTransformation = null;
 		
 	}
 	

@@ -104,12 +104,8 @@ public class OrientBiologicalAssembly {
 				
 		calc.orient();
 		
-		AxisTransformation at 			= calc.getAxistTransformation();
-		FindQuarternarySymmetry finder  = calc.getFinder();
-		RotationGroup rotationGroup 	= calc.getRotationGroup();
+		AxisTransformation at 			= calc.getAxisTransformation();
 		
-		
-
 		String prefix = getBaseFileName();
 		String bioassemblyId = getBioassemblyId();
 		if (! bioassemblyId.isEmpty()) {

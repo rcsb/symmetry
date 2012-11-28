@@ -9,6 +9,7 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
+
 import org.biojava3.structure.quaternary.core.AxisTransformation;
 import org.biojava3.structure.quaternary.core.FindQuarternarySymmetry;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
@@ -82,7 +83,7 @@ public class OrientBiologicalAssembly {
 	}
 
 	
-	public QuatSymmetryParameters getDefaultParameters(){
+	public static QuatSymmetryParameters getDefaultParameters(){
 		QuatSymmetryParameters params = new QuatSymmetryParameters();
 		params.setMinimumSequenceLength(MIN_SEQUENCE_LENGTH);
 		params.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
@@ -96,20 +97,19 @@ public class OrientBiologicalAssembly {
 		
 		QuatSymmetryParameters params = getDefaultParameters();
 		
-		FindQuarternarySymmetry finder = new FindQuarternarySymmetry(structure, params);	
+		
+		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
+		calc.setBioAssembly(structure);
+		calc.setParams(params);
+				
+		calc.orient();
+		
+		AxisTransformation at 			= calc.getAxistTransformation();
+		FindQuarternarySymmetry finder  = calc.getFinder();
+		RotationGroup rotationGroup 	= calc.getRotationGroup();
+		
+		
 
-		RotationGroup rotationGroup = new RotationGroup();
-		if (finder.getChainCount() > 0) {
-			System.out.println();
-			rotationGroup = finder.getRotationGroup();
-			System.out.println("Results for " + Math.round(SEQUENCE_IDENTITY_THRESHOLD*100) + "% sequence identity threshold:");
-			System.out.println("Stoichiometry: " + finder.getCompositionFormula());
-			System.out.println("Point group  : " + rotationGroup.getPointGroup());		
-			System.out.println("Symmetry RMSD: " + (float) rotationGroup.getAverageTraceRmsd());
-		} 
-			
-			
-		System.out.println();
 		String prefix = getBaseFileName();
 		String bioassemblyId = getBioassemblyId();
 		if (! bioassemblyId.isEmpty()) {
@@ -117,8 +117,6 @@ public class OrientBiologicalAssembly {
 		}
 		
 		System.out.println("Bioassembly id: " + getBioassemblyId());
-		
-		AxisTransformation at = new AxisTransformation(finder.getSubunits(), rotationGroup);
 		
 		String outName = prefix + "_4x4transformation.txt";
 		System.out.println("Writing 4x4 transformation to: " + outName);
@@ -128,9 +126,12 @@ public class OrientBiologicalAssembly {
 		System.out.println("Writing Jmol animation to: " + outName);
 		writeFile(outName, animate(finder, rotationGroup, at));
 		
+		
+		// avoid memory leaks
+		calc.destroy();
 	}
 
-	private String animate(FindQuarternarySymmetry finder,
+	public static String animate(FindQuarternarySymmetry finder,
 			RotationGroup rotationGroup, AxisTransformation at) {
 
 		// use factory method to get point group specific instance of script generator

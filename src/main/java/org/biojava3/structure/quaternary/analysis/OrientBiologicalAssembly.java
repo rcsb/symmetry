@@ -11,10 +11,8 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 
 import org.biojava3.structure.quaternary.core.AxisTransformation;
-import org.biojava3.structure.quaternary.core.FindQuarternarySymmetry;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
-import org.biojava3.structure.quaternary.core.RotationGroup;
-import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
+
 
 public class OrientBiologicalAssembly {
 	public static final int MIN_SEQUENCE_LENGTH = 24;

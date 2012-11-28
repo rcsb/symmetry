@@ -30,6 +30,7 @@ import org.biojava3.structure.quaternary.core.AxisTransformation;
 import org.biojava3.structure.quaternary.core.FindQuarternarySymmetry;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.RotationGroup;
+import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 
 public class CalcBioAssemblySymmetry {
 	Structure bioAssembly;
@@ -59,6 +60,21 @@ public class CalcBioAssemblySymmetry {
 					
 		axistTransformation = new AxisTransformation(finder.getSubunits(), rotationGroup);
 		
+	}
+	
+	public  String animate() {
+
+		// use factory method to get point group specific instance of script generator
+		JmolSymmetryScriptGenerator script = JmolSymmetryScriptGenerator.getInstance(axistTransformation, rotationGroup);
+		
+		// here are some example calls to generate various Jmol scripts
+		// System.out.println(script.colorBySubunit());
+		
+		// access some default results...
+		//System.out.println(script.colorBySequenceCluster());
+		//System.out.println(script.setDefaultOrientation());
+		
+		return script.playOrientations();
 	}
 
 

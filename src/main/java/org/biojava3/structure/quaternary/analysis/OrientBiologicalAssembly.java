@@ -124,26 +124,14 @@ public class OrientBiologicalAssembly {
 		
 		outName = prefix + "_JmolAnimation.txt";
 		System.out.println("Writing Jmol animation to: " + outName);
-		writeFile(outName, animate(finder, rotationGroup, at));
+		writeFile(outName, calc.animate());
 		
 		
 		// avoid memory leaks
 		calc.destroy();
 	}
 
-	public static String animate(FindQuarternarySymmetry finder,
-			RotationGroup rotationGroup, AxisTransformation at) {
-
-		// use factory method to get point group specific instance of script generator
-		JmolSymmetryScriptGenerator script = JmolSymmetryScriptGenerator.getInstance(at, rotationGroup);
-		
-		// here are some example calls to generate various Jmol scripts
-//		System.out.println(script.colorBySubunit());
-		System.out.println(script.colorBySequenceCluster());
-		System.out.println(script.setDefaultOrientation());
-		
-		return script.playOrientations();
-	}
+	
 	
 	private String getBioassemblyId() {
 		int first = fileName.indexOf(".pdb") + 4;

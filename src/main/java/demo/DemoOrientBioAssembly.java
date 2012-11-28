@@ -33,27 +33,28 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 
+import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
 
 public class DemoOrientBioAssembly {
 	public static void main(String[] args){
 
-		String pdbID = "1stp";
+		String pdbID = "3LSV";
 		int  biolAssemblyNr = 1;
 
 		Structure s;
 		try {
 
 			//			
-			//			AtomCache cache = new AtomCache();
-			//			FileParsingParameters params = cache.getFileParsingParams();
-			//			params.setAlignSeqRes(true);
-			//			params.setParseCAOnly(true);
-			//			
-			//			StructureIO.setAtomCache(cache);
+			AtomCache cache = new AtomCache();
+			FileParsingParameters params = cache.getFileParsingParams();
+			params.setAlignSeqRes(false);
+			params.setParseCAOnly(false);
 
-			//s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
-			s = readStructure(pdbID,biolAssemblyNr);
+			StructureIO.setAtomCache(cache);
+
+			s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
+			//s = readStructure(pdbID,biolAssemblyNr);
 
 			System.out.println(s);
 
@@ -70,7 +71,7 @@ public class DemoOrientBioAssembly {
 
 			String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
 					"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
-					"color cpk ; select all; model 0;set antialiasDisplay true; ;save STATE state_1;" ;
+					"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
 
 			jmol.evalString(script);
 

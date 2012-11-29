@@ -15,11 +15,6 @@ import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 
 
 public class OrientBiologicalAssembly {
-	public static final int MIN_SEQUENCE_LENGTH = 24;
-	public static final double SEQUENCE_IDENTITY_THRESHOLD = 0.30;
-	public static final double ALIGNMENT_FRACTION_THRESHOLD = 0.9;
-	public static final double RMSD_THRESHOLD = 5.0;
-
 	private String fileName = "";
 	private String outputDirectory = "";
 
@@ -44,12 +39,7 @@ public class OrientBiologicalAssembly {
 	}
 
 	public void run() {
-		System.out.println("Default parameters:");
-		System.out.println("Minimum protein sequence length: " + MIN_SEQUENCE_LENGTH);
-		System.out.println("Sequence identity threshold    : " +  Math.round(SEQUENCE_IDENTITY_THRESHOLD*100) + "%");
-		System.out.println("Alignment length threshold     : " +  Math.round(ALIGNMENT_FRACTION_THRESHOLD*100) + "%");
-		System.out.println("Symmetry RMSD threshold        : " +  RMSD_THRESHOLD);
-		System.out.println();
+		
 
 		Structure structure = readStructure();
 		System.out.println("Protein chains used for alignment:");
@@ -79,21 +69,13 @@ public class OrientBiologicalAssembly {
 		}
 		return structure;
 	}
-
-	
-	public static QuatSymmetryParameters getDefaultParameters(){
-		QuatSymmetryParameters params = new QuatSymmetryParameters();
-		params.setMinimumSequenceLength(MIN_SEQUENCE_LENGTH);
-		params.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
-		params.setAlignmentFractionThreshold(ALIGNMENT_FRACTION_THRESHOLD);
-		params.setRmsdThreshold(RMSD_THRESHOLD);
-		
-		return params;
-	}
 	
 	private void orient(Structure structure) {	
 		
-		QuatSymmetryParameters params = getDefaultParameters();
+		// initialize with default parameters
+		QuatSymmetryParameters params = new QuatSymmetryParameters();
+		System.out.println("Default parameters:");
+		System.out.println(params);
 		
 		
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
@@ -118,7 +100,7 @@ public class OrientBiologicalAssembly {
 		
 		outName = prefix + "_JmolAnimation.txt";
 		System.out.println("Writing Jmol animation to: " + outName);
-		writeFile(outName, calc.animate());
+		writeFile(outName, calc.getScriptGenerator().playOrientations());
 		
 		
 		// avoid memory leaks

@@ -34,11 +34,12 @@ import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 
 public class CalcBioAssemblySymmetry {
 	Structure bioAssembly;
-	QuatSymmetryParameters params = OrientBiologicalAssembly.getDefaultParameters();
+	QuatSymmetryParameters params = new QuatSymmetryParameters();
 	
 	FindQuarternarySymmetry finder ;
 	RotationGroup rotationGroup;
 	AxisTransformation axisTransformation;
+	private JmolSymmetryScriptGenerator scriptGenerator;
 	
 	public CalcBioAssemblySymmetry(){
 	}
@@ -52,7 +53,7 @@ public class CalcBioAssemblySymmetry {
 		if (finder.getChainCount() > 0) {
 			System.out.println();
 			rotationGroup = finder.getRotationGroup();
-			System.out.println("Results for " + Math.round(OrientBiologicalAssembly.SEQUENCE_IDENTITY_THRESHOLD*100) + "% sequence identity threshold:");
+			System.out.println("Results for " + Math.round(params.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
 			System.out.println("Stoichiometry: " + finder.getCompositionFormula());
 			System.out.println("Point group  : " + rotationGroup.getPointGroup());		
 			System.out.println("Symmetry RMSD: " + (float) rotationGroup.getAverageTraceRmsd());
@@ -60,28 +61,11 @@ public class CalcBioAssemblySymmetry {
 					
 		axisTransformation = new AxisTransformation(finder.getSubunits(), rotationGroup);
 		
+		// use factory method to get point group specific instance of script generator
+		scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation, rotationGroup);
+		
 	}
 	
-	public  String animate() {
-
-		if ( axisTransformation == null){
-			orient();
-		}
-		
-		// use factory method to get point group specific instance of script generator
-		JmolSymmetryScriptGenerator script = JmolSymmetryScriptGenerator.getInstance(axisTransformation, rotationGroup);
-		
-		// here are some example calls to generate various Jmol scripts
-		// System.out.println(script.colorBySubunit());
-		
-		// access some default results...
-		//System.out.println(script.colorBySequenceCluster());
-		//System.out.println(script.setDefaultOrientation());
-		
-		return script.playOrientations();
-	}
-
-
 	public Structure getBioAssembly() {
 		return bioAssembly;
 	}
@@ -129,6 +113,16 @@ public class CalcBioAssemblySymmetry {
 
 	public void setAxisTransformation(AxisTransformation axistTransformation) {
 		this.axisTransformation = axistTransformation;
+	}
+
+
+	public JmolSymmetryScriptGenerator getScriptGenerator() {
+		return scriptGenerator;
+	}
+
+
+	public void setScriptGenerator(JmolSymmetryScriptGenerator scriptGenerator) {
+		this.scriptGenerator = scriptGenerator;
 	}
 
 

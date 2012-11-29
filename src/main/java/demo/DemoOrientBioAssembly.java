@@ -39,7 +39,7 @@ import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
 public class DemoOrientBioAssembly {
 	public static void main(String[] args){
 
-		String pdbID = "3LSV";
+		String pdbID = "1a4w";
 		int  biolAssemblyNr = 1;
 
 		Structure s;
@@ -56,15 +56,7 @@ public class DemoOrientBioAssembly {
 			s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
 			//s = readStructure(pdbID,biolAssemblyNr);
 
-			System.out.println(s);
-
-			CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
-
-			calc.setBioAssembly(s);
-
-			calc.orient();
-
-			String jmolScript = calc.animate();
+			//System.out.println(s);
 
 			StructureAlignmentJmol jmol = new StructureAlignmentJmol();
 			jmol.setStructure(s);
@@ -73,11 +65,36 @@ public class DemoOrientBioAssembly {
 					"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
 					"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
 
+			
+			CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
+
+			calc.setBioAssembly(s);
+
+			calc.orient();
+			
+			String jmolScript = calc.animate();
+
+			
 			jmol.evalString(script);
 
 
 			jmol.evalString(jmolScript);
 
+			System.out.println("=================");
+			System.out.println("Symmetry results for " + pdbID + " bio assembly: " + biolAssemblyNr);
+			System.out.println("=================");
+			System.out.println("Sequence ID   : " + calc.getParams().getSequenceIdentityThreshold() );
+			System.out.println("Stoichiometry : " + calc.getFinder().getCompositionFormula());
+			System.out.println("Point Group   : " + calc.getRotationGroup().getPointGroup()	);
+			System.out.println("Symmetry RMSD : " + String.format("%.2f",calc.getRotationGroup().getAverageTraceRmsd()));
+		
+			System.out.println("transf. matrix: " + calc.getAxisTransformation().getTransformation());
+			
+			System.out.println("dimension     : " + calc.getAxisTransformation().getDimension());
+			
+			System.out.println("=================");
+			
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

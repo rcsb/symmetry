@@ -39,7 +39,7 @@ import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
 public class DemoOrientBioAssembly {
 	public static void main(String[] args){
 
-		String pdbID = "1a4w";
+		String pdbID = "4hhb";
 		int  biolAssemblyNr = 1;
 
 		Structure s;
@@ -54,46 +54,12 @@ public class DemoOrientBioAssembly {
 			StructureIO.setAtomCache(cache);
 
 			s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
-			//s = readStructure(pdbID,biolAssemblyNr);
 
-			//System.out.println(s);
+			analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.30);
 
-			StructureAlignmentJmol jmol = new StructureAlignmentJmol();
-			jmol.setStructure(s);
-
-			String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
-					"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
-					"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
-
+			analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.95);
 			
-			CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
-
-			calc.setBioAssembly(s);
-
-			calc.orient();
-			
-			String jmolScript = calc.animate();
-
-			
-			jmol.evalString(script);
-
-
-			jmol.evalString(jmolScript);
-
-			System.out.println("=================");
-			System.out.println("Symmetry results for " + pdbID + " bio assembly: " + biolAssemblyNr);
-			System.out.println("=================");
-			System.out.println("Sequence ID   : " + calc.getParams().getSequenceIdentityThreshold() );
-			System.out.println("Stoichiometry : " + calc.getFinder().getCompositionFormula());
-			System.out.println("Point Group   : " + calc.getRotationGroup().getPointGroup()	);
-			System.out.println("Symmetry RMSD : " + String.format("%.2f",calc.getRotationGroup().getAverageTraceRmsd()));
 		
-			System.out.println("transf. matrix: " + calc.getAxisTransformation().getTransformation());
-			
-			System.out.println("dimension     : " + calc.getAxisTransformation().getDimension());
-			
-			System.out.println("=================");
-			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -104,35 +70,51 @@ public class DemoOrientBioAssembly {
 
 	}
 
-	private static Structure  readStructure(String pdbId, int bioAssemblyId) {
-		// initialize the PDB_DIR env variable
-		AtomCache cache = new AtomCache();
+	private static void analyzeSymmetry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
 
-		FileParsingParameters p = new FileParsingParameters();
-		p.setStoreEmptySeqRes(true);
-		p.setLoadChemCompInfo(true);
-		p.setAtomCaThreshold(Integer.MAX_VALUE);
-		//p.setAcceptedAtomNames(new String[]{" CA "});
-		p.setParseBioAssembly(true);
+		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
+
+		calc.setBioAssembly(s);
+
+		calc.getParams().setSequenceIdentityThreshold(threshold);
+		
+		calc.orient();
+		
+		String jmolScript = calc.animate();
+
+		String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
+				"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
+				"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
 
 
+		StructureAlignmentJmol jmol = new StructureAlignmentJmol();
+		jmol.setStructure(s);
 
-		PDBFileReader pdbreader = new PDBFileReader();
-		pdbreader.setPath(cache.getPath());
-		pdbreader.setFileParsingParameters(p);
-		pdbreader.setAutoFetch(true);
-		pdbreader.setBioAssemblyId(bioAssemblyId);
-		pdbreader.setBioAssemblyFallback(false);
-		Structure structure = null;
-		try { 
-			structure = pdbreader.getStructureById(pdbId);
-			if ( bioAssemblyId > 0 )
-				structure.setBiologicalAssembly(true);
-			structure.setPDBCode(pdbId);
-		} catch (Exception e){
-			e.printStackTrace();
-			System.exit(-1);
-		}
-		return structure;
+		String title = "Symmetry results for " + pdbID + " bio assembly: " + biolAssemblyNr + " seq cutoff:" + calc.getParams().getSequenceIdentityThreshold();
+		jmol.setTitle(title);
+		
+		
+		jmol.evalString(script);
+
+
+		jmol.evalString(jmolScript);
+
+		
+		
+		System.out.println("=================");
+		System.out.println(title );
+		System.out.println("=================");
+		System.out.println("Sequence ID   : " + calc.getParams().getSequenceIdentityThreshold() );
+		System.out.println("Stoichiometry : " + calc.getFinder().getCompositionFormula());
+		System.out.println("Point Group   : " + calc.getRotationGroup().getPointGroup()	);
+		System.out.println("Symmetry RMSD : " + String.format("%.2f",calc.getRotationGroup().getAverageTraceRmsd()));
+	
+		System.out.println("transf. matrix: " + calc.getAxisTransformation().getTransformation());
+		
+		System.out.println("dimension     : " + calc.getAxisTransformation().getDimension());
+		
+		System.out.println("=================");
+		
 	}
+	
 }

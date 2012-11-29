@@ -15,6 +15,15 @@
 			<name>Java.net Maven 1 Repository (legacy)</name>
 			<url>http://download.java.net/maven/1</url>
 		</repository>
+		
+			
+		<!--  for vecmath... -->
+		<repository>
+            <id>geotoolkit</id>
+            <name>geotoolkit Repository</name>
+            <url>http://maven.geotoolkit.org/</url>
+        </repository>
+		
 		<repository>
 			<id>biojava-maven-repo</id>
 			<name>BioJava repository</name>
@@ -38,13 +47,7 @@
 			</releases>
 		</repository>
 		
-		
-		<!--  for vecmath... -->
-		<repository>
-            <id>geotoolkit</id>
-            <name>geotoolkit Repository</name>
-            <url>http://maven.geotoolkit.org/</url>
-        </repository>
+	
 		
 
         

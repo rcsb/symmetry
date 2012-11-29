@@ -4,7 +4,6 @@
 package org.biojava3.structure.quaternary.jmolScript;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.vecmath.AxisAngle4d;
@@ -17,7 +16,6 @@ import javax.vecmath.Vector3d;
 import org.biojava3.structure.quaternary.core.AxisTransformation;
 import org.biojava3.structure.quaternary.core.Rotation;
 import org.biojava3.structure.quaternary.core.RotationGroup;
-import org.biojava3.structure.quaternary.core.Subunits;
 import org.biojava3.structure.quaternary.geometry.Polyhedron;
 
 
@@ -57,7 +55,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		} else if (pointGroup.startsWith("C")) {
 			return new JmolSymmetryScriptGeneratorCn(axisTransformation, rotationGroup);
 		} else if (pointGroup.startsWith("D")) {
-			return new JmolSymmetryScriptGeneratorCn(axisTransformation, rotationGroup);
+			return new JmolSymmetryScriptGeneratorDn(axisTransformation, rotationGroup);
 		} else if (pointGroup.equals("T")) {
 			return new JmolSymmetryScriptGeneratorT(axisTransformation, rotationGroup);
 		} else if (pointGroup.equals("O")) {
@@ -84,7 +82,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		q.set(m);
 		
 		// set orientation
-		s.append("moveto 4 quaternion {");
+		s.append("moveto 0 quaternion {");
 		s.append(jMolFloat(q.x));
 		s.append(" ");
 		s.append(jMolFloat(q.y));
@@ -134,7 +132,14 @@ public abstract class JmolSymmetryScriptGenerator {
 		return s.toString();
 	}
 	
-
+	/**
+	 * Returns the name of a specific orientation
+	 * @param index orientation index
+	 * @return name of orientation
+	 */
+	public String getOrientationName(int index) {	
+	    return polyhedron.getViewName(index);
+	}
 
 	/**
 	 * Returns a Jmol script that draws an invisible polyhedron around a structure.
@@ -240,11 +245,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		s.append(drawHeader(polyhedron.getViewName(0), "white"));
 		
 		return s.toString();
-	}
-
-	
-	
-	
+	}	
 	
 	/**
 	 * Returns a Jmol script that colors the subunits of a structure by differen colors
@@ -252,28 +253,29 @@ public abstract class JmolSymmetryScriptGenerator {
 	 */
 	public String colorBySubunit() {
 		// TODO incomplete prototype, try to use ColorBrewer here ...
-		StringBuilder s = new StringBuilder();
-	    Subunits subunits = axisTransformation.getSubunits();
-	    List<Integer> modelNumbers = subunits.getModelNumbers();
-	    List<String> chainIds = subunits.getChainIds();
-	    List<String> colors = Arrays.asList("yellow","orange","red","green","blue","purple");
-	    int colorIndex = 0;
-		for (int i = 0; i < subunits.getSubunitCount(); i++) {
-			s.append("select chain=");
-			s.append(chainIds.get(i));
-			s.append(" and model=");
-			if (i == colors.size()) {
-				colorIndex = 0;
-			} else {
-				colorIndex++;
-			}
-			s.append(modelNumbers.get(i)+1);
-			s.append(";");
-			s.append("color cartoon ");
-			s.append(colors.get(colorIndex));
-			s.append(";");
-		}
-		return s.toString();
+//		StringBuilder s = new StringBuilder();
+//	    Subunits subunits = axisTransformation.getSubunits();
+//	    List<Integer> modelNumbers = subunits.getModelNumbers();
+//	    List<String> chainIds = subunits.getChainIds();
+//	    List<String> colors = Arrays.asList("yellow","orange","red","green","blue","purple");
+//	    int colorIndex = 0;
+//		for (int i = 0; i < subunits.getSubunitCount(); i++) {
+//			s.append("select chain=");
+//			s.append(chainIds.get(i));
+//			s.append(" and model=");
+//			if (i == colors.size()) {
+//				colorIndex = 0;
+//			} else {
+//				colorIndex++;
+//			}
+//			s.append(modelNumbers.get(i)+1);
+//			s.append(";");
+//			s.append("color cartoon ");
+//			s.append(colors.get(colorIndex));
+//			s.append(";");
+//		}
+//		return s.toString();
+		return "";
 	}
 	
 	/**
@@ -282,23 +284,24 @@ public abstract class JmolSymmetryScriptGenerator {
 	 */
 	public String colorBySequenceCluster() {
 		// TODO incomplete prototype, try to use ColorBrewer here ...
-		StringBuilder s = new StringBuilder();
-	    Subunits subunits = axisTransformation.getSubunits();
-	    List<Integer> modelNumbers = subunits.getModelNumbers();
-	    List<String> chainIds = subunits.getChainIds();
-	    List<Integer> seqClusterIds = subunits.getSequenceClusterIds();
-	    List<String> colors = Arrays.asList("yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple");
-		for (int i = 0; i < subunits.getSubunitCount(); i++) {
-			s.append("select chain=");
-			s.append(chainIds.get(i));
-			s.append(" and model=");
-			s.append((modelNumbers.get(i)+1));
-			s.append(";");
-			s.append("color cartoon ");
-			s.append(colors.get(seqClusterIds.get(i)));
-			s.append(";");
-		}
-		return s.toString();
+//		StringBuilder s = new StringBuilder();
+//	    Subunits subunits = axisTransformation.getSubunits();
+//	    List<Integer> modelNumbers = subunits.getModelNumbers();
+//	    List<String> chainIds = subunits.getChainIds();
+//	    List<Integer> seqClusterIds = subunits.getSequenceClusterIds();
+//	    List<String> colors = Arrays.asList("yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple");
+//		for (int i = 0; i < subunits.getSubunitCount(); i++) {
+//			s.append("select chain=");
+//			s.append(chainIds.get(i));
+//			s.append(" and model=");
+//			s.append((modelNumbers.get(i)+1));
+//			s.append(";");
+//			s.append("color cartoon ");
+//			s.append(colors.get(seqClusterIds.get(i)));
+//			s.append(";");
+//		}
+//		return s.toString();
+		return "";
 	}
 	
 	/**
@@ -306,6 +309,25 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @return Jmol script
 	 */
 	public String colorBySymmetry() {
+		// TODO incomplete prototype, try to use ColorBrewer here ...
+//		StringBuilder s = new StringBuilder();
+//		Subunits subunits = axisTransformation.getSubunits();
+//		List<Integer> modelNumbers = subunits.getModelNumbers();
+//		List<String> chainIds = subunits.getChainIds();
+//		List<Integer> depthOrder = axisTransformation.getDepthOrder();
+//		List<String> colors = Arrays.asList("darkblue","blue","lightblue","darkgreen","green","lightgreen");
+//		for (int i = 0; i < subunits.getSubunitCount(); i++) {
+//			s.append("select chain=");
+//			s.append(chainIds.get(i));
+//			s.append(" and model=");
+//			s.append((modelNumbers.get(i)+1));
+//			s.append(";");
+//			s.append("color cartoon ");
+//			System.out.println("coloring: " + colors.get(depthOrder.get(i)));
+//			s.append(colors.get(depthOrder.get(i)));
+//			s.append(";");
+//		}
+//		return s.toString();
 		return "";
 	}
 	
@@ -486,7 +508,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		}
 
 		if (n == 2) {
-	      	s.append(" mesh");
+	      	s.append(" mesh off");
 		}
 		//	s.append(" color translucent ");
 		s.append(" color ");

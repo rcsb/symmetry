@@ -7,6 +7,7 @@ public class QuatSymmetryParameters {
 	private double sequencePseudoSymmetryThreshold = 0.95;
 	private double alignmentFractionThreshold = 0.9;
 	private double rmsdThreshold = 5.0;
+	private static final String n = System.getProperty("line.separator");
 	
 	/**
 	 * @return the minimumSequenceLength
@@ -80,11 +81,21 @@ public class QuatSymmetryParameters {
 	
 	public String toString() {
 		StringBuilder s = new StringBuilder();
-		s.append("Minimum protein sequence length  : " + minimumSequenceLength  +"/n");
-		s.append("Sequence identity threshold      : " + sequenceIdentityThreshold + "/n");
-		s.append("Sequence pseudosymmetry threshold: " + sequencePseudoSymmetryThreshold + "/n");
-		s.append("Alignment fraction threshold     : " + alignmentFractionThreshold + "/n");
-		s.append("Symmetry RMSD threshold          : " + rmsdThreshold + "/n");
+		s.append("Minimum protein sequence length  : ");
+		s.append(minimumSequenceLength);
+		s.append(n);
+		s.append("Sequence identity threshold      : ");
+		s.append(sequenceIdentityThreshold);
+		s.append(n);
+		s.append("Sequence pseudosymmetry threshold: ");
+		s.append(sequencePseudoSymmetryThreshold);
+		s.append(n);
+		s.append("Alignment fraction threshold     : ");
+		s.append(alignmentFractionThreshold);
+		s.append(n);
+		s.append("Symmetry RMSD threshold          : ");
+		s.append(rmsdThreshold);
+		s.append(n);
 		return s.toString();
 	}
 }

@@ -30,6 +30,7 @@ public class ChainClusterer  {
 	List<SequenceAlignmentCluster> seqClusters = new ArrayList<SequenceAlignmentCluster>();
 	
 	private boolean modified = true;
+	private boolean pseudoSymmetric = false;
 
 	public ChainClusterer(Structure structure, QuatSymmetryParameters parameters) {
 		this.structure = structure;
@@ -62,6 +63,11 @@ public class ChainClusterer  {
 		return seqClusters.size() == 1;
 	}
 	
+	public boolean isPseudoSymmetric() {
+		run();
+		return pseudoSymmetric;
+	}
+
 	public int getMultiplicity() {
 		run();
 		return seqClusters.get(seqClusters.size()-1).getSequenceCount();
@@ -213,6 +219,9 @@ public class ChainClusterer  {
             		if (c.isSequenceMatch(sequences.get(j)) || parameters.isStructuralAlignmentOnly()) {
             			if (c.addChain(caUnaligned.get(j), chainIds.get(j), modelNumbers.get(j), sequences.get(j))) {
             				processed[j] = true;
+            				if (c.isPseudoSymmetric()) {	
+            					pseudoSymmetric = true;
+            				}
             				break;
             			}
             		}

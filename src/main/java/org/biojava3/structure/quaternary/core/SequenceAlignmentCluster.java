@@ -33,6 +33,7 @@ public class SequenceAlignmentCluster {
 //	private List<Atom[]> alignedCBetaAtoms = null;
 	private int alignmentLength = 0;
 	private boolean modified = true;
+	private boolean pseudoSymmetric = false;
 
 	public SequenceAlignmentCluster (QuatSymmetryParameters parameters) {
 		this.parameters = parameters;
@@ -85,6 +86,10 @@ public class SequenceAlignmentCluster {
 		return sequenceIdentity >= parameters.getSequenceIdentityThreshold() && alignmentLengthFraction >= parameters.getAlignmentFractionThreshold();
 	}
 	
+	public boolean isPseudoSymmetric() {
+		return pseudoSymmetric;
+	}
+
 	public boolean addChain(Atom[] cAlphaAtoms, String chainId, int modelNumber, String sequence) {	
 		// check if new chain exactly matches an existing sequence, then add it to the cluster
 		if (exactMatch(cAlphaAtoms, chainId, modelNumber)) {
@@ -243,6 +248,7 @@ public class SequenceAlignmentCluster {
 			}
 			identity = afp.getIdentity();
 			rmsd = afp.getChainRmsd();
+			
 			System.out.println("CE            : seq. identity: " + (float)identity + " RMSD: " + (float)rmsd + " alignment length: " + afp.getOptLength());
 //			System.out.println(afp.getAlnseq1());
 //			System.out.println(afp.getAlnseq2());
@@ -265,6 +271,9 @@ public class SequenceAlignmentCluster {
 //			System.out.println(align1);
 //			System.out.println(align2);
 			addUniqueSequenceList(seqList);
+			if (identity < parameters.getSequencePseudoSymmetryThreshold()) {
+				pseudoSymmetric = true;
+			}
 			return true;
 		}
 		return false;

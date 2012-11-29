@@ -103,7 +103,6 @@ public class AxisTransformation {
 			calcReferenceAxis();
 			calcTransformation();
 			calcBoundaries();
-//			calcZorder();
 			modified = false;
 		}
 	}
@@ -306,9 +305,9 @@ public class AxisTransformation {
 //				probe.set(p);
 				transformationMatrix.transform(probe);
 
-				minBoundary.x  = Math.min(minBoundary.x, probe.x);
+				minBoundary.x = Math.min(minBoundary.x, probe.x);
 				maxBoundary.x = Math.max(maxBoundary.x, probe.x);
-				minBoundary.y  = Math.min(minBoundary.y, probe.y);
+				minBoundary.y = Math.min(minBoundary.y, probe.y);
 				maxBoundary.y = Math.max(maxBoundary.y, probe.y);
 				minBoundary.z = Math.min(minBoundary.z, probe.z);
 				maxBoundary.z = Math.max(maxBoundary.z, probe.z);
@@ -322,57 +321,62 @@ public class AxisTransformation {
 	/**
 	 * Calculates 
 	 */
-	private void calcZorder() {
+	public List<Integer> getDepthOrder() {
 		if (subunits == null || subunits.getSubunitCount() == 0) {
-			return;
+			return Collections.emptyList();
 		}
-		
+
 		int n = subunits.getSubunitCount();
+		List<Integer> seqClusterIds = subunits.getSequenceClusterIds();
+		double[] zCentroidS = new double[n];
 		double[] zCentroid = new double[n];
-		boolean[] used = new boolean[n];
-		Arrays.fill(used,  false);
+		int fold = rotationGroup.getRotation(0).getFold();
 
 		Point3d probe = new Point3d();
 		Point3d centroid = subunits.getCentroid();
-		double zMin = Double.MAX_VALUE;
 
 		int k = 0;
 		for (Point3d p: subunits.getCenters()) {
-				// TODO does transformation matrix contain translation already??
-				probe.sub(p, centroid); // apply transformation at origin of coordinate system
-//				probe.set(p);
-				transformationMatrix.transform(probe);
-				zCentroid[k] = probe.z;
-				zMin = Math.min(probe.z, zMin);
-				k++;
+			// TODO does transformation matrix contain translation already??
+			probe.sub(p, centroid); // apply transformation at origin of coordinate system
+			//				probe.set(p);
+			transformationMatrix.transform(probe);
+			zCentroidS[k] = probe.z;
+			zCentroid[k] = probe.z;
+			k++;
 		}
 		
-	   Map<Integer, List<Integer>> clusters = new TreeMap<Integer, List<Integer>>();
-	   for (int i = 0; i < n; i++) {
-		   if (used[i]) continue;	   
-		   for (int j = i+1; j < n; j++) {
-			   if (used[j]) continue;
-			   double d = Math.abs(zCentroid[j]-zCentroid[i]);
-			   if (d < 2) {
-				   List<Integer> cluster = clusters.get(i);
-				   if (cluster == null) {
-					   cluster = new ArrayList<Integer>();
-					   clusters.put(i, cluster);
-					   cluster.add(i);
-	//				   System.out.println("New cluster: " + i);
-					   used[i] = true;
-				   }
-				   cluster.add(j);
-	//			   System.out.println("Add to cluster: " + i + " : " + j);
-				   used[j] = true;
-			   }
-		   }
-	   }
-//	   for (Iterator<Entry<Integer, List<Integer>>> iter = clusters.entrySet().iterator(); iter.hasNext();) {
-//		   System.out.println(iter.next());
-//	   }
+		Arrays.sort(zCentroidS);
+		int sets = n/fold;
+		System.out.println("subunits: " + n + " folds: " + fold);
+		double[] mean = new double[sets];
+		for (int i= 0; i < sets; i++) {
+			for (int j = 0; j < fold; j++) {
+				mean[i] += zCentroidS[i*fold + j];
+				System.out.println("zDepth: " + zCentroidS[i*fold+j]);
+			}
+			mean[i] /= fold;
+		}
+		for (int i = 0; i < sets; i++) {
+			System.out.println("Mean z: " + mean[i]);
+		}
 		
-//		System.out.println("zOrder: " + Arrays.toString(zCentroid));
+		List<Integer> depthIndex = new ArrayList<Integer>();
+		for (int i = 0; i < n; i++) {
+			double dMin = Double.MAX_VALUE;
+			int index = -1;
+			for (int j = 0; j < sets; j++) {
+				double d = Math.abs(zCentroid[i]-mean[j]);
+//				System.out.println("depth: " + d);
+				if (d < dMin) {
+					index = j;
+					dMin = d;
+				}
+			}
+			depthIndex.add(index);
+		}
+		System.out.println(depthIndex);
+		return depthIndex;
 	}
 
 	/*

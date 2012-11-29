@@ -3,7 +3,8 @@ package org.biojava3.structure.quaternary.core;
 public class QuatSymmetryParameters {
 	private int minimumSequenceLength = 24;
 	private boolean structuralAlignmentOnly = false;
-	private double sequenceIdentityThreshold = 1.0;
+	private double sequenceIdentityThreshold = 0.30;
+	private double sequencePseudoSymmetryThreshold = 0.95;
 	private double alignmentFractionThreshold = 0.9;
 	private double rmsdThreshold = 5.0;
 	
@@ -61,11 +62,29 @@ public class QuatSymmetryParameters {
 	public boolean isStructuralAlignmentOnly() {
 		return structuralAlignmentOnly;
 	}
-	/**
-	 * @param structuralAlignmentOnly the structuralAlignmentOnly to set
-	 */
-	public void setStructuralAlignmentOnly(boolean structuralAlignmentOnly) {
-		this.structuralAlignmentOnly = structuralAlignmentOnly;
+//	/**
+//	 * @param structuralAlignmentOnly the structuralAlignmentOnly to set
+//	 */
+//	public void setStructuralAlignmentOnly(boolean structuralAlignmentOnly) {
+//		this.structuralAlignmentOnly = structuralAlignmentOnly;
+//	}
+	
+	public double getSequencePseudoSymmetryThreshold() {
+		return sequencePseudoSymmetryThreshold;
 	}
 	
+	public void setSequencePseudoSymmetryThreshold(
+			double sequencePseudoSymmetryThreshold) {
+		this.sequencePseudoSymmetryThreshold = sequencePseudoSymmetryThreshold;
+	}
+	
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+		s.append("Minimum protein sequence length  : " + minimumSequenceLength  +"/n");
+		s.append("Sequence identity threshold      : " + sequenceIdentityThreshold + "/n");
+		s.append("Sequence pseudosymmetry threshold: " + sequencePseudoSymmetryThreshold + "/n");
+		s.append("Alignment fraction threshold     : " + alignmentFractionThreshold + "/n");
+		s.append("Symmetry RMSD threshold          : " + rmsdThreshold + "/n");
+		return s.toString();
+	}
 }

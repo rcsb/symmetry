@@ -14,6 +14,7 @@ public class FindQuarternarySymmetry {
 	private Subunits subunits = null;
 	private String method = "";
 	private int maxFolds = 1;
+	private boolean pseudoSymmetric = false;
 	
 	private boolean modified = true;
 
@@ -57,6 +58,10 @@ public class FindQuarternarySymmetry {
 		return method;
 	}
 	
+	public boolean isPseudoSymmetric() {
+		return pseudoSymmetric;
+	}
+	
 	private void run() {
 		if (modified) {
 			createSubunits();
@@ -68,6 +73,7 @@ public class FindQuarternarySymmetry {
 	private void createSubunits() {
 		ChainClusterer chainClusterer = new ChainClusterer(structure, parameters);
 		// TODO how about chains with UNK residues??
+		pseudoSymmetric = chainClusterer.isPseudoSymmetric();
 		compositionFormula = chainClusterer.getCompositionFormula();
 		chainIds = chainClusterer.getChainIdsInClusterOrder();
 		if (chainIds.size() == 0) {

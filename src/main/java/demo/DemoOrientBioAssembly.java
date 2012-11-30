@@ -35,6 +35,7 @@ import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
 public class DemoOrientBioAssembly {
 	public static void main(String[] args){
 
+	//	String pdbID = "4hhb";
 		String pdbID = "1bhc";
 		int  biolAssemblyNr = 1;
 
@@ -51,9 +52,11 @@ public class DemoOrientBioAssembly {
 
 			s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
 
-			analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.30);
+			boolean pseudosymmetric = analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.30);
 
-			analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.95);
+			if (pseudosymmetric) {
+				analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.95);
+			}
 			
 		
 			
@@ -66,7 +69,7 @@ public class DemoOrientBioAssembly {
 
 	}
 
-	private static void analyzeSymmetry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
+	private static boolean analyzeSymmetry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
 
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
 
@@ -118,7 +121,7 @@ public class DemoOrientBioAssembly {
 		System.out.println("Draw axes                : " + calc.getScriptGenerator().drawAxes());
 		System.out.println("Draw polyhedron          : " + calc.getScriptGenerator().drawPolyhedron());
 		
-		System.out.println("Default orientation  : " + calc.getScriptGenerator().setDefaultOrientation());
+		System.out.println("Default orientation      : " + calc.getScriptGenerator().setDefaultOrientation());
 		System.out.println("Orientation count        : " + calc.getScriptGenerator().getOrientationCount());
 		for (int i = 0; i <  calc.getScriptGenerator().getOrientationCount(); i++) {
 			System.out.println("Orientation name " + i + "       : " + calc.getScriptGenerator().getOrientationName(i));
@@ -126,7 +129,7 @@ public class DemoOrientBioAssembly {
 		}
 		
 		System.out.println("=================");
-		
+		return calc.getFinder().isPseudoSymmetric();
 	}
 	
 }

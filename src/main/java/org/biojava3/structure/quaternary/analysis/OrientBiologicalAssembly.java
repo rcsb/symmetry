@@ -39,8 +39,6 @@ public class OrientBiologicalAssembly {
 	}
 
 	public void run() {
-		
-
 		Structure structure = readStructure();
 		System.out.println("Protein chains used for alignment:");
 		orient(structure);
@@ -74,6 +72,8 @@ public class OrientBiologicalAssembly {
 		
 		// initialize with default parameters
 		QuatSymmetryParameters params = new QuatSymmetryParameters();
+		params.setSequenceIdentityThreshold(0.3);
+		
 		System.out.println("Default parameters:");
 		System.out.println(params);
 		
@@ -101,13 +101,26 @@ public class OrientBiologicalAssembly {
 		outName = prefix + "_JmolAnimation.txt";
 		System.out.println("Writing Jmol animation to: " + outName);
 		writeFile(outName, calc.getScriptGenerator().playOrientations());
+
+		System.out.println("Color by subunit         : " + calc.getScriptGenerator().colorBySubunit());
+		System.out.println();
+		System.out.println("Color by sequence cluster: " + calc.getScriptGenerator().colorBySequenceCluster());
+		System.out.println();
+		System.out.println("Color by symmetry        : " + calc.getScriptGenerator().colorBySymmetry());
+        System.out.println();
+		System.out.println("Draw axes                : " + calc.getScriptGenerator().drawAxes());
+		System.out.println("Draw polyhedron          : " + calc.getScriptGenerator().drawPolyhedron());
 		
+		System.out.println("Default orientation      : " + calc.getScriptGenerator().setDefaultOrientation());
+		System.out.println("Orientation count        : " + calc.getScriptGenerator().getOrientationCount());
+		for (int i = 0; i <  calc.getScriptGenerator().getOrientationCount(); i++) {
+			System.out.println("Orientation name " + i + "       : " + calc.getScriptGenerator().getOrientationName(i));
+			System.out.println("Orientation " + i + "            : " + calc.getScriptGenerator().setOrientation(i));
+		}
 		
 		// avoid memory leaks
 		calc.destroy();
 	}
-
-	
 	
 	private String getBioassemblyId() {
 		int first = fileName.indexOf(".pdb") + 4;

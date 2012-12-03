@@ -3,20 +3,28 @@
  */
 package org.biojava3.structure.quaternary.jmolScript;
 
+import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.vecmath.AxisAngle4d;
+import javax.vecmath.Color3f;
+import javax.vecmath.Color4f;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
+import javax.vecmath.Point4i;
 import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 
 import org.biojava3.structure.quaternary.core.AxisTransformation;
 import org.biojava3.structure.quaternary.core.Rotation;
 import org.biojava3.structure.quaternary.core.RotationGroup;
+import org.biojava3.structure.quaternary.core.Subunits;
 import org.biojava3.structure.quaternary.geometry.Polyhedron;
+import org.biojava3.structure.quaternary.misc.ColorBrewer;
 
 
 /**
@@ -166,7 +174,9 @@ public abstract class JmolSymmetryScriptGenerator {
 			}
 			s.append(" width 1.5");
 			s.append(" color ");
-			s.append(POLYHEDRON_COLOR);
+			Color4f c = getPolyhedronColor();
+			s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+	//		s.append(POLYHEDRON_COLOR);
 			s.append(" off;");
 		}
 
@@ -248,34 +258,36 @@ public abstract class JmolSymmetryScriptGenerator {
 	}	
 	
 	/**
-	 * Returns a Jmol script that colors the subunits of a structure by differen colors
+	 * Returns a Jmol script that colors the subunits of a structure by different colors
 	 * @return
 	 */
 	public String colorBySubunit() {
-		// TODO incomplete prototype, try to use ColorBrewer here ...
-//		StringBuilder s = new StringBuilder();
-//	    Subunits subunits = axisTransformation.getSubunits();
-//	    List<Integer> modelNumbers = subunits.getModelNumbers();
-//	    List<String> chainIds = subunits.getChainIds();
-//	    List<String> colors = Arrays.asList("yellow","orange","red","green","blue","purple");
-//	    int colorIndex = 0;
-//		for (int i = 0; i < subunits.getSubunitCount(); i++) {
-//			s.append("select chain=");
-//			s.append(chainIds.get(i));
-//			s.append(" and model=");
-//			if (i == colors.size()) {
-//				colorIndex = 0;
-//			} else {
-//				colorIndex++;
-//			}
-//			s.append(modelNumbers.get(i)+1);
-//			s.append(";");
-//			s.append("color cartoon ");
-//			s.append(colors.get(colorIndex));
-//			s.append(";");
-//		}
-//		return s.toString();
-		return "";
+		// TODO prototype, should be refined, so there is maximum contrast between adjacent subunits
+		StringBuilder s = new StringBuilder();
+	    Subunits subunits = axisTransformation.getSubunits();
+	    List<Integer> modelNumbers = subunits.getModelNumbers();
+	    List<String> chainIds = subunits.getChainIds();
+	    int n = subunits.getSubunitCount();
+//	    int cMax = Math.max(n, 4);
+//	    int offset = cMax - n;
+	    Color4f[] colors = ColorBrewer.Spectral.getColor4fPalette(n);
+	//    System.arraycopy(colors, offset, colors, 0, n);
+	    
+		for (int i = 0; i < n; i++) {
+			s.append("select chain=");
+			s.append(chainIds.get(i));
+			s.append(" and model=");
+			s.append(modelNumbers.get(i)+1);
+			s.append(";");
+			Color4f c = colors[i];
+			s.append("color cartoon ");
+			s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+			s.append(";");
+			s.append("color atom ");
+			s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+			s.append(";");
+		}
+		return s.toString();
 	}
 	
 	/**
@@ -283,54 +295,171 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @return Jmol script
 	 */
 	public String colorBySequenceCluster() {
-		// TODO incomplete prototype, try to use ColorBrewer here ...
-//		StringBuilder s = new StringBuilder();
-//	    Subunits subunits = axisTransformation.getSubunits();
-//	    List<Integer> modelNumbers = subunits.getModelNumbers();
-//	    List<String> chainIds = subunits.getChainIds();
-//	    List<Integer> seqClusterIds = subunits.getSequenceClusterIds();
-//	    List<String> colors = Arrays.asList("yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple","yellow","orange","green","blue","purple");
-//		for (int i = 0; i < subunits.getSubunitCount(); i++) {
-//			s.append("select chain=");
-//			s.append(chainIds.get(i));
-//			s.append(" and model=");
-//			s.append((modelNumbers.get(i)+1));
-//			s.append(";");
-//			s.append("color cartoon ");
-//			s.append(colors.get(seqClusterIds.get(i)));
-//			s.append(";");
-//		}
-//		return s.toString();
-		return "";
+		// TODO prototype, what should the default color scheme be?
+		StringBuilder s = new StringBuilder();
+	    Subunits subunits = axisTransformation.getSubunits();
+	    List<Integer> modelNumbers = subunits.getModelNumbers();
+	    List<String> chainIds = subunits.getChainIds();
+	    List<Integer> seqClusterIds = subunits.getSequenceClusterIds();
+	    int clusters = Collections.max(seqClusterIds) + 1;
+	    Color4f[] colors = ColorBrewer.BrBG.getColor4fPalette(clusters);
+
+		for (int i = 0; i < subunits.getSubunitCount(); i++) {
+			s.append("select chain=");
+			s.append(chainIds.get(i));
+			s.append(" and model=");
+			s.append((modelNumbers.get(i)+1));
+			s.append(";");
+			Color4f c = colors[seqClusterIds.get(i)];
+			s.append("color cartoon ");
+			s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+			s.append(";");
+			s.append("color atom ");
+		    s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+			s.append(";");
+		}
+		return s.toString();
 	}
 	
 	/**
-	 * Return a Jmol script that colors subunits to highlight the symmetry within a structure
+	 * Returns a Jmol script that colors subunits to highlight the symmetry within a structure
 	 * @return Jmol script
 	 */
 	public String colorBySymmetry() {
-		// TODO incomplete prototype, try to use ColorBrewer here ...
-//		StringBuilder s = new StringBuilder();
-//		Subunits subunits = axisTransformation.getSubunits();
-//		List<Integer> modelNumbers = subunits.getModelNumbers();
-//		List<String> chainIds = subunits.getChainIds();
-//		List<Integer> depthOrder = axisTransformation.getDepthOrder();
-//		List<String> colors = Arrays.asList("darkblue","blue","lightblue","darkgreen","green","lightgreen");
-//		for (int i = 0; i < subunits.getSubunitCount(); i++) {
-//			s.append("select chain=");
-//			s.append(chainIds.get(i));
-//			s.append(" and model=");
-//			s.append((modelNumbers.get(i)+1));
-//			s.append(";");
-//			s.append("color cartoon ");
-//			System.out.println("coloring: " + colors.get(depthOrder.get(i)));
-//			s.append(colors.get(depthOrder.get(i)));
-//			s.append(";");
-//		}
-//		return s.toString();
-		return "";
+		// TODO prototype
+		StringBuilder s = new StringBuilder();
+		String pointGroup = rotationGroup.getPointGroup();
+		Subunits subunits = axisTransformation.getSubunits();
+		List<Integer> modelNumbers = subunits.getModelNumbers();
+		List<String> chainIds = subunits.getChainIds();
+		List<List<Integer>> orbits = axisTransformation.getOrbits();
+
+		int n = subunits.getSubunitCount();
+		int fold = rotationGroup.getRotation(0).getFold();
+
+		// Simple Cn symmetry
+		if (pointGroup.startsWith("C") && n == fold) {
+			Color4f[] colors = getSymmetryColors(n);
+			for (int i = 0; i < n; i++) {
+				int subunit = orbits.get(0).get(i);
+				s.append("select chain=");
+				s.append(chainIds.get(subunit));
+				s.append(" and model=");
+				s.append((modelNumbers.get(subunit)+1));
+				s.append(";");
+				s.append("color cartoon ");	
+				Color4f c = colors[i];
+				s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+				s.append(";");
+				s.append("color atom ");
+				s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+				s.append(";");
+			}
+			// complex cases
+		} else if (pointGroup.startsWith("C") || (pointGroup.startsWith("D") && orbits.size() > 2) || 
+				pointGroup.equals("T")|| pointGroup.equals("O") || pointGroup.equals("I")) {
+			int nColor = 0;
+			if (orbits.size() % 2 == 0) {
+				nColor = orbits.size()/2;
+			} else {
+				nColor = (orbits.size() + 1)/2;
+			}
+			Color4f[] colors = getSymmetryColors(nColor);
+			Color4f black = new Color4f(Color.BLACK);
+
+			for (int i = 0; i < orbits.size(); i++) {
+				int colorIndex = i;
+				if (i >= nColor) {
+					colorIndex = orbits.size() - 1 - i;
+				}
+				Color4f c = new Color4f(colors[colorIndex]);
+				for (int subunit: orbits.get(i)) {
+					s.append("select chain=");
+					s.append(chainIds.get(subunit));
+					s.append(" and model=");
+					s.append((modelNumbers.get(subunit)+1));
+					s.append(";");
+					s.append("color cartoon ");	
+//					if (i >= nColor) {
+//					    c.interpolate(black, 0.2f);
+//					}
+					s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+					s.append(";");
+					s.append("color atom ");
+					s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+					s.append(";");
+				}
+			}
+
+			// Simple Dn symmetry
+		} else {
+			Color4f[] colors = getSymmetryColors(orbits.size());
+			Color4f black = new Color4f(Color.BLACK);
+
+			for (int i = 0; i < orbits.size(); i++) {
+				Color4f c = new Color4f(colors[i]);
+				for (int subunit: orbits.get(i)) {
+					s.append("select chain=");
+					s.append(chainIds.get(subunit));
+					s.append(" and model=");
+					s.append((modelNumbers.get(subunit)+1));
+					s.append(";");
+					s.append("color cartoon ");	
+			//		c.interpolate(black, 0.2f);
+					s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+					s.append(";");
+					s.append("color atom ");
+					s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+					s.append(";");
+				}
+			}
+		}
+		return s.toString();
 	}
 	
+	/**
+	 * Return a color that is complementary to the symmetry color
+	 * @return
+	 */
+	private Color4f getPolyhedronColor() {
+		Color4f[] colors = getSymmetryColors(5);
+		Color4f strongestColor = colors[4];
+		Color4f complement = new Color4f(Color.WHITE);
+		complement.sub(strongestColor);
+		return complement;
+	}
+	
+	/**
+	 * Returns a unique color palette based on point group
+	 * @param nColors
+	 * @return
+	 */
+	private Color4f[] getSymmetryColors(int nColors) {
+		int offset = 0;
+		int dMax = nColors + offset;
+		String pointGroup = rotationGroup.getPointGroup();
+		Color4f[] colors = null;
+		if (pointGroup.equals("C1")) {
+			offset = 1;
+			dMax = nColors + offset;
+			colors = ColorBrewer.Greys.getColor4fPalette(dMax);
+		} else if (pointGroup.startsWith("C")) {
+			colors = ColorBrewer.YlGnBu.getColor4fPalette(dMax);		
+		} else if (pointGroup.startsWith("D")) {
+			colors = ColorBrewer.YlOrRd.getColor4fPalette(dMax);
+		} else if (pointGroup.equals("T")) {
+			colors = ColorBrewer.Greens.getColor4fPalette(dMax);
+		} else if (pointGroup.equals("O")) {
+			colors = ColorBrewer.Blues.getColor4fPalette(dMax);
+		} else if (pointGroup.equals("I")) {
+			colors = ColorBrewer.BuPu.getColor4fPalette(dMax);
+		} else {
+			colors = ColorBrewer.Greys.getColor4fPalette(dMax);
+		}
+		System.arraycopy(colors, offset, colors, 0, dMax-offset);
+		return colors;
+		
+	}
 	
 	private String drawInertiaAxes() {
 		StringBuilder s = new StringBuilder();

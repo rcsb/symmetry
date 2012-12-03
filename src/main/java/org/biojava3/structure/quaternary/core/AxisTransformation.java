@@ -2,17 +2,22 @@ package org.biojava3.structure.quaternary.core;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
+import javax.vecmath.Point4i;
 import javax.vecmath.Vector3d;
 
 import org.biojava3.structure.quaternary.geometry.MomentsOfInertia;
@@ -319,66 +324,85 @@ public class AxisTransformation {
 	}
 	
 	/**
-	 * Calculates 
+	 * 
 	 */
-	public List<Integer> getDepthOrder() {
-		if (subunits == null || subunits.getSubunitCount() == 0) {
-			return Collections.emptyList();
-		}
+	public List<List<Integer>> getOrbits() {
+		double[] depth = getOrbitDepth();
+		List<List<Integer>> orbits = calcOrbits();
 
+		// calculate the mean depth of orbit along z-axis
+        Map<Double, List<Integer>> depthMap = new TreeMap<Double, List<Integer>>();
+		for (int i = 0; i < orbits.size(); i++) {
+			double meanDepth = 0;
+			List<Integer> orbit = orbits.get(i);
+			for (int subunit: orbit) {
+				meanDepth += depth[subunit];
+			}
+		    meanDepth /= orbit.size();
+		    if (depthMap.get(meanDepth) != null) {
+		    	System.out.println("Conflict in depthMap");
+		    	meanDepth += 0.01;
+		    }
+		    depthMap.put(meanDepth, orbit);
+		}
+		
+		// now fill orbits back into list order by depth
+		orbits.clear();
+		for (List<Integer> orbit: depthMap.values()) {
+			orbits.add(orbit);
+		}
+		return orbits;
+	}
+	
+	private double[] getOrbitDepth() {	
 		int n = subunits.getSubunitCount();
-		List<Integer> seqClusterIds = subunits.getSequenceClusterIds();
-		double[] zCentroidS = new double[n];
-		double[] zCentroid = new double[n];
+        double[] depth = new double[n];        
+		Point3d probe = new Point3d();
+
+		for (int i = 0; i < n; i++) {
+			Point3d p= subunits.getCenters().get(i);
+			probe.set(p);
+			transformationMatrix.transform(probe);
+			probe.add(minBoundary);
+			depth[i] = probe.z;
+		}
+		return depth;
+	}
+	
+	/**
+	 * Returns a list of list of subunit ids that form an "orbit", i.e. they
+	 * are transformed into each other during a rotation around the principal symmetry axis (z-axis)
+	 * @return
+	 */
+	private List<List<Integer>> calcOrbits() {
+		int n = subunits.getSubunitCount();
 		int fold = rotationGroup.getRotation(0).getFold();
 
-		Point3d probe = new Point3d();
-		Point3d centroid = subunits.getCentroid();
-
-		int k = 0;
-		for (Point3d p: subunits.getCenters()) {
-			// TODO does transformation matrix contain translation already??
-			probe.sub(p, centroid); // apply transformation at origin of coordinate system
-			//				probe.set(p);
-			transformationMatrix.transform(probe);
-			zCentroidS[k] = probe.z;
-			zCentroid[k] = probe.z;
-			k++;
-		}
-		
-		Arrays.sort(zCentroidS);
-		int sets = n/fold;
-		System.out.println("subunits: " + n + " folds: " + fold);
-		double[] mean = new double[sets];
-		for (int i= 0; i < sets; i++) {
-			for (int j = 0; j < fold; j++) {
-				mean[i] += zCentroidS[i*fold + j];
-				System.out.println("zDepth: " + zCentroidS[i*fold+j]);
-			}
-			mean[i] /= fold;
-		}
-		for (int i = 0; i < sets; i++) {
-			System.out.println("Mean z: " + mean[i]);
-		}
-		
-		List<Integer> depthIndex = new ArrayList<Integer>();
+		List<List<Integer>> orbits = new ArrayList<List<Integer>>();
+		Set<Integer> used = new HashSet<Integer>();
+//		for (int j = 0; j < fold; j++) {
+//			System.out.println("Rotation angle: " +rotationGroup.getRotation(j).getAxisAngle().angle);
+//			System.out.println(rotationGroup.getRotation(j).getPermutation());
+//		}
+			
 		for (int i = 0; i < n; i++) {
-			double dMin = Double.MAX_VALUE;
-			int index = -1;
-			for (int j = 0; j < sets; j++) {
-				double d = Math.abs(zCentroid[i]-mean[j]);
-//				System.out.println("depth: " + d);
-				if (d < dMin) {
-					index = j;
-					dMin = d;
+			if (! used.contains(i)) {
+				List<Integer> orbit = new ArrayList<Integer>();
+				for (int j = 0; j < fold; j++) {
+					List<Integer> permutation = rotationGroup.getRotation(j).getPermutation();
+					orbit.add(permutation.get(i));
+					used.add(permutation.get(i));
 				}
+				orbits.add(orbit);
 			}
-			depthIndex.add(index);
 		}
-		System.out.println(depthIndex);
-		return depthIndex;
+//		System.out.println("Orbits: ");
+//		for (List<Integer> orbit: orbits) {
+//			System.out.println(orbit);
+//		}
+		return orbits;
 	}
-
+	
 	/*
 	 * Modifies the rotation part of the transformation axis for
 	 * a Cn symmetric complex, so that the narrower end faces the

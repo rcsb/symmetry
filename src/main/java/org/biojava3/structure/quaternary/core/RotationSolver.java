@@ -145,6 +145,9 @@ public class RotationSolver implements QuatSymmetrySolver {
 	    // ----
 		Matrix4d transformation = SuperPosition.superposeAtOrigin(transformedCoords, originalCoords, axisAngle);
 		double subunitRmsd = SuperPosition.rmsd(transformedCoords, originalCoords);
+		//
+	
+		
 	//	long t3 = System.nanoTime();
 		// --
 //		System.out.println(" new rmsd: " + subunitRmsd);

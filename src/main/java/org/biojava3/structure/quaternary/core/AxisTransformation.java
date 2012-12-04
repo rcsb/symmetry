@@ -376,22 +376,45 @@ public class AxisTransformation {
 	 */
 	private List<List<Integer>> calcOrbits() {
 		int n = subunits.getSubunitCount();
+//		for (int i = 0; i < n; i++) {
+//			System.out.println("ChainId: " + subunits.getChainIds().get(i));
+//		}
 		int fold = rotationGroup.getRotation(0).getFold();
 
 		List<List<Integer>> orbits = new ArrayList<List<Integer>>();
 		Set<Integer> used = new HashSet<Integer>();
 //		for (int j = 0; j < fold; j++) {
-//			System.out.println("Rotation angle: " +rotationGroup.getRotation(j).getAxisAngle().angle);
+//			System.out.println("Rotation angle: " +rotationGroup.getRotation(j).getAxisAngle());
 //			System.out.println(rotationGroup.getRotation(j).getPermutation());
 //		}
+		
+		List<Integer> inOrder = rotationGroup.getRotation(0).getPermutation();
+		
+		// for simple Cn group, order the orbits in rotation order for coloring
+		if (rotationGroup.getOrder() > 1  && n == fold && rotationGroup.getPointGroup().startsWith("C")) {
+		    inOrder = deconvolute();
+		}
 			
 		for (int i = 0; i < n; i++) {
 			if (! used.contains(i)) {
-				List<Integer> orbit = new ArrayList<Integer>();
+				// determine the equivalent subunits
+				List<Integer> orbitElements = new ArrayList<Integer>();
 				for (int j = 0; j < fold; j++) {
 					List<Integer> permutation = rotationGroup.getRotation(j).getPermutation();
-					orbit.add(permutation.get(i));
+					int element = inOrder.get(permutation.get(i));
+					//			orbitElements.add(element);
+					orbitElements.add(permutation.get(i));
 					used.add(permutation.get(i));
+				}
+
+//				System.out.println("OrbitElements: " + orbitElements);
+
+				// order subunits in rotation order
+				List<Integer> orbit = new ArrayList<Integer>(orbitElements.size());
+				for (Integer p: inOrder) {
+					if (orbitElements.contains(p)) {
+						orbit.add(p);
+					}
 				}
 				orbits.add(orbit);
 			}
@@ -401,6 +424,24 @@ public class AxisTransformation {
 //			System.out.println(orbit);
 //		}
 		return orbits;
+	}
+	
+	private List<Integer> deconvolute() {
+		// get first rotation in rotation group (by definition the first rotation with smallest angle)
+		List<Integer> permutation = rotationGroup.getRotation(1).getPermutation();
+
+		List<Integer> inRotationOrder = new ArrayList<Integer>(permutation.size());
+		inRotationOrder.add(0);
+		for (int i = 0; i < permutation.size()-1; i++) {
+			int next = permutation.get(inRotationOrder.get(i));
+			if (next == 0) {
+				next = i+1;
+			}
+		    inRotationOrder.add(next);
+			
+//			System.out.println("inrotationorder: " + inRotationOrder);
+		}
+		return inRotationOrder;
 	}
 	
 	/*

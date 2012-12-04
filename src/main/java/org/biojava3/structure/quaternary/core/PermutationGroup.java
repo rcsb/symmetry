@@ -38,6 +38,7 @@ public class PermutationGroup {
             for (int j = i; j < permutations.size(); j++) {
                 List<Integer> p = combine(permutations.get(i), permutations.get(j));
                 addPermutation(p);
+//                System.out.println("complete group: adding " + p);
             }
         }
         // repeat iteratively until no new permutation are created

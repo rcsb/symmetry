@@ -115,6 +115,8 @@ public class FindQuarternarySymmetry {
 		} else {
 			method = "rotation";
 			QuatSymmetrySolver solver = new RotationSolver(subunits, parameters.getRmsdThreshold());
+			// TODO
+//			QuatSymmetrySolver solver = new SystematicSolver(subunits, parameters.getRmsdThreshold());
 			rotationGroup = solver.getSymmetryOperations();
 		}
 	}

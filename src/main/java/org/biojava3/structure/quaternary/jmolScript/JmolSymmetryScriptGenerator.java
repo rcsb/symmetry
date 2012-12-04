@@ -356,7 +356,7 @@ public abstract class JmolSymmetryScriptGenerator {
 				s.append(";");
 			}
 			// complex cases
-		} else if (pointGroup.startsWith("C") || (pointGroup.startsWith("D") && orbits.size() > 2) || 
+		} else if ((pointGroup.startsWith("D") && orbits.size() > 2) || 
 				pointGroup.equals("T")|| pointGroup.equals("O") || pointGroup.equals("I")) {
 			int nColor = 0;
 			if (orbits.size() % 2 == 0) {

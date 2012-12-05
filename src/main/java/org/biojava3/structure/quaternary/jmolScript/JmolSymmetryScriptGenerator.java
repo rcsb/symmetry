@@ -7,7 +7,11 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Color3f;
@@ -93,11 +97,11 @@ public abstract class JmolSymmetryScriptGenerator {
 		// set orientation
 		s.append("moveto 0 quaternion{");
 		s.append(jMolFloat(q.x));
-		s.append(" ");
+		s.append(",");
 		s.append(jMolFloat(q.y));
-		s.append(" ");
+		s.append(",");
 		s.append(jMolFloat(q.z));
-		s.append(" ");
+		s.append(",");
 		s.append(jMolFloat(q.w));
 		s.append("};");
 		return s.toString();
@@ -129,11 +133,11 @@ public abstract class JmolSymmetryScriptGenerator {
 		// set orientation
 		s.append("moveto 4 quaternion{");
 		s.append(jMolFloat(q.x));
-		s.append(" ");
+		s.append(",");
 		s.append(jMolFloat(q.y));
-		s.append(" ");
+		s.append(",");
 		s.append(jMolFloat(q.z));
-		s.append(" ");
+		s.append(",");
 		s.append(jMolFloat(q.w));
 		s.append("} ");
 		s.append(getDefaultZoom());
@@ -264,27 +268,36 @@ public abstract class JmolSymmetryScriptGenerator {
 	 */
 	public String colorBySubunit() {
 		// TODO prototype, should be refined, so there is maximum contrast between adjacent subunits
-		StringBuilder s = new StringBuilder();
 	    Subunits subunits = axisTransformation.getSubunits();
 	    List<Integer> modelNumbers = subunits.getModelNumbers();
 	    List<String> chainIds = subunits.getChainIds();
-	    int n = subunits.getSubunitCount();
-	    Color4f[] colors = ColorBrewer.Spectral.getColor4fPalette(n);
+	    List<List<Integer>> orbits = axisTransformation.getOrbits();
+		int fold = rotationGroup.getRotation(0).getFold();
+
+	    Color4f[] colors = ColorBrewer.Spectral.getColor4fPalette(2*fold);
+	    Map<Color4f, List<String>> colorMap = new HashMap<Color4f, List<String>>();
 	    
-		for (int i = 0; i < n; i++) {
-			s.append("select *");
-			s.append(chainIds.get(i));
-			s.append("/");
-			s.append(modelNumbers.get(i)+1);
-			s.append(";");
-			s.append("color cartoon");
-			s.append(getJmolColor(colors[i]));
-			s.append(";");
-			s.append("color atom");
-			s.append(getJmolColor(colors[i]));
-			s.append(";");
+		for (int i = 0; i < orbits.size(); i++) {
+			for (int j = 0; j < fold; j++) {
+				// assign alternating color sets to adjacent orbits
+				int colorIndex = j;
+				if (i % 2 == 0) {
+					colorIndex = j;
+				} else {
+					colorIndex = fold + j;
+				}
+				int subunit = orbits.get(i).get(j);
+				Color4f c = colors[colorIndex];
+				List<String> ids = colorMap.get(c);
+				if (ids == null) {
+					ids = new ArrayList<String>();
+					colorMap.put(c,  ids);
+				}
+				String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
+				ids.add(id);
+			}
 		}
-		return s.toString();
+		return getJmolColorScript(colorMap);
 	}
 	
 	/**
@@ -292,8 +305,7 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @return Jmol script
 	 */
 	public String colorBySequenceCluster() {
-		// TODO prototype, what should the default color scheme be?
-		StringBuilder s = new StringBuilder();
+		// TODO what should the default color scheme be?
 	    Subunits subunits = axisTransformation.getSubunits();
 	    int n = subunits.getSubunitCount();
 	    List<Integer> modelNumbers = subunits.getModelNumbers();
@@ -301,34 +313,20 @@ public abstract class JmolSymmetryScriptGenerator {
 	    List<Integer> seqClusterIds = subunits.getSequenceClusterIds();
 	    int clusters = Collections.max(seqClusterIds) + 1;
 	    Color4f[] colors = ColorBrewer.BrBG.getColor4fPalette(clusters);
-	    int prev = 0;
-
-		s.append("select ");
+		Map<Color4f, List<String>> colorMap = new HashMap<Color4f, List<String>>();
+		
 		for (int i = 0; i < n; i++) {
-			s.append("*");
-			s.append(chainIds.get(i));
-			s.append("/");
-			s.append(modelNumbers.get(i)+1);
-			if (i == n-1 || prev != seqClusterIds.get(i+1)) {			
-				Color4f c = colors[seqClusterIds.get(i)];
-				s.append(";");
-			    s.append("color cartoon");
-			    s.append(getJmolColor(c));
-			    s.append(";");
-			    s.append("color atom");
-			    s.append(getJmolColor(c));
-			    s.append(";");
-			    if (i < n-1) {
-			    	s.append("select ");
-			    } 
-			    if (i < n-1) { 
-			    	prev = seqClusterIds.get(i+1);
-			    }
-			} else if (i < n) {
-				s.append(",");
+			Color4f c = colors[seqClusterIds.get(i)];
+			List<String> ids = colorMap.get(c);
+			if (ids == null) {
+				ids = new ArrayList<String>();
+				colorMap.put(c,  ids);
 			}
+			String id = chainIds.get(i) + "/" + (modelNumbers.get(i)+1);
+			ids.add(id);
+
 		}
-		return s.toString();
+		return getJmolColorScript(colorMap);
 	}
 	
 	/**
@@ -336,8 +334,7 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @return Jmol script
 	 */
 	public String colorBySymmetry() {
-		// TODO prototype
-		StringBuilder s = new StringBuilder();
+		// TODO needs some refactoring
 		String pointGroup = rotationGroup.getPointGroup();
 		Subunits subunits = axisTransformation.getSubunits();
 		List<Integer> modelNumbers = subunits.getModelNumbers();
@@ -346,24 +343,17 @@ public abstract class JmolSymmetryScriptGenerator {
 
 		int n = subunits.getSubunitCount();
 		int fold = rotationGroup.getRotation(0).getFold();
+		
+		Map<Color4f, List<String>> colorMap = new HashMap<Color4f, List<String>>();
 
 		// Simple Cn symmetry
 		if (pointGroup.startsWith("C") && n == fold) {
 			Color4f[] colors = getSymmetryColors(n);
 			for (int i = 0; i < n; i++) {
 				int subunit = orbits.get(0).get(i);
-				s.append("select *");
-				s.append(chainIds.get(subunit));
-				s.append("/");
-				s.append(modelNumbers.get(subunit)+1);
-				s.append(";");
-				s.append("color cartoon");	
-				Color4f c = colors[i];
-				s.append(getJmolColor(c));
-				s.append(";");
-				s.append("color atom");
-				s.append(getJmolColor(c));
-				s.append(";");
+				String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
+				List<String> ids = Collections.singletonList(id);
+				colorMap.put(colors[i], ids);
 			}
 			// complex cases
 		} else if ((pointGroup.startsWith("D") && orbits.size() > 2) || 
@@ -382,24 +372,15 @@ public abstract class JmolSymmetryScriptGenerator {
 					colorIndex = orbits.size() - 1 - i;
 				}
 				Color4f c = new Color4f(colors[colorIndex]);
-				s.append("select ");
-				List<Integer> orbit = orbits.get(i);
-				for (int j = 0; j < orbit.size(); j++) {
-					s.append("*");
-					s.append(chainIds.get(orbit.get(j)));
-					s.append("/");
-					s.append(modelNumbers.get(orbit.get(j))+1);
-					if (j < orbit.size()-1) {
-						s.append(",");
-					}
+				List<String> ids = colorMap.get(c);
+				if (ids == null) {
+					ids = new ArrayList<String>();
+					colorMap.put(c,  ids);
 				}
-				s.append(";");
-				s.append("color cartoon");	
-				s.append(getJmolColor(c));;
-				s.append(";");
-				s.append("color atom");
-				s.append(getJmolColor(c));
-				s.append(";");
+				for (int subunit: orbits.get(i)) {
+					String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
+					ids.add(id);
+				}
 			}
 
 			// Simple Dn symmetry
@@ -408,29 +389,45 @@ public abstract class JmolSymmetryScriptGenerator {
 			
 			for (int i = 0; i < orbits.size(); i++) {
 				Color4f c = new Color4f(colors[i]);
-				s.append("select ");
+				List<String> ids = colorMap.get(c);
+				if (ids == null) {
+					ids = new ArrayList<String>();
+					colorMap.put(c,  ids);
+				}
 				List<Integer> orbit = orbits.get(i);
 				for (int j = 0; j < orbit.size(); j++) {
-					s.append("*");
-					s.append(chainIds.get(orbit.get(j)));
-					s.append("/");
-					s.append(modelNumbers.get(orbit.get(j))+1);
-					if (j < orbit.size()-1) {
-						s.append(",");
-					}
+					String id = chainIds.get(orbit.get(j)) + "/" + (modelNumbers.get(orbit.get(j))+1);
+					ids.add(id);
 				}
-				s.append(";");
-				s.append("color cartoon");	
-				s.append(getJmolColor(c));
-				s.append(";");
-				s.append("color atom");
-				s.append(getJmolColor(c));
-				s.append(";");
 			}
+		}
+		return getJmolColorScript(colorMap);
+	}
+	
+	private String getJmolColorScript(Map<Color4f, List<String>> map) {
+		StringBuilder s = new StringBuilder();
+		for (Entry<Color4f, List<String>> entry: map.entrySet()) {
+			s.append("select ");
+			List<String> ids = entry.getValue();
+			for (int i = 0; i < ids.size(); i++) {
+				s.append("*");
+				s.append(ids.get(i));
+				if (i < ids.size() -1 ) {
+				    s.append(",");
+				} else {
+					s.append(";");
+				}
+			}
+			s.append("color cartoon");	
+			s.append(getJmolColor(entry.getKey()));
+			s.append(";");
+			s.append("color atom");
+			s.append(getJmolColor(entry.getKey()));
+			s.append(";");
+			
 		}
 		return s.toString();
 	}
-	
 	/**
 	 * Return a color that is complementary to the symmetry color
 	 * @return
@@ -831,11 +828,11 @@ public abstract class JmolSymmetryScriptGenerator {
 	private static String getJmolPoint(Tuple3d point) {
 		StringBuilder s = new StringBuilder();
 		s.append("{");
-		s.append(jMolFloat(point.x));
-		s.append(" ");
-		s.append(jMolFloat(point.y));
-		s.append(" ");
-		s.append(jMolFloat(point.z));
+		s.append(fDot2(point.x));
+		s.append(",");
+		s.append(fDot2(point.y));
+		s.append(",");
+		s.append(fDot2(point.z));
 		s.append("}");
 		return s.toString();
 	}
@@ -843,18 +840,23 @@ public abstract class JmolSymmetryScriptGenerator {
 	private static String getJmolColor(Color4f color) {
 		StringBuilder s = new StringBuilder();
 		s.append("{");
-		s.append(f12(color.x));
+		s.append(f1Dot2(color.x));
 		s.append(",");
-		s.append(f12(color.y));
+		s.append(f1Dot2(color.y));
 		s.append(",");
-		s.append(f12(color.z));
+		s.append(f1Dot2(color.z));
 		s.append("}");
 		return s.toString();
 	}
 	
-	private static String f12(float number) {
+	private static String f1Dot2(float number) {
 		return String.format("%1.2f", number);
 	}
+	
+	private static String fDot2(double number) {
+		return String.format("%.2f", number);
+	}
+	
 	/**
 	 * Returns a lower precision floating point number for Jmol
 	 * @param f

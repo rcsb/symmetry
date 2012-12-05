@@ -41,6 +41,9 @@ public class CalcBioAssemblySymmetry {
 	AxisTransformation axisTransformation;
 	private JmolSymmetryScriptGenerator scriptGenerator;
 	
+	
+	public static String version = "0.0.6";
+	
 	public CalcBioAssemblySymmetry(){
 	}
 	

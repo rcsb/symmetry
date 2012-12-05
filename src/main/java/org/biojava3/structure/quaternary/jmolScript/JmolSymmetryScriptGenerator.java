@@ -17,6 +17,7 @@ import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Point4i;
 import javax.vecmath.Quat4d;
+import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
 
 import org.biojava3.structure.quaternary.core.AxisTransformation;
@@ -90,7 +91,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		q.set(m);
 		
 		// set orientation
-		s.append("moveto 0 quaternion {");
+		s.append("moveto 0 quaternion{");
 		s.append(jMolFloat(q.x));
 		s.append(" ");
 		s.append(jMolFloat(q.y));
@@ -126,7 +127,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		q.set(m);
 		
 		// set orientation
-		s.append("moveto 4 quaternion {");
+		s.append("moveto 4 quaternion{");
 		s.append(jMolFloat(q.x));
 		s.append(" ");
 		s.append(jMolFloat(q.y));
@@ -163,19 +164,19 @@ public abstract class JmolSymmetryScriptGenerator {
 			reverseTransformation.transform(vertices[i]);
 		}
 		
-		int index = 100;
+		int index = 0;
 
 		for (int[] lineLoop: polyhedron.getLineLoops()) {
 			s.append("draw polyhedron");
 			s.append(index++);
-			s.append(" line ");
+			s.append(" line");
 			for (int i: lineLoop) {
 				s.append(getJmolPoint(vertices[i]));
 			}
-			s.append(" width 1.5");
-			s.append(" color ");
+			s.append("width 1.5");
+			s.append(" color");
 			Color4f c = getPolyhedronColor();
-			s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+			s.append(getJmolColor(c));
 	//		s.append(POLYHEDRON_COLOR);
 			s.append(" off;");
 		}
@@ -268,23 +269,19 @@ public abstract class JmolSymmetryScriptGenerator {
 	    List<Integer> modelNumbers = subunits.getModelNumbers();
 	    List<String> chainIds = subunits.getChainIds();
 	    int n = subunits.getSubunitCount();
-//	    int cMax = Math.max(n, 4);
-//	    int offset = cMax - n;
 	    Color4f[] colors = ColorBrewer.Spectral.getColor4fPalette(n);
-	//    System.arraycopy(colors, offset, colors, 0, n);
 	    
 		for (int i = 0; i < n; i++) {
-			s.append("select chain=");
+			s.append("select *");
 			s.append(chainIds.get(i));
-			s.append(" and model=");
+			s.append("/");
 			s.append(modelNumbers.get(i)+1);
 			s.append(";");
-			Color4f c = colors[i];
-			s.append("color cartoon ");
-			s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+			s.append("color cartoon");
+			s.append(getJmolColor(colors[i]));
 			s.append(";");
-			s.append("color atom ");
-			s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+			s.append("color atom");
+			s.append(getJmolColor(colors[i]));
 			s.append(";");
 		}
 		return s.toString();
@@ -298,25 +295,38 @@ public abstract class JmolSymmetryScriptGenerator {
 		// TODO prototype, what should the default color scheme be?
 		StringBuilder s = new StringBuilder();
 	    Subunits subunits = axisTransformation.getSubunits();
+	    int n = subunits.getSubunitCount();
 	    List<Integer> modelNumbers = subunits.getModelNumbers();
 	    List<String> chainIds = subunits.getChainIds();
 	    List<Integer> seqClusterIds = subunits.getSequenceClusterIds();
 	    int clusters = Collections.max(seqClusterIds) + 1;
 	    Color4f[] colors = ColorBrewer.BrBG.getColor4fPalette(clusters);
+	    int prev = 0;
 
-		for (int i = 0; i < subunits.getSubunitCount(); i++) {
-			s.append("select chain=");
+		s.append("select ");
+		for (int i = 0; i < n; i++) {
+			s.append("*");
 			s.append(chainIds.get(i));
-			s.append(" and model=");
-			s.append((modelNumbers.get(i)+1));
-			s.append(";");
-			Color4f c = colors[seqClusterIds.get(i)];
-			s.append("color cartoon ");
-			s.append("{" + c.x + "," + c.y + "," + c.z + "}");
-			s.append(";");
-			s.append("color atom ");
-		    s.append("{" + c.x + "," + c.y + "," + c.z + "}");
-			s.append(";");
+			s.append("/");
+			s.append(modelNumbers.get(i)+1);
+			if (i == n-1 || prev != seqClusterIds.get(i+1)) {			
+				Color4f c = colors[seqClusterIds.get(i)];
+				s.append(";");
+			    s.append("color cartoon");
+			    s.append(getJmolColor(c));
+			    s.append(";");
+			    s.append("color atom");
+			    s.append(getJmolColor(c));
+			    s.append(";");
+			    if (i < n-1) {
+			    	s.append("select ");
+			    } 
+			    if (i < n-1) { 
+			    	prev = seqClusterIds.get(i+1);
+			    }
+			} else if (i < n) {
+				s.append(",");
+			}
 		}
 		return s.toString();
 	}
@@ -342,17 +352,17 @@ public abstract class JmolSymmetryScriptGenerator {
 			Color4f[] colors = getSymmetryColors(n);
 			for (int i = 0; i < n; i++) {
 				int subunit = orbits.get(0).get(i);
-				s.append("select chain=");
+				s.append("select *");
 				s.append(chainIds.get(subunit));
-				s.append(" and model=");
-				s.append((modelNumbers.get(subunit)+1));
+				s.append("/");
+				s.append(modelNumbers.get(subunit)+1);
 				s.append(";");
-				s.append("color cartoon ");	
+				s.append("color cartoon");	
 				Color4f c = colors[i];
-				s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+				s.append(getJmolColor(c));
 				s.append(";");
-				s.append("color atom ");
-				s.append("{" + c.x + "," + c.y + "," + c.z + "}");
+				s.append("color atom");
+				s.append(getJmolColor(c));
 				s.append(";");
 			}
 			// complex cases
@@ -365,7 +375,6 @@ public abstract class JmolSymmetryScriptGenerator {
 				nColor = (orbits.size() + 1)/2;
 			}
 			Color4f[] colors = getSymmetryColors(nColor);
-			Color4f black = new Color4f(Color.BLACK);
 
 			for (int i = 0; i < orbits.size(); i++) {
 				int colorIndex = i;
@@ -373,45 +382,50 @@ public abstract class JmolSymmetryScriptGenerator {
 					colorIndex = orbits.size() - 1 - i;
 				}
 				Color4f c = new Color4f(colors[colorIndex]);
-				for (int subunit: orbits.get(i)) {
-					s.append("select chain=");
-					s.append(chainIds.get(subunit));
-					s.append(" and model=");
-					s.append((modelNumbers.get(subunit)+1));
-					s.append(";");
-					s.append("color cartoon ");	
-//					if (i >= nColor) {
-//					    c.interpolate(black, 0.2f);
-//					}
-					s.append("{" + c.x + "," + c.y + "," + c.z + "}");
-					s.append(";");
-					s.append("color atom ");
-					s.append("{" + c.x + "," + c.y + "," + c.z + "}");
-					s.append(";");
+				s.append("select ");
+				List<Integer> orbit = orbits.get(i);
+				for (int j = 0; j < orbit.size(); j++) {
+					s.append("*");
+					s.append(chainIds.get(orbit.get(j)));
+					s.append("/");
+					s.append(modelNumbers.get(orbit.get(j))+1);
+					if (j < orbit.size()-1) {
+						s.append(",");
+					}
 				}
+				s.append(";");
+				s.append("color cartoon");	
+				s.append(getJmolColor(c));;
+				s.append(";");
+				s.append("color atom");
+				s.append(getJmolColor(c));
+				s.append(";");
 			}
 
 			// Simple Dn symmetry
 		} else {
 			Color4f[] colors = getSymmetryColors(orbits.size());
-			Color4f black = new Color4f(Color.BLACK);
-
+			
 			for (int i = 0; i < orbits.size(); i++) {
 				Color4f c = new Color4f(colors[i]);
-				for (int subunit: orbits.get(i)) {
-					s.append("select chain=");
-					s.append(chainIds.get(subunit));
-					s.append(" and model=");
-					s.append((modelNumbers.get(subunit)+1));
-					s.append(";");
-					s.append("color cartoon ");	
-			//		c.interpolate(black, 0.2f);
-					s.append("{" + c.x + "," + c.y + "," + c.z + "}");
-					s.append(";");
-					s.append("color atom ");
-					s.append("{" + c.x + "," + c.y + "," + c.z + "}");
-					s.append(";");
+				s.append("select ");
+				List<Integer> orbit = orbits.get(i);
+				for (int j = 0; j < orbit.size(); j++) {
+					s.append("*");
+					s.append(chainIds.get(orbit.get(j)));
+					s.append("/");
+					s.append(modelNumbers.get(orbit.get(j))+1);
+					if (j < orbit.size()-1) {
+						s.append(",");
+					}
 				}
+				s.append(";");
+				s.append("color cartoon");	
+				s.append(getJmolColor(c));
+				s.append(";");
+				s.append("color atom");
+				s.append(getJmolColor(c));
+				s.append(";");
 			}
 		}
 		return s.toString();
@@ -461,17 +475,17 @@ public abstract class JmolSymmetryScriptGenerator {
 		
 	}
 	
-	private String drawInertiaAxes() {
+	public String drawInertiaAxes() {
 		StringBuilder s = new StringBuilder();
 		Point3d centroid = axisTransformation.calcGeometricCenter();
 		Vector3d[] axes = axisTransformation.getPrincipalAxesOfInertia();
 
 		for (int i = 0; i < axes.length; i++) {
 			s.append("draw axesInertia");
-			s.append(200+i);
+			s.append(i);
 			s.append(" ");
 			s.append("line");
-			s.append(" ");
+	//		s.append(" ");
 			Point3d v1 = new Point3d(axes[i]);
 			if (i == 0) {
 				v1.scale(AXIS_SCALE_FACTOR*axisTransformation.getDimension().y);
@@ -486,7 +500,7 @@ public abstract class JmolSymmetryScriptGenerator {
 			v2.add(centroid);
 			s.append(getJmolPoint(v1));
 			s.append(getJmolPoint(v2));
-			s.append(" width 0.5 ");
+			s.append("width 0.5 ");
 			s.append(" color white");
 			s.append(" off;");
 		}
@@ -554,12 +568,11 @@ public abstract class JmolSymmetryScriptGenerator {
 		s.append("draw");
 		s.append(" axesSymmetry");
 		s.append(i);
-		s.append(" cylinder ");
+		s.append(" cylinder");
 		s.append(getJmolPoint(p1));
 		s.append(getJmolPoint(p2));
-		s.append(" diameter ");
+		s.append("diameter ");
 		s.append(diameter);
-		//		s.append(" color translucent ");
 		s.append(" color ");
 		s.append(color);
 		s.append(" off;");
@@ -592,33 +605,18 @@ public abstract class JmolSymmetryScriptGenerator {
 		s.append("polygon");
 		s.append(" ");
 		s.append(n+1); 
-		s.append(" ");
-
-		s.append("{");
-		s.append(jMolFloat(center.x));
-		s.append(" ");
-		s.append(jMolFloat(center.y));
-		s.append(" ");
-		s.append(jMolFloat(center.z));
-		s.append("}");
+		s.append(getJmolPoint(center));
 
 		Vector3d[] vertexes = getPolygonVertices(principalAxis, axis, referenceAxis, center, n, radius);
-		//	System.out.println("AxisTransformation: polygon: " + Arrays.toString(vertexes));
 		// create vertex list
 		for (Vector3d v: vertexes) {
-			s.append("{");
-			s.append(jMolFloat(v.x));
-			s.append(" ");
-			s.append(jMolFloat(v.y));
-			s.append(" ");
-			s.append(jMolFloat(v.z));
-			s.append("}");
+			s.append(getJmolPoint(v));
 		}
 
 		// create face list
-		s.append(" ");
+	//	s.append(" ");
 		s.append(n);
-		s.append(" ");
+	//	s.append(" ");
 
 		for (int i = 1; i <= n; i++) {
 			s.append("[");
@@ -637,9 +635,8 @@ public abstract class JmolSymmetryScriptGenerator {
 		}
 
 		if (n == 2) {
-	      	s.append(" mesh off");
+	      	s.append("mesh off");
 		}
-		//	s.append(" color translucent ");
 		s.append(" color ");
 		s.append(color);
 		s.append(" off;");
@@ -821,20 +818,17 @@ public abstract class JmolSymmetryScriptGenerator {
 	private String setCentroid() {
 		// calculate center of rotation
 		Point3d centroid = axisTransformation.calcGeometricCenter();
+//		Point3d centroid = axisTransformation.getCentroid();
 			
 		// set centroid
 		StringBuilder s = new StringBuilder();
-		s.append("center {");
-		s.append(jMolFloat(centroid.x));
-		s.append(" ");
-		s.append(jMolFloat(centroid.y));
-		s.append(" ");
-		s.append(jMolFloat(centroid.z));
-		s.append("};");
+		s.append("center");
+		s.append(getJmolPoint(centroid));
+		s.append(";");
 		return s.toString();
 	}
 	
-	private static String getJmolPoint(Point3d point) {
+	private static String getJmolPoint(Tuple3d point) {
 		StringBuilder s = new StringBuilder();
 		s.append("{");
 		s.append(jMolFloat(point.x));
@@ -846,6 +840,21 @@ public abstract class JmolSymmetryScriptGenerator {
 		return s.toString();
 	}
 	
+	private static String getJmolColor(Color4f color) {
+		StringBuilder s = new StringBuilder();
+		s.append("{");
+		s.append(f12(color.x));
+		s.append(",");
+		s.append(f12(color.y));
+		s.append(",");
+		s.append(f12(color.z));
+		s.append("}");
+		return s.toString();
+	}
+	
+	private static String f12(float number) {
+		return String.format("%1.2f", number);
+	}
 	/**
 	 * Returns a lower precision floating point number for Jmol
 	 * @param f
@@ -857,4 +866,5 @@ public abstract class JmolSymmetryScriptGenerator {
 		}
 		return (float)f;
 	}
+	
 }

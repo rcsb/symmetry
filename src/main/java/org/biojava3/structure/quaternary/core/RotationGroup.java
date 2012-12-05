@@ -40,9 +40,13 @@ public class RotationGroup {
         modified = true;
     }
     
-    public void setC1() {
+    public void setC1(int n) {
     	Rotation r = new Rotation();
-        r.setPermutation(new ArrayList<Integer>(0));
+    	List<Integer> permutation = new ArrayList<Integer>(n);
+    	for (int i = 0; i < n; i++) {
+        	permutation.add(i);
+        }
+        r.setPermutation(permutation);   
         Matrix4d m = new Matrix4d();
         m.setIdentity();
         r.setTransformation(m);

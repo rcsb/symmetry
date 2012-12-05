@@ -107,7 +107,7 @@ public class FindQuarternarySymmetry {
 			// no symmetry possible, create empty ("C1") rotation group
 			method = "norotation";
 			rotationGroup =  new RotationGroup();
-			rotationGroup.setC1();
+			rotationGroup.setC1(subunits.getSubunitCount());
 		} else if (subunits.getSubunitCount() == 2 && subunits.getFolds().contains(2)) {
 			method = "C2rotation";
 			QuatSymmetrySolver solver = new C2RotationSolver(subunits, parameters.getRmsdThreshold());

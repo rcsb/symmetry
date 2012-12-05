@@ -271,10 +271,12 @@ public class AxisTransformation {
 	public Point3d calcGeometricCenter() {
 		Point3d geometricCenter = new Point3d();
 	
-		if (rotationGroup.getPointGroup().equals("C1")) {
+//		if (rotationGroup.getPointGroup().equals("C1")) {
+		if (rotationGroup.getPointGroup().startsWith("C")) {
+			// geometric center not set at all: 2ZP9 ok, 2X6A misaligned
+			// w/ geometric center: 2X6A ok, 2ZP9  misaligned
 			geometricCenter.set(getDimension());
 			geometricCenter.add(minBoundary);
-//			geometricCenter = new Point3d(xMin + getXRadius(), yMin + getYRadius(), zMin + getZRadius());
 			
 			// TODO does this transformation include the translational component??
 			transformationMatrix.transform(geometricCenter);
@@ -282,6 +284,10 @@ public class AxisTransformation {
 		
 		geometricCenter.add(subunits.getCentroid());
 		return geometricCenter;
+	}
+	
+	public Point3d getCentroid() {
+		return new Point3d(subunits.getCentroid());
 	}
 	
 	/**
@@ -401,8 +407,6 @@ public class AxisTransformation {
 				List<Integer> orbitElements = new ArrayList<Integer>();
 				for (int j = 0; j < fold; j++) {
 					List<Integer> permutation = rotationGroup.getRotation(j).getPermutation();
-					int element = inOrder.get(permutation.get(i));
-					//			orbitElements.add(element);
 					orbitElements.add(permutation.get(i));
 					used.add(permutation.get(i));
 				}

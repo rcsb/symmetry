@@ -45,11 +45,11 @@ public class CalcBioAssemblySymmetry {
 	}
 	
 	
-	public  void orient(){
-		
-		 finder = new FindQuarternarySymmetry(bioAssembly, params);	
+	public boolean orient(){
+		boolean hasProtein = false;
+		finder = new FindQuarternarySymmetry(bioAssembly, params);	
 
-		 rotationGroup = new RotationGroup();
+		rotationGroup = new RotationGroup();
 		if (finder.getChainCount() > 0) {
 			System.out.println();
 			rotationGroup = finder.getRotationGroup();
@@ -58,13 +58,14 @@ public class CalcBioAssemblySymmetry {
 			System.out.println("Point group    : " + rotationGroup.getPointGroup());	
 			System.out.println("Pseudosymmetric: " + finder.isPseudoSymmetric());	
 			System.out.println("Symmetry RMSD  : " + (float) rotationGroup.getAverageTraceRmsd());
-		} 
-					
-		axisTransformation = new AxisTransformation(finder.getSubunits(), rotationGroup);
-		
-		// use factory method to get point group specific instance of script generator
-		scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation, rotationGroup);
-		
+
+			axisTransformation = new AxisTransformation(finder.getSubunits(), rotationGroup);
+
+			// use factory method to get point group specific instance of script generator
+			scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation, rotationGroup);
+			hasProtein = true;
+		}
+		return hasProtein;
 	}
 	
 	public Structure getBioAssembly() {

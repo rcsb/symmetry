@@ -103,13 +103,17 @@ public class OrientBiologicalAssembly {
 		writeFile(outName, calc.getScriptGenerator().playOrientations());
 
 		System.out.println("Color by subunit         : " + calc.getScriptGenerator().colorBySubunit());
-		System.out.println();
+		System.out.println("Color by subunit length  : " + calc.getScriptGenerator().colorBySubunit().length());
 		System.out.println("Color by sequence cluster: " + calc.getScriptGenerator().colorBySequenceCluster());
-		System.out.println();
+		System.out.println("Color by seq. clst. len  : " + calc.getScriptGenerator().colorBySequenceCluster().length());
 		System.out.println("Color by symmetry        : " + calc.getScriptGenerator().colorBySymmetry());
-        System.out.println();
+		System.out.println("Color by symmetry length : " + calc.getScriptGenerator().colorBySymmetry().length());
+
 		System.out.println("Draw axes                : " + calc.getScriptGenerator().drawAxes());
+		System.out.println("Draw axes length         : " + calc.getScriptGenerator().drawAxes().length());
 		System.out.println("Draw polyhedron          : " + calc.getScriptGenerator().drawPolyhedron());
+		System.out.println("Draw polyhedron length   : " + calc.getScriptGenerator().drawPolyhedron().length());
+
 		
 		System.out.println("Default orientation      : " + calc.getScriptGenerator().setDefaultOrientation());
 		System.out.println("Orientation count        : " + calc.getScriptGenerator().getOrientationCount());

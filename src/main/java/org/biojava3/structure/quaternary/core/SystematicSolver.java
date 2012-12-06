@@ -20,8 +20,8 @@ import org.biojava3.structure.quaternary.geometry.SuperPosition;
  */
 public class SystematicSolver implements QuatSymmetrySolver {
     private Subunits subunits = null;
-//    private double subunitRmsdThreshold = 3.0f;
-    private double rmsdThreshold = 6.0f;
+    private QuatSymmetryParameters parameters = null;
+
     private Point3d[] originalCoords = null;
     private Point3d[] transformedCoords = null;
     private RotationGroup rotations = new RotationGroup();
@@ -30,17 +30,13 @@ public class SystematicSolver implements QuatSymmetrySolver {
     private QuatSuperpositionScorer scorer = null;
     private Set<List<Integer>> hashCodes = new HashSet<List<Integer>>();
 
-    public SystematicSolver(Subunits subunits, double rmsdThreshold) {
+    public SystematicSolver(Subunits subunits, QuatSymmetryParameters parameters) {
     	if (subunits.getSubunitCount()== 2) {
     		throw new IllegalArgumentException("SystematicSolver cannot be applied to subunits with 2 centers");
     	}
         this.subunits = subunits;
-        this.rmsdThreshold = rmsdThreshold;
+        this.parameters = parameters;
     }
-
-//    public void setRmsdThreshold(double rmsdThreshold) {
-//        this.rmsdThreshold = rmsdThreshold;
-//    }
 
     public RotationGroup getSymmetryOperations() {
         if (rotations.getOrder() == 0) {
@@ -182,7 +178,7 @@ public class SystematicSolver implements QuatSymmetrySolver {
         }
  //               System.out.println("Complete: " + permutation + " rmsd: " + rmsd);
 		// check if it meets criteria and save symmetry operation
-		if (rmsd < rmsdThreshold) {
+		if (rmsd <parameters.getRmsdThreshold()) {
 			// transform to original coordinate system
 		    combineWithTranslation(transformation);
 		    // evaluate superposition of CA traces with GTS score
@@ -194,7 +190,7 @@ public class SystematicSolver implements QuatSymmetrySolver {
 		    	if (caRmsd < 0.0) {
 		    		return false;
 		    	}
-		    	if (caRmsd > rmsdThreshold) {
+		    	if (caRmsd > parameters.getRmsdThreshold()) {
 		            return false;
 		    	}
 		        Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, gts, caRmsd, fold);

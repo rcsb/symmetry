@@ -10,7 +10,7 @@ import org.biojava.bio.structure.StructureTools;
 
 public class ProteinChainExtractor  {
 	private Structure structure = null;
-	private int minSequenceLength = 24;
+	private QuatSymmetryParameters parameters = null;
 	private boolean unknownSequence = false;
 	private boolean modified = true;
 	
@@ -19,9 +19,9 @@ public class ProteinChainExtractor  {
 	private List<Integer> modelNumbers = new ArrayList<Integer>();
 	private List<String> sequences = new ArrayList<String>();
 
-	public ProteinChainExtractor(Structure structure, int minSequenceLength) {
+	public ProteinChainExtractor(Structure structure, QuatSymmetryParameters parameters) {
 		this.structure = structure;
-		this.minSequenceLength = minSequenceLength;
+		this.parameters = parameters;
 		modified = true;
 	}
 	
@@ -62,6 +62,10 @@ public class ProteinChainExtractor  {
 			models = structure.nrModels();
 		}
 		
+		if (parameters.isVerbose()) {
+			System.out.println("Protein chains used in calculation:");
+		}
+		
 		for (int i = 0; i < models; i++) {
 			for (Chain c : structure.getChains(i)) {
 				Atom[] ca = StructureTools.getAtomCAArray(c);
@@ -69,8 +73,10 @@ public class ProteinChainExtractor  {
 					ca = removeUnknownResidues(ca);
 					unknownSequence = true;
 				}
-				if (ca.length >= minSequenceLength) {
-				   System.out.println("Chain " + c.getChainID() + ": " + c.getSeqResSequence());
+				if (ca.length >= parameters.getMinimumSequenceLength()) {
+					if (parameters.isVerbose()) {
+				        System.out.println("Chain " + c.getChainID() + ": " + c.getSeqResSequence());
+					}
 //				   System.out.println("Number CA atoms: " + ca.length);
 				   cAlphaTrace.add(ca);
 				   chainIds.add(c.getChainID());

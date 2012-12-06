@@ -7,6 +7,7 @@ public class QuatSymmetryParameters {
 	private double sequencePseudoSymmetryThreshold = 0.95;
 	private double alignmentFractionThreshold = 0.9;
 	private double rmsdThreshold = 5.0;
+	private boolean verbose = false;
 	private static final String n = System.getProperty("line.separator");
 	
 	/**
@@ -63,6 +64,8 @@ public class QuatSymmetryParameters {
 	public boolean isStructuralAlignmentOnly() {
 		return structuralAlignmentOnly;
 	}
+	
+// Reserved for the future. This feature is currently not supported
 //	/**
 //	 * @param structuralAlignmentOnly the structuralAlignmentOnly to set
 //	 */
@@ -77,6 +80,13 @@ public class QuatSymmetryParameters {
 	public void setSequencePseudoSymmetryThreshold(
 			double sequencePseudoSymmetryThreshold) {
 		this.sequencePseudoSymmetryThreshold = sequencePseudoSymmetryThreshold;
+	}
+	
+	public boolean isVerbose() {
+		return verbose;
+	}
+	public void setVerbose(boolean verbose) {
+		this.verbose = verbose;
 	}
 	
 	public String toString() {
@@ -95,6 +105,9 @@ public class QuatSymmetryParameters {
 		s.append(n);
 		s.append("Symmetry RMSD threshold          : ");
 		s.append(rmsdThreshold);
+		s.append(n);
+		s.append("Verbose                          : ");
+		s.append(verbose);
 		s.append(n);
 		return s.toString();
 	}

@@ -110,13 +110,13 @@ public class FindQuarternarySymmetry {
 			rotationGroup.setC1(subunits.getSubunitCount());
 		} else if (subunits.getSubunitCount() == 2 && subunits.getFolds().contains(2)) {
 			method = "C2rotation";
-			QuatSymmetrySolver solver = new C2RotationSolver(subunits, parameters.getRmsdThreshold());
+			QuatSymmetrySolver solver = new C2RotationSolver(subunits, parameters);
 			rotationGroup = solver.getSymmetryOperations();
 		} else {
 			method = "rotation";
-			QuatSymmetrySolver solver = new RotationSolver(subunits, parameters.getRmsdThreshold());
+			QuatSymmetrySolver solver = new RotationSolver(subunits, parameters);
 			// TODO
-//			QuatSymmetrySolver solver = new SystematicSolver(subunits, parameters.getRmsdThreshold());
+//			QuatSymmetrySolver solver = new SystematicSolver(subunits, parameters);
 			rotationGroup = solver.getSymmetryOperations();
 		}
 	}

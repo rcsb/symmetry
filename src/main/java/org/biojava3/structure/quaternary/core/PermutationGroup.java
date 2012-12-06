@@ -94,7 +94,6 @@ public class PermutationGroup {
     		for (int j = 0; j < getOrder(); j++) {
     			builder.append(" ");
     			builder.append(permutations.indexOf(combine(permutations.get(i), permutations.get(j))));
- //   			builder.append(i);
     		}
     		builder.append("\n");
     	}

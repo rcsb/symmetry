@@ -11,6 +11,7 @@ import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
+import org.biojava3.structure.quaternary.geometry.CircleSampler;
 import org.biojava3.structure.quaternary.geometry.MomentsOfInertia;
 import org.biojava3.structure.quaternary.geometry.SuperPosition;
 
@@ -21,7 +22,8 @@ import org.biojava3.structure.quaternary.geometry.SuperPosition;
  */
 public class C2RotationSolver implements QuatSymmetrySolver {
     private Subunits subunits = null;
-    private double rmsdThreshold = 0.0f;
+    private QuatSymmetryParameters parameters = null;
+//    private double rmsdThreshold = 0.0f;
     private double distanceThreshold = 0.0f;
     private Vector3d centroid = new Vector3d();
     private Matrix4d centroidInverse = new Matrix4d();
@@ -33,12 +35,12 @@ public class C2RotationSolver implements QuatSymmetrySolver {
     private RotationGroup rotations = new RotationGroup();
     private QuatSuperpositionScorer scorer = null;
 
-    public C2RotationSolver(Subunits subunits, double rmsdThreshold) {
+    public C2RotationSolver(Subunits subunits, QuatSymmetryParameters parameters) {
         if (subunits.getSubunitCount() != 2) {
     		throw new IllegalArgumentException("C2RotationSolver can only be applied to cases with 2 centers");
     	}
         this.subunits = subunits;
-        this.rmsdThreshold = rmsdThreshold;
+        this.parameters = parameters;
     }
    
     public RotationGroup getSymmetryOperations() {
@@ -159,7 +161,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 
 		combineWithTranslation(transformation);
 		double caRmsd = scorer.calcCalphaRMSD(transformation, permutation);
-		if (caRmsd < 0.0 || caRmsd > rmsdThreshold) {
+		if (caRmsd < 0.0 || caRmsd > parameters.getRmsdThreshold()) {
 			return;
 		}
 		
@@ -213,7 +215,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         double distanceThreshold = Math.sqrt(threshold);
 
 //        System.out.println("Distance threshold: " + distanceThreshold);
-        distanceThreshold = Math.max(distanceThreshold, rmsdThreshold);
+        distanceThreshold = Math.max(distanceThreshold, parameters.getRmsdThreshold());
         
         return distanceThreshold;
     }

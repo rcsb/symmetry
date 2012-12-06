@@ -1,15 +1,9 @@
 package org.biojava3.structure.quaternary.core;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -17,7 +11,6 @@ import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
-import javax.vecmath.Point4i;
 import javax.vecmath.Vector3d;
 
 import org.biojava3.structure.quaternary.geometry.MomentsOfInertia;
@@ -46,6 +39,15 @@ public class AxisTransformation {
 	public AxisTransformation(Subunits subunits, RotationGroup rotationGroup) {
 		this.subunits = subunits;
 		this.rotationGroup = rotationGroup;
+		if (subunits == null) {
+			throw new IllegalArgumentException("AxisTransformation: Subunits are null");
+		} else if (rotationGroup == null) {
+			throw new IllegalArgumentException("AxisTransformation: Subunits are null");
+		} else if (subunits.getSubunitCount() == 0) {
+			throw new IllegalArgumentException("AxisTransformation: Subunits is empty");
+		} else if (rotationGroup.getOrder() == 0) {
+			throw new IllegalArgumentException("AxisTransformation: RotationGroup is empty");
+		}
 	}
 
 	public Matrix4d getTransformation() {
@@ -204,7 +206,7 @@ public class AxisTransformation {
 		}
 
 		if (SuperPosition.rmsd(refPoints, coordPoints) > 0.01) {
-			System.out.println("Warning: aligment with coordinate system is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
+			System.out.println("Warning: AxisTransformation: axes alignment is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
 		}
 		m2.mul(m1);
 		return m2;
@@ -325,8 +327,8 @@ public class AxisTransformation {
 				xyRadiusMax = Math.max(xyRadiusMax, Math.sqrt(probe.x*probe.x + probe.y * probe.y));
 			}
 		}
-		System.out.println("Min: " + minBoundary);
-		System.out.println("Max: " + maxBoundary);
+//		System.out.println("Min: " + minBoundary);
+//		System.out.println("Max: " + maxBoundary);
 	}
 	
 	/**
@@ -346,7 +348,7 @@ public class AxisTransformation {
 			}
 		    meanDepth /= orbit.size();
 		    if (depthMap.get(meanDepth) != null) {
-		    	System.out.println("Conflict in depthMap");
+//		    	System.out.println("Conflict in depthMap");
 		    	meanDepth += 0.01;
 		    }
 		    depthMap.put(meanDepth, orbit);

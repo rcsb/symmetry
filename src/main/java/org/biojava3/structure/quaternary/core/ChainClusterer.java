@@ -183,7 +183,7 @@ public class ChainClusterer  {
 	}
 	
 	private void extractProteinChains() {
-		ProteinChainExtractor extractor = new ProteinChainExtractor(structure,  parameters.getMinimumSequenceLength());
+		ProteinChainExtractor extractor = new ProteinChainExtractor(structure,  parameters);
 		caUnaligned = extractor.getCalphaTraces();
 		chainIds  = extractor.getChainIds();
 		sequences = extractor.getSequences();

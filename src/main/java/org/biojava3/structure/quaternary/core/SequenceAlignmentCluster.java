@@ -236,7 +236,9 @@ public class SequenceAlignmentCluster {
 			System.out.println("AFPChain is null");
 		}
 
-		System.out.println("Smith-Waterman: seq. identity: " + (float)identity + " RMSD: " + (float)rmsd + " alignment length: " + afp.getOptLength());
+		if (parameters.isVerbose()) {
+			System.out.println("Smith-Waterman: seq. identity: " + (float)identity + " RMSD: " + (float)rmsd + " alignment length: " + afp.getOptLength());
+		}
 //		System.out.println(afp.getAlnseq1());
 //		System.out.println(afp.getAlnseq2());
 		if (identity < 1.0) {
@@ -249,7 +251,9 @@ public class SequenceAlignmentCluster {
 			identity = afp.getIdentity();
 			rmsd = afp.getChainRmsd();
 			
-			System.out.println("CE            : seq. identity: " + (float)identity + " RMSD: " + (float)rmsd + " alignment length: " + afp.getOptLength());
+			if (parameters.isVerbose()) {
+				System.out.println("CE            : seq. identity: " + (float)identity + " RMSD: " + (float)rmsd + " alignment length: " + afp.getOptLength());
+			}
 //			System.out.println(afp.getAlnseq1());
 //			System.out.println(afp.getAlnseq2());
 		}

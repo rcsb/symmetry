@@ -364,7 +364,8 @@ public abstract class JmolSymmetryScriptGenerator {
 			} else {
 				nColor = (orbits.size() + 1)/2;
 			}
-			Color4f[] colors = getSymmetryColors(nColor);
+			Color4f[] colors = getSymmetryColors(nColor); 
+//			colors = increaseContrast(colors);
 
 			for (int i = 0; i < orbits.size(); i++) {
 				int colorIndex = i;
@@ -404,13 +405,28 @@ public abstract class JmolSymmetryScriptGenerator {
 		return getJmolColorScript(colorMap);
 	}
 	
+	private Color4f[] increaseContrast(Color4f[] colors) {
+		Color4f[] newColors = new Color4f[colors.length];
+		int count = 0;
+		for (int i = 0; i < colors.length; i+=3) {
+			newColors[count++] = colors[i];
+		}
+		for (int i = 1; i < colors.length; i+=3) {
+			newColors[count++] = colors[i];
+		}
+		for (int i = 2; i < colors.length; i+=3) {
+			newColors[count++] = colors[i];
+		}
+		return newColors;
+	}
+	
 	private String getJmolColorScript(Map<Color4f, List<String>> map) {
 		StringBuilder s = new StringBuilder();
 		for (Entry<Color4f, List<String>> entry: map.entrySet()) {
 			s.append("select ");
 			List<String> ids = entry.getValue();
 			for (int i = 0; i < ids.size(); i++) {
-				s.append("*");
+				s.append("*:");
 				s.append(ids.get(i));
 				if (i < ids.size() -1 ) {
 				    s.append(",");

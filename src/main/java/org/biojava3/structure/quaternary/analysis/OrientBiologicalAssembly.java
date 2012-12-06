@@ -17,30 +17,37 @@ import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 public class OrientBiologicalAssembly {
 	private String fileName = "";
 	private String outputDirectory = "";
+	private boolean verbose = false;
 
-	public OrientBiologicalAssembly (String fileName, String outputDirectory) {		
+	public OrientBiologicalAssembly (String fileName, String outputDirectory, boolean verbose) {		
 		this.fileName = fileName;
 		this.outputDirectory = outputDirectory;
+		this.verbose = verbose;
 	}
 
 	public static void main(String[] args) {		
 		System.out.println("OrientBiologicalAssembly V 0.5: Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
 		System.out.println();
-		if (args.length != 2) {
-			System.out.println("Usage: OrientBiologicalAssembly pdbFile outputDirectory");
+		if (args.length < 2) {
+			System.out.println("Usage: OrientBiologicalAssembly pdbFile outputDirectory [-verbose]");
 			System.exit(-1);
 		}
 		if (!args[0].contains(".pdb")) {
 			System.err.println("Input file must be a .pdb or a pdb.gz file");
 			System.exit(-1);
 		}
-		OrientBiologicalAssembly orienter = new OrientBiologicalAssembly(args[0], args[1]);
+		boolean verbose = false;
+		if (args.length == 3 && args[2].equals("-verbose")) {
+			verbose = true;
+		}
+		
+		
+		OrientBiologicalAssembly orienter = new OrientBiologicalAssembly(args[0], args[1], verbose);
 		orienter.run();
 	}
 
 	public void run() {
 		Structure structure = readStructure();
-		System.out.println("Protein chains used for alignment:");
 		orient(structure);
 	}
 
@@ -73,6 +80,7 @@ public class OrientBiologicalAssembly {
 		// initialize with default parameters
 		QuatSymmetryParameters params = new QuatSymmetryParameters();
 		params.setSequenceIdentityThreshold(0.3);
+		params.setVerbose(verbose);
 		
 		System.out.println("Default parameters:");
 		System.out.println(params);
@@ -84,7 +92,7 @@ public class OrientBiologicalAssembly {
 				
 		calc.orient();
 		
-		AxisTransformation at 			= calc.getAxisTransformation();
+		AxisTransformation at = calc.getAxisTransformation();
 		
 		String prefix = getBaseFileName();
 		String bioassemblyId = getBioassemblyId();

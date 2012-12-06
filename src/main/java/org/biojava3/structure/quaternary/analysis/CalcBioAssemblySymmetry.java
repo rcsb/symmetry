@@ -56,11 +56,14 @@ public class CalcBioAssemblySymmetry {
 		if (finder.getChainCount() > 0) {
 			System.out.println();
 			rotationGroup = finder.getRotationGroup();
-			System.out.println("Results for " + Math.round(params.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
-			System.out.println("Stoichiometry  : " + finder.getCompositionFormula());
-			System.out.println("Point group    : " + rotationGroup.getPointGroup());	
-			System.out.println("Pseudosymmetric: " + finder.isPseudoSymmetric());	
-			System.out.println("Symmetry RMSD  : " + (float) rotationGroup.getAverageTraceRmsd());
+			
+			if (params.isVerbose()) {
+				System.out.println("Results for " + Math.round(params.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
+				System.out.println("Stoichiometry  : " + finder.getCompositionFormula());
+				System.out.println("Point group    : " + rotationGroup.getPointGroup());	
+				System.out.println("Pseudosymmetric: " + finder.isPseudoSymmetric());	
+				System.out.println("Symmetry RMSD  : " + (float) rotationGroup.getAverageTraceRmsd());
+			}
 
 			axisTransformation = new AxisTransformation(finder.getSubunits(), rotationGroup);
 

@@ -5,21 +5,17 @@ package org.biojava3.structure.quaternary.jmolScript;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.vecmath.AxisAngle4d;
-import javax.vecmath.Color3f;
 import javax.vecmath.Color4f;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
-import javax.vecmath.Point4i;
 import javax.vecmath.Quat4d;
 import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
@@ -37,7 +33,7 @@ import org.biojava3.structure.quaternary.misc.ColorBrewer;
  *
  */
 public abstract class JmolSymmetryScriptGenerator {
-	private static String POLYHEDRON_COLOR = "lawngreen";
+//	private static String POLYHEDRON_COLOR = "lawngreen";
 	private static String N_FOLD_AXIS_COLOR = "red";
 	private static String TWO_FOLD_AXIS_COLOR = "blue";
 	private static String THREE_FOLD_AXIS_COLOR = "green";

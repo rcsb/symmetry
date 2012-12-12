@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>structcomplayground</artifactId>
-	<version>0.0.7-SNAPSHOT</version>
+	<version>0.0.8-SNAPSHOT</version>
 	<name>StructCompPlayground</name>
 	<repositories>
 		<repository>
@@ -46,11 +46,7 @@
 				<enabled>true</enabled>
 			</releases>
 		</repository>
-		
-	
-		
-
-        
+	        
 	</repositories>
 	<scm>
 		<connection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/trunk</connection>
@@ -78,13 +74,13 @@
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-structure</artifactId>
-			<version>3.0.5-SNAPSHOT</version>
+			<version>3.0.6-SNAPSHOT</version>
 			
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-structure-gui</artifactId>
-			<version>3.0.5-SNAPSHOT</version>
+			<version>3.0.6-SNAPSHOT</version>
 			
 		</dependency>
 		<dependency>

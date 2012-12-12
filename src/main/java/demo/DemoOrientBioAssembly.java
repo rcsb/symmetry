@@ -113,6 +113,7 @@ public class DemoOrientBioAssembly {
 			System.out.println("Transf. matrix: " + calc.getAxisTransformation().getTransformation());
 
 			System.out.println("Dimension                : " + calc.getAxisTransformation().getDimension());
+			System.out.println("Subunit count            : " + calc.getFinder().getChainCount());
 
 			System.out.println("Color by subunit         : " + calc.getScriptGenerator().colorBySubunit());
 			System.out.println("Color by subunit length  : " + calc.getScriptGenerator().colorBySubunit().length());
@@ -126,11 +127,12 @@ public class DemoOrientBioAssembly {
 			System.out.println("Draw polyhedron          : " + calc.getScriptGenerator().drawPolyhedron());
 			System.out.println("Draw polyhedron length   : " + calc.getScriptGenerator().drawPolyhedron().length());
 
-			System.out.println("Default orientation      : " + calc.getScriptGenerator().setDefaultOrientation());
+			System.out.println("Zoom                     : " + calc.getScriptGenerator().getZoom());
+			System.out.println("Default orientation      : " + calc.getScriptGenerator().getDefaultOrientation());
 			System.out.println("Orientation count        : " + calc.getScriptGenerator().getOrientationCount());
 			for (int i = 0; i <  calc.getScriptGenerator().getOrientationCount(); i++) {
 				System.out.println("Orientation name " + i + "       : " + calc.getScriptGenerator().getOrientationName(i));
-				System.out.println("Orientation " + i + "            : " + calc.getScriptGenerator().setOrientation(i));
+				System.out.println("Orientation " + i + "            : " + calc.getScriptGenerator().getOrientation(i));
 			}
 
 			System.out.println("=================");

@@ -4,7 +4,6 @@
 package org.biojava3.structure.quaternary.jmolScript;
 
 import org.biojava3.structure.quaternary.core.AxisTransformation;
-import org.biojava3.structure.quaternary.core.RotationGroup;
 import org.biojava3.structure.quaternary.geometry.Tetrahedron;
 
 
@@ -14,18 +13,25 @@ import org.biojava3.structure.quaternary.geometry.Tetrahedron;
  */
 public class JmolSymmetryScriptGeneratorT extends JmolSymmetryScriptGenerator {
 
-	public JmolSymmetryScriptGeneratorT(AxisTransformation axisTransformation, RotationGroup rotationGroup) {
-		super(axisTransformation, rotationGroup);
+	public JmolSymmetryScriptGeneratorT(AxisTransformation axisTransformation) {
+		super(axisTransformation);
 		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getXYRadius());
 		Tetrahedron t = new Tetrahedron();
 		t.setMidRadius(radius);
-		polyhedron = t;
-//		System.out.println("Tetrahedron: mid radius" + radius);
-//		System.out.println("Tetrahedron: circ. radius" + t.getCirumscribedRadius());
+		setPolyhedron(t);
 	}
 	
-	public int getDefaultZoom() {
-		return 60;
+	public int getZoom() {
+		// find maximum extension of structure
+		double maxExtension = getMaxExtension();
+		// find maximum extension of polyhedron
+		double polyhedronExtension = getPolyhedron().getCirumscribedRadius();
+		
+		int zoom = Math.round((float)(maxExtension/polyhedronExtension * 110));
+		if (zoom > 100) {
+			zoom = 100;
+		}
+		return zoom;
 	}
 	
 }

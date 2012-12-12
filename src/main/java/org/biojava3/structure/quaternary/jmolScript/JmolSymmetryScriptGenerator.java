@@ -33,23 +33,21 @@ import org.biojava3.structure.quaternary.misc.ColorBrewer;
  *
  */
 public abstract class JmolSymmetryScriptGenerator {
-//	private static String POLYHEDRON_COLOR = "lawngreen";
 	private static String N_FOLD_AXIS_COLOR = "red";
-	private static String TWO_FOLD_AXIS_COLOR = "blue";
-	private static String THREE_FOLD_AXIS_COLOR = "green";
+	private static String TWO_FOLD_AXIS_COLOR = "deepskyblue";
+	private static String THREE_FOLD_AXIS_COLOR = "lime";
 
 	private static double AXIS_SCALE_FACTOR = 1.2;
 	
-	protected AxisTransformation axisTransformation = null;
-	protected RotationGroup rotationGroup = null;
-	protected Polyhedron polyhedron = null;
+	private AxisTransformation axisTransformation = null;
+	private RotationGroup rotationGroup = null;
+	private Polyhedron polyhedron = null;
 	
-	public JmolSymmetryScriptGenerator(AxisTransformation axisTransformation, RotationGroup rotationGroup) {
+	
+	public JmolSymmetryScriptGenerator(AxisTransformation axisTransformation) {
 		this.axisTransformation = axisTransformation;
-		this.rotationGroup = rotationGroup;
+		this.rotationGroup = axisTransformation.getRotationGroup();
 	}
-
-	abstract public int getDefaultZoom();
 	
 	/**
 	 * Returns an instance of a JmolSymmetryScriptGenerator, based on the point group of a structure (factory method)
@@ -57,30 +55,37 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @param rotationGroup
 	 * @return instance of JmolSymmetryScriptGenerator
 	 */
-	public static JmolSymmetryScriptGenerator getInstance(AxisTransformation axisTransformation, RotationGroup rotationGroup) {
-		String pointGroup = rotationGroup.getPointGroup();
+	public static JmolSymmetryScriptGenerator getInstance(AxisTransformation axisTransformation) {
+		String pointGroup = axisTransformation.getRotationGroup().getPointGroup();
 		if (pointGroup.equals("C1")) {
-			return new JmolSymmetryScriptGeneratorC1(axisTransformation, rotationGroup);
+			return new JmolSymmetryScriptGeneratorC1(axisTransformation);
 		} else if (pointGroup.startsWith("C")) {
-			return new JmolSymmetryScriptGeneratorCn(axisTransformation, rotationGroup);
+			return new JmolSymmetryScriptGeneratorCn(axisTransformation);
 		} else if (pointGroup.startsWith("D")) {
-			return new JmolSymmetryScriptGeneratorDn(axisTransformation, rotationGroup);
+			return new JmolSymmetryScriptGeneratorDn(axisTransformation);
 		} else if (pointGroup.equals("T")) {
-			return new JmolSymmetryScriptGeneratorT(axisTransformation, rotationGroup);
+			return new JmolSymmetryScriptGeneratorT(axisTransformation);
 		} else if (pointGroup.equals("O")) {
-			return new JmolSymmetryScriptGeneratorO(axisTransformation, rotationGroup);
+			return new JmolSymmetryScriptGeneratorO(axisTransformation);
 		} else if (pointGroup.equals("I")) {
-			return new JmolSymmetryScriptGeneratorI(axisTransformation, rotationGroup);
+			return new JmolSymmetryScriptGeneratorI(axisTransformation);
 		} 
 		
 		return null;
 	}
 	
 	/**
+	 * Returns the Jmol zoom to fit polyhedron and symmetry axes. This zoom
+	 * level should be used so that the polyhedron and symmetry axes are not cutoff.
+	 * @return
+	 */
+	abstract public int getZoom();
+	
+	/**
 	 * Returns a Jmol script to set the default orientation for a structure
 	 * @return Jmol script
 	 */
-	public String setDefaultOrientation() {	
+	public String getDefaultOrientation() {	
 		StringBuilder s = new StringBuilder();
 		s.append(setCentroid());
 		
@@ -116,7 +121,7 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @param index orientation index
 	 * @return Jmol script
 	 */
-	public String setOrientation(int index) {	
+	public String getOrientation(int index) {	
 		StringBuilder s = new StringBuilder();
 		s.append(setCentroid());
 		
@@ -135,12 +140,24 @@ public abstract class JmolSymmetryScriptGenerator {
 		s.append(jMolFloat(q.z));
 		s.append(",");
 		s.append(jMolFloat(q.w));
-		s.append("} ");
-		s.append(getDefaultZoom());
+		s.append("}");
 		s.append(";");
 		return s.toString();
 	}
 	
+	/**
+	 * Returns a Jmol script that sets a specific orientation and zoom
+	 * to draw either axes or polyhedron
+	 * @param index orientation index
+	 * @return Jmol script
+	 */
+	public String getOrientationWithZoom(int index) {
+		StringBuilder s = new StringBuilder();
+		s.append(getOrientation(index));
+		s.insert(s.length()-1, getZoom());
+		return s.toString();
+		
+	}
 	/**
 	 * Returns the name of a specific orientation
 	 * @param index orientation index
@@ -158,13 +175,10 @@ public abstract class JmolSymmetryScriptGenerator {
 	public String drawPolyhedron() {
 		StringBuilder s = new StringBuilder();
 
-		Point3d[] vertices = polyhedron.getVertices();
-		Matrix4d reverseTransformation = axisTransformation.calcPrismTransformation();
-		for (int i = 0; i < vertices.length; i++) {
-			reverseTransformation.transform(vertices[i]);
-		}
+		Point3d[] vertices = getPolyhedronVertices();
 		
 		int index = 0;
+		double width = getMaxExtension()*0.015;
 
 		for (int[] lineLoop: polyhedron.getLineLoops()) {
 			s.append("draw polyhedron");
@@ -173,16 +187,18 @@ public abstract class JmolSymmetryScriptGenerator {
 			for (int i: lineLoop) {
 				s.append(getJmolPoint(vertices[i]));
 			}
-			s.append("width 1.5");
+			s.append("width ");
+		    s.append(fDot2(width));
 			s.append(" color");
 			Color4f c = getPolyhedronColor();
 			s.append(getJmolColor(c));
-	//		s.append(POLYHEDRON_COLOR);
 			s.append(" off;");
 		}
 
 		return s.toString();
 	}
+
+	
 	
 	public String hidePolyhedron() {
 		return "draw polyhedron* off;";
@@ -235,24 +251,22 @@ public abstract class JmolSymmetryScriptGenerator {
 		// draw polygon
 		s.append(drawPolyhedron()); // draw invisibly
 		s.append(showPolyhedron());
-//		s.append(hidePolyhedron());
 			
 		// draw axes
 		s.append(drawAxes());
 		s.append(showAxes());
-//		s.append(hideAxes());
 		
 		// loop over all orientations with 4 sec. delay
 		for (int i = 0; i < getOrientationCount(); i++) {
 			s.append(deleteHeader());
-			s.append(setOrientation(i));
+			s.append(getOrientationWithZoom(i));
 			s.append(drawHeader(polyhedron.getViewName(i), "white"));
 			s.append("delay 4;");
 		}
 		
 		// go back to first orientation
 		s.append(deleteHeader());
-		s.append(setOrientation(0));
+		s.append(getOrientationWithZoom(0));
 		s.append(drawHeader(polyhedron.getViewName(0), "white"));
 		
 		return s.toString();
@@ -263,7 +277,6 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @return
 	 */
 	public String colorBySubunit() {
-		// TODO prototype, should be refined, so there is maximum contrast between adjacent subunits
 	    Subunits subunits = axisTransformation.getSubunits();
 	    List<Integer> modelNumbers = subunits.getModelNumbers();
 	    List<String> chainIds = subunits.getChainIds();
@@ -301,7 +314,6 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @return Jmol script
 	 */
 	public String colorBySequenceCluster() {
-		// TODO what should the default color scheme be?
 	    Subunits subunits = axisTransformation.getSubunits();
 	    int n = subunits.getSubunitCount();
 	    List<Integer> modelNumbers = subunits.getModelNumbers();
@@ -361,7 +373,6 @@ public abstract class JmolSymmetryScriptGenerator {
 				nColor = (orbits.size() + 1)/2;
 			}
 			Color4f[] colors = getSymmetryColors(nColor); 
-//			colors = increaseContrast(colors);
 
 			for (int i = 0; i < orbits.size(); i++) {
 				int colorIndex = i;
@@ -401,19 +412,68 @@ public abstract class JmolSymmetryScriptGenerator {
 		return getJmolColorScript(colorMap);
 	}
 	
-	private Color4f[] increaseContrast(Color4f[] colors) {
-		Color4f[] newColors = new Color4f[colors.length];
-		int count = 0;
-		for (int i = 0; i < colors.length; i+=3) {
-			newColors[count++] = colors[i];
+	// --- protected methods ---
+	/**
+	 * Returns the maximum extension (length) of structure
+	 * @return
+	 */
+	protected double getMaxExtension() {
+		Vector3d dimension = axisTransformation.getDimension();
+		double maxExtension = Math.max(dimension.x, dimension.y);
+		maxExtension = Math.max(maxExtension, dimension.z);
+		return maxExtension;
+	}
+	
+	/**
+	 * @return the axisTransformation
+	 */
+	protected AxisTransformation getAxisTransformation() {
+		return axisTransformation;
+	}
+
+	/**
+	 * @param axisTransformation the axisTransformation to set
+	 */
+	protected void setAxisTransformation(AxisTransformation axisTransformation) {
+		this.axisTransformation = axisTransformation;
+	}
+
+	/**
+	 * @return the rotationGroup
+	 */
+	protected RotationGroup getRotationGroup() {
+		return rotationGroup;
+	}
+
+	/**
+	 * @param rotationGroup the rotationGroup to set
+	 */
+	protected void setRotationGroup(RotationGroup rotationGroup) {
+		this.rotationGroup = rotationGroup;
+	}
+
+	/**
+	 * @return the polyhedron
+	 */
+	protected Polyhedron getPolyhedron() {
+		return polyhedron;
+	}
+
+	/**
+	 * @param polyhedron the polyhedron to set
+	 */
+	protected void setPolyhedron(Polyhedron polyhedron) {
+		this.polyhedron = polyhedron;
+	}
+
+//  --- private methods ---
+	private Point3d[] getPolyhedronVertices() {
+		Point3d[] vertices = polyhedron.getVertices();
+		Matrix4d reverseTransformation = axisTransformation.getGeometicCenterTransformation();
+		for (int i = 0; i < vertices.length; i++) {
+			reverseTransformation.transform(vertices[i]);
 		}
-		for (int i = 1; i < colors.length; i+=3) {
-			newColors[count++] = colors[i];
-		}
-		for (int i = 2; i < colors.length; i+=3) {
-			newColors[count++] = colors[i];
-		}
-		return newColors;
+		return vertices;
 	}
 	
 	private String getJmolColorScript(Map<Color4f, List<String>> map) {
@@ -486,7 +546,7 @@ public abstract class JmolSymmetryScriptGenerator {
 	
 	public String drawInertiaAxes() {
 		StringBuilder s = new StringBuilder();
-		Point3d centroid = axisTransformation.calcGeometricCenter();
+		Point3d centroid = axisTransformation.getGeometricCenter();
 		Vector3d[] axes = axisTransformation.getPrincipalAxesOfInertia();
 
 		for (int i = 0; i < axes.length; i++) {
@@ -494,7 +554,6 @@ public abstract class JmolSymmetryScriptGenerator {
 			s.append(i);
 			s.append(" ");
 			s.append("line");
-	//		s.append(" ");
 			Point3d v1 = new Point3d(axes[i]);
 			if (i == 0) {
 				v1.scale(AXIS_SCALE_FACTOR*axisTransformation.getDimension().y);
@@ -515,6 +574,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		}
         return s.toString();
 	};
+	
 	private String drawSymmetryAxes() {
 		StringBuilder s = new StringBuilder();
 
@@ -536,11 +596,6 @@ public abstract class JmolSymmetryScriptGenerator {
 				color = N_FOLD_AXIS_COLOR;
 			} else {
 				radius = polyhedron.getCirumscribedRadius();
-				// TODO radius of Tetrahedron seems to be too small???
-				// System.out.println("Symmetry axis radius: " + radius);
-				if (rotationGroup.getPointGroup().equals("T")) {
-					radius *= 1.22;
-				}
 			
 				if (r.getFold() == 2) {
 					color = TWO_FOLD_AXIS_COLOR;
@@ -552,19 +607,61 @@ public abstract class JmolSymmetryScriptGenerator {
 			}
 		
 
-			Point3d center = axisTransformation.calcGeometricCenter();
+			Point3d center = axisTransformation.getGeometricCenter();
 			AxisAngle4d axisAngle = r.getAxisAngle();
 			Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
-	//		System.out.println("Unique axes: " + axis + " n: " + r.getFold());
-			s.append(getSymmetryAxis(i, i+axes.size(), rotationGroup.getPointGroup(), r.getFold(),  axisTransformation.getPrincipalRotationAxis(), axisTransformation.getRotationReferenceAxis(), radius, diameter, color, center, axis));
+			Vector3d refAxis = axisTransformation.getRotationReferenceAxis();
+//			System.out.println("Unique axes: " + axis + " n: " + r.getFold());
+			s.append(getSymmetryAxis(i, i+axes.size(), rotationGroup.getPointGroup(), r.getFold(), refAxis, radius, diameter, color, center, axis));
 	        i++;
 		}
 
 		return s.toString();
 	}
 
+	private Vector3d getAligmentVector(Point3d point, Vector3d axis) {		
+		// for system with a single Cn axis
+		if (rotationGroup.getPointGroup().startsWith("C") || rotationGroup.getPointGroup().startsWith("D")) {
+			// if axis is orthogonal to principal axis, use principal axis as reference axis
+			if (axis.dot(axisTransformation.getPrincipalRotationAxis()) < 0.1) {
+				return axisTransformation.getPrincipalRotationAxis();
+			} else {
+				return axisTransformation.getRotationReferenceAxis();
+			}
+		}
+
+		// for T, O, and I point groups find reference axis with respect to
+		// nearest polyhedron vertex
+		Vector3d ref = new Vector3d();
+		double dSqThreshold = 25;
+		double dSqMin = Double.MAX_VALUE;
+		Point3d refPoint = null;
+		// find nearest point on polyhedron as reference point,
+		// but do not choose a point on the same axis (therefore, we 
+		// apply a distance threshold squared 5A*5A = 25A^2
+		for (Point3d v: getPolyhedronVertices()) {
+			double dSq = point.distanceSquared(v);
+			if (dSq > dSqThreshold) {
+				if (dSq < dSqMin) {
+					dSqMin = dSq;
+					refPoint = v;
+				}
+			}
+		}
+
+
+		ref.sub(point, refPoint);
+
+		// this ref vector is usually not orthogonal to the 
+		// axis. The following double-cross product makes it
+		// orthogonal.
+		ref.cross(axis, ref);
+		ref.cross(axis, ref); // note, done twice on purpose
+		ref.normalize();
+		return ref;
+	}
 	
-	private String getSymmetryAxis(int i, int j, String pointGroup, int n, Vector3d principalAxis, Vector3d referenceAxis, double radius, float diameter, String color, Point3d center, Vector3d axis) {
+	private String getSymmetryAxis(int i, int j, String pointGroup, int n, Vector3d referenceAxis, double radius, float diameter, String color, Point3d center, Vector3d axis) {
 		boolean drawPolygon = true;
 		
 		Point3d p1 = new Point3d(axis);
@@ -586,6 +683,8 @@ public abstract class JmolSymmetryScriptGenerator {
 		s.append(color);
 		s.append(" off;");
 
+		// calc. point to center symmetry symbols. They are offset by 0.01
+		// to avoid overlap with the polyhedron
 		p1 = new Point3d(axis);
 		p1.scaleAdd(-1.01*radius, center);
 
@@ -593,20 +692,25 @@ public abstract class JmolSymmetryScriptGenerator {
 		p2.scaleAdd(1.01*radius, center);
 
 		if (drawPolygon == true) {
-//			if (n == 2) {
-//				s.append(getLineJmol(index, p1, axis, principalAxis, referenceAxis, color));
-//				s.append(getLineJmol(index + n + 1, p2, axis, principalAxis, referenceAxis, color));
-//			} else if (n > 2) {
-//				double polygonRadius = 5;
-			double polygonRadius = radius * 0.05;
-				s.append(getPolygonJmol(i, p1, principalAxis, referenceAxis, axis, n, color, polygonRadius));
-				s.append(getPolygonJmol(j, p2, principalAxis, referenceAxis, axis, n, color, polygonRadius));
-//			}
+		
+			double polygonRadius = getMaxExtension() * 0.06;
+			if (n == 2) {
+				referenceAxis = getAligmentVector(p1, axis);
+				s.append(getC2PolygonJmol(i, p1, referenceAxis, axis, n, color, polygonRadius));
+				referenceAxis = getAligmentVector(p2, axis);
+				s.append(getC2PolygonJmol(j, p2,  referenceAxis, axis, n, color, polygonRadius));
+			} else if (n > 2) {
+				referenceAxis = getAligmentVector(p1, axis);
+				s.append(getPolygonJmol(i, p1, referenceAxis, axis, n, color, polygonRadius));
+				referenceAxis = getAligmentVector(p2, axis);
+				s.append(getPolygonJmol(j, p2, referenceAxis, axis, n, color, polygonRadius));
+			}
 		}
 
 		return s.toString();
 	}
-	private static String getPolygonJmol(int index, Point3d center, Vector3d principalAxis, Vector3d referenceAxis, Vector3d axis, int n, String color, double radius) {
+	
+	private static String getPolygonJmol(int index, Point3d center, Vector3d referenceAxis, Vector3d axis, int n, String color, double radius) {
 		StringBuilder s = new StringBuilder();
 		s.append("draw axesSymbol");
 		s.append(index);
@@ -616,16 +720,80 @@ public abstract class JmolSymmetryScriptGenerator {
 		s.append(n+1); 
 		s.append(getJmolPoint(center));
 
-		Vector3d[] vertexes = getPolygonVertices(principalAxis, axis, referenceAxis, center, n, radius);
+		Vector3d[] vertexes = getPolygonVertices(axis, referenceAxis, center, n, radius);
 		// create vertex list
 		for (Vector3d v: vertexes) {
 			s.append(getJmolPoint(v));
 		}
 
 		// create face list
-	//	s.append(" ");
 		s.append(n);
-	//	s.append(" ");
+		for (int i = 1; i <= n; i++) {
+			s.append("[");
+			s.append(0);
+			s.append(" ");
+			s.append(i);
+			s.append(" ");
+			if (i < n) {
+				s.append(i+1);
+			} else {
+				s.append(1);
+			}
+			s.append(" ");
+			s.append(7);
+			s.append("]");
+		}
+
+		if (n == 2) {
+	      	s.append("mesh off");
+		}
+		s.append(" color ");
+		s.append(color);
+		s.append(" off;");
+
+		return s.toString();
+	}
+	
+	
+	private static Vector3d[] getPolygonVertices(Vector3d axis, Vector3d referenceAxis, Point3d center, int n, double radius) {
+		Vector3d ref = new Vector3d(referenceAxis);
+		ref.scale(radius);		
+
+		AxisAngle4d axisAngle = new AxisAngle4d(axis, 0);
+		Vector3d[] vectors = new Vector3d[n];
+		Matrix4d m = new Matrix4d();
+
+		for (int i = 0; i < n; i++) {
+			axisAngle.angle = i * 2 * Math.PI/n;
+			vectors[i] = new Vector3d(ref);		
+			m.set(axisAngle);
+			m.transform(vectors[i]);
+			vectors[i].add(center);
+		}
+		return vectors;
+	}
+	
+	private static String getC2PolygonJmol(int index, Point3d center, Vector3d referenceAxis, Vector3d axis, int n, String color, double radius) {
+		StringBuilder s = new StringBuilder();
+		n = 10;
+		s.append("draw axesSymbol");
+		s.append(index);
+		s.append(" ");
+		s.append("polygon");
+		s.append(" ");
+		s.append(n+1-2); 
+		s.append(getJmolPoint(center));
+
+		Vector3d[] vertexes = getC2PolygonVertices(axis, referenceAxis, center, n, radius);
+		// create vertex list
+		for (Vector3d v: vertexes) {
+			s.append(getJmolPoint(v));
+		}
+		
+		n -= 2;
+
+		// create face list
+		s.append(n);
 
 		for (int i = 1; i <= n; i++) {
 			s.append("[");
@@ -652,27 +820,55 @@ public abstract class JmolSymmetryScriptGenerator {
 
 		return s.toString();
 	}
-	private static Vector3d[] getPolygonVertices(Vector3d principalAxis, Vector3d axis, Vector3d referenceAxis, Point3d center, int n, double radius) {
-		Vector3d perp = new Vector3d(axis);
-		// if axis coincides with principal axis, use the reference axis to orient polygon
-		// TODO need to check alignment with y-axis for all cases of symmetry
-		if (Math.abs(axis.dot(principalAxis)) > 0.9) {
-			perp.set(referenceAxis);
-		} else {
-			perp.cross(perp, principalAxis);
-		}
-		//	System.out.println("AxisTransformation: perp. axis: " + referenceAxis);
-		perp.scale(radius);		
+	private static Vector3d[] getC2PolygonVertices(Vector3d axis, Vector3d referenceAxis, Point3d center, int n, double radius) {
+		Vector3d ref = new Vector3d(referenceAxis);
+		ref.scale(4*radius);		
 
 		AxisAngle4d axisAngle = new AxisAngle4d(axis, 0);
-		Vector3d[] vectors = new Vector3d[n];
+		int k = n / 2;
+		// draw arc 1/6 of a full circle
+		int f = 6;
+		Vector3d[] vectors = new Vector3d[n-2];	
 		Matrix4d m = new Matrix4d();
+		
+		// first point of arc
+		axisAngle.angle = (k+0.5) * 2 * Math.PI/(f*k);
+		Vector3d begin = new Vector3d(ref);		
+		m.set(axisAngle);
+		m.transform(begin);
+		
+		// last point of arc
+		axisAngle.angle = (2*k-1+0.5) * 2 * Math.PI/(f*k);
+		Vector3d end = new Vector3d(ref);		
+		m.set(axisAngle);
+		m.transform(end);
+		
+		// center of arc
+		Vector3d arcCenter = new Vector3d();
+		arcCenter.interpolate(begin, end, 0.5);
+		arcCenter.negate();
+		
+		// add translation component
+		Vector3d trans =  new Vector3d();
+		trans.sub(center, arcCenter);
 
-		for (int i = 0; i < n; i++) {
-			axisAngle.angle = i * 2 * Math.PI/n;
-			vectors[i] = new Vector3d(perp);		
+		// draw arc (1/6 of a full circle)
+		for (int i = 0; i < k; i++) {
+			axisAngle.angle = (k + i + 0.5) * 2 * Math.PI/(f*k);
+			vectors[i] = new Vector3d(ref);		
 			m.set(axisAngle);
 			m.transform(vectors[i]);
+			vectors[i].add(arcCenter);
+			vectors[i].add(center);
+		}
+		// in reverse order, draw reflected half of arc (1/6 of full circle)
+		// don't draw first and last element, since the are already part of the previous arc
+		for (int i = k; i < 2*k-2; i++) {
+			axisAngle.angle = (f/2*k + i + 0.5) * 2 * Math.PI/(f*k);
+			vectors[i] = new Vector3d(ref);		
+			m.set(axisAngle);
+			m.transform(vectors[i]);
+			vectors[i].sub(arcCenter);
 			vectors[i].add(center);
 		}
 		return vectors;
@@ -691,8 +887,7 @@ public abstract class JmolSymmetryScriptGenerator {
 			for (Rotation r: uniqueRotations) {
 				AxisAngle4d axisAngleJ = r.getAxisAngle();
 			    Vector3d axisJ = new Vector3d(axisAngleJ.x, axisAngleJ.y, axisAngleJ.z);
-	//		    System.out.println("dot: " + axisI.dot(axisJ));
-			    if (Math.abs(axisI.dot(axisJ)) > 0.97) {
+			    if (Math.abs(axisI.dot(axisJ)) > 0.99) {
 			    	redundant = true;
 			    	break;
 			    }
@@ -704,95 +899,6 @@ public abstract class JmolSymmetryScriptGenerator {
     	}
         return uniqueRotations;
     }
-
-//	public String drawSymmetrySymbolOld(int index) {	
-//		String color = "red";
-//
-////		Matrix3d m = polyhedron.getViewMatrix(index);
-//		Matrix3d m1 = new Matrix3d();
-//		axisTransformation.getReverseTransformation().getRotationScale(m1);
-//		
-//		Point3d[] vertices = polyhedron.getVertices();	
-//		
-//		for (int i = 0; i < vertices.length; i++) {
-//			m1.transform(vertices[i]);
-//			System.out.println("vi: " + vertices[i]);
-//		}
-//		
-//		double zMax = Double.MIN_VALUE;
-//		Point3d center = null;
-//		for (Point3d v: vertices) {
-//			if (v.z > zMax) {
-//				zMax = v.z;
-//				center = v;
-//			}
-//		}
-//
-//		int n = rotationGroup.getRotation(0).getFold();
-//
-//		StringBuilder s = new StringBuilder();
-//		s.append("draw symmetrySymbol");
-//		s.append(" ");
-//		s.append("polygon");
-//		s.append(" ");
-//		s.append(n+1); 
-//		s.append(" ");
-//
-//		s.append("{");
-//		s.append(jMolFloat(center.x));
-//		s.append(" ");
-//		s.append(jMolFloat(center.y));
-//		s.append(" ");
-//		s.append(jMolFloat(center.z));
-//		s.append("}");
-//		
-//		Vector3d axis = new Vector3d();
-//		axis.sub(center, axisTransformation.calcGeometricCenter());
-//
-//
-//		Point3d[] pVertices = SymmetrySymbol.getPolygon(n, axis, center, vertices);
-//		// create vertex list
-//		for (Point3d v: pVertices) {
-//			s.append("{");
-//			s.append(jMolFloat(v.x));
-//			s.append(" ");
-//			s.append(jMolFloat(v.y));
-//			s.append(" ");
-//			s.append(jMolFloat(v.z));
-//			s.append("}");
-//		}
-//
-//		// create face list
-//		s.append(" ");
-//		s.append(pVertices.length);
-//		s.append(" ");
-//
-//		for (int i = 1; i <= pVertices.length; i++) {
-//			s.append("[");
-//			s.append(0);
-//			s.append(" ");
-//			s.append(i);
-//			s.append(" ");
-//			if (i < n) {
-//				s.append(i+1);
-//			} else {
-//				s.append(1);
-//			}
-//			s.append(" ");
-//			s.append(7);
-//			s.append("]");
-//		}
-//
-//		s.append(" mesh");
-//		//	s.append(" color translucent ");
-//		s.append(" color ");
-//		s.append(color);
-//		s.append(";");
-//
-//		return s.toString();
-//	}
-	
-	
 	
 	private String drawHeader(String text, String color) {
 		StringBuilder s = new StringBuilder();
@@ -826,8 +932,8 @@ public abstract class JmolSymmetryScriptGenerator {
 	
 	private String setCentroid() {
 		// calculate center of rotation
-		Point3d centroid = axisTransformation.calcGeometricCenter();
-//		Point3d centroid = axisTransformation.getCentroid();
+	//	Point3d centroid = axisTransformation.getGeometricCenter();
+		Point3d centroid = axisTransformation.getCentroid();
 			
 		// set centroid
 		StringBuilder s = new StringBuilder();

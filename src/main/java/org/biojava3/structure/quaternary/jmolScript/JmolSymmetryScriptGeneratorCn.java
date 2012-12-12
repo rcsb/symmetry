@@ -4,7 +4,6 @@
 package org.biojava3.structure.quaternary.jmolScript;
 
 import org.biojava3.structure.quaternary.core.AxisTransformation;
-import org.biojava3.structure.quaternary.core.RotationGroup;
 import org.biojava3.structure.quaternary.geometry.Prism;
 import org.biojava3.structure.quaternary.geometry.RectangularPrism;
 
@@ -15,20 +14,30 @@ import org.biojava3.structure.quaternary.geometry.RectangularPrism;
  */
 public class JmolSymmetryScriptGeneratorCn extends JmolSymmetryScriptGenerator {
 
-	public JmolSymmetryScriptGeneratorCn(AxisTransformation axisTransformation, RotationGroup rotationGroup) {
-		super(axisTransformation, rotationGroup);
-		if (rotationGroup.getPointGroup().equals("C2")) {
-			polyhedron = new RectangularPrism(axisTransformation.getDimension().z*2, axisTransformation.getDimension().x*2, axisTransformation.getDimension().y*2);
+	public JmolSymmetryScriptGeneratorCn(AxisTransformation axisTransformation) {
+		super(axisTransformation);
+		if (axisTransformation.getRotationGroup().getPointGroup().equals("C2")) {
+			setPolyhedron(new RectangularPrism(axisTransformation.getDimension().z*2, axisTransformation.getDimension().x*2, axisTransformation.getDimension().y*2));
 		} else {
-			Prism p = new Prism(rotationGroup.getRotation(0).getFold());
+			Prism p = new Prism(axisTransformation.getRotationGroup().getRotation(0).getFold());
 			p.setHeight(axisTransformation.getDimension().z*2);
 			p.setInscribedRadius(axisTransformation.getXYRadius());
-			polyhedron = p;
+			setPolyhedron(p);
 		}
 	}
 	
-	public int getDefaultZoom() {
-		return 80;
+	public int getZoom() {
+		// find maximum extension of structure
+		double maxExtension = getMaxExtension();
+		// find maximum extension of polyhedron
+		AxisTransformation at = getAxisTransformation();
+		double polyhedronExtension = Math.max(getPolyhedron().getCirumscribedRadius(), at.getDimension().z);
+		
+		int zoom = Math.round((float)(maxExtension/polyhedronExtension * 110));
+		if (zoom > 100) {
+			zoom = 100;
+		}
+		return zoom;
 	}
 	
 }

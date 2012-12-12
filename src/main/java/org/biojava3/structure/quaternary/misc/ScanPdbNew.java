@@ -236,8 +236,8 @@ public class ScanPdbNew implements Runnable {
 				float rz = (float) at.getDimension().z;
 				int bin2 = Math.round(rz)/2 + 1000*(Math.round(ry)/2) + 1000000*(Math.round(rx)/2);
 				Matrix4d matrix = at.getTransformation();
-				JmolSymmetryScriptGenerator g = JmolSymmetryScriptGenerator.getInstance(at, rotationGroup);
-                String jmolTransform = g.setOrientation(0);
+				JmolSymmetryScriptGenerator g = JmolSymmetryScriptGenerator.getInstance(at);
+                String jmolTransform = g.getOrientation(0);
 				String jmolAxes = "";
 				
 				// determine overall symmetry

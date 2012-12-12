@@ -558,7 +558,12 @@ public class AxisTransformation {
 	 * 
 	 */
 	private Vector3d getReferenceAxisDihedral() {
+		System.out.println("getReferenceAxisDihedral");
 		int maxFold = rotationGroup.getRotation(0).getFold();
+		// one exception: D2
+		if (maxFold == 2) {
+			maxFold = 3;
+		}
     	// TODO how about D2, where minor axis = 2 = principal axis??
 		for (int i = 0; i < rotationGroup.getOrder(); i++) {
 			if (rotationGroup.getRotation(i).getDirection() == 1 && rotationGroup.getRotation(i).getFold() < maxFold) {

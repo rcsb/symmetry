@@ -558,7 +558,6 @@ public class AxisTransformation {
 	 * 
 	 */
 	private Vector3d getReferenceAxisDihedral() {
-		System.out.println("getReferenceAxisDihedral");
 		int maxFold = rotationGroup.getRotation(0).getFold();
 		// one exception: D2
 		if (maxFold == 2) {

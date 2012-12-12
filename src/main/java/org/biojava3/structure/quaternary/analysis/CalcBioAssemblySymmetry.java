@@ -36,7 +36,7 @@ public class CalcBioAssemblySymmetry {
 	Structure bioAssembly;
 	QuatSymmetryParameters params = new QuatSymmetryParameters();
 	
-	FindQuarternarySymmetry finder ;
+	FindQuarternarySymmetry finder;
 	RotationGroup rotationGroup;
 	AxisTransformation axisTransformation;
 	private JmolSymmetryScriptGenerator scriptGenerator;
@@ -68,7 +68,7 @@ public class CalcBioAssemblySymmetry {
 			axisTransformation = new AxisTransformation(finder.getSubunits(), rotationGroup);
 
 			// use factory method to get point group specific instance of script generator
-			scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation, rotationGroup);
+			scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation);
 			hasProtein = true;
 		}
 		return hasProtein;

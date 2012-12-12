@@ -80,12 +80,13 @@ public class Tetrahedron implements Polyhedron {
 	 * @return
 	 */ 
 	public  Point3d[] getVertices() {
-		double a = circumscribedRadius/Math.sqrt(2);
-	    Point3d[] tetrahedron = new Point3d[4];
-		tetrahedron[0] = new Point3d(-circumscribedRadius, 0, -a);
-		tetrahedron[1] = new Point3d( circumscribedRadius, 0, -a);
-		tetrahedron[2] = new Point3d(0, -circumscribedRadius, a);
-		tetrahedron[3] = new Point3d(0,  circumscribedRadius, a);
+		double x = getSideLengthFromCircumscribedRadius(circumscribedRadius)/2;
+		double z = x/Math.sqrt(2);
+		Point3d[] tetrahedron = new Point3d[4];
+		tetrahedron[0] = new Point3d(-x,  0, -z);
+		tetrahedron[1] = new Point3d( x,  0, -z);
+		tetrahedron[2] = new Point3d( 0, -x,  z);
+		tetrahedron[3] = new Point3d( 0,  x,  z);
 		Point3d centroid = SuperPosition.centroid(tetrahedron);
 		
 		// rotate tetrahedron to align one vertex with the +z axis

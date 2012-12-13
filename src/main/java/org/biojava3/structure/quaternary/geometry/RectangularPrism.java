@@ -52,13 +52,12 @@ public class RectangularPrism implements Polyhedron {
 	}
 	
 	/**
-	 * Returns the radius of a circumscribed sphere, that goes
-	 * through all vertices
+	 * Returns the radius of a circumscribed sphere (length of diagonal of
+	 * rectangular prism/2, that goes through at least four vertices
 	 * @return the cirumscribedRadius
 	 */
 	public double getCirumscribedRadius() {
-		// TODO need to implement
-		return 0;
+		return 0.5* Math.sqrt(width*width + height*height + length*length);
 	}
 
 	/**
@@ -69,15 +68,18 @@ public class RectangularPrism implements Polyhedron {
 	 * @return
 	 */ 
 	public Point3d[] getVertices() {
+		double x = 0.5 * width;
+		double y = 0.5 * height;
+		double z = 0.5 * length;
 		Point3d[] vertices = new Point3d[8];
-	    vertices[0] = new Point3d(-width/2, -height/2, length/2);
-	    vertices[1] = new Point3d(-width/2, height/2, length/2);
-	    vertices[2] = new Point3d(width/2, height/2, length/2);
-	    vertices[3] = new Point3d(width/2, -height/2, length/2);
-	    vertices[4] = new Point3d(-width/2, -height/2, -length/2);
-	    vertices[5] = new Point3d(-width/2, height/2, -length/2);
-	    vertices[6] = new Point3d(width/2, height/2, -length/2);
-	    vertices[7] = new Point3d(width/2, -height/2, -length/2);
+	    vertices[0] = new Point3d(-x, -y,  z);
+	    vertices[1] = new Point3d(-x,  y,  z);
+	    vertices[2] = new Point3d( x,  y,  z);
+	    vertices[3] = new Point3d( x, -y,  z);
+	    vertices[4] = new Point3d(-x, -y, -z);
+	    vertices[5] = new Point3d(-x,  y, -z);
+	    vertices[6] = new Point3d( x,  y, -z);
+	    vertices[7] = new Point3d( x, -y, -z);
 
 		return vertices;
 	};

@@ -280,7 +280,7 @@ public abstract class JmolSymmetryScriptGenerator {
 	    Subunits subunits = axisTransformation.getSubunits();
 	    List<Integer> modelNumbers = subunits.getModelNumbers();
 	    List<String> chainIds = subunits.getChainIds();
-	    List<List<Integer>> orbits = axisTransformation.getOrbits();
+	    List<List<Integer>> orbits = axisTransformation.getOrbitsByZDepth();
 		int fold = rotationGroup.getRotation(0).getFold();
 
 	    Color4f[] colors = ColorBrewer.Spectral.getColor4fPalette(2*fold);
@@ -347,7 +347,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		Subunits subunits = axisTransformation.getSubunits();
 		List<Integer> modelNumbers = subunits.getModelNumbers();
 		List<String> chainIds = subunits.getChainIds();
-		List<List<Integer>> orbits = axisTransformation.getOrbits();
+		List<List<Integer>> orbits = axisTransformation.getOrbitsByZDepth();
 
 		int n = subunits.getSubunitCount();
 		int fold = rotationGroup.getRotation(0).getFold();
@@ -422,6 +422,15 @@ public abstract class JmolSymmetryScriptGenerator {
 		double maxExtension = Math.max(dimension.x, dimension.y);
 		maxExtension = Math.max(maxExtension, dimension.z);
 		return maxExtension;
+	}
+	
+	/**
+	 * Returns the mean extension (length) of structure
+	 * @return
+	 */
+	protected double getMeanExtension() {
+		Vector3d dimension = axisTransformation.getDimension();
+		return (dimension.x+dimension.y+dimension.z)/3;
 	}
 	
 	/**
@@ -693,7 +702,8 @@ public abstract class JmolSymmetryScriptGenerator {
 
 		if (drawPolygon == true) {
 		
-			double polygonRadius = getMaxExtension() * 0.06;
+//			double polygonRadius = getMaxExtension() * 0.06;
+			double polygonRadius = getMeanExtension() * 0.06;
 			if (n == 2) {
 				referenceAxis = getAligmentVector(p1, axis);
 				s.append(getC2PolygonJmol(i, p1, referenceAxis, axis, n, color, polygonRadius));
@@ -789,7 +799,9 @@ public abstract class JmolSymmetryScriptGenerator {
 		for (Vector3d v: vertexes) {
 			s.append(getJmolPoint(v));
 		}
-		
+		 
+		// there are two vertices less, since the first and last vertex of
+		// the two arcs are identical
 		n -= 2;
 
 		// create face list
@@ -811,10 +823,7 @@ public abstract class JmolSymmetryScriptGenerator {
 			s.append("]");
 		}
 
-		if (n == 2) {
-	      	s.append("mesh off");
-		}
-		s.append(" color ");
+		s.append("color ");
 		s.append(color);
 		s.append(" off;");
 
@@ -864,7 +873,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		// in reverse order, draw reflected half of arc (1/6 of full circle)
 		// don't draw first and last element, since the are already part of the previous arc
 		for (int i = k; i < 2*k-2; i++) {
-			axisAngle.angle = (f/2*k + i + 0.5) * 2 * Math.PI/(f*k);
+			axisAngle.angle = (f/2*k + i + 1.5) * 2 * Math.PI/(f*k);
 			vectors[i] = new Vector3d(ref);		
 			m.set(axisAngle);
 			m.transform(vectors[i]);

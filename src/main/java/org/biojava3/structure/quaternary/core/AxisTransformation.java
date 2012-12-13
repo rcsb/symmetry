@@ -99,6 +99,50 @@ public class AxisTransformation {
 		return xyRadiusMax;
 	}
 
+	/**
+	 * Returns a transformation matrix transform polyhedra for Cn structures.
+	 * The center in this matrix is the geometric center, rather then the centroid.
+	 * In Cn structures those are usually not the same.
+	 * @return
+	 */
+	public Matrix4d getGeometicCenterTransformation() {
+		run();
+	
+	    Matrix4d geometricCentered = new Matrix4d(reverseTransformationMatrix);
+	    geometricCentered.setTranslation(new Vector3d(getGeometricCenter()));
+	
+		return geometricCentered;
+	}
+
+	/**
+	 * Returns the geometric center of polyhedron. In the case of the Cn 
+	 * point group, the centroid and geometric center are usually not
+	 * identical.
+	 * @return
+	 */
+	public Point3d getGeometricCenter() {
+		run();
+		
+		Point3d geometricCenter = new Point3d();
+		Vector3d translation = new Vector3d();
+		reverseTransformationMatrix.get(translation);
+		
+		// calculate adjustment around z-axis and transform adjustment to
+		//  original coordinate frame with the reverse transformation
+		if (rotationGroup.getPointGroup().startsWith("C")) {
+			Vector3d corr = new Vector3d(0,0, minBoundary.z+getDimension().z);
+			reverseTransformationMatrix.transform(corr);
+			geometricCenter.set(corr);
+		}
+		
+		geometricCenter.add(translation);
+		return geometricCenter;
+	}
+
+	public Point3d getCentroid() {
+		return new Point3d(subunits.getCentroid());
+	}
+
 	public Subunits getSubunits() {
 		return subunits;
 	}
@@ -107,6 +151,38 @@ public class AxisTransformation {
 		return rotationGroup;
 	}
 	
+	/**
+		 * 
+		 */
+		public List<List<Integer>> getOrbitsByZDepth() {
+			Map<Double, List<Integer>> depthMap = new TreeMap<Double, List<Integer>>();
+			double[] depth = getSubunitZDepth();
+			List<List<Integer>> orbits = calcOrbits();
+	
+			// calculate the mean depth of orbit along z-axis
+			for (List<Integer> orbit: orbits) {
+				// calculate the mean depth along z-axis for each orbit
+				double meanDepth = 0;
+				for (int subunit: orbit) {
+					meanDepth += depth[subunit];
+				}
+			    meanDepth /= orbit.size();
+			    
+			    if (depthMap.get(meanDepth) != null) {
+	//		    	System.out.println("Conflict in depthMap");
+			    	meanDepth += 0.01;
+			    }
+			    depthMap.put(meanDepth, orbit);
+			}
+			
+			// now fill orbits back into list ordered by depth
+			orbits.clear();
+			for (List<Integer> orbit: depthMap.values()) {
+				orbits.add(orbit);
+			}
+			return orbits;
+		}
+
 	private void run () {
 		if (modified) {
 			calcPrincipalRotationVector();
@@ -139,6 +215,10 @@ public class AxisTransformation {
 		} else {
 			transformationMatrix = getTransformationBySymmetryAxes();
 		}
+	}
+
+	private void calcReverseTransformation() {
+		reverseTransformationMatrix.invert(transformationMatrix);
 	}
 
 	private Matrix4d getTransformationBySymmetryAxes() {
@@ -189,6 +269,43 @@ public class AxisTransformation {
 //		return matrix;
 //	}
 	
+	private Matrix4d getTransformationByInertiaAxes() {
+		Point3d[] refPoints = new Point3d[2];
+		refPoints[0] = new Point3d(principalAxesOfInertia[0]);
+		refPoints[1] = new Point3d(principalAxesOfInertia[1]);
+	
+		Point3d[] coordPoints = new Point3d[2];
+		coordPoints[0] = new Point3d(Y_AXIS);
+		coordPoints[1] = new Point3d(X_AXIS);
+		
+		// align inertia axis with y-x axis
+		Matrix4d matrix = alignAxes(refPoints, coordPoints);
+		if (SuperPosition.rmsd(refPoints, coordPoints) > 0.01) {
+			System.out.println("Warning: aligment with coordinate system is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
+		}
+		
+		// combine with translation
+		Matrix4d translation = new Matrix4d();
+		translation.setIdentity();
+		Vector3d trans = new Vector3d(subunits.getCentroid());
+		trans.negate();
+		translation.setTranslation(trans);
+		matrix.mul(translation);
+		
+		return matrix;
+	}
+
+	private void calcPrincipalAxes() {
+		MomentsOfInertia moi = new MomentsOfInertia();
+	
+		for (Point3d[] list: subunits.getTraces()) {
+			for (Point3d p: list) {
+				moi.addPoint(p, 1.0);
+			}
+		}
+		principalAxesOfInertia = moi.getPrincipalAxes();
+	}
+
 	private Matrix4d alignAxes(Point3d[] refPoints, Point3d[] coordPoints) {
 		Vector3d v1 = new Vector3d(refPoints[0]);
 		Vector3d v2 = new Vector3d(coordPoints[0]);
@@ -220,55 +337,6 @@ public class AxisTransformation {
 		return m2;
 	}
 
-	private void calcReverseTransformation() {
-		reverseTransformationMatrix.invert(transformationMatrix);
-	}
-
-
-	/**
-	 * Returns a transformation matrix transform polyhedra for Cn structures.
-	 * The center in this matrix is the geometric center, rather then the centroid.
-	 * In Cn structures those are usually not the same.
-	 * @return
-	 */
-	public Matrix4d getGeometicCenterTransformation() {
-		run();
-
-	    Matrix4d geometricCentered = new Matrix4d(reverseTransformationMatrix);
-	    geometricCentered.setTranslation(new Vector3d(getGeometricCenter()));
-
-		return geometricCentered;
-	}
-
-	/**
-	 * Returns the geometric center of polyhedron. In the case of the Cn 
-	 * point group, the centroid and geometric center are usually not
-	 * identical.
-	 * @return
-	 */
-	public Point3d getGeometricCenter() {
-		run();
-		
-		Point3d geometricCenter = new Point3d();
-		Vector3d translation = new Vector3d();
-		reverseTransformationMatrix.get(translation);
-		
-		// calculate adjustment around z-axis and transform adjustment to
-		//  original coordinate frame with the reverse transformation
-		if (rotationGroup.getPointGroup().startsWith("C")) {
-			Vector3d corr = new Vector3d(0,0, minBoundary.z+getDimension().z);
-			reverseTransformationMatrix.transform(corr);
-			geometricCenter.set(corr);
-		}
-		
-		geometricCenter.add(translation);
-		return geometricCenter;
-	}
-	
-	public Point3d getCentroid() {
-		return new Point3d(subunits.getCentroid());
-	}
-	
 	/**
 	 * Calculates the min and max boundaries of the structure after it has been
 	 * transformed into its canonical orientation.
@@ -305,42 +373,28 @@ public class AxisTransformation {
 //		System.out.println("Max: " + maxBoundary);
 	}
 	
-	/**
-	 * 
+	/*
+	 * Modifies the rotation part of the transformation axis for
+	 * a Cn symmetric complex, so that the narrower end faces the
+	 * viewer, and the wider end faces away from the viewer. Example: 3LSV
 	 */
-	public List<List<Integer>> getOrbitsByZDepth() {
-		Map<Double, List<Integer>> depthMap = new TreeMap<Double, List<Integer>>();
-		double[] depth = getSubunitZDepth();
-		List<List<Integer>> orbits = calcOrbits();
-
-		// calculate the mean depth of orbit along z-axis
-		for (List<Integer> orbit: orbits) {
-			// calculate the mean depth along z-axis for each orbit
-			double meanDepth = 0;
-			for (int subunit: orbit) {
-				meanDepth += depth[subunit];
-			}
-		    meanDepth /= orbit.size();
-		    
-		    if (depthMap.get(meanDepth) != null) {
-//		    	System.out.println("Conflict in depthMap");
-		    	meanDepth += 0.01;
-		    }
-		    depthMap.put(meanDepth, orbit);
-		}
-		
-		// now fill orbits back into list ordered by depth
-		orbits.clear();
-		for (List<Integer> orbit: depthMap.values()) {
-			orbits.add(orbit);
-		}
-		return orbits;
-	}
+	private void calcZDirection(Matrix4d matrix) {
+		calcBoundaries();
 	
+		// if the longer part of the structure faces towards the back (-z direction),
+		// rotate around y-axis so the longer part faces the viewer (+z direction)
+		if (Math.abs(minBoundary.z) > Math.abs(maxBoundary.z)) {
+			Matrix4d rot = new Matrix4d();
+			rot.rotY(-Math.PI);
+			rot.mul(matrix);
+			matrix.set(rot);
+		}
+	}
+
 	/**
 	 * 
 	 */
-	public List<List<Integer>> getOrbitsByXYWidth() {
+	private List<List<Integer>> getOrbitsByXYWidth() {
 		Map<Double, List<Integer>> widthMap = new TreeMap<Double, List<Integer>>();
 		double[] width = getSubunitXYWidth();
 		List<List<Integer>> orbits = calcOrbits();
@@ -368,27 +422,11 @@ public class AxisTransformation {
 		return orbits;
 	}
 	
-	private double[] getSubunitZDepth() {	
-		int n = subunits.getSubunitCount();
-        double[] depth = new double[n];        
-		Point3d probe = new Point3d();
-
-		// transform subunit centers into z-aligned position and calculate
-		// z-coordinates (depth) along the z-axis.
-		for (int i = 0; i < n; i++) {
-			Point3d p= subunits.getCenters().get(i);
-			probe.set(p);
-			transformationMatrix.transform(probe);
-			depth[i] = probe.z;
-		}
-		return depth;
-	}
-	
 	private double[] getSubunitXYWidth() {	
 		int n = subunits.getSubunitCount();
-        double[] width = new double[n];        
+	    double[] width = new double[n];        
 		Point3d probe = new Point3d();
-
+	
 		// transform subunit centers into z-aligned position and calculate
 		// width in xy direction.
 		for (int i = 0; i < n; i++) {
@@ -401,33 +439,23 @@ public class AxisTransformation {
 		}
 		return width;
 	}
-	
-	private Vector3d getSubunitReferenceVector() {	
-		int n = subunits.getSubunitCount();    
-		Point3d probe = new Point3d();
 
-		// transform subunit centers into z-aligned position and calculate
-		// width in xy direction.
-		double maxWidthSq = 0;
-		Point3d ref = null;
-		for (int i = 0; i < n; i++) {
-			for (Point3d p: subunits.getTraces().get(i)) {
-				probe.set(p);
-				transformationMatrix.transform(probe);
-				double widthSq = probe.x*probe.x + probe.y*probe.y;
-				if (widthSq > maxWidthSq) {
-					maxWidthSq = widthSq;
-					ref = p;
-				}
-			}
-		}
-//		System.out.println("width: " + maxWidthSq);
-		Vector3d refVector = new Vector3d();
-		refVector.sub(ref, subunits.getCentroid());
-		refVector.normalize();
-		return refVector;
-	}
+	private double[] getSubunitZDepth() {	
+		int n = subunits.getSubunitCount();
+	    double[] depth = new double[n];        
+		Point3d probe = new Point3d();
 	
+		// transform subunit centers into z-aligned position and calculate
+		// z-coordinates (depth) along the z-axis.
+		for (int i = 0; i < n; i++) {
+			Point3d p= subunits.getCenters().get(i);
+			probe.set(p);
+			transformationMatrix.transform(probe);
+			depth[i] = probe.z;
+		}
+		return depth;
+	}
+
 	/**
 	 * Returns a list of list of subunit ids that form an "orbit", i.e. they
 	 * are transformed into each other during a rotation around the principal symmetry axis (z-axis)
@@ -501,24 +529,6 @@ public class AxisTransformation {
 		return inRotationOrder;
 	}
 	
-	/*
-	 * Modifies the rotation part of the transformation axis for
-	 * a Cn symmetric complex, so that the narrower end faces the
-	 * viewer, and the wider end faces away from the viewer. Example: 3LSV
-	 */
-	private void calcZDirection(Matrix4d matrix) {
-		calcBoundaries();
-
-		// if the longer part of the structure faces towards the back (-z direction),
-		// rotate around y-axis so the longer part faces the viewer (+z direction)
-		if (Math.abs(minBoundary.z) > Math.abs(maxBoundary.z)) {
-			Matrix4d rot = new Matrix4d();
-			rot.rotY(-Math.PI);
-			rot.mul(matrix);
-			matrix.set(rot);
-		}
-	}
-
 	/**
 	 * Returns a vector along the principal rotation axis for the
 	 * alignment of structures along the z-axis
@@ -549,7 +559,7 @@ public class AxisTransformation {
 			referenceVector = getReferenceAxisIcosahedral();		
 		} 
 		
-		// make sure reference axis is perpendicular
+		// make sure reference vector is perpendicular principal roation vector
 		referenceVector.cross(principalRotationVector, referenceVector);
 		referenceVector.cross(referenceVector, principalRotationVector); 
 	}
@@ -679,12 +689,6 @@ public class AxisTransformation {
 				AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
 				Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 				v.normalize();
-				// for consistency with the other getReferenceAxis... method, use positive dot product
-				// to provide uniform directionality
-				if (v.dot(principalRotationVector) < 0) {
-					continue;
-				}
-//				System.out.println("Minor rotation axis: " + rotationGroup.getRotation(i).getFold());
 				return v;
 			}
 		}
@@ -736,41 +740,30 @@ public class AxisTransformation {
 		return null;
 	}
 
-	private void calcPrincipalAxes() {
-		MomentsOfInertia moi = new MomentsOfInertia();
-
-		for (Point3d[] list: subunits.getTraces()) {
-			for (Point3d p: list) {
-				moi.addPoint(p, 1.0);
+	private Vector3d getSubunitReferenceVector() {	
+			int n = subunits.getSubunitCount();    
+			Point3d probe = new Point3d();
+	
+			// transform subunit centers into z-aligned position and calculate
+			// width in xy direction.
+			double maxWidthSq = 0;
+			Point3d ref = null;
+			for (int i = 0; i < n; i++) {
+				for (Point3d p: subunits.getTraces().get(i)) {
+					probe.set(p);
+					transformationMatrix.transform(probe);
+					double widthSq = probe.x*probe.x + probe.y*probe.y;
+					if (widthSq > maxWidthSq) {
+						maxWidthSq = widthSq;
+						ref = p;
+					}
+				}
 			}
+	//		System.out.println("width: " + maxWidthSq);
+			Vector3d refVector = new Vector3d();
+			refVector.sub(ref, subunits.getCentroid());
+			refVector.normalize();
+			return refVector;
 		}
-		principalAxesOfInertia = moi.getPrincipalAxes();
-	}
-
-	private Matrix4d getTransformationByInertiaAxes() {
-		Point3d[] refPoints = new Point3d[2];
-		refPoints[0] = new Point3d(principalAxesOfInertia[0]);
-		refPoints[1] = new Point3d(principalAxesOfInertia[1]);
-
-		Point3d[] coordPoints = new Point3d[2];
-		coordPoints[0] = new Point3d(Y_AXIS);
-		coordPoints[1] = new Point3d(X_AXIS);
-		
-		// align inertia axis with y-x axis
-		Matrix4d matrix = alignAxes(refPoints, coordPoints);
-		if (SuperPosition.rmsd(refPoints, coordPoints) > 0.01) {
-			System.out.println("Warning: aligment with coordinate system is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
-		}
-		
-		// combine with translation
-		Matrix4d translation = new Matrix4d();
-		translation.setIdentity();
-		Vector3d trans = new Vector3d(subunits.getCentroid());
-		trans.negate();
-		translation.setTranslation(trans);
-		matrix.mul(translation);
-		
-		return matrix;
-	}
 
 }

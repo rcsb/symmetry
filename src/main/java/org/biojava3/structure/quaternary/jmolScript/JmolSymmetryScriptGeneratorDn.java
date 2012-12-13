@@ -5,7 +5,6 @@ package org.biojava3.structure.quaternary.jmolScript;
 
 import org.biojava3.structure.quaternary.core.AxisTransformation;
 import org.biojava3.structure.quaternary.geometry.Prism;
-import org.biojava3.structure.quaternary.geometry.RectangularPrism;
 
 
 /**
@@ -16,14 +15,18 @@ public class JmolSymmetryScriptGeneratorDn extends JmolSymmetryScriptGenerator {
 
 	public JmolSymmetryScriptGeneratorDn(AxisTransformation axisTransformation) {
 		super(axisTransformation);
+		int fold = axisTransformation.getRotationGroup().getRotation(0).getFold();
+		
+		// special case for D2. Since there is no 2-fold prism, draw a 4-fold
+		// prism that encases the D2 structure
 		if (axisTransformation.getRotationGroup().getPointGroup().equals("D2")) {
-			setPolyhedron(new RectangularPrism(axisTransformation.getDimension().z*2, axisTransformation.getDimension().x*2, axisTransformation.getDimension().y*2));
-		} else {
-			Prism p = new Prism(axisTransformation.getRotationGroup().getRotation(0).getFold());
-			p.setHeight(axisTransformation.getDimension().z*2);
-			p.setInscribedRadius(axisTransformation.getXYRadius());
-			setPolyhedron(p);
+			fold = 4;
 		}
+		
+		Prism p = new Prism(fold);
+		p.setHeight(axisTransformation.getDimension().z*2);
+		p.setInscribedRadius(axisTransformation.getXYRadius());
+		setPolyhedron(p);
 	}
 	
 	public int getZoom() {

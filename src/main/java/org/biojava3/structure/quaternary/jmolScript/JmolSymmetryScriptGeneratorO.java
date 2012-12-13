@@ -26,6 +26,7 @@ public class JmolSymmetryScriptGeneratorO extends JmolSymmetryScriptGenerator {
 		double maxExtension = getMaxExtension();
 		// find maximum extension of polyhedron
 		double polyhedronExtension = getPolyhedron().getCirumscribedRadius();
+		
 		int zoom = Math.round((float)(maxExtension/polyhedronExtension * 110));
 		if (zoom > 100) {
 			zoom = 100;

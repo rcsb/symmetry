@@ -532,8 +532,8 @@ public abstract class JmolSymmetryScriptGenerator {
 		String pointGroup = rotationGroup.getPointGroup();
 		Color4f[] colors = null;
 		if (pointGroup.equals("C1")) {
-			offset = 1;
-			dMax = nColors + offset;
+	//		offset = 1;
+	//		dMax = nColors + offset;
 			colors = ColorBrewer.Greys.getColor4fPalette(dMax);
 		} else if (pointGroup.startsWith("C")) {
 			colors = ColorBrewer.YlGnBu.getColor4fPalette(dMax);		
@@ -553,7 +553,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		
 	}
 	
-	public String drawInertiaAxes() {
+	private String drawInertiaAxes() {
 		StringBuilder s = new StringBuilder();
 		Point3d centroid = axisTransformation.getGeometricCenter();
 		Vector3d[] axes = axisTransformation.getPrincipalAxesOfInertia();
@@ -620,6 +620,7 @@ public abstract class JmolSymmetryScriptGenerator {
 			AxisAngle4d axisAngle = r.getAxisAngle();
 			Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 			Vector3d refAxis = axisTransformation.getRotationReferenceAxis();
+			
 //			System.out.println("Unique axes: " + axis + " n: " + r.getFold());
 			s.append(getSymmetryAxis(i, i+axes.size(), rotationGroup.getPointGroup(), r.getFold(), refAxis, radius, diameter, color, center, axis));
 	        i++;
@@ -763,7 +764,6 @@ public abstract class JmolSymmetryScriptGenerator {
 
 		return s.toString();
 	}
-	
 	
 	private static Vector3d[] getPolygonVertices(Vector3d axis, Vector3d referenceAxis, Point3d center, int n, double radius) {
 		Vector3d ref = new Vector3d(referenceAxis);

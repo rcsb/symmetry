@@ -152,7 +152,7 @@ public class RotationGroup {
 
     /**
      * Add E operation to the highest order rotation axis. By definition
-     * E belongs to the highest order axis (see Papula p ??).
+     * E belongs to the highest order axis.
      */
     private void setEAxis() {
         Rotation e = rotations.get(0);

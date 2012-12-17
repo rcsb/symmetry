@@ -1,6 +1,7 @@
 package org.biojava3.structure.quaternary.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +11,9 @@ import java.util.TreeMap;
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
+import javax.vecmath.Point2i;
 import javax.vecmath.Point3d;
+import javax.vecmath.Tuple2i;
 import javax.vecmath.Vector3d;
 
 import org.biojava3.structure.quaternary.geometry.MomentsOfInertia;
@@ -152,36 +155,83 @@ public class AxisTransformation {
 	}
 	
 	/**
-		 * 
-		 */
-		public List<List<Integer>> getOrbitsByZDepth() {
-			Map<Double, List<Integer>> depthMap = new TreeMap<Double, List<Integer>>();
-			double[] depth = getSubunitZDepth();
-			List<List<Integer>> orbits = calcOrbits();
-	
-			// calculate the mean depth of orbit along z-axis
-			for (List<Integer> orbit: orbits) {
-				// calculate the mean depth along z-axis for each orbit
-				double meanDepth = 0;
-				for (int subunit: orbit) {
-					meanDepth += depth[subunit];
-				}
-			    meanDepth /= orbit.size();
-			    
-			    if (depthMap.get(meanDepth) != null) {
-	//		    	System.out.println("Conflict in depthMap");
-			    	meanDepth += 0.01;
-			    }
-			    depthMap.put(meanDepth, orbit);
+	 * 
+	 */
+	public List<List<Integer>> getOrbitsByZDepth() {
+		Map<Double, List<Integer>> depthMap = new TreeMap<Double, List<Integer>>();
+		double[] depth = getSubunitZDepth();
+		List<List<Integer>> orbits = calcOrbits();
+
+		// calculate the mean depth of orbit along z-axis
+		for (List<Integer> orbit: orbits) {
+			// calculate the mean depth along z-axis for each orbit
+			double meanDepth = 0;
+			for (int subunit: orbit) {
+				meanDepth += depth[subunit];
 			}
-			
-			// now fill orbits back into list ordered by depth
-			orbits.clear();
-			for (List<Integer> orbit: depthMap.values()) {
-				orbits.add(orbit);
+			meanDepth /= orbit.size();
+
+			if (depthMap.get(meanDepth) != null) {
+				//		    	System.out.println("Conflict in depthMap");
+				meanDepth += 0.01;
 			}
-			return orbits;
+			depthMap.put(meanDepth, orbit);
 		}
+
+		// now fill orbits back into list ordered by depth
+		orbits.clear();
+		for (List<Integer> orbit: depthMap.values()) {
+			orbits.add(orbit);
+		}
+		return orbits;
+	}
+	
+	public List<Integer> alignWithReferenceAxis(List<Integer> orbit) {
+		Point2i referenceSubunits = new Point2i();
+		int n = subunits.getSubunitCount();    
+		int fold = rotationGroup.getRotation(0).getFold();
+		Vector3d probe = new Vector3d();
+	
+		double dotMin1 = Double.MIN_VALUE;
+		double dotMin2 = Double.MIN_VALUE;
+		int index1 = 0;
+		int index2 = 0;
+		Vector3d Y1 = new Vector3d(0,1,0);
+		Vector3d Y2 = new Vector3d(0,1,0);
+		Matrix3d m = new Matrix3d();
+		m.rotZ(2*Math.PI/fold);
+		// transform subunit centers into z-aligned position and calculate
+		// width in xy direction.
+		for (int i: orbit) {
+			for (Point3d p: subunits.getTraces().get(i)) {
+		   	    probe.set(p);
+			    transformationMatrix.transform(probe);
+			    double dot1 = Y1.dot(probe);
+			    if (dot1 > dotMin1) {
+			    	dotMin1 = dot1;
+			    	index1 = i;
+			    }
+			    double dot2 = Y2.dot(probe);
+			    if (dot2 > dotMin2) {
+			    	dotMin2 = dot2;
+			    	index2 = i;
+			    }
+			}
+		}
+		for (int i = 0; i < n; i++) {
+			if (orbit.get(0) != index1) {
+				Collections.rotate(orbit,1);
+			} else {
+				break;
+			}
+		}
+//		if (orbit.get(1) == index2) {
+//			return orbit;
+//		} else {
+////			Collections.
+//		}
+		return orbit;
+	}
 
 	private void run () {
 		if (modified) {

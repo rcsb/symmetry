@@ -48,7 +48,7 @@ extends TestCase{
 
 	public void test1STP(){
 
-		String pdbId = "1STP";
+		String pdbId = "1stp";
 
 		int bioAssemblyNr = 1;
 
@@ -57,6 +57,7 @@ extends TestCase{
 
 	private void testLoaders(String pdbId, int bioAssemblyNr) {
 
+		pdbId = pdbId.toLowerCase();
 		try {
 			
 			Structure s1 = getStructureFromIO(pdbId,bioAssemblyNr);

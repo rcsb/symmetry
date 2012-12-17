@@ -281,6 +281,7 @@ public final class SphereSampler {
 		assert (ncell1 == ncell);
 //			System.out.println("not fine");
 			int nc = orientations.size();
+			System.out.println("nc: " + nc + " ncell " + ncell);
 			assert (nc == ncell);
 			for (int n = 1; n < 24; ++n) {
 				Quat4d q = new Quat4d(cubeSyms[n][0], cubeSyms[n][1],

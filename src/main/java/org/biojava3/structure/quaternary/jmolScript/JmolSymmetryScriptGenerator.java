@@ -356,13 +356,7 @@ public abstract class JmolSymmetryScriptGenerator {
 
 		// Simple Cn symmetry
 		if (pointGroup.startsWith("C") && n == fold) {
-			Color4f[] colors = getSymmetryColors(n);
-			for (int i = 0; i < n; i++) {
-				int subunit = orbits.get(0).get(i);
-				String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
-				List<String> ids = Collections.singletonList(id);
-				colorMap.put(colors[i], ids);
-			}
+			colorMap = getCnColorMap();
 			// complex cases
 		} else if ((pointGroup.startsWith("D") && orbits.size() > 2) || 
 				pointGroup.equals("T")|| pointGroup.equals("O") || pointGroup.equals("I")) {
@@ -410,6 +404,39 @@ public abstract class JmolSymmetryScriptGenerator {
 			}
 		}
 		return getJmolColorScript(colorMap);
+	}
+	
+	private Map<Color4f, List<String>> getCnColorMap() {
+		Subunits subunits = axisTransformation.getSubunits();
+		List<Integer> modelNumbers = subunits.getModelNumbers();
+		List<String> chainIds = subunits.getChainIds();
+		List<List<Integer>> orbits = axisTransformation.getOrbitsByZDepth();
+
+		int n = subunits.getSubunitCount();
+		int fold = rotationGroup.getRotation(0).getFold();
+
+		Map<Color4f, List<String>> colorMap = new HashMap<Color4f, List<String>>();
+
+
+		Color4f[] colors = getSymmetryColors(n);
+//		int refSubunit = axisTransformation.getReferenceSubunit();
+		List<Integer> orbit = orbits.get(0);
+		axisTransformation.alignWithReferenceAxis(orbit);
+//		for (int i = 0; i < n; i++) {
+//			if (orbit.get(0) != refSubunit) {
+//				Collections.rotate(orbit,1);
+//			} else {
+//				break;
+//			}
+//		}
+		for (int i = 0; i < n; i++) {
+			int subunit = orbits.get(0).get(i);
+			String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
+			List<String> ids = Collections.singletonList(id);
+			colorMap.put(colors[i], ids);
+		}
+
+		return colorMap;
 	}
 	
 	// --- protected methods ---

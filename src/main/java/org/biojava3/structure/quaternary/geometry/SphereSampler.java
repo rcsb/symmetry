@@ -270,7 +270,7 @@ public final class SphereSampler {
 			Permute p = new Permute(new Point3i(k[n], l[n], m[n]));
 //			System.out.println("Permutate = " + k[n] + "," + l[n] + "," + m[n]
 //					+ ": " + p.size());
-			assert (mult[n] == p.size());
+			//assert (mult[n] == p.size());
 			for (int i = 0; i < mult[n]; ++i) {
 				Point3i t = p.get(i);
 				orientations.add(new Quat4d(1.0, pind(0.5 * t.x, delta, sigma), pind(
@@ -278,11 +278,11 @@ public final class SphereSampler {
 			}
 			ncell1 += mult[n];
 		}
-		assert (ncell1 == ncell);
+		//assert (ncell1 == ncell);
 //			System.out.println("not fine");
 			int nc = orientations.size();
-			System.out.println("nc: " + nc + " ncell " + ncell);
-			assert (nc == ncell);
+//			System.out.println("nc: " + nc + " ncell " + ncell);
+//			assert (nc == ncell);
 			for (int n = 1; n < 24; ++n) {
 				Quat4d q = new Quat4d(cubeSyms[n][0], cubeSyms[n][1],
 						cubeSyms[n][2], cubeSyms[n][3]);
@@ -294,7 +294,7 @@ public final class SphereSampler {
 	//				s.add(times(q, s.getOrientation(i)), s.getWeight(i));
 				}
 			}
-			assert (orientations.size() == ntot);
+			//assert (orientations.size() == ntot);
 			// s.clear();
 		// for (int i = 0; i < s.size(); i++) {
 		// System.out.println(s.getOrientation(i) + ", " + s.getWeight(i));

@@ -30,6 +30,17 @@ public class OrientBiologicalAssembly {
 	public static void main(String[] args) {		
 		System.out.println("OrientBiologicalAssembly V " + CalcBioAssemblySymmetry.version + " : Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
 		System.out.println();
+		
+		// enforce the use of the version of vecmath that we bundle with this jar
+		try {
+			Class.forName("javax.vecmath.Point2i");
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+		
 		if (args.length < 2) {
 			System.out.println("Usage: OrientBiologicalAssembly pdbFile outputDirectory [-verbose]");
 			System.exit(-1);

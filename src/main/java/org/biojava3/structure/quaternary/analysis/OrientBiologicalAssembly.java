@@ -5,6 +5,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import javax.vecmath.Matrix4d;
+
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
@@ -81,61 +83,70 @@ public class OrientBiologicalAssembly {
 		QuatSymmetryParameters params = new QuatSymmetryParameters();
 		params.setSequenceIdentityThreshold(0.3);
 		params.setVerbose(verbose);
-		
+
 		System.out.println("Default parameters:");
 		System.out.println(params);
-		
-		
+
+
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
 		calc.setBioAssembly(structure);
 		calc.setParams(params);
-				
-		calc.orient();
-		
-		AxisTransformation at = calc.getAxisTransformation();
-		
+
 		String prefix = getBaseFileName();
 		String bioassemblyId = getBioassemblyId();
 		if (! bioassemblyId.isEmpty()) {
-		    prefix += "_" + bioassemblyId;
+			prefix += "_" + bioassemblyId;
 		}
-		
-		System.out.println("Bioassembly id: " + getBioassemblyId());
-		
-		String outName = prefix + "_4x4transformation.txt";
-		System.out.println("Writing 4x4 transformation to: " + outName);
-		writeFile(outName, at.getTransformation().toString());
-		
-		outName = prefix + "_JmolAnimation.txt";
-		System.out.println("Writing Jmol animation to: " + outName);
-		writeFile(outName, calc.getScriptGenerator().playOrientations());
 
-		System.out.println("Subunit count            : " + calc.getFinder().getChainCount());
-		System.out.println("Color by subunit         : " + calc.getScriptGenerator().colorBySubunit());
-		System.out.println("Color by subunit length  : " + calc.getScriptGenerator().colorBySubunit().length());
-		System.out.println("Color by sequence cluster: " + calc.getScriptGenerator().colorBySequenceCluster());
-		System.out.println("Color by seq. clst. len  : " + calc.getScriptGenerator().colorBySequenceCluster().length());
-		System.out.println("Color by symmetry        : " + calc.getScriptGenerator().colorBySymmetry());
-		System.out.println("Color by symmetry length : " + calc.getScriptGenerator().colorBySymmetry().length());
+		boolean hasProtein = calc.orient();
 
-		System.out.println("Draw axes                : " + calc.getScriptGenerator().drawAxes());
-		System.out.println("Draw axes length         : " + calc.getScriptGenerator().drawAxes().length());
-		System.out.println("Draw polyhedron          : " + calc.getScriptGenerator().drawPolyhedron());
-		System.out.println("Draw polyhedron length   : " + calc.getScriptGenerator().drawPolyhedron().length());
+		if (hasProtein) {
+			AxisTransformation at = calc.getAxisTransformation();	
+			System.out.println("Bioassembly id: " + getBioassemblyId());
 
-		System.out.println("Zoom                     : " + calc.getScriptGenerator().getZoom());
-		System.out.println("Default orientation      : " + calc.getScriptGenerator().getDefaultOrientation());
-		System.out.println("Orientation count        : " + calc.getScriptGenerator().getOrientationCount());
-		for (int i = 0; i <  calc.getScriptGenerator().getOrientationCount(); i++) {
-			System.out.println("Orientation name " + i + "       : " + calc.getScriptGenerator().getOrientationName(i));
-			System.out.println("Orientation " + i + "            : " + calc.getScriptGenerator().getOrientation(i));
-			System.out.println("Orientation with zoom " + i + "  : " + calc.getScriptGenerator().getOrientationWithZoom(i));
+			String outName = prefix + "_4x4transformation.txt";
+			System.out.println("Writing 4x4 transformation to: " + outName);
+			writeFile(outName, at.getTransformation().toString());
+
+			outName = prefix + "_JmolAnimation.txt";
+			System.out.println("Writing Jmol animation to: " + outName);
+			writeFile(outName, calc.getScriptGenerator().playOrientations());
+
+			System.out.println("Subunit count            : " + calc.getFinder().getChainCount());
+			System.out.println("Color by subunit         : " + calc.getScriptGenerator().colorBySubunit());
+			System.out.println("Color by subunit length  : " + calc.getScriptGenerator().colorBySubunit().length());
+			System.out.println("Color by sequence cluster: " + calc.getScriptGenerator().colorBySequenceCluster());
+			System.out.println("Color by seq. clst. len  : " + calc.getScriptGenerator().colorBySequenceCluster().length());
+			System.out.println("Color by symmetry        : " + calc.getScriptGenerator().colorBySymmetry());
+			System.out.println("Color by symmetry length : " + calc.getScriptGenerator().colorBySymmetry().length());
+
+			System.out.println("Draw axes                : " + calc.getScriptGenerator().drawAxes());
+			System.out.println("Draw axes length         : " + calc.getScriptGenerator().drawAxes().length());
+			System.out.println("Draw polyhedron          : " + calc.getScriptGenerator().drawPolyhedron());
+			System.out.println("Draw polyhedron length   : " + calc.getScriptGenerator().drawPolyhedron().length());
+
+			System.out.println("Zoom                     : " + calc.getScriptGenerator().getZoom());
+			System.out.println("Default orientation      : " + calc.getScriptGenerator().getDefaultOrientation());
+			System.out.println("Orientation count        : " + calc.getScriptGenerator().getOrientationCount());
+			for (int i = 0; i <  calc.getScriptGenerator().getOrientationCount(); i++) {
+				System.out.println("Orientation name " + i + "       : " + calc.getScriptGenerator().getOrientationName(i));
+				System.out.println("Orientation " + i + "            : " + calc.getScriptGenerator().getOrientation(i));
+				System.out.println("Orientation with zoom " + i + "  : " + calc.getScriptGenerator().getOrientationWithZoom(i));
+			}
+		} else { 
+			System.out.println("Bioassembly id: " + getBioassemblyId());	
+			System.out.println("No protein chain found: returning identity matrix");
+			String outName = prefix + "_4x4transformation.txt";
+			System.out.println("Writing 4x4 transformation to: " + outName);
+			Matrix4d m = new Matrix4d();
+			m.setIdentity();
+			writeFile(outName, m.toString());
 		}
-		
+
 		// avoid memory leaks
 		calc.destroy();
 	}
-	
+
 	private String getBioassemblyId() {
 		int first = fileName.indexOf(".pdb") + 4;
 		int last = fileName.length();

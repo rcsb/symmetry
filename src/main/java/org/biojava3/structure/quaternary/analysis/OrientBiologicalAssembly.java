@@ -11,6 +11,8 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
+import org.biojava.bio.structure.io.mmcif.AllChemCompProvider;
+import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 
 import org.biojava3.structure.quaternary.core.AxisTransformation;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
@@ -30,6 +32,10 @@ public class OrientBiologicalAssembly {
 	public static void main(String[] args) {		
 		System.out.println("OrientBiologicalAssembly V " + CalcBioAssemblySymmetry.version + " : Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
 		System.out.println();
+		
+		AllChemCompProvider all = new AllChemCompProvider();
+		
+		ChemCompGroupFactory.setChemCompProvider(all);
 		
 		// enforce the use of the version of vecmath that we bundle with this jar
 		try {

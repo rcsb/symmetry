@@ -283,17 +283,32 @@ public abstract class JmolSymmetryScriptGenerator {
 	    List<List<Integer>> orbits = axisTransformation.getOrbitsByZDepth();
 		int fold = rotationGroup.getRotation(0).getFold();
 
-	    Color4f[] colors = ColorBrewer.Spectral.getColor4fPalette(2*fold);
+		Color4f[] colors = null;
+		if (fold > 1) {
+	        colors = ColorBrewer.Spectral.getColor4fPalette(2*fold);
+		} else {
+			colors = ColorBrewer.Spectral.getColor4fPalette(orbits.size());
+		}
+		int half = colors.length/2;
+		for (int i = 0; i < half; i++) {
+			if (i % 2 == 1) {
+			   Color4f temp = colors[i];
+			   colors[i] = colors[half+i];
+			   colors[half+i] = temp;
+			}
+		}
 	    Map<Color4f, List<String>> colorMap = new HashMap<Color4f, List<String>>();
 	    
 		for (int i = 0; i < orbits.size(); i++) {
 			for (int j = 0; j < fold; j++) {
 				// assign alternating color sets to adjacent orbits
-				int colorIndex = j;
-				if (i % 2 == 0) {
-					colorIndex = j;
-				} else {
-					colorIndex = fold + j;
+				int colorIndex = i;
+				if (fold > 1) {
+					if (i % 2 == 0) {
+						colorIndex = j;
+					} else {
+						colorIndex = fold + j;
+					}
 				}
 				int subunit = orbits.get(i).get(j);
 				Color4f c = colors[colorIndex];

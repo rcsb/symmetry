@@ -15,20 +15,13 @@ class Permute {
 	private List<Point3i> triples = new ArrayList<Point3i>();
 
 	Permute(Point3i t) {
-		// assert(x.a >= x.b && x.b >= x.c && x.c >= 0);
-		// m_arr.push_back(x);
 		Point3i tmp = new Point3i();
 		tmp.x = t.x;
 		tmp.y = t.y;
 		tmp.z = t.z;
 		triples.add(tmp);
 		int n = 1;
-		// Do the sign changes
-		// if (x.a != 0) {
-		// for (size_t i = 0; i < n; ++i)
-		// m_arr.push_back(Triple(-m_arr[i].a, m_arr[i].b, m_arr[i].c));
-		// n *= 2;
-		// }
+	
 		if (t.x != 0) {
 			for (int i = 0; i < n; ++i) {
 				Tuple3i m = triples.get(i);
@@ -37,11 +30,7 @@ class Permute {
 			}
 			n *= 2;
 		}
-		// if (t.b != 0) {
-		// for (size_t i = 0; i < n; ++i)
-		// m_arr.push_back(Triple(m_arr[i].a, -m_arr[i].b, m_arr[i].c));
-		// n *= 2;
-		// }
+		
 		if (t.y != 0) {
 			for (int i = 0; i < n; ++i) {
 				Point3i m = triples.get(i);
@@ -49,11 +38,7 @@ class Permute {
 			}
 			n *= 2;
 		}
-		// if (x.c != 0) {
-		// for (size_t i = 0; i < n; ++i)
-		// m_arr.push_back(Triple(m_arr[i].a, m_arr[i].b, -m_arr[i].c));
-		// n *= 2;
-		// }
+
 		if (t.z != 0) {
 			for (int i = 0; i < n; ++i) {
 				Point3i m = triples.get(i);
@@ -64,13 +49,7 @@ class Permute {
 		if (t.x == t.y && t.y == t.z) {
 			return;
 		}
-		// With at least two distinct indices we can rotate the set thru 3
-		// permuations.
-		// for (size_t i = 0; i < n; ++i) {
-		// m_arr.push_back(Triple(m_arr[i].b, m_arr[i].c, m_arr[i].a));
-		// m_arr.push_back(Triple(m_arr[i].c, m_arr[i].a, m_arr[i].b));
-		// }
-		// n *= 3;
+		
 		for (int i = 0; i < n; ++i) {
 			Point3i m = triples.get(i);
 			triples.add(new Point3i(m.y, m.z, m.x));
@@ -81,12 +60,7 @@ class Permute {
 		if (t.x == t.y || t.y == t.z) {
 			return;
 		}
-		// With three distinct indices we can in addition interchange the
-		// first two indices (to yield all 6 permutations of 3 indices).
-		// for (size_t i = 0; i < n; ++i) {
-		// m_arr.push_back(Triple(m_arr[i].b, m_arr[i].a, m_arr[i].c));
-		// }
-		// n *= 2;
+	
 		for (int i = 0; i < n; ++i) {
 			Point3i m = triples.get(i);
 			triples.add(new Point3i(m.y, m.x, m.z));
@@ -265,39 +239,32 @@ public final class SphereSampler {
 		for (int i = 0; i < IcosahedralSampler.getSphereCount(); i++) {
 			orientations.add(IcosahedralSampler.getQuat4d(i));
 		}
+		List<Quat4d> grid = new ArrayList<Quat4d>();
 		int ncell1 = 0;
 		for (int n = 0; n < nent; ++n) {
 			Permute p = new Permute(new Point3i(k[n], l[n], m[n]));
-//			System.out.println("Permutate = " + k[n] + "," + l[n] + "," + m[n]
-//					+ ": " + p.size());
-			//assert (mult[n] == p.size());
+			assert (mult[n] == p.size());
 			for (int i = 0; i < mult[n]; ++i) {
 				Point3i t = p.get(i);
-				orientations.add(new Quat4d(1.0, pind(0.5 * t.x, delta, sigma), pind(
+				grid.add(new Quat4d(1.0, pind(0.5 * t.x, delta, sigma), pind(
 						0.5 * t.y, delta, sigma), pind(0.5 * t.z, delta, sigma)));
 			}
 			ncell1 += mult[n];
 		}
-		//assert (ncell1 == ncell);
-//			System.out.println("not fine");
-			int nc = orientations.size();
-//			System.out.println("nc: " + nc + " ncell " + ncell);
-//			assert (nc == ncell);
-			for (int n = 1; n < 24; ++n) {
-				Quat4d q = new Quat4d(cubeSyms[n][0], cubeSyms[n][1],
-						cubeSyms[n][2], cubeSyms[n][3]);
-//				System.out.println("q: " + q);
-				for (int i = 0; i < nc; ++i) {
-					 Quat4d qs = new Quat4d();
-					 qs.mul(q, orientations.get(i));
-					 orientations.add(qs);
-	//				s.add(times(q, s.getOrientation(i)), s.getWeight(i));
-				}
+		assert (ncell1 == ncell);
+		int nc = orientations.size();
+		assert (nc == ncell);
+		for (int n = 1; n < 24; ++n) {
+			Quat4d q = new Quat4d(cubeSyms[n][0], cubeSyms[n][1],
+					cubeSyms[n][2], cubeSyms[n][3]);
+			for (int i = 0; i < nc; ++i) {
+				Quat4d qs = new Quat4d();
+				qs.mul(q, grid.get(i));
+				grid.add(qs);
+				//	s.add(times(q, s.getOrientation(i)), s.getWeight(i)); // this data set has no weights
 			}
-			//assert (orientations.size() == ntot);
-			// s.clear();
-		// for (int i = 0; i < s.size(); i++) {
-		// System.out.println(s.getOrientation(i) + ", " + s.getWeight(i));
-		// }
+		}
+		assert (grid.size() == ntot);
+		orientations.addAll(grid);
 	}
 }

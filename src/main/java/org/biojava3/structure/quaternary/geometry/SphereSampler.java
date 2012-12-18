@@ -252,7 +252,7 @@ public final class SphereSampler {
 			ncell1 += mult[n];
 		}
 		assert (ncell1 == ncell);
-		int nc = orientations.size();
+		int nc = grid.size();
 		assert (nc == ncell);
 		for (int n = 1; n < 24; ++n) {
 			Quat4d q = new Quat4d(cubeSyms[n][0], cubeSyms[n][1],

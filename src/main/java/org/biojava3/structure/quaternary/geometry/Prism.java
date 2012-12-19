@@ -167,7 +167,8 @@ public class Prism implements Polyhedron {
 		         m1.rotX(Math.PI/2);
 		         m.mul(m1);
 		break;
-		case 3:  m.rotX(-Math.PI); // back
+		case 3:  m.set(flipX()); // back
+		
 		break;
 		default: throw new IllegalArgumentException("getViewMatrix: index out of range:" + index);
 		}
@@ -204,5 +205,12 @@ public class Prism implements Polyhedron {
 		return length / (2 * Math.sin(Math.PI/n));
 	}
 	
+	private static Matrix3d flipX() {
+		Matrix3d rot = new Matrix3d();
+		rot.m00 = 1;
+		rot.m11 = -1;
+		rot.m22 = -1;
+		return rot;
+	}
 	
 }

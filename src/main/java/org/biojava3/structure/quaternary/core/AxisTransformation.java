@@ -11,9 +11,7 @@ import java.util.TreeMap;
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
-import javax.vecmath.Point2i;
 import javax.vecmath.Point3d;
-import javax.vecmath.Tuple2i;
 import javax.vecmath.Vector3d;
 
 import org.biojava3.structure.quaternary.geometry.MomentsOfInertia;
@@ -187,7 +185,6 @@ public class AxisTransformation {
 	}
 	
 	public List<Integer> alignWithReferenceAxis(List<Integer> orbit) {
-		Point2i referenceSubunits = new Point2i();
 		int n = subunits.getSubunitCount();    
 		int fold = rotationGroup.getRotation(0).getFold();
 		Vector3d probe = new Vector3d();
@@ -199,25 +196,36 @@ public class AxisTransformation {
 		Vector3d Y1 = new Vector3d(0,1,0);
 		Vector3d Y2 = new Vector3d(0,1,0);
 		Matrix3d m = new Matrix3d();
-		m.rotZ(2*Math.PI/fold);
+		double angle = -2*Math.PI/fold;
+		m.rotZ(0.1*angle); // add small offset, since two subunits may be equidistant to the y-axis
+		m.transform(Y1);
+		m.rotZ(1.1*angle);
+		m.transform(Y2);
 		// transform subunit centers into z-aligned position and calculate
 		// width in xy direction.
 		for (int i: orbit) {
-			for (Point3d p: subunits.getTraces().get(i)) {
+			Point3d p = subunits.getCenters().get(i);
+	//		for (Point3d p: subunits.getTraces().get(i)) {
 		   	    probe.set(p);
 			    transformationMatrix.transform(probe);
+			    // find subunit that lines up with y-axis
 			    double dot1 = Y1.dot(probe);
 			    if (dot1 > dotMin1) {
 			    	dotMin1 = dot1;
 			    	index1 = i;
 			    }
+			    // find next subunit (rotated by one fold around z-axis - clockwise)
 			    double dot2 = Y2.dot(probe);
 			    if (dot2 > dotMin2) {
 			    	dotMin2 = dot2;
 			    	index2 = i;
 			    }
-			}
+//			}
 		}
+//		System.out.println("Index1/2: " + index1 + " - " + index2);
+//		System.out.println("Orbit0: " + orbit);
+		// order subunit indices in a clockwise orientation around the z-axis
+		// bring subunit into position 0
 		for (int i = 0; i < n; i++) {
 			if (orbit.get(0) != index1) {
 				Collections.rotate(orbit,1);
@@ -225,24 +233,23 @@ public class AxisTransformation {
 				break;
 			}
 		}
-//		if (orbit.get(1) == index2) {
-//			return orbit;
-//		} else {
-////			Collections.
-//		}
+//		System.out.println("Orbit1: " + orbit);
+		// bring second subunit  onto position 1
+		if (orbit.get(1) == index2) {
+			return orbit;
+		}
+		Collections.reverse(orbit.subList(1,  orbit.size()));
+//		System.out.println("Orbit2: " + orbit);
 		return orbit;
 	}
 
 	private void run () {
 		if (modified) {
 			calcPrincipalRotationVector();
-			calcPrincipalAxes();
-			
+			calcPrincipalAxes();	
 			// initial alignment with draft reference axis
 			calcReferenceVector();
 			calcTransformation();
-			calcReverseTransformation();
-			calcBoundaries();
 			
 			// refine ref. axis for cyclic and dihedral systems
 			if ((rotationGroup.getPointGroup().startsWith("C") &&
@@ -252,18 +259,18 @@ public class AxisTransformation {
 					) {
 				refineReferenceVector();
 				calcTransformation();
-				calcReverseTransformation();
-				calcBoundaries();
 			}
+			calcReverseTransformation();
+			calcBoundaries();
 			modified = false;
 		}
 	}
 
 	private void calcTransformation() {
 		if (rotationGroup.getPointGroup().equals("C1")) {
-			transformationMatrix = getTransformationByInertiaAxes();
+			calcTransformationByInertiaAxes();
 		} else {
-			transformationMatrix = getTransformationBySymmetryAxes();
+			calcTransformationBySymmetryAxes();
 		}
 	}
 
@@ -271,7 +278,7 @@ public class AxisTransformation {
 		reverseTransformationMatrix.invert(transformationMatrix);
 	}
 
-	private Matrix4d getTransformationBySymmetryAxes() {
+	private void calcTransformationBySymmetryAxes() {
 		Point3d[] refPoints = new Point3d[2];
 		refPoints[0] = new Point3d(principalRotationVector);
 		refPoints[1] = new Point3d(referenceVector);
@@ -281,7 +288,7 @@ public class AxisTransformation {
 		coordPoints[0] = new Point3d(Z_AXIS);
 		coordPoints[1] = new Point3d(Y_AXIS);
 
-		Matrix4d matrix = alignAxes(refPoints, coordPoints);
+		transformationMatrix = alignAxes(refPoints, coordPoints);
 
 		// combine with translation
 		Matrix4d combined = new Matrix4d();
@@ -289,13 +296,12 @@ public class AxisTransformation {
 		Vector3d trans = new Vector3d(subunits.getCentroid());
 		trans.negate();
 		combined.setTranslation(trans);
-		matrix.mul(combined);
+		transformationMatrix.mul(combined);
 		
 		// for cyclic geometry, set a canonical view for the Z direction
 		if (rotationGroup.getPointGroup().startsWith("C")) {
-			calcZDirection(matrix);
+			calcZDirection();
 		}
-	    return matrix;
 	}
 	
 //	private Matrix4d getTransformationByC2SymmetryAxes() {		
@@ -319,7 +325,7 @@ public class AxisTransformation {
 //		return matrix;
 //	}
 	
-	private Matrix4d getTransformationByInertiaAxes() {
+	private void calcTransformationByInertiaAxes() {
 		Point3d[] refPoints = new Point3d[2];
 		refPoints[0] = new Point3d(principalAxesOfInertia[0]);
 		refPoints[1] = new Point3d(principalAxesOfInertia[1]);
@@ -329,7 +335,7 @@ public class AxisTransformation {
 		coordPoints[1] = new Point3d(X_AXIS);
 		
 		// align inertia axis with y-x axis
-		Matrix4d matrix = alignAxes(refPoints, coordPoints);
+		transformationMatrix = alignAxes(refPoints, coordPoints);
 		if (SuperPosition.rmsd(refPoints, coordPoints) > 0.01) {
 			System.out.println("Warning: aligment with coordinate system is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
 		}
@@ -340,9 +346,7 @@ public class AxisTransformation {
 		Vector3d trans = new Vector3d(subunits.getCentroid());
 		trans.negate();
 		translation.setTranslation(trans);
-		matrix.mul(translation);
-		
-		return matrix;
+		transformationMatrix.mul(translation);
 	}
 
 	private void calcPrincipalAxes() {
@@ -362,28 +366,62 @@ public class AxisTransformation {
 		Matrix4d m1 = new Matrix4d();
 		AxisAngle4d a = new AxisAngle4d();
 		Vector3d axis = new Vector3d();
-		axis.cross(v1,v2);
-		a.set(axis, v1.angle(v2));
-		m1.set(a);
-		for (int i = 0; i < 2; i++) {
-			Point3d v = refPoints[i];
+		double dot = v1.dot(v2);
+		if (Math.abs(dot) < 0.999) {
+			axis.cross(v1,v2);
+			axis.normalize();
+			a.set(axis, v1.angle(v2));
+			m1.set(a);
+		} else if (dot > 0) {
+//			System.out.println("Parallel Axis1 > 0: " + axis + ": " + dot);
+			// parallel axis, nothing to do -> identity matrix
+			m1.setIdentity();
+		} else if (dot < 0) {
+//			System.out.println("Parallel Axis1 < 0: " + axis + ": " + dot);
+			// anti-parallel axis, flip around x-axis
+			m1.set(flipX());
+//			System.out.println("rotX Exact: ");
+//			System.out.println(m1);
+		}
+		for (Point3d v: refPoints) {
 			m1.transform(v);
 		}
-		
+//		System.out.println("M1: " + m1);
 		v1 = new Vector3d(refPoints[1]);
 		v2 = new Vector3d(coordPoints[1]);
-		axis.cross(v1,v2);
-		a.set(axis, v1.angle(v2));
 		Matrix4d m2 = new Matrix4d();
-		m2.set(a);
+		dot = v1.dot(v2);
+		if (Math.abs(dot) < 0.999) {
+			axis.cross(v1,v2);
+			axis.normalize();
+			a.set(axis, v1.angle(v2));
+//			System.out.println("Axis2: " + axis);
+//		    System.out.println("Angle2: " + Math.toDegrees(v1.angle(v2)));
+			m2.set(a);
+		} else if (dot > 0) {
+//			System.out.println("Parallel Axis2 > 0: " + axis + ": " + dot);
+			// parallel axis, nothing to do -> identity matrix
+			m2.setIdentity();
+		} else if (dot < 0) {
+//			System.out.println("Parallel Axis2 < 0: " + axis + ": " + dot);
+			// anti-parallel axis, flip around z-axis
+			m2.set(flipZ());
+//			System.out.println("rotX Exact: ");
+		}
 		for (Point3d v: refPoints) {
 			m2.transform(v);
 		}
+		
+		m2.mul(m1);
+//		System.out.println("M2: " + m2);
+//		System.out.println("Refpoints  : " + Arrays.toString(refPoints));
+//		System.out.println("Coordpoints: " + Arrays.toString(coordPoints));
 
 		if (SuperPosition.rmsd(refPoints, coordPoints) > 0.01) {
 			System.out.println("Warning: AxisTransformation: axes alignment is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
 		}
-		m2.mul(m1);
+		
+
 		return m2;
 	}
 
@@ -391,11 +429,7 @@ public class AxisTransformation {
 	 * Calculates the min and max boundaries of the structure after it has been
 	 * transformed into its canonical orientation.
 	 */
-	private void calcBoundaries() {
-		if (subunits == null || subunits.getSubunitCount() == 0) {
-			return;
-		}
-		
+	private void calcBoundaries() {	
 		minBoundary.x = Double.MAX_VALUE;
 		maxBoundary.x = Double.MIN_VALUE;
 		minBoundary.y = Double.MAX_VALUE;
@@ -419,8 +453,6 @@ public class AxisTransformation {
 				xyRadiusMax = Math.max(xyRadiusMax, Math.sqrt(probe.x*probe.x + probe.y * probe.y));
 			}
 		}
-//		System.out.println("Min: " + minBoundary);
-//		System.out.println("Max: " + maxBoundary);
 	}
 	
 	/*
@@ -428,16 +460,15 @@ public class AxisTransformation {
 	 * a Cn symmetric complex, so that the narrower end faces the
 	 * viewer, and the wider end faces away from the viewer. Example: 3LSV
 	 */
-	private void calcZDirection(Matrix4d matrix) {
+	private void calcZDirection() {
 		calcBoundaries();
 	
 		// if the longer part of the structure faces towards the back (-z direction),
 		// rotate around y-axis so the longer part faces the viewer (+z direction)
 		if (Math.abs(minBoundary.z) > Math.abs(maxBoundary.z)) {
-			Matrix4d rot = new Matrix4d();
-			rot.rotY(-Math.PI);
-			rot.mul(matrix);
-			matrix.set(rot);
+			Matrix4d rot = flipY();
+			rot.mul(transformationMatrix);
+			transformationMatrix.set(rot);
 		}
 	}
 
@@ -458,7 +489,6 @@ public class AxisTransformation {
 		    meanWidth /= orbit.size();
 		    
 		    if (widthMap.get(meanWidth) != null) {
-//		    	System.out.println("Conflict in widthMap");
 		    	meanWidth += 0.01;
 		    }
 		    widthMap.put(meanWidth, orbit);
@@ -513,18 +543,10 @@ public class AxisTransformation {
 	 */
 	private List<List<Integer>> calcOrbits() {
 		int n = subunits.getSubunitCount();
-//		for (int i = 0; i < n; i++) {
-//			System.out.println("ChainId: " + subunits.getChainIds().get(i));
-//		}
 		int fold = rotationGroup.getRotation(0).getFold();
 
 		List<List<Integer>> orbits = new ArrayList<List<Integer>>();
-		Set<Integer> used = new HashSet<Integer>();
-//		for (int j = 0; j < fold; j++) {
-//			System.out.println("Rotation angle: " +rotationGroup.getRotation(j).getAxisAngle());
-//			System.out.println(rotationGroup.getRotation(j).getPermutation());
-//		}
-		
+		Set<Integer> used = new HashSet<Integer>();	
 		List<Integer> inOrder = rotationGroup.getRotation(0).getPermutation();
 		
 		// for simple Cn group, order the orbits in rotation order for coloring
@@ -592,7 +614,7 @@ public class AxisTransformation {
 
 	/**
 	 * Returns a vector perpendicular to the principal rotation vector
-	 * for the alignment of structures in the xy-palne
+	 * for the alignment of structures in the xy-plane
 	 * @return reference vector
 	 */
 	private void calcReferenceVector() {
@@ -610,8 +632,7 @@ public class AxisTransformation {
 		} 
 		
 		// make sure reference vector is perpendicular principal roation vector
-		referenceVector.cross(principalRotationVector, referenceVector);
-		referenceVector.cross(referenceVector, principalRotationVector); 
+		referenceVector = orthogonalize(principalRotationVector, referenceVector);
 	}
 	
 	/**
@@ -627,19 +648,37 @@ public class AxisTransformation {
 			referenceVector = getReferenceAxisDihedralWithSubunitAlignment();
 		} 
 
-		// make sure reference axis is perpendicular
-		referenceVector.cross(principalRotationVector, referenceVector);
-		referenceVector.cross(referenceVector, principalRotationVector); 
+		referenceVector = orthogonalize(principalRotationVector, referenceVector);
 	}
 	
+	private Vector3d orthogonalize(Vector3d vector1, Vector3d vector2) {
+		double dot = vector1.dot(vector2);
+		Vector3d ref = new Vector3d(vector2);
+//		System.out.println("p.r: " + dot);
+//		System.out.println("Orig refVector: " + referenceVector);
+		if (dot < 0) {
+			vector2.negate();
+		}
+		vector2.cross(vector1, vector2);
+//		System.out.println("Intermed. refVector: " + vector2);
+		vector2.normalize();
+//		referenceVector.cross(referenceVector, principalRotationVector); 
+		vector2.cross(vector1, vector2); 
+		vector2.normalize();	
+		if (ref.dot(vector2) < 0) {
+			vector2.negate();
+		}
+//		System.out.println("Mod. refVector: " + vector2);
+		return vector2;
+	}
 	/**
 	 * Returns the default reference vector for the alignment of Cn structures
 	 * @return
 	 */	
 	private Vector3d getReferenceAxisCylic() {
 		if (rotationGroup.getPointGroup().equals("C2")) {
-			Vector3d vr = new Vector3d(subunits.getCentroid());
-			vr.sub(subunits.getOriginalCenters().get(0));
+			Vector3d vr = new Vector3d(subunits.getOriginalCenters().get(0));
+			vr.sub(subunits.getCentroid());
 			vr.normalize();
 			return vr;
 		}		
@@ -653,6 +692,9 @@ public class AxisTransformation {
 				dotMin = Math.abs(principalRotationVector.dot(v));
 				vmin = new Vector3d(v);
 			}
+		}
+		if (principalRotationVector.dot(vmin) < 0) {
+			vmin.negate();
 		}
 		
 		return vmin;
@@ -677,7 +719,7 @@ public class AxisTransformation {
 		
 		// calculate reference vector
 		Vector3d refAxis = new Vector3d();
-		refAxis.sub(subunits.getCentroid(), centers.get(subunit));
+		refAxis.sub(centers.get(subunit), subunits.getCentroid());
 		refAxis.normalize();
 		return refAxis;
 	}
@@ -697,8 +739,7 @@ public class AxisTransformation {
 			if (rotationGroup.getRotation(i).getDirection() == 1 && 
 					(rotationGroup.getRotation(i).getFold() < maxFold) ||
 					rotationGroup.getPointGroup().equals("D2")) {
-//			System.out.println("direction: " + rotationGroup.getRotation(i).getDirection());
-//			System.out.println("fold     : " + rotationGroup.getRotation(i).getFold());
+
 				AxisAngle4d axisAngle = rotationGroup.getRotation(i).getAxisAngle();
 				Vector3d v = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 				v.normalize();
@@ -717,10 +758,9 @@ public class AxisTransformation {
 					minAngle = angle;
 					refVec = vn;
 				}
-				
-	//			return v;
 			}
 		}
+		refVec.normalize();
 		return refVec;
 	}
 
@@ -816,4 +856,31 @@ public class AxisTransformation {
 			return refVector;
 		}
 
+	private static Matrix4d flipX() {
+		Matrix4d rot = new Matrix4d();
+		rot.m00 = 1;
+		rot.m11 = -1;
+		rot.m22 = -1;
+		rot.m33 = 1;
+		return rot;
+	}
+	
+	private static Matrix4d flipY() {
+		Matrix4d rot = new Matrix4d();
+		rot.m00 = -1;
+		rot.m11 = 1;
+		rot.m22 = -1;
+		rot.m33 = 1;
+		return rot;
+	}
+	
+	private static Matrix4d flipZ() {
+		Matrix4d rot = new Matrix4d();
+		rot.m00 = -1;
+		rot.m11 = -1;
+		rot.m22 = 1;
+		rot.m33 = 1;
+		return rot;
+	}
+	
 }

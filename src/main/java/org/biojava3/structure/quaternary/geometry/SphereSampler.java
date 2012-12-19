@@ -103,6 +103,8 @@ public final class SphereSampler {
 			// 180 degree rotations about 6 face diagonals
 			{ 0, 1, 1, 0 }, { 0, 1, -1, 0 }, { 0, 1, 0, 1 }, { 0, 1, 0, -1 },
 			{ 0, 0, 1, 1 }, { 0, 0, 1, -1 }, };
+	
+	
 //	 private static double delta = 0.25970;
 //	 private static double sigma = 0.00;
 //	 private static int ntot = 1992;

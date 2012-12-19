@@ -42,4 +42,9 @@ public class JmolSymmetryScriptGeneratorDn extends JmolSymmetryScriptGenerator {
 		return zoom;
 	}
 	
+	public int getOrientationCount() {
+		// for Dn point groups the last view is redundant due to symmetry.
+		return getPolyhedron().getViewCount()-1;
+	}
+	
 }

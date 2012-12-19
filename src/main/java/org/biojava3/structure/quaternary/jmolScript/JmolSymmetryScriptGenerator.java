@@ -90,10 +90,14 @@ public abstract class JmolSymmetryScriptGenerator {
 		s.append(setCentroid());
 		
 		// calculate  orientation
-		Matrix3d m = polyhedron.getViewMatrix(0);
-		m.mul(axisTransformation.getRotationMatrix());
 		Quat4d q = new Quat4d();
-		q.set(m);
+		q.set(polyhedron.getViewMatrix(0));
+		q.normalize();
+		Quat4d r = new Quat4d();
+		r.set(axisTransformation.getRotationMatrix());
+		r.normalize();
+		q.mul(r);
+		q.normalize();
 		
 		// set orientation
 		s.append("moveto 0 quaternion{");
@@ -126,10 +130,14 @@ public abstract class JmolSymmetryScriptGenerator {
 		s.append(setCentroid());
 		
 		// calculate  orientation
-		Matrix3d m = polyhedron.getViewMatrix(index);
-		m.mul(axisTransformation.getRotationMatrix());
 		Quat4d q = new Quat4d();
-		q.set(m);
+		q.set(polyhedron.getViewMatrix(index));
+		q.normalize();
+		Quat4d r = new Quat4d();
+		r.set(axisTransformation.getRotationMatrix());
+		r.normalize();
+		q.mul(r);
+		q.normalize();
 		
 		// set orientation
 		s.append("moveto 4 quaternion{");
@@ -197,8 +205,6 @@ public abstract class JmolSymmetryScriptGenerator {
 
 		return s.toString();
 	}
-
-	
 	
 	public String hidePolyhedron() {
 		return "draw polyhedron* off;";
@@ -385,10 +391,12 @@ public abstract class JmolSymmetryScriptGenerator {
 
 			for (int i = 0; i < orbits.size(); i++) {
 				int colorIndex = i;
+				
+				// reverse colors once the center of the structure has been reached
 				if (i >= nColor) {
 					colorIndex = orbits.size() - 1 - i;
 				}
-				Color4f c = new Color4f(colors[colorIndex]);
+				Color4f c = colors[colorIndex];
 				List<String> ids = colorMap.get(c);
 				if (ids == null) {
 					ids = new ArrayList<String>();
@@ -431,19 +439,11 @@ public abstract class JmolSymmetryScriptGenerator {
 		int fold = rotationGroup.getRotation(0).getFold();
 
 		Map<Color4f, List<String>> colorMap = new HashMap<Color4f, List<String>>();
-
-
 		Color4f[] colors = getSymmetryColors(n);
-//		int refSubunit = axisTransformation.getReferenceSubunit();
+
 		List<Integer> orbit = orbits.get(0);
 		axisTransformation.alignWithReferenceAxis(orbit);
-//		for (int i = 0; i < n; i++) {
-//			if (orbit.get(0) != refSubunit) {
-//				Collections.rotate(orbit,1);
-//			} else {
-//				break;
-//			}
-//		}
+
 		for (int i = 0; i < n; i++) {
 			int subunit = orbits.get(0).get(i);
 			String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
@@ -1032,10 +1032,11 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @return
 	 */
 	private static float jMolFloat(double f) {
-		if (Math.abs(f) < 1.0E-7) {
-			return 0.0f;
-		}
+	//	if (Math.abs(f) < 1.0E-7) {
+	//		return 0.0f;
+	//	}
 		return (float)f;
+
 	}
 	
 }

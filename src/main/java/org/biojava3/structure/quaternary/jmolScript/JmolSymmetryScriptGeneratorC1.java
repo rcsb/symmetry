@@ -32,5 +32,10 @@ public class JmolSymmetryScriptGeneratorC1 extends JmolSymmetryScriptGenerator {
 		}
 		return zoom;
 	}
+	
+	public int getOrientationCount() {
+		// the last two views (top, bottom) are not that interesting.
+		return getPolyhedron().getViewCount()-2;
+	}
 
 }

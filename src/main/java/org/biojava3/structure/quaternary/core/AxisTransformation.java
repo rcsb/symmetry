@@ -156,6 +156,7 @@ public class AxisTransformation {
 	 * 
 	 */
 	public List<List<Integer>> getOrbitsByZDepth() {
+		run();
 		Map<Double, List<Integer>> depthMap = new TreeMap<Double, List<Integer>>();
 		double[] depth = getSubunitZDepth();
 		List<List<Integer>> orbits = calcOrbits();
@@ -185,7 +186,11 @@ public class AxisTransformation {
 	}
 	
 	public List<Integer> alignWithReferenceAxis(List<Integer> orbit) {
+		run();
 		int n = subunits.getSubunitCount();    
+		if (n < 2) {
+			return orbit;
+		}
 		int fold = rotationGroup.getRotation(0).getFold();
 		Vector3d probe = new Vector3d();
 	
@@ -279,16 +284,16 @@ public class AxisTransformation {
 	}
 
 	private void calcTransformationBySymmetryAxes() {
-		Point3d[] refPoints = new Point3d[2];
-		refPoints[0] = new Point3d(principalRotationVector);
-		refPoints[1] = new Point3d(referenceVector);
+		Vector3d[] axisVectors = new Vector3d[2];
+		axisVectors[0] = new Vector3d(principalRotationVector);
+		axisVectors[1] = new Vector3d(referenceVector);
 
 		//  y,z axis centered at the centroid of the subunits
-		Point3d[] coordPoints = new Point3d[2];
-		coordPoints[0] = new Point3d(Z_AXIS);
-		coordPoints[1] = new Point3d(Y_AXIS);
+		Vector3d[] referenceVectors = new Vector3d[2];
+		referenceVectors[0] = new Vector3d(Z_AXIS);
+		referenceVectors[1] = new Vector3d(Y_AXIS);
 
-		transformationMatrix = alignAxes(refPoints, coordPoints);
+		transformationMatrix = alignAxes(axisVectors, referenceVectors);
 
 		// combine with translation
 		Matrix4d combined = new Matrix4d();
@@ -304,41 +309,17 @@ public class AxisTransformation {
 		}
 	}
 	
-//	private Matrix4d getTransformationByC2SymmetryAxes() {		
-//		Point3d[] refPoints = new Point3d[2];
-//		refPoints[0] = new Point3d(principalRotationAxis);
-//		refPoints[1] = new Point3d(referenceVector);
-//		
-//		Point3d[] coordPoints = new Point3d[2];
-//		coordPoints[0] = new Point3d(Y_AXIS);
-//		coordPoints[1] = new Point3d(X_AXIS);
-// 
-//		Matrix4d matrix = alignAxes(refPoints, coordPoints);  
-//		
-//		// combine with translation
-//		Matrix4d translation = new Matrix4d();
-//		translation.setIdentity();
-//		Vector3d trans = new Vector3d(subunits.getCentroid());
-//		trans.negate();
-//		translation.setTranslation(trans);
-//		matrix.mul(translation);
-//		return matrix;
-//	}
-	
 	private void calcTransformationByInertiaAxes() {
-		Point3d[] refPoints = new Point3d[2];
-		refPoints[0] = new Point3d(principalAxesOfInertia[0]);
-		refPoints[1] = new Point3d(principalAxesOfInertia[1]);
+		Vector3d[] axisVectors = new Vector3d[2];
+		axisVectors[0] = new Vector3d(principalAxesOfInertia[0]);
+		axisVectors[1] = new Vector3d(principalAxesOfInertia[1]);
 	
-		Point3d[] coordPoints = new Point3d[2];
-		coordPoints[0] = new Point3d(Y_AXIS);
-		coordPoints[1] = new Point3d(X_AXIS);
+		Vector3d[] referenceVectors = new Vector3d[2];
+		referenceVectors[0] = new Vector3d(Y_AXIS);
+		referenceVectors[1] = new Vector3d(X_AXIS);
 		
-		// align inertia axis with y-x axis
-		transformationMatrix = alignAxes(refPoints, coordPoints);
-		if (SuperPosition.rmsd(refPoints, coordPoints) > 0.01) {
-			System.out.println("Warning: aligment with coordinate system is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
-		}
+		// align inertia axes with y-x plane
+		transformationMatrix = alignAxes(axisVectors, referenceVectors);
 		
 		// combine with translation
 		Matrix4d translation = new Matrix4d();
@@ -349,6 +330,78 @@ public class AxisTransformation {
 		transformationMatrix.mul(translation);
 	}
 
+	/**
+	 * Returns a transformation matrix that rotates refPoints to match
+	 * coordPoints
+	 * @param refPoints the points to be aligned
+	 * @param referenceVectors
+	 * @return
+	 */
+	private Matrix4d alignAxes(Vector3d[] axisVectors, Vector3d[] referenceVectors) {
+		Matrix4d m1 = new Matrix4d();
+		AxisAngle4d a = new AxisAngle4d();
+		Vector3d axis = new Vector3d();
+		
+		// calculate rotation matrix to rotate refPoints[0] into coordPoints[0]
+		Vector3d v1 = new Vector3d(axisVectors[0]);
+		Vector3d v2 = new Vector3d(referenceVectors[0]);
+		double dot = v1.dot(v2);
+		if (Math.abs(dot) < 0.999) {
+			axis.cross(v1,v2);
+			axis.normalize();
+			a.set(axis, v1.angle(v2));
+			m1.set(a);
+		} else if (dot > 0) {
+			// parallel axis, nothing to do -> identity matrix
+			m1.setIdentity();
+		} else if (dot < 0) {
+			// anti-parallel axis, flip around x-axis
+			m1.set(flipX());
+		}
+		
+		// apply transformation matrix to all refPoints
+		m1.transform(axisVectors[0]);
+		m1.transform(axisVectors[1]);
+		
+		// calculate rotation matrix to rotate refPoints[1] into coordPoints[1]
+		v1 = new Vector3d(axisVectors[1]);
+		v2 = new Vector3d(referenceVectors[1]);
+		Matrix4d m2 = new Matrix4d();
+		dot = v1.dot(v2);
+		if (Math.abs(dot) < 0.999) {
+			axis.cross(v1,v2);
+			axis.normalize();
+			a.set(axis, v1.angle(v2));
+			m2.set(a);
+		} else if (dot > 0) {
+			// parallel axis, nothing to do -> identity matrix
+			m2.setIdentity();
+		} else if (dot < 0) {
+			// anti-parallel axis, flip around z-axis
+			m2.set(flipZ());
+		}
+		
+		// apply transformation matrix to all refPoints
+		m2.transform(axisVectors[0]);
+		m2.transform(axisVectors[1]);
+		
+		// combine the two rotation matrices
+		m2.mul(m1);
+
+		// the RMSD should be close to zero
+		Point3d[] axes = new Point3d[2];
+		axes[0] = new Point3d(axisVectors[0]);
+		axes[1] = new Point3d(axisVectors[1]);
+		Point3d[] ref = new Point3d[2];
+		ref[0] = new Point3d(referenceVectors[0]);
+		ref[1] = new Point3d(referenceVectors[1]);
+		if (SuperPosition.rmsd(axes, ref) > 0.01) {
+			System.out.println("Warning: AxisTransformation: axes alignment is off. RMSD: " + SuperPosition.rmsd(axes, ref));
+		}
+		
+		return m2;
+	}
+	
 	private void calcPrincipalAxes() {
 		MomentsOfInertia moi = new MomentsOfInertia();
 	
@@ -358,71 +411,6 @@ public class AxisTransformation {
 			}
 		}
 		principalAxesOfInertia = moi.getPrincipalAxes();
-	}
-
-	private Matrix4d alignAxes(Point3d[] refPoints, Point3d[] coordPoints) {
-		Vector3d v1 = new Vector3d(refPoints[0]);
-		Vector3d v2 = new Vector3d(coordPoints[0]);
-		Matrix4d m1 = new Matrix4d();
-		AxisAngle4d a = new AxisAngle4d();
-		Vector3d axis = new Vector3d();
-		double dot = v1.dot(v2);
-		if (Math.abs(dot) < 0.999) {
-			axis.cross(v1,v2);
-			axis.normalize();
-			a.set(axis, v1.angle(v2));
-			m1.set(a);
-		} else if (dot > 0) {
-//			System.out.println("Parallel Axis1 > 0: " + axis + ": " + dot);
-			// parallel axis, nothing to do -> identity matrix
-			m1.setIdentity();
-		} else if (dot < 0) {
-//			System.out.println("Parallel Axis1 < 0: " + axis + ": " + dot);
-			// anti-parallel axis, flip around x-axis
-			m1.set(flipX());
-//			System.out.println("rotX Exact: ");
-//			System.out.println(m1);
-		}
-		for (Point3d v: refPoints) {
-			m1.transform(v);
-		}
-//		System.out.println("M1: " + m1);
-		v1 = new Vector3d(refPoints[1]);
-		v2 = new Vector3d(coordPoints[1]);
-		Matrix4d m2 = new Matrix4d();
-		dot = v1.dot(v2);
-		if (Math.abs(dot) < 0.999) {
-			axis.cross(v1,v2);
-			axis.normalize();
-			a.set(axis, v1.angle(v2));
-//			System.out.println("Axis2: " + axis);
-//		    System.out.println("Angle2: " + Math.toDegrees(v1.angle(v2)));
-			m2.set(a);
-		} else if (dot > 0) {
-//			System.out.println("Parallel Axis2 > 0: " + axis + ": " + dot);
-			// parallel axis, nothing to do -> identity matrix
-			m2.setIdentity();
-		} else if (dot < 0) {
-//			System.out.println("Parallel Axis2 < 0: " + axis + ": " + dot);
-			// anti-parallel axis, flip around z-axis
-			m2.set(flipZ());
-//			System.out.println("rotX Exact: ");
-		}
-		for (Point3d v: refPoints) {
-			m2.transform(v);
-		}
-		
-		m2.mul(m1);
-//		System.out.println("M2: " + m2);
-//		System.out.println("Refpoints  : " + Arrays.toString(refPoints));
-//		System.out.println("Coordpoints: " + Arrays.toString(coordPoints));
-
-		if (SuperPosition.rmsd(refPoints, coordPoints) > 0.01) {
-			System.out.println("Warning: AxisTransformation: axes alignment is off. RMSD: " + SuperPosition.rmsd(refPoints, coordPoints));
-		}
-		
-
-		return m2;
 	}
 
 	/**

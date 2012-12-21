@@ -1,6 +1,7 @@
 package org.biojava3.structure.quaternary.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +31,7 @@ public class AxisTransformation {
 	private Vector3d referenceVector = new Vector3d();
 	private Vector3d principalRotationVector = new Vector3d();
 	private Vector3d[] principalAxesOfInertia = null;
+	 List<List<Integer>> alignedOrbits = null;
 
 	private Vector3d minBoundary = new Vector3d();
 	private Vector3d maxBoundary = new Vector3d();
@@ -152,17 +154,50 @@ public class AxisTransformation {
 		return rotationGroup;
 	}
 	
+	public List<List<Integer>> getOrbits() {
+		return alignedOrbits;
+	}
+
 	/**
-	 * 
+	 * @return
 	 */
-	public List<List<Integer>> getOrbitsByZDepth() {
-		run();
+	
+	private void run () {
+		if (modified) {
+			calcPrincipalRotationVector();
+			calcPrincipalAxes();	
+			// initial alignment with draft reference axis
+			calcReferenceVector();
+			calcTransformation();
+			
+			// refine ref. axis for cyclic and dihedral systems
+			if ((rotationGroup.getPointGroup().startsWith("C") &&
+					!rotationGroup.getPointGroup().startsWith("C2")) ||
+				(rotationGroup.getPointGroup().startsWith("D") &&
+							!rotationGroup.getPointGroup().startsWith("D2"))
+					) {
+				refineReferenceVector();
+				calcTransformation();
+			}
+			calcReverseTransformation();
+			calcBoundaries();
+			calcAlignedOrbits();
+			modified = false;
+		}
+	}
+	/**
+	 * Returns a list of orbits (an orbit is a cyclic permutation of subunit indices that are related 
+	 * by a rotation around the principal rotation axis) ordered from the +z direction to the -z direction (z-depth).
+	 * Within an orbit, subunit indices are ordered with a clockwise rotation around the z-axis.
+	 * @return list of orbits ordered by z-depth
+	 */
+	private void calcAlignedOrbits() {
 		Map<Double, List<Integer>> depthMap = new TreeMap<Double, List<Integer>>();
 		double[] depth = getSubunitZDepth();
-		List<List<Integer>> orbits = calcOrbits();
+		alignedOrbits = calcOrbits();
 
 		// calculate the mean depth of orbit along z-axis
-		for (List<Integer> orbit: orbits) {
+		for (List<Integer> orbit: alignedOrbits) {
 			// calculate the mean depth along z-axis for each orbit
 			double meanDepth = 0;
 			for (int subunit: orbit) {
@@ -171,22 +206,32 @@ public class AxisTransformation {
 			meanDepth /= orbit.size();
 
 			if (depthMap.get(meanDepth) != null) {
-				//		    	System.out.println("Conflict in depthMap");
+				// System.out.println("Conflict in depthMap");
 				meanDepth += 0.01;
 			}
 			depthMap.put(meanDepth, orbit);
 		}
 
 		// now fill orbits back into list ordered by depth
-		orbits.clear();
+		alignedOrbits.clear();
 		for (List<Integer> orbit: depthMap.values()) {
-			orbits.add(orbit);
+			// order subunit in a clockwise rotation around the z-axis 
+			/// starting at the 12 O-clock position (+y position)
+			alignWithReferenceAxis(orbit);
+			alignedOrbits.add(orbit);
 		}
-		return orbits;
 	}
 	
-	public List<Integer> alignWithReferenceAxis(List<Integer> orbit) {
-		run();
+	/**
+	 * Returns an ordered list of subunit ids (orbit) in such a way that the subunit
+	 * indices start at the 12 o-clock (+y axis) and proceed in a clockwise direction
+	 * to the 11 o-clock position to close the "orbit".
+	 * 
+	 * @param orbit list of subunit indices that are transformed into each other by a rotation
+	 * @return list of subunit indices ordered in a clockwise direction
+	 */
+	
+	private List<Integer> alignWithReferenceAxis(List<Integer> orbit) {
 		int n = subunits.getSubunitCount();    
 		if (n < 2) {
 			return orbit;
@@ -210,33 +255,30 @@ public class AxisTransformation {
 		// width in xy direction.
 		for (int i: orbit) {
 			Point3d p = subunits.getCenters().get(i);
-	//		for (Point3d p: subunits.getTraces().get(i)) {
-		   	    probe.set(p);
-			    transformationMatrix.transform(probe);
-			    // find subunit that lines up with y-axis
-			    double dot1 = Y1.dot(probe);
-			    if (dot1 > dotMin1) {
-			    	dotMin1 = dot1;
-			    	index1 = i;
-			    }
-			    // find next subunit (rotated by one fold around z-axis - clockwise)
-			    double dot2 = Y2.dot(probe);
-			    if (dot2 > dotMin2) {
-			    	dotMin2 = dot2;
-			    	index2 = i;
-			    }
-//			}
+			probe.set(p);
+			transformationMatrix.transform(probe);
+			// find subunit that lines up with y-axis
+			double dot1 = Y1.dot(probe);
+			if (dot1 > dotMin1) {
+				dotMin1 = dot1;
+				index1 = i;
+			}
+			// find next subunit (rotated by one fold around z-axis - clockwise)
+			double dot2 = Y2.dot(probe);
+			if (dot2 > dotMin2) {
+				dotMin2 = dot2;
+				index2 = i;
+			}
 		}
 //		System.out.println("Index1/2: " + index1 + " - " + index2);
 //		System.out.println("Orbit0: " + orbit);
 		// order subunit indices in a clockwise orientation around the z-axis
 		// bring subunit into position 0
 		for (int i = 0; i < n; i++) {
-			if (orbit.get(0) != index1) {
-				Collections.rotate(orbit,1);
-			} else {
+			if (orbit.get(0) == index1) {
 				break;
 			}
+			Collections.rotate(orbit,1);			
 		}
 //		System.out.println("Orbit1: " + orbit);
 		// bring second subunit  onto position 1
@@ -244,32 +286,14 @@ public class AxisTransformation {
 			return orbit;
 		}
 		Collections.reverse(orbit.subList(1,  orbit.size()));
+		if (orbit.get(1) != index2) {
+			System.err.println("Waring: alignWithReferenceAxis failed");
+		}
 //		System.out.println("Orbit2: " + orbit);
 		return orbit;
 	}
 
-	private void run () {
-		if (modified) {
-			calcPrincipalRotationVector();
-			calcPrincipalAxes();	
-			// initial alignment with draft reference axis
-			calcReferenceVector();
-			calcTransformation();
-			
-			// refine ref. axis for cyclic and dihedral systems
-			if ((rotationGroup.getPointGroup().startsWith("C") &&
-					!rotationGroup.getPointGroup().startsWith("C2")) ||
-				(rotationGroup.getPointGroup().startsWith("D") &&
-							!rotationGroup.getPointGroup().startsWith("D2"))
-					) {
-				refineReferenceVector();
-				calcTransformation();
-			}
-			calcReverseTransformation();
-			calcBoundaries();
-			modified = false;
-		}
-	}
+	
 
 	private void calcTransformation() {
 		if (rotationGroup.getPointGroup().equals("C1")) {
@@ -534,58 +558,47 @@ public class AxisTransformation {
 		int fold = rotationGroup.getRotation(0).getFold();
 
 		List<List<Integer>> orbits = new ArrayList<List<Integer>>();
-		Set<Integer> used = new HashSet<Integer>();	
-		List<Integer> inOrder = rotationGroup.getRotation(0).getPermutation();
-		
-		// for simple Cn group, order the orbits in rotation order for coloring
-		if (rotationGroup.getOrder() > 1  && n == fold && rotationGroup.getPointGroup().startsWith("C")) {
-		    inOrder = deconvolute();
-		}
+		boolean[] used = new boolean[n];
+		Arrays.fill(used, false);
 			
 		for (int i = 0; i < n; i++) {
-			if (! used.contains(i)) {
+			if (! used[i]) {
 				// determine the equivalent subunits
-				List<Integer> orbitElements = new ArrayList<Integer>();
+				List<Integer> orbit = new ArrayList<Integer>(fold);
 				for (int j = 0; j < fold; j++) {
 					List<Integer> permutation = rotationGroup.getRotation(j).getPermutation();
-					orbitElements.add(permutation.get(i));
-					used.add(permutation.get(i));
+					orbit.add(permutation.get(i));
+					used[permutation.get(i)] = true;
 				}
-
-//				System.out.println("OrbitElements: " + orbitElements);
-
-				// order subunits in rotation order
-				List<Integer> orbit = new ArrayList<Integer>(orbitElements.size());
-				for (Integer p: inOrder) {
-					if (orbitElements.contains(p)) {
-						orbit.add(p);
-					}
-				}
-				orbits.add(orbit);
+				orbits.add(deconvolute(orbit));
 			}
 		}
-//		System.out.println("Orbits: ");
-//		for (List<Integer> orbit: orbits) {
-//			System.out.println(orbit);
-//		}
 		return orbits;
 	}
-	
-	private List<Integer> deconvolute() {
-		// get first rotation in rotation group (by definition the first rotation with smallest angle)
-		List<Integer> permutation = rotationGroup.getRotation(1).getPermutation();
-
-		List<Integer> inRotationOrder = new ArrayList<Integer>(permutation.size());
-		inRotationOrder.add(0);
-		for (int i = 0; i < permutation.size()-1; i++) {
-			int next = permutation.get(inRotationOrder.get(i));
-			if (next == 0) {
-				next = i+1;
-			}
-		    inRotationOrder.add(next);
-			
-//			System.out.println("inrotationorder: " + inRotationOrder);
+		
+	private List<Integer> deconvolute(List<Integer> orbit) {
+		if (rotationGroup.getOrder() < 2) {
+			return orbit;
 		}
+		List<Integer> p0 = rotationGroup.getRotation(0).getPermutation();
+		List<Integer> p1 = rotationGroup.getRotation(1).getPermutation();
+//		System.out.println("deconvolute");
+//		System.out.println("Permutation0: " + p0);
+//		System.out.println("Permutation1: " + p1);
+
+		List<Integer> inRotationOrder = new ArrayList<Integer>(orbit.size());
+		inRotationOrder.add(orbit.get(0));
+		for (int i = 1; i < orbit.size(); i++) {
+			int current = inRotationOrder.get(i-1);
+			int index = p0.indexOf(current);
+			int next = p1.get(index);
+			if (!orbit.contains(next)) {
+				System.err.println("deconvolute: inconsistency in permuation. Returning original order");
+				return orbit;
+			}
+			inRotationOrder.add(next);
+		}
+//		System.out.println("In order: " + inRotationOrder);
 		return inRotationOrder;
 	}
 	
@@ -606,7 +619,7 @@ public class AxisTransformation {
 	 * @return reference vector
 	 */
 	private void calcReferenceVector() {
-		referenceVector = new Vector3d(Y_AXIS);
+		referenceVector = null;
 		if (rotationGroup.getPointGroup().startsWith("C")) {
 			referenceVector = getReferenceAxisCylic();
 		} else if (rotationGroup.getPointGroup().startsWith("D")) {
@@ -619,6 +632,10 @@ public class AxisTransformation {
 			referenceVector = getReferenceAxisIcosahedral();		
 		} 
 		
+		if (referenceVector == null) {
+			System.err.println("Warning: no reference vector found. Using y-axis.");
+			referenceVector = new Vector3d(Y_AXIS);
+		}
 		// make sure reference vector is perpendicular principal roation vector
 		referenceVector = orthogonalize(principalRotationVector, referenceVector);
 	}
@@ -700,7 +717,7 @@ public class AxisTransformation {
 
 		// find subunit that extends the most in the xy-plane
 		List<List<Integer>> orbits = getOrbitsByXYWidth();
-		// get the last orbit is the widgest
+		// get the last orbit which is the widest
 		List<Integer> widestOrbit = orbits.get(orbits.size()-1); 
 		List<Point3d> centers = subunits.getCenters();	
 		int subunit = widestOrbit.get(0);
@@ -795,7 +812,7 @@ public class AxisTransformation {
 				double d = v.dot(principalRotationVector);
 				if (rotationGroup.getRotation(i).getFold() == 4) {
 					// the dot product 0 is between to adjacent 4-fold axes
-					if (d >= 0 && d < 0.1 ) {
+					if (d > -0.1 && d < 0.1 ) {
 						return v;
 					}
 				}
@@ -810,7 +827,8 @@ public class AxisTransformation {
 				double d = v.dot(principalRotationVector);
 				if (rotationGroup.getRotation(i).getFold() == 5) {
 					// the dot product of 0.447.. is between to adjacent 5-fold axes
-					if (d > 0.447 && d < 0.448) {
+//					if (d > 0.447 && d < 0.448) {
+					if (d > 0.4 && d < 0.5) {
 						return v;
 					}
 				}

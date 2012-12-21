@@ -286,7 +286,7 @@ public abstract class JmolSymmetryScriptGenerator {
 	    Subunits subunits = axisTransformation.getSubunits();
 	    List<Integer> modelNumbers = subunits.getModelNumbers();
 	    List<String> chainIds = subunits.getChainIds();
-	    List<List<Integer>> orbits = axisTransformation.getOrbitsByZDepth();
+	    List<List<Integer>> orbits = axisTransformation.getOrbits();
 		int fold = rotationGroup.getRotation(0).getFold();
 
 		Color4f[] colors = null;
@@ -368,7 +368,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		Subunits subunits = axisTransformation.getSubunits();
 		List<Integer> modelNumbers = subunits.getModelNumbers();
 		List<String> chainIds = subunits.getChainIds();
-		List<List<Integer>> orbits = axisTransformation.getOrbitsByZDepth();
+		List<List<Integer>> orbits = axisTransformation.getOrbits();
 
 		int n = subunits.getSubunitCount();
 		int fold = rotationGroup.getRotation(0).getFold();
@@ -433,22 +433,25 @@ public abstract class JmolSymmetryScriptGenerator {
 		Subunits subunits = axisTransformation.getSubunits();
 		List<Integer> modelNumbers = subunits.getModelNumbers();
 		List<String> chainIds = subunits.getChainIds();
-		List<List<Integer>> orbits = axisTransformation.getOrbitsByZDepth();
+		List<List<Integer>> orbits = axisTransformation.getOrbits();
 
-		int n = subunits.getSubunitCount();
 		int fold = rotationGroup.getRotation(0).getFold();
 
 		Map<Color4f, List<String>> colorMap = new HashMap<Color4f, List<String>>();
-		Color4f[] colors = getSymmetryColors(n);
+		Color4f[] colors = getSymmetryColors(fold);
 
-		List<Integer> orbit = orbits.get(0);
-		axisTransformation.alignWithReferenceAxis(orbit);
-
-		for (int i = 0; i < n; i++) {
-			int subunit = orbits.get(0).get(i);
-			String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
-			List<String> ids = Collections.singletonList(id);
-			colorMap.put(colors[i], ids);
+		for (List<Integer> orbit: orbits) {
+			for (int i = 0; i < fold; i++) {
+				int subunit = orbit.get(i);
+				String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
+				Color4f c = colors[i];
+				List<String> ids = colorMap.get(c);
+				if (ids == null) {
+					ids = new ArrayList<String>();
+					colorMap.put(c, ids);
+				}
+				ids.add(id);
+			}
 		}
 
 		return colorMap;
@@ -749,9 +752,9 @@ public abstract class JmolSymmetryScriptGenerator {
 			double polygonRadius = getMeanExtension() * 0.06;
 			if (n == 2) {
 				referenceAxis = getAligmentVector(p1, axis);
-				s.append(getC2PolygonJmol(i, p1, referenceAxis, axis, n, color, polygonRadius));
+				s.append(getC2PolygonJmol(i, p1, referenceAxis, axis, color, polygonRadius));
 				referenceAxis = getAligmentVector(p2, axis);
-				s.append(getC2PolygonJmol(j, p2,  referenceAxis, axis, n, color, polygonRadius));
+				s.append(getC2PolygonJmol(j, p2,  referenceAxis, axis, color, polygonRadius));
 			} else if (n > 2) {
 				referenceAxis = getAligmentVector(p1, axis);
 				s.append(getPolygonJmol(i, p1, referenceAxis, axis, n, color, polygonRadius));
@@ -825,15 +828,15 @@ public abstract class JmolSymmetryScriptGenerator {
 		return vectors;
 	}
 	
-	private static String getC2PolygonJmol(int index, Point3d center, Vector3d referenceAxis, Vector3d axis, int n, String color, double radius) {
+	private static String getC2PolygonJmol(int index, Point3d center, Vector3d referenceAxis, Vector3d axis, String color, double radius) {
 		StringBuilder s = new StringBuilder();
-		n = 10;
+		int n = 10;
 		s.append("draw axesSymbol");
 		s.append(index);
 		s.append(" ");
 		s.append("polygon");
 		s.append(" ");
-		s.append(n+1-2); 
+		s.append(n-1); 
 		s.append(getJmolPoint(center));
 
 		Vector3d[] vertexes = getC2PolygonVertices(axis, referenceAxis, center, n, radius);
@@ -841,21 +844,17 @@ public abstract class JmolSymmetryScriptGenerator {
 		for (Vector3d v: vertexes) {
 			s.append(getJmolPoint(v));
 		}
-		 
-		// there are two vertices less, since the first and last vertex of
-		// the two arcs are identical
-		n -= 2;
 
 		// create face list
-		s.append(n);
+		s.append(n-2);
 
-		for (int i = 1; i <= n; i++) {
+		for (int i = 1; i < n-1; i++) {
 			s.append("[");
 			s.append(0);
 			s.append(" ");
 			s.append(i);
 			s.append(" ");
-			if (i < n) {
+			if (i < n-2) {
 				s.append(i+1);
 			} else {
 				s.append(1);

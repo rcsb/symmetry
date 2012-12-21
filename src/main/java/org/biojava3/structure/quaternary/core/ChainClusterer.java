@@ -167,6 +167,10 @@ public class ChainClusterer  {
 		return list;
 	}
 	
+	public List<SequenceAlignmentCluster> getSequenceClusters() {
+		return seqClusters;
+	}
+	
 	private void run() {
 		if (modified) {
 			extractProteinChains();

@@ -233,10 +233,10 @@ public class AxisTransformation {
 	
 	private List<Integer> alignWithReferenceAxis(List<Integer> orbit) {
 		int n = subunits.getSubunitCount();    
-		if (n < 2) {
+		int fold = rotationGroup.getRotation(0).getFold();
+		if (fold < 2) {
 			return orbit;
 		}
-		int fold = rotationGroup.getRotation(0).getFold();
 		Vector3d probe = new Vector3d();
 	
 		double dotMin1 = Double.MIN_VALUE;

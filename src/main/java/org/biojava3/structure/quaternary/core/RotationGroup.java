@@ -205,24 +205,59 @@ public class RotationGroup {
         }
     }
 
+//    private void calcPointGroup() {
+//        if (higherOrderRotationAxis > 1) {
+//            // cubic groups
+//            if (highestOrder == 5) {
+//                // rotational icosahedral symmetry or chiral icosahedral symmetry
+//                pointGroup = "I";
+//                complete = rotations.size() == 60;
+//                return;
+//            } else if (highestOrder == 4) {
+//                // rotational octahedral symmetry or chiral octahedral symmetry
+//                pointGroup = "O";
+//                complete = rotations.size() == 24;
+//                return;
+//            } else if (highestOrder == 3) {
+//                // rotational tetrahedral symmetry or chiral tetrahedral symmetry
+//                pointGroup = "T";
+//                complete = rotations.size() == 12;
+//                return;
+//            }
+//        } else {
+//            // Cn and Dn groups
+//            // if E is not counted, subtract 1
+//            if (Math.abs(twoFoldsPerpendicular - highestOrder) <= 1 && highestOrder > 1) {
+//                pointGroup = "D" + highestOrder;
+//                complete = rotations.size() == 2 * highestOrder;
+//                return;
+//            } else {
+//                pointGroup = "C" + highestOrder;
+//                complete = rotations.size() == highestOrder;
+//                return;
+//            }
+//        }
+//
+//        pointGroup = "C1";
+//        return;
+//    }
+    
     private void calcPointGroup() {
+    	complete = false;
         if (higherOrderRotationAxis > 1) {
             // cubic groups
             if (highestOrder == 5) {
                 // rotational icosahedral symmetry or chiral icosahedral symmetry
                 pointGroup = "I";
                 complete = rotations.size() == 60;
-                return;
             } else if (highestOrder == 4) {
                 // rotational octahedral symmetry or chiral octahedral symmetry
                 pointGroup = "O";
                 complete = rotations.size() == 24;
-                return;
             } else if (highestOrder == 3) {
                 // rotational tetrahedral symmetry or chiral tetrahedral symmetry
                 pointGroup = "T";
                 complete = rotations.size() == 12;
-                return;
             }
         } else {
             // Cn and Dn groups
@@ -230,16 +265,23 @@ public class RotationGroup {
             if (Math.abs(twoFoldsPerpendicular - highestOrder) <= 1 && highestOrder > 1) {
                 pointGroup = "D" + highestOrder;
                 complete = rotations.size() == 2 * highestOrder;
-                return;
             } else {
                 pointGroup = "C" + highestOrder;
                 complete = rotations.size() == highestOrder;
-                return;
             }
         }
 
-        pointGroup = "C1";
-        return;
+        if (!complete) {
+           // the rotation group is incomplete, remove partial results. This happens
+           // when a structure is symmetric, some subunits are below the rmsd threshold,
+           // and some are just above the rmsd threshold
+        	int n = 0;
+        	if (rotations.size() > 0) {
+        		n = rotations.get(0).getPermutation().size();
+        		rotations.clear();
+        	}
+        	setC1(n);
+        }
     }
 
     public void sortByFoldDecending() {

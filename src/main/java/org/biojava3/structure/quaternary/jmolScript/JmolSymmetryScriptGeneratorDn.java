@@ -47,4 +47,16 @@ public class JmolSymmetryScriptGeneratorDn extends JmolSymmetryScriptGenerator {
 		return getPolyhedron().getViewCount()-1;
 	}
 	
+	/**
+	 * Returns the name of a specific orientation
+	 * @param index orientation index
+	 * @return name of orientation
+	 */
+	public String getOrientationName(int index) {	
+		if (index == 0 && getAxisTransformation().getRotationGroup().getPointGroup().equals("D2")) {
+			return "Front C2 axis";
+		} else {
+			return getPolyhedron().getViewName(index);
+		}
+	}
 }

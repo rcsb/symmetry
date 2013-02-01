@@ -42,7 +42,7 @@ public class CalcBioAssemblySymmetry {
 	private JmolSymmetryScriptGenerator scriptGenerator;
 	
 	
-	public static String version = "0.1.4";
+	public static String version = "0.1.5";
 	
 	public CalcBioAssemblySymmetry(){
 	}

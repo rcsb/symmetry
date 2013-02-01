@@ -42,6 +42,25 @@ public class JmolSymmetryScriptGeneratorCn extends JmolSymmetryScriptGenerator {
 	
 	public int getOrientationCount() {
 		//  the last two views (top, bottom) are not that interesting.
-		return getPolyhedron().getViewCount()-2;
+		if (getAxisTransformation().getRotationGroup().getPointGroup().equals("C2")) {
+		    return getPolyhedron().getViewCount()-2;
+		}
+		return getPolyhedron().getViewCount();
+	}
+	
+	/**
+	 * Returns the name of a specific orientation
+	 * @param index orientation index
+	 * @return name of orientation
+	 */
+	public String getOrientationName(int index) {	
+		if (getAxisTransformation().getRotationGroup().getPointGroup().equals("C2")) {
+			if (index == 0) {
+				return "Front C2 axis";
+			} else if (index == 2) {
+				return "Back C2 axis";
+			}
+		} 
+		return getPolyhedron().getViewName(index);
 	}
 }

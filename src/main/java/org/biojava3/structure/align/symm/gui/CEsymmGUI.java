@@ -102,36 +102,41 @@ public class CEsymmGUI extends JFrame{
 			StructureAlignmentFactory.addAlgorithm(alg);
 		}
 
-		String pdb = (String)JOptionPane.showInputDialog(
-		                    null,
-		                    "PDB ID:",
-		                    "CE-Symm",
-		                    JOptionPane.PLAIN_MESSAGE);
+		String pdb = null;
+		
+		while(pdb == null || pdb.length() == 0) {
+			pdb = (String)JOptionPane.showInputDialog(
+					null,
+					"PDB ID:",
+					"CE-Symm",
+					JOptionPane.PLAIN_MESSAGE);
 
-		//If a string was returned, say so.
-		if ((pdb != null) && (pdb.length() > 0)) {
-		    try {
-		    	AtomCache cache = new AtomCache();
-				Atom[] ca1 = cache.getAtoms(pdb);
-				Atom[] ca2 = cache.getAtoms(pdb);
-				
-				CeSymm ce = new CeSymm();
-				
-				AFPChain afp = ce.align(ca1, ca2);
-				
-				RotationAxis axis = new RotationAxis(afp);
-				StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afp, ca1, ca2);
-				
-				axis.displayRotationAxis(jmolPanel, ca1);
-				
-				
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (StructureException e) {
-				e.printStackTrace();
+			//If a string was returned, say so.
+			if ((pdb != null) && (pdb.length() > 0)) {
+				try {
+					AtomCache cache = new AtomCache();
+					Atom[] ca1 = cache.getAtoms(pdb);
+					Atom[] ca2 = cache.getAtoms(pdb);
+
+					CeSymm ce = new CeSymm();
+
+					AFPChain afp = ce.align(ca1, ca2);
+
+					RotationAxis axis = new RotationAxis(afp);
+					StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afp, ca1, ca2);
+
+					axis.displayRotationAxis(jmolPanel, ca1);
+
+
+				} catch (IOException e) {
+					e.printStackTrace();
+					pdb = null;
+				} catch (StructureException e) {
+					e.printStackTrace();
+					pdb = null;
+				}
 			}
 		}
-
 		
 //		new CEsymmGUI();
 	}

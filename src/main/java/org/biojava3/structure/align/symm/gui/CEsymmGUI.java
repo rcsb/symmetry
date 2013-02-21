@@ -23,9 +23,29 @@
 package org.biojava3.structure.align.symm.gui;
 
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+
+import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.gui.AlignmentGui;
+import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
+import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.gui.RotationAxis;
 import org.biojava3.structure.align.symm.CeSymm;
 
 /**
@@ -33,10 +53,43 @@ import org.biojava3.structure.align.symm.CeSymm;
  * @author Andreas Prlic
  *
  */
-public class CEsymmGUI {
+public class CEsymmGUI extends JFrame{
 
-	//  /Users/ap3/WORK/PDB/hy/pdb2hyn.ent.gz
-	//  /Users/ap3/WORK/PDB/zl/pdb1zll.ent.gz
+//	public CEsymmGUI() {
+//		super("CE-Symm");
+//		
+//		JPanel main = createMainPanel();
+//		getContentPane().add(main);
+//		setDefaultCloseOperation(EXIT_ON_CLOSE);
+//		pack();
+//		setVisible(true);
+//	}
+//	private JPanel createMainPanel() {
+//		JPanel main = new JPanel();
+//		main.setLayout(new BorderLayout());
+//		JPanel sub = new JPanel();
+//		sub.add(new JLabel("PDB ID:"));
+//		
+//		
+//		
+//		main.add(sub,BorderLayout.CENTER);
+//		
+//		JButton submit = new JButton(new AlignAction("Get Symmetry"));
+//		main.add(submit,BorderLayout.SOUTH);
+//		
+//		return main;
+//	}
+	
+	private static class AlignAction extends AbstractAction {
+		public AlignAction(String name) {
+			super(name);
+		}
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			System.out.println("Aligning ");
+		}
+	}
 	
 	public static void main(String[] args) {
 	
@@ -49,7 +102,37 @@ public class CEsymmGUI {
 			StructureAlignmentFactory.addAlgorithm(alg);
 		}
 
-		AlignmentGui.getInstance();
+		String pdb = (String)JOptionPane.showInputDialog(
+		                    null,
+		                    "PDB ID:",
+		                    "CE-Symm",
+		                    JOptionPane.PLAIN_MESSAGE);
+
+		//If a string was returned, say so.
+		if ((pdb != null) && (pdb.length() > 0)) {
+		    try {
+		    	AtomCache cache = new AtomCache();
+				Atom[] ca1 = cache.getAtoms(pdb);
+				Atom[] ca2 = cache.getAtoms(pdb);
+				
+				CeSymm ce = new CeSymm();
+				
+				AFPChain afp = ce.align(ca1, ca2);
+				
+				RotationAxis axis = new RotationAxis(afp);
+				StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afp, ca1, ca2);
+				
+				axis.displayRotationAxis(jmolPanel, ca1);
+				
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (StructureException e) {
+				e.printStackTrace();
+			}
+		}
+
 		
+//		new CEsymmGUI();
 	}
 }

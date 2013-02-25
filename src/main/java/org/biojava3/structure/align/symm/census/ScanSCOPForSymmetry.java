@@ -74,7 +74,7 @@ public class ScanSCOPForSymmetry {
 
 	public static void main(String[] args){
 
-		String path =  "/Users/ap3/WORK/PDB/";
+		String path =  "/Users/dmyerstu/Desktop/the_pdb/";
 
 		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
 
@@ -131,7 +131,12 @@ public class ScanSCOPForSymmetry {
 				count++;
 				int sunid = superfamily.getSunID();
 				List<ScopDomain> familyMembers = scop.getScopDomainsBySunid(sunid);
-				ScopDomain first = familyMembers.get(0);
+				
+				for (int i = 0; i < 20; i++) {
+				
+					if (i >= familyMembers.size()) break;
+					
+				ScopDomain first = familyMembers.get(i);
 
 				String name = first.getScopId();
 				if ( knownResults.contains(name))
@@ -149,6 +154,8 @@ public class ScanSCOPForSymmetry {
 
 				Future<CensusResult> result = ConcurrencyTools.submit(calc);
 				futureData.add(result);
+				
+				}
 			}
 
 
@@ -336,15 +343,15 @@ public class ScanSCOPForSymmetry {
 
 		// here how to change the aa subst matrix, SDM is the default matrix
 		String matrixName = "PRLA000101";
-		SubstitutionMatrix<AminoAcidCompound> sdm = SubstitutionMatrixHelper.getMatrixFromAAINDEX(matrixName);			
-		params.setSubstitutionMatrix(sdm);
+		//SubstitutionMatrix<AminoAcidCompound> sdm = SubstitutionMatrixHelper.getMatrixFromAAINDEX(matrixName);			
+		//params.setSubstitutionMatrix(sdm);
 		//SubstitutionMatrix<AminoAcidCompound> max = SubstitutionMatrixHelper.getBlosum85();
 		//params.setSubstitutionMatrix(max);		
 
 		// we over-weight sequence
-		params.setSeqWeight(2.0);
+		//params.setSeqWeight(2.0);
 
-		ceSymm.setParameters(params);
+		//ceSymm.setParameters(params);
 
 		return ceSymm;
 	}

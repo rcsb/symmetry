@@ -81,7 +81,7 @@ public class CensusResults implements Serializable{
 		StringWriter w = new StringWriter();
 		
 		w.append(ResultConverter.getHTMLHeader());
-		for ( CensusResult d : data){
+		for (CensusResult d : data) {
 			w.append(ResultConverter.toHTML(d));
 		}
 		

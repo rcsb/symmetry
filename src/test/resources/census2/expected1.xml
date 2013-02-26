@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:CensusResults xmlns:ns2="http://source.rcsb.org">
+    <data>
+        <alignment>
+            <alignLength>115</alignLength>
+            <alignScore>82.4591</alignScore>
+            <block1Length>31</block1Length>
+            <block2Length>34</block2Length>
+            <gapLength>50</gapLength>
+            <identity>0.12307692</identity>
+            <rmsd>5.0854034</rmsd>
+            <similarity>0.32307693</similarity>
+            <tmScore>0.24488482</tmScore>
+            <zScore>1.64</zScore>
+        </alignment>
+        <axis>
+            <orthogonal>54.17225</orthogonal>
+            <screw>0.98715436</screw>
+            <theta>3.1255682</theta>
+            <x>-0.5418386</x>
+            <y>-0.6299675</y>
+            <z>-0.5563739</z>
+        </axis>
+        <classification>a.60.8</classification>
+        <description>HRDC-like</description>
+        <isSignificant>false</isSignificant>
+        <rank>0</rank>
+        <scopId>d2c35e1</scopId>
+        <sunId>129717</sunId>
+    </data>
+    <timestamp>2013-02-25 16:53:20</timestamp>
+</ns2:CensusResults>

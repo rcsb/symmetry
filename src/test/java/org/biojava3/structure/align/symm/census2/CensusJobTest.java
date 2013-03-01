@@ -34,7 +34,9 @@ public class CensusJobTest {
 	@Before
 	public void setUp() throws Exception {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
-		ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // ScopDatabase is too hard to mock well
+		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
+			ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // ScopDatabase is too hard to mock well
+		}
 		final CeSymm ceSymm = mock(CeSymm.class);
 		AFPChain afpChain = new AFPChain();
 		afpChain.setProbability(zScore);

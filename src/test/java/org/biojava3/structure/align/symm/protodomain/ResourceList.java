@@ -46,6 +46,7 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.align.xml.AFPChainXMLParser;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
+import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.CeSymm;
 
@@ -131,7 +132,10 @@ public class ResourceList {
 	static {
 		StructureAlignmentFactory.addAlgorithm(new CeMain());
 		StructureAlignmentFactory.addAlgorithm(new CeCPMain());
-		ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
+		ScopDatabase scop = ScopFactory.getSCOP();
+		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
+			ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // ScopDatabase is too hard to mock well
+		}
 	}
 
 	/**
@@ -178,7 +182,10 @@ public class ResourceList {
 	 */
 	public static void set(NameProvider nameProvider, String pdbDir) {
 		ResourceList.singleton = new ResourceList(nameProvider, pdbDir);
-		ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
+		ScopDatabase scop = ScopFactory.getSCOP();
+		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
+			ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // ScopDatabase is too hard to mock well
+		}
 	}
 
 	private ResourceList(NameProvider nameProvider, String pdbDir) {

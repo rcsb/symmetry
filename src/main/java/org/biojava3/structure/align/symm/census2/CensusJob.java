@@ -32,7 +32,7 @@ import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.gui.RotationAxis;
+import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;

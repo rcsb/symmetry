@@ -25,7 +25,7 @@ package org.biojava3.structure.align.symm.census2;
 import java.io.Serializable;
 
 import org.biojava.bio.structure.Calc;
-import org.biojava.bio.structure.gui.RotationAxis;
+import org.biojava.bio.structure.align.util.RotationAxis;
 
 /**
  * An axis of rotation.
@@ -101,7 +101,7 @@ public class Axis implements Serializable {
 	public Axis() {
 	}
 	public Axis(RotationAxis rot) {
-		theta = (float) rot.getTheta();
+		theta = (float) rot.getAngle();
 		x = (float) rot.getRotationAxis().getX();
 		y = (float) rot.getRotationAxis().getY();
 		z = (float) rot.getRotationAxis().getZ();

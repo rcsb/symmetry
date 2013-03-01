@@ -6,6 +6,9 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.List;
 
+import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
+import org.biojava.bio.structure.scop.ScopDatabase;
+import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.protodomain.ResourceList;
 import org.biojava3.structure.align.symm.protodomain.ResourceList.NameProvider;
 import org.junit.Before;
@@ -16,6 +19,10 @@ public class SampleTest {
 	@Before
 	public void setUp() throws Exception {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
+		ScopDatabase scop = ScopFactory.getSCOP();
+		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
+			ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // ScopDatabase is too hard to mock well
+		}
 	}
 
 	@Test

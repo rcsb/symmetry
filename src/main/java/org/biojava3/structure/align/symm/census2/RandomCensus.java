@@ -27,9 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
@@ -47,11 +45,8 @@ public class RandomCensus extends Census {
 
 	public static void buildDefault(String pdbDir, File censusFile, int domainsPerSf, boolean shuffle) {
 		try {
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
-			System.setProperty(AbstractUserArgumentProcessor.PDB_DIR, pdbDir); // okay, this doesn't appear to be
-																				// working
+			Census.setBerkeleyScop(pdbDir);
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
-			if (maxThreads < 1) maxThreads = 1;
 			RandomCensus census = new RandomCensus(maxThreads, domainsPerSf, shuffle);
 			census.setOutputWriter(censusFile);
 			census.setCache(new AtomCache(pdbDir, false));

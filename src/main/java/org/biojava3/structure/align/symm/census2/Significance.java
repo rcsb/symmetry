@@ -33,4 +33,6 @@ public interface Significance {
 	boolean isPossiblySignificant(AFPChain afpChain);
 
 	boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain);
+	
+	boolean isSignificant(Result result);
 }

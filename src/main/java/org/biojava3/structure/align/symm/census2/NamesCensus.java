@@ -46,14 +46,10 @@ public class NamesCensus extends Census {
 
 	public static void buildDefault(String pdbDir, File censusFile, File lineByLine) {
 		try {
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
-			System.setProperty(AbstractUserArgumentProcessor.PDB_DIR, pdbDir); // okay, this doesn't appear to be
-																				// working
+			ScopDatabase scop = Census.setBerkeleyScop(pdbDir);
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
-			if (maxThreads < 1) maxThreads = 1;
 			NamesCensus census = new NamesCensus(maxThreads);
 			census.setOutputWriter(censusFile);
-			ScopDatabase scop = ScopFactory.getSCOP();
 			List<ScopDomain> domains = new ArrayList<ScopDomain>();
 			try {
 				BufferedReader br = new BufferedReader(new FileReader(lineByLine));

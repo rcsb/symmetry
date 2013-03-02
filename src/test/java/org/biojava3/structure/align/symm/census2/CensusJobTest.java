@@ -52,6 +52,10 @@ public class CensusJobTest {
 			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
 				return false;
 			}
+			@Override
+			public boolean isSignificant(Result result) {
+				return false;
+			}
 		};
 		AlgorithmGiver giver = new AlgorithmGiver() {
 			@Override

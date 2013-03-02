@@ -77,45 +77,30 @@ public class Census {
 		abstract StructureAlignment getAlgorithm();
 	}
 
-	private int printFrequency = 20;
-
 	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
 
 	private AtomCache cache;
+
+	private boolean doPrefetch = false;
 
 	private File file;
 	private int numSymm;
 
 	private int numTotal;
 
+	private int printFrequency = 20;
 	private Map<String, Integer> symm = new TreeMap<String, Integer>();
+
 	private Map<String, Integer> total = new TreeMap<String, Integer>();
 
-	private boolean doPrefetch = false;
-	
-	public int getPrintFrequency() {
-		return printFrequency;
-	}
-
-	public void setPrintFrequency(int printFrequency) {
-		this.printFrequency = printFrequency;
-	}
-
-	protected void setDoPrefetch(boolean doPrefetch) {
-		this.doPrefetch = doPrefetch;
-	}
-	
 	static {
 		BasicConfigurator.configure();
 	}
 
 	public static void buildDefault(String pdbDir, File censusFile) {
 		try {
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
-			System.setProperty(AbstractUserArgumentProcessor.PDB_DIR, pdbDir); // okay, this doesn't appear to be
-			// working
-			int maxThreads = Runtime.getRuntime().availableProcessors() - 2;
-			if (maxThreads < 1) maxThreads = 1;
+			Census.setBerkeleyScop(pdbDir);
+			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			Census census = new Census(maxThreads);
 			census.setOutputWriter(censusFile);
 			census.setCache(new AtomCache(pdbDir, false));
@@ -126,6 +111,28 @@ public class Census {
 		}
 	}
 
+	public static Significance getDefaultSignificance() {
+		return new Significance() {
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return afpChain.getProbability() >= 3.5;
+			}
+
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				return afpChain.getProbability() >= 3.5;
+			}
+
+			@Override
+			public boolean isSignificant(Result result) {
+				if (result.getAlignment() == null) throw new IllegalArgumentException(
+						"The Result must have a non-null getAlignment()");
+				if (result.getAlignment().getzScore() == null) throw new IllegalArgumentException("Z-Score is null");
+				return result.getAlignment().getzScore() >= 3.5;
+			}
+		};
+	}
+
 	public static void main(String[] args) {
 		Logger.getRootLogger().setLevel(Level.DEBUG);
 		final String pdbDir = args[0];
@@ -133,8 +140,26 @@ public class Census {
 		buildDefault(pdbDir, censusFile);
 	}
 
+	public static ScopDatabase setBerkeleyScop(String pdbDir) {
+		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR, pdbDir);
+		ScopDatabase scop = ScopFactory.getSCOP();
+		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
+			ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
+		}
+		return ScopFactory.getSCOP();
+	}
+
+	public Census() {
+		this(Runtime.getRuntime().availableProcessors() - 1);
+	}
+
 	public Census(int maxThreads) {
+		if (maxThreads < 1) maxThreads = 1;
 		ConcurrencyTools.setThreadPoolSize(maxThreads);
+	}
+
+	public int getPrintFrequency() {
+		return printFrequency;
 	}
 
 	public void print(Results census) {
@@ -242,6 +267,10 @@ public class Census {
 		file = out;
 	}
 
+	public void setPrintFrequency(int printFrequency) {
+		this.printFrequency = printFrequency;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -252,29 +281,12 @@ public class Census {
 		for (Map.Entry<String, Integer> entry : total.entrySet()) {
 			Integer nSymm = symm.get(entry.getKey());
 			if (nSymm == null) nSymm = 0;
-			double percent = (double) nSymm / ((double) entry.getValue()) * 100.0;
+			double percent = (double) nSymm / (double) entry.getValue() * 100.0;
 			sb.append(entry.getKey() + "\t" + df.format(percent) + "%\n");
 		}
 		return sb.toString();
 	}
 
-	protected List<ScopDomain> filterAndPrefetch() {
-		List<ScopDomain> domains = getDomains();
-		List<ScopDomain> filtered = new ArrayList<ScopDomain>(domains.size());
-		for (ScopDomain domain : domains) {
-			try {
-				Atom[] atoms = cache.getAtoms(domain.getScopId());
-				if (atoms == null || atoms.length == 0) throw new StructureException("No atoms in array.");
-				filtered.add(domain);
-			} catch (IOException e) {
-				logger.error("Could not preload structure for " + domain.getScopId(), e);
-			} catch (StructureException e) {
-				logger.error("Could not preload structure for " + domain.getScopId(), e);
-			}
-		}
-		return filtered;
-	}
-	
 	/**
 	 * Returns the names of the domains that we already analyzed
 	 * 
@@ -294,6 +306,23 @@ public class Census {
 			i++;
 		}
 		return names;
+	}
+
+	protected List<ScopDomain> filterAndPrefetch() {
+		List<ScopDomain> domains = getDomains();
+		List<ScopDomain> filtered = new ArrayList<ScopDomain>(domains.size());
+		for (ScopDomain domain : domains) {
+			try {
+				Atom[] atoms = cache.getAtoms(domain.getScopId());
+				if (atoms == null || atoms.length == 0) throw new StructureException("No atoms in array.");
+				filtered.add(domain);
+			} catch (IOException e) {
+				logger.error("Could not preload structure for " + domain.getScopId(), e);
+			} catch (StructureException e) {
+				logger.error("Could not preload structure for " + domain.getScopId(), e);
+			}
+		}
+		return filtered;
 	}
 
 	protected AlgorithmGiver getAlgorithm() {
@@ -330,20 +359,6 @@ public class Census {
 		return null;
 	}
 
-	public static Significance getDefaultSignificance() {
-		return new Significance() {
-			@Override
-			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return afpChain.getProbability() >= 3.5;
-			}
-
-			@Override
-			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				return afpChain.getProbability() >= 3.5;
-			}
-		};
-	}
-
 	protected Significance getSignificance() {
 		return getDefaultSignificance();
 	}
@@ -358,6 +373,10 @@ public class Census {
 	protected final void plus(Map<String, Integer> map, String key) {
 		if (!map.containsKey(key)) map.put(key, 0);
 		map.put(key, map.get(key) + 1);
+	}
+
+	protected void setDoPrefetch(boolean doPrefetch) {
+		this.doPrefetch = doPrefetch;
 	}
 
 	protected void updateStats(Result result) {

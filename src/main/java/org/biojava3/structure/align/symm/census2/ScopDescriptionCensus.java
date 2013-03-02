@@ -53,11 +53,8 @@ public class ScopDescriptionCensus extends Census {
 
 	public static void buildDefault(String pdbDir, File censusFile, int[] sunIds) {
 		try {
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
-			System.setProperty(AbstractUserArgumentProcessor.PDB_DIR, pdbDir); // okay, this doesn't appear to be
-																				// working
+			Census.setBerkeleyScop(pdbDir);
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
-			if (maxThreads < 1) maxThreads = 1;
 			ScopDescriptionCensus census = new ScopDescriptionCensus(maxThreads, sunIds);
 			census.setOutputWriter(censusFile);
 			census.setCache(new AtomCache(pdbDir, false));

@@ -41,19 +41,33 @@ public class Axis implements Serializable {
 	private Float z;
 	private Float screw;
 	private Float orthogonal;
-	public Axis(Float angle, Float yaw, Float pitch, Float roll, Float screw, Float skew) {
+	public Axis(Float angle, Float x, Float y, Float z, Float screw, Float orthogonal) {
 		this.theta = angle;
-		this.x = yaw;
-		this.y = pitch;
-		this.z = roll;
+		this.x = x;
+		this.y = y;
+		this.z = z;
 		this.screw = screw;
-		this.orthogonal = skew;
+		this.orthogonal = orthogonal;
 	}
 	
 	public Float getTheta() {
 		return theta;
 	}
 
+	public Double evaluateEpsilon(int order) {
+		if (order < 2) return null;
+		final double gamma = (double) (2*Math.PI / order);
+		double theta = Math.abs(getTheta());
+		double minEpsilon = Math.abs(theta - gamma);
+		double delta = gamma;
+		for (int k = 1; delta <= theta; k++, delta += gamma) {
+			if (order % k != 0) continue;
+			double epsilon = Math.abs(theta - delta);
+			if (epsilon < minEpsilon) minEpsilon = epsilon;
+		}
+		return minEpsilon;
+	}
+	
 	public void setTheta(Float theta) {
 		this.theta = theta;
 	}

@@ -59,6 +59,7 @@ public class FindQuarternarySymmetry {
 	}
 	
 	public boolean isPseudoSymmetric() {
+		run();
 		return pseudoSymmetric;
 	}
 	

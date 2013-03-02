@@ -78,6 +78,7 @@ public class FindQuarternarySymmetry {
 		compositionFormula = chainClusterer.getCompositionFormula();
 		chainIds = chainClusterer.getChainIdsInClusterOrder();
 		if (chainIds.size() == 0) {
+			System.err.println("createSubunits Could not find chainIds!"); 
 			maxFolds = 0;
 			return;
 		}

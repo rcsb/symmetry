@@ -128,11 +128,11 @@ public abstract class Criterion<T extends Number> {
 			}
 		};
 	}
-	
+
 	public abstract T get(Result result) throws NoncomputableCriterionException;
-	
+
 	public abstract String getName();
-	
+
 	public abstract boolean hasSymmetry(Result result) throws NoncomputableCriterionException;
 
 	public static Criterion<Float> zScore(final float threshold) {
@@ -154,6 +154,25 @@ public abstract class Criterion<T extends Number> {
 			}
 		};
 	}
+	public static Criterion<Integer> coverage(final float threshold) {
+		return new Criterion<Integer>() {
+			@Override
+			public Integer get(Result result) throws NoncomputableCriterionException {
+				if (result.getAlignment() == null || result.getAlignment().getCoverage() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getAlignment().getCoverage();
+			}
+
+			@Override
+			public String getName() {
+				return "coverage>" + threshold;
+			}
+
+			@Override
+			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
+				return get(result) > threshold;
+			}
+		};
+	}
 	public static Criterion<Float> tmScore(final float threshold) {
 		return new Criterion<Float>() {
 			@Override
@@ -165,6 +184,25 @@ public abstract class Criterion<T extends Number> {
 			@Override
 			public String getName() {
 				return "TM-score>" + threshold;
+			}
+
+			@Override
+			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
+				return get(result) > threshold;
+			}
+		};
+	}
+	public static Criterion<Float> alignScore(final float threshold) {
+		return new Criterion<Float>() {
+			@Override
+			public Float get(Result result) throws NoncomputableCriterionException {
+				if (result.getAlignment() == null || result.getAlignment().getAlignScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getAlignment().getAlignScore();
+			}
+
+			@Override
+			public String getName() {
+				return "Align-score>" + threshold;
 			}
 
 			@Override
@@ -352,5 +390,5 @@ public abstract class Criterion<T extends Number> {
 			}
 		};
 	}
-	
+
 }

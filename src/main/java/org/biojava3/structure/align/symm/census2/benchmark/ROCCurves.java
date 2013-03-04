@@ -78,6 +78,8 @@ public class ROCCurves {
 			criteria.add(Criterion.tmScore(0.3f));
 			criteria.add(Criterion.tmScore(0.4f));
 			criteria.add(Criterion.tmScore(0.5f));
+			criteria.add(Criterion.coverage(150));
+			criteria.add(Criterion.alignScore(500));
 			criteria.add(Criterion.inverseF(Criterion.screw(1.5f)));
 			criteria.add(Criterion.random(0.5f));
 //			criteria.add(Criterion.tmScore(0.6f));

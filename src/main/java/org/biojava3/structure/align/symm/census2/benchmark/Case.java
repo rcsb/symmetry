@@ -1,3 +1,25 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ * Created on 2013-02-22
+ *
+ */
 package org.biojava3.structure.align.symm.census2.benchmark;
 
 import java.io.Serializable;
@@ -6,24 +28,29 @@ import org.biojava3.structure.align.symm.census2.Alignment;
 import org.biojava3.structure.align.symm.census2.Axis;
 import org.biojava3.structure.align.symm.census2.Result;
 
+/**
+ * A single case (result) to benchmark. Contains a {@link Result} and a known {@link #getKnownOrder() order} and {@link #getKnownGroup() group}.
+ * @author dmyerstu
+ *
+ */
 public class Case implements Serializable {
 
 	private static final long serialVersionUID = 1604599374800984540L;
 	
-	private int knownOrder;
-	private String knownGroup;
+	private KnownInfo knownInfo;
 	private Result result;
 	public int getKnownOrder() {
-		return knownOrder;
-	}
-	public void setKnownOrder(int knownOrder) {
-		this.knownOrder = knownOrder;
+		return knownInfo.getOrder();
 	}
 	public String getKnownGroup() {
-		return knownGroup;
+		return knownInfo.getGroup();
 	}
-	public void setKnownGroup(String knownGroup) {
-		this.knownGroup = knownGroup;
+	
+	public KnownInfo getKnownInfo() {
+		return knownInfo;
+	}
+	public void setKnownInfo(KnownInfo knownInfo) {
+		this.knownInfo = knownInfo;
 	}
 	public Result getResult() {
 		return result;
@@ -31,16 +58,12 @@ public class Case implements Serializable {
 	public void setResult(Result result) {
 		this.result = result;
 	}
-	@Override
-	public String toString() {
-		return "Case [knownOrder=" + knownOrder + ", knownGroup=" + knownGroup + ", result=" + result + "]";
-	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((knownGroup == null) ? 0 : knownGroup.hashCode());
-		result = prime * result + knownOrder;
+		result = prime * result + ((knownInfo == null) ? 0 : knownInfo.hashCode());
 		result = prime * result + ((this.result == null) ? 0 : this.result.hashCode());
 		return result;
 	}
@@ -50,19 +73,18 @@ public class Case implements Serializable {
 		if (obj == null) return false;
 		if (getClass() != obj.getClass()) return false;
 		Case other = (Case) obj;
-		if (knownGroup == null) {
-			if (other.knownGroup != null) return false;
-		} else if (!knownGroup.equals(other.knownGroup)) return false;
-		if (knownOrder != other.knownOrder) return false;
+		if (knownInfo == null) {
+			if (other.knownInfo != null) return false;
+		} else if (!knownInfo.equals(other.knownInfo)) return false;
 		if (result == null) {
 			if (other.result != null) return false;
 		} else if (!result.equals(other.result)) return false;
 		return true;
 	}
-	public Case(int knownOrder, String knownGroup, Result result) {
-		this.knownOrder = knownOrder;
-		this.knownGroup = knownGroup;
-		this.result = result;
+	
+	@Override
+	public String toString() {
+		return "Case [knownInfo=" + knownInfo + ", result=" + result + "]";
 	}
 	public Case() {
 	}
@@ -94,7 +116,9 @@ public class Case implements Serializable {
 		return result.getSunId();
 	}
 	public boolean hasKnownSymmetry() {
-		return knownOrder > 1;
+		return getKnownOrder() > 1;
 	}
-	
+	public boolean hasDecidedSymmetry() {
+		return getOrder() > 1;
+	}
 }

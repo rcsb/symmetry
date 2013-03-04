@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <ns2:CensusResults xmlns:ns2="http://source.rcsb.org">
     <data>
-		<knownGroup>D4</knownGroup>
-		<knownOrder>4</knownOrder>
+    	<knownInfo>
+			<group>D4</group>
+			<order>4</order>
+		</knownInfo>
 		<result>
 			<alignment>
 				<alignLength>110</alignLength>

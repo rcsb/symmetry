@@ -65,6 +65,8 @@ public class RotationGroup {
 
     public void complete() {
     	 if (modified) {
+    		 
+    		    		 
     		 if (rotations.size() > 0) {
     			 findHighestOrderAxis();
     			 setEAxis();
@@ -80,6 +82,9 @@ public class RotationGroup {
     
     public String getPointGroup() {
         if (modified) {
+        	
+        	
+        	
             if (rotations.size() == 0) {
                 return "C1";
             }

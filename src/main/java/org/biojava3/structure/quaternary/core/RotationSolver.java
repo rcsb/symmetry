@@ -130,10 +130,21 @@ public class RotationSolver implements QuatSymmetrySolver {
                 
                 // check if all symmetry operations have been found.          
                 if (rotations.getOrder() >= maxSymOps) {
+                	
+                	if ( parameters.isVerbose()) {
+                   		
+                		System.out.println("RotationSolver: rotations.getOrder():" + rotations.getOrder() + " > " + maxSymOps );
+                	}
+                	
                 	return;
                 }
             }
         }
+       
+       if ( parameters.isVerbose()) {
+      		
+   		System.out.println("RotationSolver: add end of solve() : rotations.getOrder():" + rotations.getOrder() );
+   	}
     }
     
     private void completeRotationGroup() {

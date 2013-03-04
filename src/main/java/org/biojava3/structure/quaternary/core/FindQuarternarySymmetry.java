@@ -94,7 +94,8 @@ public class FindQuarternarySymmetry {
 				chainClusterer.getChainIdsInClusterOrder(),
 				chainClusterer.getModelNumbersInClusterOrder());
 		maxFolds = folds.get(folds.size()-1);
-		System.out.println("Subunits: centroids: " + subunits.getCentroid() + " folds:" + subunits.getFolds());
+		if ( parameters.isVerbose())
+			System.out.println("Subunits: centroids: " + subunits.getCentroid() + " folds:" + subunits.getFolds());
 		//		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
 		//				chainClusterer.getSequenceClusterIds(),
 		//				folds,
@@ -108,19 +109,47 @@ public class FindQuarternarySymmetry {
 
 	private void determineRotationGroup() {
 		if (chainIds.size() == 0) {
+			if ( parameters.isVerbose()) {
+				System.err.println("FindQuaternarySymmetry: determineRotationGroups found chainIds.size() = 0" );
+			}
 			return;
 		}
+		
+		if ( parameters.isVerbose()) {
+			System.err.println("FindQuaternarySymmetry: determineRotationGroups found chainIds.size() = "+ chainIds.size() );
+			
+			System.err.println("FindQuaternarySymmetry: determineRotationGroups getFolds.size() : "+ subunits.getFolds().size());
+			System.err.println("FindQuaternarySymmetry: determineRotationGroups subunit count: "+ subunits.getSubunitCount());
+			
+		}
+		
 		if (subunits.getFolds().size() == 1) {
+			
 			// no symmetry possible, create empty ("C1") rotation group
 			method = "norotation";
+			
+			if ( parameters.isVerbose()) {
+				System.out.println("FindQuaternarySymmetry: determineRotationGroups: " + method);
+			}
+			
 			rotationGroup =  new RotationGroup();
 			rotationGroup.setC1(subunits.getSubunitCount());
 		} else if (subunits.getSubunitCount() == 2 && subunits.getFolds().contains(2)) {
 			method = "C2rotation";
+			
+			if ( parameters.isVerbose()) {
+				System.out.println("FindQuaternarySymmetry: determineRotationGroups: " + method);
+			}
+			
 			QuatSymmetrySolver solver = new C2RotationSolver(subunits, parameters);
 			rotationGroup = solver.getSymmetryOperations();
 		} else {
 			method = "rotation";
+			
+			if ( parameters.isVerbose()) {
+				System.out.println("FindQuaternarySymmetry: determineRotationGroups: " + method);
+			}
+			
 			QuatSymmetrySolver solver = new RotationSolver(subunits, parameters);
 			// TODO
 			//			QuatSymmetrySolver solver = new SystematicSolver(subunits, parameters);

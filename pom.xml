@@ -38,7 +38,7 @@
 		<repository>
 			<id>rcsb-pdb-maven-repo</id>
 			<name>RCSB PDB Maven Repository</name>
-			<url>http://maven.rcsb.org/</url>
+			<url>http://nexus.rcsb.org/nexus/content/groups/public/</url>
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>

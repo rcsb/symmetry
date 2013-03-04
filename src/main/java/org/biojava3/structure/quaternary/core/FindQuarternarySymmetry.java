@@ -15,7 +15,7 @@ public class FindQuarternarySymmetry {
 	private String method = "";
 	private int maxFolds = 1;
 	private boolean pseudoSymmetric = false;
-	
+
 	private boolean modified = true;
 
 	public FindQuarternarySymmetry(Structure structure, QuatSymmetryParameters parameters) {
@@ -25,49 +25,53 @@ public class FindQuarternarySymmetry {
 
 	public RotationGroup getRotationGroup() {
 		run();
-        return rotationGroup;
+		return rotationGroup;
 	}
-	
+
 	public String getCompositionFormula() {
 		run();
 		return compositionFormula;
 	}
-	
+
 	public int getChainCount() {
 		run();
 		return chainIds.size();
 	}
-	
+
 	public List<String> getChainIds() {
 		run();
 		return chainIds;
 	}
-	
+
 	public int getMaxFolds() {
 		run();
 		return maxFolds;
 	}
-	
+
 	public Subunits getSubunits() {
 		run();
 		return subunits;
 	}
-	
+
 	public String getMethod() {
 		run();
 		return method;
 	}
-	
+
 	public boolean isPseudoSymmetric() {
 		run();
 		return pseudoSymmetric;
 	}
-	
+
 	private void run() {
 		if (modified) {
-			createSubunits();
-			determineRotationGroup();
-			modified = false;
+			try {
+				createSubunits();
+				determineRotationGroup();
+				modified = false;
+			} catch (Exception e){
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -91,15 +95,15 @@ public class FindQuarternarySymmetry {
 				chainClusterer.getModelNumbersInClusterOrder());
 		maxFolds = folds.get(folds.size()-1);
 		System.out.println("Subunits: " + subunits.getCentroid());
-//		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
-//				chainClusterer.getSequenceClusterIds(),
-//				folds,
-//				chainClusterer.getChainIds(),
-//				chainClusterer.getModelNumbers());
-//		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
-//				chainClusterer.getCbetaCoordinates(), 
-//				chainClusterer.getSequenceClusterIds(),
-//				folds);
+		//		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
+		//				chainClusterer.getSequenceClusterIds(),
+		//				folds,
+		//				chainClusterer.getChainIds(),
+		//				chainClusterer.getModelNumbers());
+		//		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
+		//				chainClusterer.getCbetaCoordinates(), 
+		//				chainClusterer.getSequenceClusterIds(),
+		//				folds);
 	}
 
 	private void determineRotationGroup() {
@@ -119,7 +123,7 @@ public class FindQuarternarySymmetry {
 			method = "rotation";
 			QuatSymmetrySolver solver = new RotationSolver(subunits, parameters);
 			// TODO
-//			QuatSymmetrySolver solver = new SystematicSolver(subunits, parameters);
+			//			QuatSymmetrySolver solver = new SystematicSolver(subunits, parameters);
 			rotationGroup = solver.getSymmetryOperations();
 		}
 	}

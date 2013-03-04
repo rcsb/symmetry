@@ -27,7 +27,22 @@ public class RotationGroup {
      private boolean complete = true;
      private boolean modified = true;
 
-     public int getOrder() {
+     
+
+     private boolean debug = false;
+     
+     
+     
+     
+     public boolean isDebug() {
+		return debug;
+	}
+
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
+
+	public int getOrder() {
          return rotations.size();
      }
 
@@ -64,9 +79,14 @@ public class RotationGroup {
     }
 
     public void complete() {
+    	
+    	if ( debug){
+    		System.out.println("RotationGroup: modified:" + modified + " rotations.size() " + rotations.size());
+    	}
+    	
     	 if (modified) {
     		 
-    		    		 
+    		 
     		 if (rotations.size() > 0) {
     			 findHighestOrderAxis();
     			 setEAxis();
@@ -152,6 +172,10 @@ public class RotationGroup {
                 principalAxisIndex = i;
                 rmsd = s.getTraceRmsd();
             }
+        }
+        
+        if ( debug) {
+        	System.out.println("RotationGroup.findHighestOrderAxis: " + highestOrder + " principalAxisIndex: " + principalAxisIndex );
         }
     }
 

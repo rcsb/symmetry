@@ -28,6 +28,7 @@ import org.biojava.bio.structure.align.model.AFPChain;
 
 /**
  * The results of a CE-Symm alignment.
+ * 
  * @author dmyerstu
  */
 public class Alignment implements Serializable {
@@ -153,6 +154,10 @@ public class Alignment implements Serializable {
 		return block2Length;
 	}
 
+	public Integer getCoverage() {
+		return coverage;
+	}
+
 	public Integer getGapLength() {
 		return gapLength;
 	}
@@ -209,6 +214,10 @@ public class Alignment implements Serializable {
 
 	public void setBlock2Length(Integer block2Length) {
 		this.block2Length = block2Length;
+	}
+
+	public void setCoverage(Integer coverage) {
+		this.coverage = coverage;
 	}
 
 	public void setGapLength(Integer gapLength) {

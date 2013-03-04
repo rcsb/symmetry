@@ -76,8 +76,12 @@ public class Census {
 
 		abstract StructureAlignment getAlgorithm();
 	}
-
+	
 	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
+
+	static {
+		BasicConfigurator.configure();
+	}
 
 	private AtomCache cache;
 
@@ -92,10 +96,6 @@ public class Census {
 	private Map<String, Integer> symm = new TreeMap<String, Integer>();
 
 	private Map<String, Integer> total = new TreeMap<String, Integer>();
-
-	static {
-		BasicConfigurator.configure();
-	}
 
 	public static void buildDefault(String pdbDir, File censusFile) {
 		try {

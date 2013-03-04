@@ -97,8 +97,8 @@ public class CensusJob implements Callable<Result> {
 			return convertResult(null, null, superfamily, name, null, null, domain);
 		}
 		if (afpChain.getBlockNum() != 2) {
-			logger.debug("CE-Symm returned a result with " + afpChain.getBlockNum() + " blocks (job #" + count + ")");
-			return convertResult(null, false, superfamily, name, null, null, domain);
+			logger.debug("CE-Symm returned a result with " + afpChain.getBlockNum() + " block(s) (job #" + count + ")");
+			return convertResult(afpChain, false, superfamily, name, null, null, domain);
 		}
 
 		if (significance.isPossiblySignificant(afpChain)) {

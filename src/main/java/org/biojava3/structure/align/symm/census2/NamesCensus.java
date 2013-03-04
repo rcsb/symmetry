@@ -29,12 +29,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
+import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 /**
  * A census that takes a file containing a line-by-line list of SCOP domains.
@@ -50,12 +49,17 @@ public class NamesCensus extends Census {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			NamesCensus census = new NamesCensus(maxThreads);
 			census.setOutputWriter(censusFile);
-			List<ScopDomain> domains = new ArrayList<ScopDomain>();
+			census.domains = new ArrayList<ScopDomain>();
 			try {
 				BufferedReader br = new BufferedReader(new FileReader(lineByLine));
 				String line = "";
 				while ((line = br.readLine()) != null) {
-					domains.add(scop.getDomainByScopID(line));
+					ScopDomain domain = scop.getDomainByScopID(line);
+					if (domain == null) {
+						logger.error("No SCOP domain with id " + line + " was found");
+					} else {
+						census.domains.add(domain);
+					}
 				}
 				br.close();
 			} catch (IOException e) {
@@ -85,6 +89,24 @@ public class NamesCensus extends Census {
 		this.domains = domains;
 	}
 
+	@Override
+	protected Significance getSignificance() {
+		return new Significance() {
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return true;
+			}
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				return Census.getDefaultSignificance().isSignificant(protodomain, order, angle, afpChain);
+			}
+			@Override
+			public boolean isSignificant(Result result) {
+				return Census.getDefaultSignificance().isSignificant(result);
+			}
+		};
+	}
+	
 	@Override
 	protected List<ScopDomain> getDomains() {
 		return domains;

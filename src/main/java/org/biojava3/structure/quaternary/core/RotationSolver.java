@@ -96,7 +96,7 @@ public class RotationSolver implements QuatSymmetrySolver {
        for (int i = 0; i < sphereCount; i++) {
             SphereSampler.getAxisAngle(i, sphereAngle);
             if ( parameters.isVerbose() ) {   
-            	System.out.print("RotationSolver  solve: Sphere:" + i + " setting axis angle:" + sphereAngle); 
+            	System.out.println("RotationSolver  solve: Sphere:" + i + " setting axis angle:" + sphereAngle); 
             }
             
             for (double angle : angles) {

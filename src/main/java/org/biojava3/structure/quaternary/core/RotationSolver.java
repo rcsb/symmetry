@@ -149,7 +149,11 @@ public class RotationSolver implements QuatSymmetrySolver {
     		return;
     	}
     	
- //   	System.out.println("complete group: " +  rotations.getOrder() +"/" + g.getOrder());
+    	if ( parameters.isVerbose()) {
+    		System.out.println("RotationSolver completeRotationGroup: " +  rotations.getOrder() +"/" + g.getOrder());	
+    	}
+    	
+ //   	
     	// try to complete the group
     	for (int i = 0; i < g.getOrder(); i++) {
     		List<Integer> permutation = g.getPermutation(i);
@@ -182,6 +186,11 @@ public class RotationSolver implements QuatSymmetrySolver {
 		double subunitRmsd = SuperPosition.rmsd(transformedCoords, originalCoords);
 		//
 	
+		if ( parameters.isVerbose()) {
+			System.out.println("RotationSolver.evaluatePermutation subunits: "  + subunits.getSubunitCount());
+			System.out.println("RotationSolver.evaluatePermutation subunitRms " + subunitRmsd + " < " + parameters.getRmsdThreshold() + " ?");
+		}
+		
 		
 	//	long t3 = System.nanoTime();
 		// --

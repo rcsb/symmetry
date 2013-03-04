@@ -45,14 +45,24 @@ public class RotationSolver implements QuatSymmetrySolver {
     	}
         this.subunits = subunits;
         this.parameters = parameters;
+        
+        rotations.setDebug(parameters.isVerbose());
 //        sp = new SuperPositionQCP();
     }
 
 	public RotationGroup getSymmetryOperations() {
-        if (rotations.getOrder() == 0) {
+        
+		if ( parameters.isVerbose()) {
+			System.out.println("RotationSolver.getSymmetryOperations() order:" + rotations.getOrder() + " " + rotations.getTwoFoldsPerpendicular() + " " + rotations.getHigherOrderRotationAxis());
+		}
+		
+		
+		if (rotations.getOrder() == 0) {
             solve();
             completeRotationGroup();
         }
+        
+        
         return rotations;
     }
 

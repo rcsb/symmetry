@@ -247,6 +247,14 @@ public class RotationGroup {
 //        return;
 //    }
     
+    public int getHigherOrderRotationAxis(){
+    	return higherOrderRotationAxis;
+    }
+    
+    public int getTwoFoldsPerpendicular(){
+    	return twoFoldsPerpendicular;
+    }
+    
     private void calcPointGroup() {
     	complete = false;
         if (higherOrderRotationAxis > 1) {

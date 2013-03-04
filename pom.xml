@@ -54,16 +54,23 @@
 		<url>http://source.rcsb.org/javadoc/</url>
 	</scm>
 
+	  	<!-- where Maven deploy will deploy project jars/wars -->
 	<distributionManagement>
-		<downloadUrl>http://source.rcsb.org//maven/</downloadUrl>
-		<repository>
-			<uniqueVersion>false</uniqueVersion>
-			<id>rcsb-pdb-maven-repo</id>
-			<name>RCSB PDB Maven Repository</name>
-			<url>scp://maven.rcsb.org/Website/</url>
-			<layout>default</layout>
+		<downloadUrl>http://nexus.rcsb.org/nexus/content/repositories/releases/</downloadUrl>
+		<repository>			
+			<id>releases</id>
+			<name>RCSB PDB Maven Repository</name>			
+			<url>http://nexus.rcsb.org/nexus/content/repositories/releases</url>
+
 		</repository>
+		 <snapshotRepository>
+    		<id>snapshots</id>
+    		<url>http://nexus.rcsb.org/nexus/content/repositories/snapshots</url>
+    		<uniqueVersion>false</uniqueVersion>
+  		</snapshotRepository>
 	</distributionManagement>
+	
+	
 	<dependencies>
 		<dependency>
 			<groupId>java3d</groupId>

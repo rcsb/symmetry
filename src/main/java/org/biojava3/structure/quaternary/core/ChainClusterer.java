@@ -181,9 +181,30 @@ public class ChainClusterer  {
 				modified = false;
 				return;
 			}
+			
+			if ( parameters.isVerbose() ) {
+				System.out.println("ChainClusterer: caUnaligned.size() = " + caUnaligned.size());
+			}
+			
+			
+			
 			calcSequenceClusters();
+			if ( parameters.isVerbose() ) {
+				System.out.println("ChainClusterer: seqClusters.size() = " + seqClusters.size());				
+			}
+			
 			calcAlignedSequences();
+			
+			if ( parameters.isVerbose() ) {
+				System.out.println("ChainClusterer: caAligned.size() = " + caAligned.size());				
+			}
+			
 			createCalphaTraces();
+			if ( parameters.isVerbose() ) {
+				System.out.println("ChainClusterer: caCoords.size() = " + caCoords.size());				
+			}
+			
+			
 //			createCbetaTraces();
 			modified = false;
 		}

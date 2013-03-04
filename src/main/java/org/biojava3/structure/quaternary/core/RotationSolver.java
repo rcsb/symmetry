@@ -57,12 +57,25 @@ public class RotationSolver implements QuatSymmetrySolver {
     }
 
     private void solve() {
+    	
+    	
+    	
         initialize();
         
         int maxSymOps = subunits.getSubunitCount();
+        
+        boolean isSpherical = isSpherical();
+        
+        if ( parameters.isVerbose()) {
+    		System.out.println("RotationSolver.solve() maxSymOps ... " + maxSymOps ) ;
+    		System.out.println("RotationSolver.solve() isSpherical ... " + isSpherical );
+    	}
+        
+        
+        
         // for cases with icosahedral symmetry n cannot be higher than 60, should check for spherical symmetry here
         // isSpherical check added 08-04-11
-        if (maxSymOps % 60 == 0 && isSpherical()) {
+        if (maxSymOps % 60 == 0 && isSpherical) {
             maxSymOps = 60;
          }
 
@@ -70,9 +83,17 @@ public class RotationSolver implements QuatSymmetrySolver {
         Matrix4d transformation = new Matrix4d();
 
         int n = subunits.getSubunitCount();
+        
+        int sphereCount = SphereSampler.getSphereCount();
+        
+        if ( parameters.isVerbose()) {    		
+    		System.out.println("RotationSolver.solve() subunitcount ... " + n ) ;
+    		System.out.println("RotationSolver.solve() spheres ... " +  sphereCount ) ;
+        }
+        
         List<Double> angles = getAngles();
 
-       for (int i = 0; i < SphereSampler.getSphereCount(); i++) {
+       for (int i = 0; i < sphereCount; i++) {
             SphereSampler.getAxisAngle(i, sphereAngle);
             for (double angle : angles) {
                 // apply rotation
@@ -338,9 +359,16 @@ public class RotationSolver implements QuatSymmetrySolver {
     private void initialize() {
         scorer = new QuatSuperpositionScorer(subunits);
         
+                
         // translation to centered coordinate system
         centroid = new Vector3d(subunits.getCentroid());
 
+        if ( parameters.isVerbose()) {
+    		System.out.println("RotationSolver.initialize() centroid ... "  + centroid) ;
+    		
+    	}
+        
+        
         // translation back to original coordinate system
         Vector3d reverse = new Vector3d(centroid);
         reverse.negate();

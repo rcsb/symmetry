@@ -54,7 +54,7 @@ public class CalcBioAssemblySymmetry {
 
 		rotationGroup = new RotationGroup();
 		if (finder.getChainCount() > 0) {
-			System.out.println();
+			
 			rotationGroup = finder.getRotationGroup();
 			
 			if (params.isVerbose()) {
@@ -70,6 +70,9 @@ public class CalcBioAssemblySymmetry {
 			// use factory method to get point group specific instance of script generator
 			scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation);
 			hasProtein = true;
+			
+		} else {
+			System.out.println("No chains found for " + bioAssembly.getPDBCode() );
 		}
 		return hasProtein;
 	}

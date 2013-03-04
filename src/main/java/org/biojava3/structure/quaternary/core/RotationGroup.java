@@ -82,6 +82,11 @@ public class RotationGroup {
     	
     	if ( debug){
     		System.out.println("RotationGroup: modified:" + modified + " rotations.size() " + rotations.size());
+    		int rot = -1;
+    		for ( Rotation r : rotations) {
+    			rot++;
+    			System.out.println("RotationGroup: rotation:" + rot + ": " + r.toString());
+    		}
     	}
     	
     	 if (modified) {

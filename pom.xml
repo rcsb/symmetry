@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>structcomplayground</artifactId>
-	<version>0.1.11-SNAPSHOT</version>
+	<version>0.1.12-SNAPSHOT</version>
 	<name>StructCompPlayground</name>
 	<repositories>
 		<repository>

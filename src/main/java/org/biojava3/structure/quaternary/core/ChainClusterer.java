@@ -175,6 +175,9 @@ public class ChainClusterer  {
 		if (modified) {
 			extractProteinChains();
 			if (caUnaligned.size() == 0) {
+				
+				System.err.println("caUnaligned.size() == 0");
+				
 				modified = false;
 				return;
 			}

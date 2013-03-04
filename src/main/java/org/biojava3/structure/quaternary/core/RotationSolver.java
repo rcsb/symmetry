@@ -95,6 +95,10 @@ public class RotationSolver implements QuatSymmetrySolver {
 
        for (int i = 0; i < sphereCount; i++) {
             SphereSampler.getAxisAngle(i, sphereAngle);
+            if ( parameters.isVerbose() ) {   
+            	System.out.print("RotationSolver  solve: Sphere:" + i + " setting axis angle:" + sphereAngle); 
+            }
+            
             for (double angle : angles) {
                 // apply rotation
                 sphereAngle.angle = angle;
@@ -107,7 +111,15 @@ public class RotationSolver implements QuatSymmetrySolver {
                 // get permutation of subunits and check validity/uniqueness             
                 List<Integer> permutation = getPermutation();
   //              System.out.println("Rotation Solver: permutation: " + i + ": " + permutation);
-                if (! isValidPermutation(permutation)) {
+                
+                boolean isValidPermuation = isValidPermutation(permutation);
+                if ( parameters.isVerbose() ) {   
+                	System.out.print("RotationSolver " + permutation + " is " );
+                	if ( ! isValidPermuation)
+                		System.out.print("not ");
+                	System.out.println("a valid permutation...");
+                }
+                if (! isValidPermuation) {
                     continue;
                 }
                

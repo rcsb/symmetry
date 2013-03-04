@@ -157,6 +157,11 @@ public class RotationSolver implements QuatSymmetrySolver {
     	
     	// the group is complete, nothing to do
     	if (g.getOrder() == rotations.getOrder()) {
+    		
+    		if ( parameters.isVerbose()) {
+    			System.out.println("RotationSolver completeRotationGroup: order " + g.getOrder() + " " + rotations.getOrder());
+    		}
+    		
     		return;
     	}
     	
@@ -168,7 +173,17 @@ public class RotationSolver implements QuatSymmetrySolver {
     	// try to complete the group
     	for (int i = 0; i < g.getOrder(); i++) {
     		List<Integer> permutation = g.getPermutation(i);
-    		if (isValidPermutation(permutation)) {
+    		
+    		boolean isValidPermutation = isValidPermutation(permutation);
+    		if ( parameters.isVerbose() ) {   
+            	System.out.print("RotationSolver completeRotationGroup" + permutation + " is " );
+            	if ( ! isValidPermutation)
+            		System.out.print("not ");
+            	System.out.println("a valid permutation...");
+            }
+    		
+    		if (isValidPermutation) {
+    			
     			  // perform permutation of subunits
                 evaluatePermutation(permutation);
     		}
@@ -194,10 +209,11 @@ public class RotationSolver implements QuatSymmetrySolver {
 //		long t2 = System.nanoTime();
 	    // ----
 		Matrix4d transformation = SuperPosition.superposeAtOrigin(transformedCoords, originalCoords, axisAngle);
-		double subunitRmsd = SuperPosition.rmsd(transformedCoords, originalCoords);
+		double subunitRmsd 		= SuperPosition.rmsd(transformedCoords, originalCoords);
 		//
 	
 		if ( parameters.isVerbose()) {
+			System.out.println("RotationSolver.evaluatePermutation PermutationGroup order: "  + fold);
 			System.out.println("RotationSolver.evaluatePermutation subunits: "  + subunits.getSubunitCount());
 			System.out.println("RotationSolver.evaluatePermutation subunitRms " + subunitRmsd + " < " + parameters.getRmsdThreshold() + " ?");
 		}

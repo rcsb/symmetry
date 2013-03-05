@@ -101,6 +101,18 @@ public final class SuperPosition {
         Matrix4d rotTrans = new Matrix4d();
         rotTrans.set(q);
         axisAngle.set(q);
+        Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
+        if (axis.lengthSquared() < 1.0E-6) {
+        	axisAngle.x = 0;
+            axisAngle.y = 0;
+            axisAngle.z = 1;
+            axisAngle.angle = 0;
+        } else {
+        	axis.normalize();
+        	axisAngle.x = axis.x;
+        	axisAngle.y = axis.y;
+        	axisAngle.z = axis.z;
+        }
         transform(rotTrans, x);
 //		System.out.println(rotTrans);
         

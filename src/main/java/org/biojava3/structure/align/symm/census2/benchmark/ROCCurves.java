@@ -76,6 +76,7 @@ public class ROCCurves {
 			criteria.add(Criterion.tmScore());
 			criteria.add(Criterion.screw().inverse());
 			criteria.add(Criterion.random());
+			criteria.add(Criterion.epsilon());
 			criteria.add(Criterion.combine(Criterion.zScore(), Criterion.tmScore(), 1, 4));
 			rocs = new ROCCurves(input, criteria);
 			rocs.graph(output);
@@ -211,9 +212,10 @@ public class ROCCurves {
 			dataset.addSeries(series);
 		}
 		JFreeChart chart = ChartFactory.createXYLineChart("ROC", "FP", "TP", dataset, PlotOrientation.VERTICAL, true, false, false);
-		XYSplineRenderer renderer = new XYSplineRenderer();
-		renderer.setShapesVisible(false);
-		chart.getXYPlot().setRenderer(renderer);
+//		XYSplineRenderer renderer = new XYSplineRenderer();
+//		renderer.setShapesVisible(false);
+//		chart.getXYPlot().setRenderer(renderer);
+//		chart.getXYPlot().getRenderer().setSha
 		ChartUtilities.saveChartAsPNG(file, chart, width, height);
 	}
 

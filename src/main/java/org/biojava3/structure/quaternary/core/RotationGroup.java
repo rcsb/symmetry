@@ -242,6 +242,13 @@ public class RotationGroup {
 			}
 		}
 		rotations.get(0).setDirection(0); // set the E axis to the principal axis (by definition)
+		if (debug) {
+			int n = 0;
+			for (Rotation s: rotations) {
+				System.out.println("Rotation: " + n + " direction: " + s.getDirection());
+				n++;
+			}
+		}
 	}
 
 	private void findTwoFoldsPerpendicular() {

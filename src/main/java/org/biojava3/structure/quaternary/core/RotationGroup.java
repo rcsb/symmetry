@@ -314,6 +314,12 @@ public class RotationGroup {
                 complete = rotations.size() == highestOrder;
             }
         }
+        
+        if ( debug){
+        	
+        	System.out.println("RotationGroup.calcPointGroup() " + pointGroup + " complete: " + complete + " rotations.size() " + rotations.size());
+        	System.out.println("RotationGroup.calcPointGroup() " + twoFoldsPerpendicular + " " + higherOrderRotationAxis + " " + highestOrder);
+        }
 
         if (!complete) {
            // the rotation group is incomplete, remove partial results. This happens

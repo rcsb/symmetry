@@ -145,7 +145,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "Z-score>" + threshold;
+				return "Z-score";
 			}
 
 			@Override
@@ -164,7 +164,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "coverage>" + threshold;
+				return "coverage";
 			}
 
 			@Override
@@ -183,7 +183,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "TM-score>" + threshold;
+				return "TM-score";
 			}
 
 			@Override
@@ -202,7 +202,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "Align-score>" + threshold;
+				return "Align-score";
 			}
 
 			@Override
@@ -221,7 +221,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "RMSD>" + threshold;
+				return "RMSD";
 			}
 
 			@Override
@@ -240,7 +240,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "identity>" + threshold;
+				return "identity";
 			}
 
 			@Override
@@ -259,7 +259,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "similarity>" + threshold;
+				return "similarity";
 			}
 
 			@Override
@@ -278,7 +278,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "theta>" + threshold;
+				return "theta";
 			}
 
 			@Override
@@ -300,7 +300,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "2pi/o - theta > " + threshold;
+				return "2pi/o - theta";
 			}
 
 			@Override
@@ -323,7 +323,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "1/epsilon > " + threshold;
+				return "1/epsilon";
 			}
 
 			@Override
@@ -362,7 +362,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "screw component > " + threshold;
+				return "screw component";
 			}
 
 			@Override
@@ -381,7 +381,7 @@ public abstract class Criterion<T extends Number> {
 
 			@Override
 			public String getName() {
-				return "aligned length > " + threshold;
+				return "aligned length";
 			}
 
 			@Override

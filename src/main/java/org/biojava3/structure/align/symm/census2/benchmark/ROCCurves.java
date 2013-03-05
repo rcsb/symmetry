@@ -73,23 +73,11 @@ public class ROCCurves {
 		try {
 			List<Criterion<?>> criteria = new ArrayList<Criterion<?>>();
 			criteria.add(Criterion.zScore(3.5f));
-			criteria.add(Criterion.zScore(3.7f));
-			criteria.add(Criterion.zScore(3.9f));
-			criteria.add(Criterion.tmScore(0.3f));
 			criteria.add(Criterion.tmScore(0.4f));
-			criteria.add(Criterion.tmScore(0.5f));
-			criteria.add(Criterion.coverage(150));
-			criteria.add(Criterion.alignScore(500));
+			criteria.add(Criterion.combineFF(Criterion.zScore(3.5f), Criterion.tmScore(0.4f), 1, 5));
 			criteria.add(Criterion.inverseF(Criterion.screw(1.5f)));
+			criteria.add(Criterion.identity(0.2f));
 			criteria.add(Criterion.random(0.5f));
-//			criteria.add(Criterion.tmScore(0.6f));
-//			Criterion<Float> c1 = Criterion.combineFF(Criterion.tmScore(0.3f), Criterion.zScore(3.5f), 2, 1);
-//			criteria.add(c1);
-//			criteria.add(Criterion.identity(0.15f));
-//			criteria.add(Criterion.identity(0.1f));
-//			criteria.add(Criterion.similarity(0.3f));
-//			criteria.add(Criterion.epsilon((float) (Math.PI/16.0)));
-//			criteria.add(Criterion.alignLength(100));
 			rocs = new ROCCurves(input, criteria);
 			rocs.graph(output);
 		} catch (IOException e) {
@@ -136,15 +124,16 @@ public class ROCCurves {
 				// this is the only case where we'll return 0
 				if (o1.equals(o2)) return 0;
 
-				// always put cases of known symmetry first
 				try {
-					if (criterion.hasSymmetry(o1.getResult()) && !criterion.hasSymmetry(o2.getResult())) return -1;
-					if (!criterion.hasSymmetry(o1.getResult()) && criterion.hasSymmetry(o2.getResult())) return 1;
+					double c1 = criterion.get(o1.getResult()).doubleValue();
+					double c2 = criterion.get(o2.getResult()).doubleValue();
+					if (c1 < c2) return 1;
+					if (c1 > c2) return -1;
 				} catch (NoncomputableCriterionException e) {
 					throw new IllegalArgumentException(e);
 				}
 
-				// we don't want cases sorted
+				// select randomly
 				return random.nextBoolean()? 1 : -1;
 
 			}

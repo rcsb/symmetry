@@ -185,11 +185,12 @@ public class RotationGroup {
 				highestOrder = s.getFold();
 				principalAxisIndex = i;
 				rmsd = s.getTraceRmsd();
-			} else if (s.getFold() >= highestOrder && s.getTraceRmsd() < rmsd) {
-				highestOrder = s.getFold();
-				principalAxisIndex = i;
-				rmsd = s.getTraceRmsd();
 			}
+//			else if (s.getFold() >= highestOrder && s.getTraceRmsd() < rmsd) {
+//				highestOrder = s.getFold();
+//				principalAxisIndex = i;
+//				rmsd = s.getTraceRmsd();
+//			}
 		}
 
 		if ( debug) {

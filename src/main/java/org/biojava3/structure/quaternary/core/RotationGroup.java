@@ -81,7 +81,7 @@ public class RotationGroup {
     public void complete() {
     	
     	if ( debug){
-    		System.out.println("RotationGroup: modified:" + modified + " rotations.size() " + rotations.size());
+    		System.out.println("RotationGroup.complete(): modified:" + modified + " rotations.size() " + rotations.size());
     		int rot = -1;
     		for ( Rotation r : rotations) {
     			rot++;
@@ -106,11 +106,13 @@ public class RotationGroup {
     }
     
     public String getPointGroup() {
+    	
+    	if ( debug){
+    		System.out.println("RotationGroup.getPointGroup() modified: " + modified + " rotations.size() " + rotations.size());
+    	}
+    	
         if (modified) {
-        	
-        	
-        	
-            if (rotations.size() == 0) {
+        	if (rotations.size() == 0) {
                 return "C1";
             }
             complete();

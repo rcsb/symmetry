@@ -238,9 +238,7 @@ public final class SphereSampler {
 	}
 
 	private static void createSphereSet() {
-		
-		System.out.println("SphereSampler.createSphereSet()");
-		
+				
 		for (int i = 0; i < IcosahedralSampler.getSphereCount(); i++) {
 			orientations.add(IcosahedralSampler.getQuat4d(i));
 		}

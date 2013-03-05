@@ -118,9 +118,10 @@ public class Rotation {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("fold: " + fold);
+        sb.append(" fold       : " + fold);
         sb.append(" orientation: " + direction);
-        sb.append(" RMSD: " + subunitRmsd);
+        sb.append(" axisAngle  : " + axisAngle);
+        sb.append(" RMSD       : " + subunitRmsd);
         sb.append(" permutation: " + permutation);
         return sb.toString();
     }

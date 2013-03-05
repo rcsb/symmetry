@@ -182,7 +182,7 @@ public class CensusJob implements Callable<Result> {
 			if (afpChain != null) r.setAxis(new Axis(new RotationAxis(afpChain)));
 		} catch (RuntimeException e) {
 			logger.error("Could not get rotation axis for " + scopId, e);
-		} catch (StructureException e) {
+		} catch (Exception e) {
 			logger.error("Alignment for "+scopId+" is empty",e);
 			if (angle != null) {
 				Axis axis = new Axis();

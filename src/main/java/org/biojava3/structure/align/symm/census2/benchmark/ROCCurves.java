@@ -71,13 +71,12 @@ public class ROCCurves {
 	public static void run(File input, File output) {
 		ROCCurves rocs;
 		try {
-			List<Criterion<?>> criteria = new ArrayList<Criterion<?>>();
-			criteria.add(Criterion.zScore(3.5f));
-			criteria.add(Criterion.tmScore(0.4f));
-			criteria.add(Criterion.combineFF(Criterion.zScore(3.5f), Criterion.tmScore(0.4f), 1, 5));
-			criteria.add(Criterion.inverseF(Criterion.screw(1.5f)));
-			criteria.add(Criterion.identity(0.2f));
-			criteria.add(Criterion.random(0.5f));
+			List<Criterion> criteria = new ArrayList<Criterion>();
+			criteria.add(Criterion.zScore());
+			criteria.add(Criterion.tmScore());
+			criteria.add(Criterion.screw().inverse());
+			criteria.add(Criterion.random());
+			criteria.add(Criterion.combine(Criterion.zScore(), Criterion.tmScore(), 1, 4));
 			rocs = new ROCCurves(input, criteria);
 			rocs.graph(output);
 		} catch (IOException e) {
@@ -85,13 +84,13 @@ public class ROCCurves {
 		}
 	}
 
-	private List<Criterion<?>> criteria;
+	private List<Criterion> criteria;
 	private Sample sample;
 
-	public ROCCurves(File sampleFile, List<Criterion<?>> criteria) throws IOException {
+	public ROCCurves(File sampleFile, List<Criterion> criteria) throws IOException {
 		this(Sample.fromXML(sampleFile), criteria);
 	}
-	public ROCCurves(Sample sample, List<Criterion<?>> criteria) {
+	public ROCCurves(Sample sample, List<Criterion> criteria) {
 		List<Case> cases = new ArrayList<Case>(sample.size());
 		for (Case c : sample.getData()) {
 			if (c.getAlignment() == null || c.getAxis() == null) {
@@ -114,7 +113,7 @@ public class ROCCurves {
 	
 	private int nAsymm;
 	
-	public SortedSet<Case> resort(final Criterion<?> criterion) {
+	public SortedSet<Case> resort(final Criterion criterion) {
 
 		Comparator<Case> comparator = new Comparator<Case>() {
 			Random random = new Random();
@@ -125,8 +124,8 @@ public class ROCCurves {
 				if (o1.equals(o2)) return 0;
 
 				try {
-					double c1 = criterion.get(o1.getResult()).doubleValue();
-					double c2 = criterion.get(o2.getResult()).doubleValue();
+					double c1 = criterion.get(o1.getResult());
+					double c2 = criterion.get(o2.getResult());
 					if (c1 < c2) return 1;
 					if (c1 > c2) return -1;
 				} catch (NoncomputableCriterionException e) {
@@ -152,10 +151,10 @@ public class ROCCurves {
 		return cases;
 	}
 
-	public void printText(Criterion<?> criterion, String file) throws IOException {
+	public void printText(Criterion criterion, String file) throws IOException {
 		printText(criterion, new File(file));
 	}
-	public void printText(Criterion<?> criterion, File file) throws IOException {
+	public void printText(Criterion criterion, File file) throws IOException {
 		PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(file)));
 		for (Case c : sample.getData()) {
 			if (c.getResult() == null || c.getAlignment() == null) {
@@ -185,7 +184,7 @@ public class ROCCurves {
 	}
 	public void graph(File file, int width, int height) throws IOException {
 		XYSeriesCollection dataset = new XYSeriesCollection();
-		for (Criterion<?> criterion : criteria) {
+		for (Criterion criterion : criteria) {
 			XYSeries series = new XYSeries(criterion.getName());
 			int tp = 0, fp = 0;
 			SortedSet<Case> cases = resort(criterion);

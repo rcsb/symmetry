@@ -30,115 +30,48 @@ import org.biojava3.structure.align.symm.census2.Result;
  * A classifier for the quality of CE-Symm results. Has a method {@link #get(Case)} that determines the quality of a {@link Result}. Can also {@link #hasSymmetry(Result) decide} whether a result is symmetric.
  * @author dmyerstu
  *
- * @param <T> The numerical type of the quality
  */
-public abstract class Criterion<T extends Number> {
+public abstract class Criterion {
 
-	public static Criterion<Float> inverseF(final Criterion<Float> criterion) {
-		return new Criterion<Float>() {
-			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
-				return -criterion.get(result);
-			}
-
-			@Override
-			public String getName() {
-				return "-(" + criterion.getName() + ")";
-			}
-
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return !criterion.hasSymmetry(result);
-			}
-		};
-	}
-
-	public static Criterion<Integer> inverseI(final Criterion<Integer> criterion) {
-		return new Criterion<Integer>() {
-			@Override
-			public Integer get(Result result) throws NoncomputableCriterionException {
-				return -criterion.get(result);
-			}
-
-			@Override
-			public String getName() {
-				return "-(" + criterion.getName() + ")";
-			}
-
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return !criterion.hasSymmetry(result);
-			}
-		};
-	}
-
-	public static Criterion<Float> combineFF(final Criterion<Float> a, final Criterion<Float> b, final float coeffA, final float coeffB) {
-		return new Criterion<Float>() {
-			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
-				return coeffA * a.get(result) + coeffB * b.get(result);
-			}
-
-			@Override
-			public String getName() {
-				return coeffA + "*(" + a.getName() + ") + " + coeffB + " *(" + b.getName() + ")";
-			}
-
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return a.hasSymmetry(result) && b.hasSymmetry(result);
-			}
-		};
-	}
-
-	public static Criterion<Float> combineFI(final Criterion<Float> a, final Criterion<Integer> b, final float coeffA, final float coeffB) {
-		return new Criterion<Float>() {
-			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
-				return coeffA * a.get(result) + coeffB * b.get(result);
-			}
-
-			@Override
-			public String getName() {
-				return coeffA + "*(" + a.getName() + ") + " + coeffB + " *(" + b.getName() + ")";
-			}
-
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return a.hasSymmetry(result) && b.hasSymmetry(result);
-			}
-		};
-	}
-
-	public static Criterion<Integer> combineII(final Criterion<Integer> a, final Criterion<Integer> b, final float coeffA, final float coeffB) {
-		return new Criterion<Integer>() {
-			@Override
-			public Integer get(Result result) throws NoncomputableCriterionException {
-				return (int) (coeffA * a.get(result) + coeffB * b.get(result));
-			}
-
-			@Override
-			public String getName() {
-				return coeffA + "*(" + a.getName() + ") + " + coeffB + " *(" + b.getName() + ")";
-			}
-
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return a.hasSymmetry(result) && b.hasSymmetry(result);
-			}
-		};
-	}
-
-	public abstract T get(Result result) throws NoncomputableCriterionException;
+	public abstract double get(Result result) throws NoncomputableCriterionException;
 
 	public abstract String getName();
+	
+	@Override
+	public String toString() {
+		return getName();
+	}
 
-	public abstract boolean hasSymmetry(Result result) throws NoncomputableCriterionException;
-
-	public static Criterion<Float> zScore(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion combine(final Criterion a, final Criterion b, final double coeffA, final double coeffB) {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
+				return coeffA * a.get(result) + coeffB * b.get(result);
+			}
+			@Override
+			public String getName() {
+				return coeffA + "*" + a.getName() + " + " + coeffB + "*" + b.getName();
+			}
+		};
+	}
+	
+	public Criterion inverse() {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				return -Criterion.this.get(result);
+			}
+			@Override
+			public String getName() {
+				return "-" + Criterion.this.getName();
+			}
+		};
+	}
+	
+	public static Criterion zScore() {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAlignment() == null || result.getAlignment().getzScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
 				return result.getAlignment().getzScore();
 			}
@@ -147,17 +80,12 @@ public abstract class Criterion<T extends Number> {
 			public String getName() {
 				return "Z-score";
 			}
-
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Integer> coverage(final float threshold) {
-		return new Criterion<Integer>() {
+	public static Criterion coverage() {
+		return new Criterion() {
 			@Override
-			public Integer get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAlignment() == null || result.getAlignment().getCoverage() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
 				return result.getAlignment().getCoverage();
 			}
@@ -166,17 +94,12 @@ public abstract class Criterion<T extends Number> {
 			public String getName() {
 				return "coverage";
 			}
-
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Float> tmScore(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion tmScore() {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAlignment() == null || result.getAlignment().getTmScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
 				return result.getAlignment().getTmScore();
 			}
@@ -186,16 +109,12 @@ public abstract class Criterion<T extends Number> {
 				return "TM-score";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Float> alignScore(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion alignScore() {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAlignment() == null || result.getAlignment().getAlignScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
 				return result.getAlignment().getAlignScore();
 			}
@@ -205,16 +124,12 @@ public abstract class Criterion<T extends Number> {
 				return "Align-score";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Float> rmsd(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion rmsd() {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAlignment() == null || result.getAlignment().getRmsd() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
 				return result.getAlignment().getRmsd();
 			}
@@ -224,16 +139,12 @@ public abstract class Criterion<T extends Number> {
 				return "RMSD";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Float> identity(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion identity() {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAlignment() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
 				return result.getAlignment().getIdentity();
 			}
@@ -243,16 +154,12 @@ public abstract class Criterion<T extends Number> {
 				return "identity";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Float> similarity(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion similarity() {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAlignment() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
 				return result.getAlignment().getSimilarity();
 			}
@@ -262,16 +169,12 @@ public abstract class Criterion<T extends Number> {
 				return "similarity";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Float> theta(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion theta() {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAxis() == null) throw new NoncomputableCriterionException("The case has a null getAxis()");
 				return result.getAxis().getTheta();
 			}
@@ -281,16 +184,12 @@ public abstract class Criterion<T extends Number> {
 				return "theta";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Float> thetaIsCorrect(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion thetaIsCorrect() {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAxis() == null) throw new NoncomputableCriterionException("The case has a null getAxis()");
 				if (result.getOrder() == null) throw new NoncomputableCriterionException("The case has a null getOrder()");
 				float theta = result.getAxis().getTheta();
@@ -303,16 +202,12 @@ public abstract class Criterion<T extends Number> {
 				return "2pi/o - theta";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Float> epsilon(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion epsilon() {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAxis() == null) throw new NoncomputableCriterionException("The case has a null getAxis()");
 				if (result.getOrder() == null) throw new NoncomputableCriterionException("The case has a null getOrder()");
 				if (result.getOrder() < 2) throw new NoncomputableCriterionException("The case has a getOrder() of less than 2");
@@ -326,35 +221,27 @@ public abstract class Criterion<T extends Number> {
 				return "1/epsilon";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
 	private static volatile Random random = new Random();
-	public static Criterion<Float> random(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion random() {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				return random.nextFloat();
 			}
 
 			@Override
 			public String getName() {
-				return "random (" + (threshold*100.0f) + "%)";
+				return "random";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Float> screw(final float threshold) {
-		return new Criterion<Float>() {
+	public static Criterion screw() {
+		return new Criterion() {
 			@Override
-			public Float get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAxis() == null) throw new NoncomputableCriterionException("The case has a null getAxis()");
 				System.out.println(result.getAxis().getScrew());
 				return result.getAxis().getScrew();
@@ -365,16 +252,12 @@ public abstract class Criterion<T extends Number> {
 				return "screw component";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
-	public static Criterion<Integer> alignLength(final float threshold) {
-		return new Criterion<Integer>() {
+	public static Criterion alignLength() {
+		return new Criterion() {
 			@Override
-			public Integer get(Result result) throws NoncomputableCriterionException {
+			public double get(Result result) throws NoncomputableCriterionException {
 				if (result.getAlignment() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
 				return result.getAlignment().getAlignLength();
 			}
@@ -384,10 +267,6 @@ public abstract class Criterion<T extends Number> {
 				return "aligned length";
 			}
 
-			@Override
-			public boolean hasSymmetry(Result result) throws NoncomputableCriterionException {
-				return get(result) > threshold;
-			}
 		};
 	}
 

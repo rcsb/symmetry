@@ -90,15 +90,15 @@ public class CensusJob implements Callable<Result> {
 			afpChain = findSymmetry(name, ca1, ca2);
 		} catch (Exception e) {
 			logger.error("Failed running CE-Symm on " + name + ": " + e.getMessage(), e);
-			return convertResult(null, null, superfamily, name, null, null, domain);
+			return convertResult(null, null, superfamily, name, null, null, domain, null);
 		}
 		if (afpChain == null || afpChain.getOptAln() == null) {
 			logger.debug("CE-Symm returned null (job #" + count + ")");
-			return convertResult(null, null, superfamily, name, null, null, domain);
+			return convertResult(null, null, superfamily, name, null, null, domain, null);
 		}
 		if (afpChain.getBlockNum() != 2) {
 			logger.debug("CE-Symm returned a result with " + afpChain.getBlockNum() + " block(s) (job #" + count + ")");
-			return convertResult(afpChain, false, superfamily, name, null, null, domain);
+			return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
 		}
 
 		if (significance.isPossiblySignificant(afpChain)) {
@@ -110,7 +110,7 @@ public class CensusJob implements Callable<Result> {
 				logger.debug("Protodomain is " + protodomain + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.warn("Could not create protodomain because " + e.getMessage(), e);
-				return convertResult(afpChain, false, superfamily, name, null, null, domain);
+				return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
 			}
 			logger.debug("Finding order (job #" + count + ")");
 			int order;
@@ -119,7 +119,7 @@ public class CensusJob implements Callable<Result> {
 				logger.debug("Order is " + order + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.error("Failed to determine the order of symmetry on " + name + ": " + e.getMessage(), e);
-				return convertResult(afpChain, false, superfamily, name, null, null, domain);
+				return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
 			}
 			logger.debug("Finding angle (job #" + count + ")");
 			double angle;
@@ -128,14 +128,14 @@ public class CensusJob implements Callable<Result> {
 				logger.debug("Angle is " + angle + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.error("Failed to determine the angle on " + name + ": " + e.getMessage(), e);
-				return convertResult(null, false, superfamily, name, order, null, domain);
+				return convertResult(null, false, superfamily, name, order, null, domain, null);
 			}
 			boolean isSymmetric = significance.isSignificant(protodomain, order, angle, afpChain);
 			return convertResult(afpChain, isSymmetric, superfamily, name, order, protodomain.toString(),
-					domain);
+					domain, (float) angle);
 		} else {
 			logger.debug("Result is not significant (job #" + count + ")");
-			return convertResult(afpChain, false, superfamily, name, null, null, domain);
+			return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
 		}
 	}
 
@@ -163,7 +163,7 @@ public class CensusJob implements Callable<Result> {
 		this.superfamily = superfamily;
 	}
 
-	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, ScopDescription superfamily, String scopId, Integer order, String protodomain, ScopDomain domain) {
+	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, ScopDescription superfamily, String scopId, Integer order, String protodomain, ScopDomain domain, Float angle) {
 
 		final String description = superfamily.getDescription();
 
@@ -182,6 +182,13 @@ public class CensusJob implements Callable<Result> {
 			if (afpChain != null) r.setAxis(new Axis(new RotationAxis(afpChain)));
 		} catch (RuntimeException e) {
 			logger.error("Could not get rotation axis for " + scopId, e);
+		} catch (StructureException e) {
+			logger.error("Alignment for "+scopId+" is empty",e);
+			if (angle != null) {
+				Axis axis = new Axis();
+				axis.setTheta((float) angle);
+				r.setAxis(axis);
+			}
 		}
 		r.setOrder(order);
 

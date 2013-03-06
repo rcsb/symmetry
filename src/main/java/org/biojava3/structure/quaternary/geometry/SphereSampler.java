@@ -82,11 +82,12 @@ class Permute {
  * @author Peter
  */
 public final class SphereSampler {
+	
 	private static List<Quat4d> orientations = new ArrayList<Quat4d>();
 
 	// The rotational symmetries of the cube. (Not normalized, since
 	// PackSet.Add does this.)
-	private static double cubeSyms[][] = {
+	private static final double cubeSyms[][] = {
 			{ 1, 0, 0, 0 },
 			// 180 deg rotations about 3 axes
 			{ 0, 1, 0, 0 },
@@ -165,20 +166,20 @@ public final class SphereSampler {
 	// 4 4 0 0.680232 10.95 12
 	// 4 4 2 0.446640 12.25 24
 	
-	private static double delta = 0.15846;
-	private static double sigma = 0.00;
-	private static int ntot = 7416;
-	private static int ncell = 309;
-	private static int nent = 18;
+	private static final double delta = 0.15846;
+	private static final double sigma = 0.00;
+	private static final int ntot = 7416;
+	private static final int ncell = 309;
+	private static final int nent = 18;
 //	private static double maxrad = 10.07;
 //	private static double coverage = 2.13338;
-	private static int[] k = { 0, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5};
-	private static int[] l = { 0, 1, 0, 2, 2, 1, 3, 3, 0, 2, 2, 4, 4, 4, 1, 3, 3, 5};
-	private static int[] m = { 0, 1, 0, 0, 2, 1, 1, 3, 0, 0, 2, 0, 2, 4, 1, 1, 3, 1};
+	private static final int[] k = { 0, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5};
+	private static final int[] l = { 0, 1, 0, 2, 2, 1, 3, 3, 0, 2, 2, 4, 4, 4, 1, 3, 3, 5};
+	private static final int[] m = { 0, 1, 0, 0, 2, 1, 1, 3, 0, 0, 2, 0, 2, 4, 1, 1, 3, 1};
 //	private static double[] w = { 1.557196, 1.475638, 1.449892, 1.353190,
 //			1.265726, 1.257478, 1.143450, 0.867360, 0.916638, 0.941799,
 //			0.876165, 0.680232, 0.446640, 0.0, 0.0, 0.0, 0.0, 0.0};
-	private static int[] mult = { 1, 8, 6, 12, 8, 24, 24, 8, 6, 24, 24, 12, 24, 8, 24, 48, 24, 24};
+	private static final int[] mult = { 1, 8, 6, 12, 8, 24, 24, 8, 6, 24, 24, 12, 24, 8, 24, 48, 24, 24};
 	
 //	# Orientation set c48u309, number = 7416, radius = 10.07 degrees
 //	# $Id: c48u309.grid 6102 2006-02-21 19:45:40Z ckarney $

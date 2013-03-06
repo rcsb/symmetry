@@ -96,11 +96,10 @@ public final class SuperPosition {
 
     public static Matrix4d superposeAtOrigin(Point3d[] x, Point3d[] y, AxisAngle4d axisAngle) {
         Quat4d q = quaternionOrientation(x, y);
-        q.normalize();
         q.conjugate();
         
         Matrix4d rotTrans = new Matrix4d();
-     //   rotTrans.set(q);
+        rotTrans.set(q);
         axisAngle.set(q);
         Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
         if (axis.lengthSquared() < 1.0E-6) {
@@ -114,12 +113,14 @@ public final class SuperPosition {
         	axisAngle.y = axis.y;
         	axisAngle.z = axis.z;
         }
-        rotTrans.set(axisAngle);
         transform(rotTrans, x);
 //		System.out.println(rotTrans);
         
         return rotTrans;
     }
+    
+    
+    
     
     public static double rmsd(Point3d[] x, Point3d[] y) {
         double sum = 0.0f;

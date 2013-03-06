@@ -19,7 +19,7 @@ public class DistanceBox<T> {
     private boolean modified;
     private double inverseBinWidth;
     // relative locations of 26 boxes surrounding a box at (0, 0, 0)
-    private static long[] offset = new long[] {
+    private static final long[] offset = new long[] {
         0 + ( 0 * 10000) + ( 0 * 1000000000L),
        -1 + (-1 * 10000) + (-1 * 1000000000L),
        -1 + (-1 * 10000) + ( 0 * 1000000000L),
@@ -48,6 +48,7 @@ public class DistanceBox<T> {
         1 + ( 1 * 10000) + ( 0 * 1000000000L),
         1 + ( 1 * 10000) + ( 1 * 1000000000L)
     };
+   
     private List<T> tempBox = new ArrayList<T>(offset.length);
     
     /** Creates a new instance of DistanceBox */
@@ -142,7 +143,7 @@ public class DistanceBox<T> {
     }
     
     private List<T> getBoxTwo(long location) {
-        tempBox.clear();
+    	tempBox.clear();
         for (int i = 0, n = offset.length; i < n; i++) {
             List<T> box = map.get(location + offset[i]);
             if (box != null) {

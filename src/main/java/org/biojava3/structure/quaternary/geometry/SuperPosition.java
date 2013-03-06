@@ -28,7 +28,6 @@ public final class SuperPosition {
         
         // calculate quaternion from relative orientation
         Quat4d q = quaternionOrientation(x, ref);
-        q.conjugate();
         
         Matrix4d rotTrans = new Matrix4d();
         rotTrans.set(q);
@@ -61,7 +60,6 @@ public final class SuperPosition {
         
         // calculate rotational component (rotation around origin)
         Quat4d q = quaternionOrientation(xref, yref);
-        q.conjugate();
         Matrix4d rotTrans = new Matrix4d();
         rotTrans.set(q);   
  
@@ -86,7 +84,6 @@ public final class SuperPosition {
     
     public static Matrix4d superposeAtOrigin(Point3d[] x, Point3d[] y) {
         Quat4d q = quaternionOrientation(x, y);
-        q.conjugate();
         
         Matrix4d rotTrans = new Matrix4d();
         rotTrans.set(q);
@@ -95,9 +92,7 @@ public final class SuperPosition {
     }
 
     public static Matrix4d superposeAtOrigin(Point3d[] x, Point3d[] y, AxisAngle4d axisAngle) {
-        Quat4d q = quaternionOrientation(x, y);
-        q.conjugate();
-        
+        Quat4d q = quaternionOrientation(x, y);    
         Matrix4d rotTrans = new Matrix4d();
         rotTrans.set(q);
         axisAngle.set(q);
@@ -214,6 +209,8 @@ public final class SuperPosition {
         EigenvalueDecomposition eig = m.eig();
         double[][] v = eig.getV().getArray();
         Quat4d q = new Quat4d(v[1][3], v[2][3], v[3][3], v[0][3]);
+        q.normalize();
+        q.conjugate();
         return q;
     }
     

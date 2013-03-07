@@ -21,16 +21,16 @@ class Permute {
 		tmp.z = t.z;
 		triples.add(tmp);
 		int n = 1;
-	
+
 		if (t.x != 0) {
 			for (int i = 0; i < n; ++i) {
 				Tuple3i m = triples.get(i);
-			
+
 				triples.add(new Point3i(-m.x, m.y, m.z));
 			}
 			n *= 2;
 		}
-		
+
 		if (t.y != 0) {
 			for (int i = 0; i < n; ++i) {
 				Point3i m = triples.get(i);
@@ -49,7 +49,7 @@ class Permute {
 		if (t.x == t.y && t.y == t.z) {
 			return;
 		}
-		
+
 		for (int i = 0; i < n; ++i) {
 			Point3i m = triples.get(i);
 			triples.add(new Point3i(m.y, m.z, m.x));
@@ -60,7 +60,7 @@ class Permute {
 		if (t.x == t.y || t.y == t.z) {
 			return;
 		}
-	
+
 		for (int i = 0; i < n; ++i) {
 			Point3i m = triples.get(i);
 			triples.add(new Point3i(m.y, m.x, m.z));
@@ -82,166 +82,52 @@ class Permute {
  * @author Peter
  */
 public final class SphereSampler {
-	
-	private static List<Quat4d> orientations = new ArrayList<Quat4d>();
+
+	private static final List<Quat4d> orientations ;
+
+
 
 	// The rotational symmetries of the cube. (Not normalized, since
 	// PackSet.Add does this.)
 	private static final double cubeSyms[][] = {
-			{ 1, 0, 0, 0 },
-			// 180 deg rotations about 3 axes
-			{ 0, 1, 0, 0 },
-			{ 0, 0, 1, 0 },
-			{ 0, 0, 0, 1 },
-			// +/- 120 degree rotations about 4 leading diagonals
-			{ 1, 1, 1, 1 }, { 1, 1, 1, -1 }, { 1, 1, -1, 1 }, { 1, 1, -1, -1 },
-			{ 1, -1, 1, 1 }, { 1, -1, 1, -1 },
-			{ 1, -1, -1, 1 },
-			{ 1, -1, -1, -1 },
-			// +/- 90 degree rotations about 3 axes
-			{ 1, 1, 0, 0 }, { 1, -1, 0, 0 }, { 1, 0, 1, 0 }, { 1, 0, -1, 0 },
-			{ 1, 0, 0, 1 }, { 1, 0, 0, -1 },
-			// 180 degree rotations about 6 face diagonals
-			{ 0, 1, 1, 0 }, { 0, 1, -1, 0 }, { 0, 1, 0, 1 }, { 0, 1, 0, -1 },
-			{ 0, 0, 1, 1 }, { 0, 0, 1, -1 }, };
-	
-	
-//	 private static double delta = 0.25970;
-//	 private static double sigma = 0.00;
-//	 private static int ntot = 1992;
-//	 private static int ncell = 83;
-//	 private static int nent = 7;
-//	 private static double maxrad = 16.29;
-//	 private static double coverage = 2.42065;
-//	 private static int[] k = {0, 1, 2, 2, 2, 3, 3};
-//	 private static int[] l = {0, 1, 0, 2, 2, 1, 3};
-//	 private static int[] m = {0, 1, 0, 0, 2, 1, 1};
-//	 private static double[] w = {1.665264, 1.517726, 1.489794, 1.205193,
-//	 1.146566, 0.973349, 0.552456};
-//	 private static int[] mult = {1, 8, 6, 12, 8, 24, 24};
+		{ 1, 0, 0, 0 },
+		// 180 deg rotations about 3 axes
+		{ 0, 1, 0, 0 },
+		{ 0, 0, 1, 0 },
+		{ 0, 0, 0, 1 },
+		// +/- 120 degree rotations about 4 leading diagonals
+		{ 1, 1, 1, 1 }, { 1, 1, 1, -1 }, { 1, 1, -1, 1 }, { 1, 1, -1, -1 },
+		{ 1, -1, 1, 1 }, { 1, -1, 1, -1 },
+		{ 1, -1, -1, 1 },
+		{ 1, -1, -1, -1 },
+		// +/- 90 degree rotations about 3 axes
+		{ 1, 1, 0, 0 }, { 1, -1, 0, 0 }, { 1, 0, 1, 0 }, { 1, 0, -1, 0 },
+		{ 1, 0, 0, 1 }, { 1, 0, 0, -1 },
+		// 180 degree rotations about 6 face diagonals
+		{ 0, 1, 1, 0 }, { 0, 1, -1, 0 }, { 0, 1, 0, 1 }, { 0, 1, 0, -1 },
+		{ 0, 0, 1, 1 }, { 0, 0, 1, -1 }, };
 
-	// # Orientation set c48u83, number = 1992, radius = 16.29 degrees
-	// # $Id: c48u83.grid 6102 2006-02-21 19:45:40Z ckarney $
-	// # For more information, See http://charles.karney.info/orientation/
-	// format grid
-	// 0.25970 0.00 1992 83 7 16.29 2.42065
-	// 0 0 0 1.665264 16.29 1
-	// 1 1 1 1.517726 16.29 8
-	// 2 0 0 1.489794 16.29 6
-	// 2 2 0 1.205193 16.00 12
-	// 2 2 2 1.146566 15.33 8
-	// 3 1 1 0.973349 16.29 24
-	// 3 3 1 0.552456 14.88 24
 
-//	private static double delta = 0.19415;
-//	private static double sigma = 0.00;
-//	private static int ntot = 4344;
-//	private static int ncell = 181;
-//	private static int nent = 13;
-//	private static double maxrad = 12.29;
-//	private static double coverage = 2.27013;
-//	private static int[] k = { 0, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4 };
-//	private static int[] l = { 0, 1, 0, 2, 2, 1, 3, 3, 0, 2, 2, 4, 4 };
-//	private static int[] m = { 0, 1, 0, 0, 2, 1, 1, 3, 0, 0, 2, 0, 2 };
-//	private static double[] w = { 1.557196, 1.475638, 1.449892, 1.353190,
-//			1.265726, 1.257478, 1.143450, 0.867360, 0.916638, 0.941799,
-//			0.876165, 0.680232, 0.446640 };
-//	private static int[] mult = { 1, 8, 6, 12, 8, 24, 24, 8, 6, 24, 24, 12, 24 };
-	// # Orientation set c48u181, number = 4344, radius = 12.29 degrees
-	// # $Id: c48u181.grid 6102 2006-02-21 19:45:40Z ckarney $
-	// # For more information, See http://charles.karney.info/orientation/
-	// format grid
-	// 0.19415 0.00 4344 181 13 12.29 2.27013
-	// 0 0 0 1.557196 12.29 1
-	// 1 1 1 1.475638 12.29 8
-	// 2 0 0 1.449892 12.29 6
-	// 2 2 0 1.353190 12.16 12
-	// 2 2 2 1.265726 11.86 8
-	// 3 1 1 1.257478 11.99 24
-	// 3 3 1 1.143450 12.29 24
-	// 3 3 3 0.867360 11.12 8
-	// 4 0 0 0.916638 11.70 6
-	// 4 2 0 0.941799 11.61 24
-	// 4 2 2 0.876165 12.29 24
-	// 4 4 0 0.680232 10.95 12
-	// 4 4 2 0.446640 12.25 24
-	
+
 	private static final double delta = 0.15846;
 	private static final double sigma = 0.00;
 	private static final int ntot = 7416;
 	private static final int ncell = 309;
 	private static final int nent = 18;
-//	private static double maxrad = 10.07;
-//	private static double coverage = 2.13338;
+
 	private static final int[] k = { 0, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5};
 	private static final int[] l = { 0, 1, 0, 2, 2, 1, 3, 3, 0, 2, 2, 4, 4, 4, 1, 3, 3, 5};
 	private static final int[] m = { 0, 1, 0, 0, 2, 1, 1, 3, 0, 0, 2, 0, 2, 4, 1, 1, 3, 1};
-//	private static double[] w = { 1.557196, 1.475638, 1.449892, 1.353190,
-//			1.265726, 1.257478, 1.143450, 0.867360, 0.916638, 0.941799,
-//			0.876165, 0.680232, 0.446640, 0.0, 0.0, 0.0, 0.0, 0.0};
+
 	private static final int[] mult = { 1, 8, 6, 12, 8, 24, 24, 8, 6, 24, 24, 12, 24, 8, 24, 48, 24, 24};
-	
-//	# Orientation set c48u309, number = 7416, radius = 10.07 degrees
-//	# $Id: c48u309.grid 6102 2006-02-21 19:45:40Z ckarney $
-//	# For more information, See http://charles.karney.info/orientation/
-//	format grid
-//	0.15846 0.00   7416  309  18 10.07  2.13338
-//	 0  0  0  1.461532  10.07   1
-//	 1  1  1  1.409259  10.07   8
-//	 2  0  0  1.392463  10.07   6
-//	 2  2  0  1.328138  10.00  12
-//	 2  2  2  1.268130   9.83   8
-//	 3  1  1  1.282781   9.90  24
-//	 3  3  1  1.172478   9.70  24
-//	 3  3  3  1.075693   9.39   8
-//	 4  0  0  1.233711  10.07   6
-//	 4  2  0  1.121495   9.68  24
-//	 4  2  2  1.095831   9.53  24
-//	 4  4  0  0.918990   9.38  12
-//	 4  4  2  0.969269   9.49  24
-//	 4  4  4  0.691509   8.83   8
-//	 5  1  1  0.872382  10.07  24
-//	 5  3  1  0.757191   9.50  48
-//	 5  3  3  0.740975   9.00  24
-//	 5  5  1  0.782872   9.50  24
 
+	static 
+	{
 
-	static {
-		createSphereSet();
-	}
+		List<Quat4d> myorientations = new ArrayList<Quat4d>();
 
-	// this class cannot be instantiated
-	private SphereSampler() {
-	};
-
-	public static int getSphereCount() {
-		return orientations.size();
-	}
-
-	public static Quat4d getQuat4d(int index) {
-		return orientations.get(index);
-	}
-
-	public static void getAxisAngle(int index, AxisAngle4f axisAngle) {
-		axisAngle.set(orientations.get(index));
-	}
-
-	public static void getAxisAngle(int index, AxisAngle4d axisAngle) {
-		axisAngle.set(orientations.get(index));
-	}
-
-	// Convert from index to position. The sinh scaling tries to compensate
-	// for the bunching up that occurs when [1 x y z] is projected onto the
-	// unit sphere.
-	private static double pind(double ind, double delta, double sigma) {
-		return (sigma == 0) ? ind * delta : Math.sinh(sigma * ind * delta)
-				/ sigma;
-	}
-
-	private static void createSphereSet() {
-				
 		for (int i = 0; i < IcosahedralSampler.getSphereCount(); i++) {
-			orientations.add(IcosahedralSampler.getQuat4d(i));
+			myorientations.add(IcosahedralSampler.getQuat4d(i));
 		}
 		List<Quat4d> grid = new ArrayList<Quat4d>();
 		int ncell1 = 0;
@@ -269,6 +155,42 @@ public final class SphereSampler {
 			}
 		}
 		assert (grid.size() == ntot);
-		orientations.addAll(grid);
+		myorientations.addAll(grid);
+
+		orientations = myorientations;
+
 	}
+
+	// this class cannot be instantiated
+	private SphereSampler() {
+	};
+
+	public static int getSphereCount() {
+	
+		return orientations.size();
+	}
+
+	public static Quat4d getQuat4d(int index) {
+	
+		return orientations.get(index);
+	}
+
+	public static void getAxisAngle(int index, AxisAngle4f axisAngle) {
+	
+		axisAngle.set(orientations.get(index));
+	}
+
+	public static void getAxisAngle(int index, AxisAngle4d axisAngle) {
+		
+		axisAngle.set(orientations.get(index));
+	}
+
+	// Convert from index to position. The sinh scaling tries to compensate
+	// for the bunching up that occurs when [1 x y z] is projected onto the
+	// unit sphere.
+	private static double pind(double ind, double delta, double sigma) {
+		return (sigma == 0) ? ind * delta : Math.sinh(sigma * ind * delta)
+				/ sigma;
+	}
+
 }

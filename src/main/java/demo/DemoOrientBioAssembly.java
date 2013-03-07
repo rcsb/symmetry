@@ -34,9 +34,21 @@ import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
 
 public class DemoOrientBioAssembly {
+	
 	public static void main(String[] args){
 
-		String pdbID = "1stp";
+		//String[] pdbIDs = new String[]{"4INU", "4D8s","4EAR","4IYQ","3ZKR",};
+		String[] pdbIDs = new String[]{"4INU",};
+		for ( String pdbID : pdbIDs){
+			runPDB(pdbID);
+		}
+
+	}
+
+	private static void runPDB(String pdbID){
+
+		pdbID = pdbID.toLowerCase();
+		
 		int  biolAssemblyNr =1;
 
 		Structure s;
@@ -50,11 +62,11 @@ public class DemoOrientBioAssembly {
 
 			StructureIO.setAtomCache(cache);
 			
-			s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
+			//s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
 
 			// Alternative access to structure:			
 			//
-			//s = readStructure(pdbID, biolAssemblyNr);
+			s = readStructure(pdbID, biolAssemblyNr);
 			
 			System.out.println("MODELS:" + s.nrModels());
 			
@@ -70,11 +82,8 @@ public class DemoOrientBioAssembly {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
-
-
-
 	}
-
+	
 	private static boolean analyzeSymmetry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
 
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();

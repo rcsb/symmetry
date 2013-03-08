@@ -6,33 +6,47 @@ import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.biojava3.structure.align.symm.census2.Census;
 
 public class AccuracyFinder {
 
+	static final Logger logger = Logger.getLogger(Case.class.getPackage().getName());
+
+	static {
+		BasicConfigurator.configure();
+		logger.setLevel(Level.DEBUG);
+	}
+
 	public static void main(String[] args) throws IOException {
 		findAccuracy(new File(args[0]), System.out);
 	}
-	
+
 	public static void findAccuracy(File input, PrintStream ps) throws IOException {
 		findAccuracy(Sample.fromXML(input), ps);
 	}
-	
+
 	public static void findAccuracy(Sample sample, PrintStream ps) {
 		int tp = 0, fp = 0, tn = 0, fn = 0;
 		for (Case c : sample.getData()) {
-			if (c.hasKnownSymmetry()) {
-				if (Census.getDefaultSignificance().isSignificant(c.getResult())) {
-					tp++;
+			try {
+				if (c.hasKnownSymmetry()) {
+					if (Census.getDefaultSignificance().isSignificant(c.getResult())) {
+						tp++;
+					} else {
+						fn++;
+					}
 				} else {
-					fn++;
+					if (Census.getDefaultSignificance().isSignificant(c.getResult())) {
+						fp++;
+					} else {
+						tn++;
+					}
 				}
-			} else {
-				if (Census.getDefaultSignificance().isSignificant(c.getResult())) {
-					fp++;
-				} else {
-					tn++;
-				}
+			} catch (RuntimeException e) {
+				logger.error("Encountered an error on " + c.getScopId(), e);
 			}
 		}
 		NumberFormat nf = new DecimalFormat();

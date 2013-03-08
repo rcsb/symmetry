@@ -43,7 +43,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
@@ -99,10 +98,14 @@ public class ROCCurves {
 				continue;
 			}
 			cases.add(c);
-			if (c.hasKnownSymmetry()) {
-				nSymm++;
-			} else {
-				nAsymm++;
+			try {
+				if (c.hasKnownSymmetry()) {
+					nSymm++;
+				} else {
+					nAsymm++;
+				}
+			} catch (RuntimeException e) {
+				logger.error("Encountered an error on " + c.getScopId(), e);
 			}
 		}
 		sample.setData(cases);
@@ -111,9 +114,9 @@ public class ROCCurves {
 	}
 
 	private int nSymm;
-	
+
 	private int nAsymm;
-	
+
 	public SortedSet<Case> resort(final Criterion criterion) {
 
 		Comparator<Case> comparator = new Comparator<Case>() {
@@ -144,7 +147,7 @@ public class ROCCurves {
 			try {
 				criterion.get(c.getResult());
 			} catch (NoncomputableCriterionException e) {
-				logger.warn("Can't compute " + criterion.getName() + " on " + c.getScopId());
+				logger.error("Can't compute " + criterion.getName() + " on " + c.getScopId());
 				continue;
 			}
 			cases.add(c);
@@ -166,7 +169,7 @@ public class ROCCurves {
 			try {
 				value = criterion.get(c.getResult());
 			} catch (NoncomputableCriterionException e) {
-				e.printStackTrace();
+				logger.error("Can't compute " + criterion.getName() + " on " + c.getScopId());
 				continue;
 			}
 			pw.println(value + "\t" + (c.hasKnownSymmetry()? 1 : 0));
@@ -192,10 +195,15 @@ public class ROCCurves {
 			logger.info("Adding series " + criterion.getName() + " with " + nSymm + " symmetric and " + nAsymm + " asymmetric:");
 			for (Case c : cases) {
 				double x, y;
-				if (c.hasKnownSymmetry()) {
-					tp++;
-				} else {
-					fp++;
+				try {
+					if (c.hasKnownSymmetry()) {
+						tp++;
+					} else {
+						fp++;
+					}
+				} catch (RuntimeException e) {
+					logger.error("Encountered an error on " + c.getScopId(), e);
+					continue;
 				}
 				y = (double) tp / (double) nSymm;
 				x = (double) fp / (double) nAsymm;
@@ -212,10 +220,6 @@ public class ROCCurves {
 			dataset.addSeries(series);
 		}
 		JFreeChart chart = ChartFactory.createXYLineChart("ROC", "FP", "TP", dataset, PlotOrientation.VERTICAL, true, false, false);
-//		XYSplineRenderer renderer = new XYSplineRenderer();
-//		renderer.setShapesVisible(false);
-//		chart.getXYPlot().setRenderer(renderer);
-//		chart.getXYPlot().getRenderer().setSha
 		ChartUtilities.saveChartAsPNG(file, chart, width, height);
 	}
 

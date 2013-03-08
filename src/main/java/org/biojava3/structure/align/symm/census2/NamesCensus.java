@@ -54,6 +54,7 @@ public class NamesCensus extends Census {
 				BufferedReader br = new BufferedReader(new FileReader(lineByLine));
 				String line = "";
 				while ((line = br.readLine()) != null) {
+					if (line.trim().isEmpty()) continue;
 					ScopDomain domain = scop.getDomainByScopID(line);
 					if (domain == null) {
 						logger.error("No SCOP domain with id " + line + " was found");

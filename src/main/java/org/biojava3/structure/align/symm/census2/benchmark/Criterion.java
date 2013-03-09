@@ -96,6 +96,34 @@ public abstract class Criterion {
 			}
 		};
 	}
+	public static Criterion symdTm() {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				if (result.getAlignment() == null || result.getAlignment().getAlternateTm() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getAlignment().getAlternateTm();
+			}
+
+			@Override
+			public String getName() {
+				return "SymD-TM";
+			}
+		};
+	}
+	public static Criterion symdZScore() {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				if (result.getAlignment() == null || result.getAlignment().getzScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getAlignment().getzScore();
+			}
+
+			@Override
+			public String getName() {
+				return "SymD-Z-score";
+			}
+		};
+	}
 	public static Criterion tmScore() {
 		return new Criterion() {
 			@Override

@@ -67,6 +67,19 @@ public class ROCCurves {
 		run(new File(args[0]), new File(args[1]));
 	}
 
+	public static void runForSymD(File input, File output) {
+		ROCCurves rocs;
+		try {
+			List<Criterion> criteria = new ArrayList<Criterion>();
+			criteria.add(Criterion.symdZScore());
+			criteria.add(Criterion.symdTm());
+			rocs = new ROCCurves(input, criteria);
+			rocs.graph(output);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public static void run(File input, File output) {
 		ROCCurves rocs;
 		try {
@@ -76,7 +89,9 @@ public class ROCCurves {
 			criteria.add(Criterion.screw().inverse());
 			criteria.add(Criterion.random());
 			criteria.add(Criterion.epsilon());
-			criteria.add(Criterion.combine(Criterion.zScore(), Criterion.tmScore(), 1, 4));
+			criteria.add(Criterion.symdZScore());
+			criteria.add(Criterion.symdTm());
+//			criteria.add(Criterion.combine(Criterion.zScore(), Criterion.tmScore(), 1, 4));
 			rocs = new ROCCurves(input, criteria);
 			rocs.graph(output);
 		} catch (IOException e) {
@@ -93,7 +108,7 @@ public class ROCCurves {
 	public ROCCurves(Sample sample, List<Criterion> criteria) {
 		List<Case> cases = new ArrayList<Case>(sample.size());
 		for (Case c : sample.getData()) {
-			if (c.getAlignment() == null || c.getAxis() == null) {
+			if (c.getAlignment() == null) { // TODO  || c.getAxis() == null
 				logger.error("No alignment info for " + c.getScopId());
 				continue;
 			}

@@ -27,15 +27,15 @@ import org.apache.log4j.Logger;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.Alignment;
-import org.biojava3.structure.align.symm.census2.Census;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 
-@XmlRootElement(name = "SymDResults", namespace = "http://source.rcsb.org")
+@XmlRootElement(name = "CensusResults", namespace = "http://source.rcsb.org")
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public class SymDResults extends Results {
 
@@ -72,7 +72,8 @@ public class SymDResults extends Results {
 	public static Result fromOutput(String output) {
 		Result result = new Result();
 		try {
-			String line = output.split("\n")[2];
+			String[] lines = output.split("\n");
+			String line = lines[lines.length-1];
 			String x = line.substring(line.lastIndexOf("(") + 1, line.length() - 1).trim();
 			String[] values = x.split("[\\s,]+");
 			result.setScopId(line.substring(0, line.indexOf(" ")));
@@ -127,9 +128,9 @@ public class SymDResults extends Results {
 		final String symDPath = args[1];
 		final File namesFile = new File(args[2]);
 		final File outputFile = new File(args[3]);
-		Census.setBerkeleyScop(pdbDir);
+		ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
 		AtomCache cache = new AtomCache(pdbDir, false);
-		writeToFile(symDPath, outputFile, cache, namesFile);
+		writeToFile(symDPath, namesFile, cache, outputFile);
 	}
 
 	public static SymDResults runSymD(String symDPath, String pdbFilesPath, AtomCache cache, List<ScopDomain> scopDomains) {
@@ -139,7 +140,6 @@ public class SymDResults extends Results {
 		for (ScopDomain domain : scopDomains) {
 			final File file = new File(pdbFilesPath + domain.getScopId() + ".pdb");
 			if (!file.exists()) {
-				System.out.println("GOING INTO");
 				try {
 					Structure structure = cache.getStructure(domain.getScopId());
 					BufferedWriter bw = new BufferedWriter(new FileWriter(file));

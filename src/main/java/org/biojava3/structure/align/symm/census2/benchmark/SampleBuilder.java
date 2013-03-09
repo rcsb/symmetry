@@ -76,4 +76,9 @@ public class SampleBuilder {
 		br.close();
 	}
 
+
+	public static Map<String, KnownInfo> getOrders(String file) throws IOException {
+		return getOrders(new File(file));
+	}
+
 }

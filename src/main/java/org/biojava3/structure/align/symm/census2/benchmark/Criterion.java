@@ -270,8 +270,9 @@ public abstract class Criterion {
 		return new Criterion() {
 			@Override
 			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAxis() == null) throw new NoncomputableCriterionException("The case has a null getAxis()");
-				System.out.println(result.getAxis().getScrew());
+				if (result.getAxis() == null || result.getAxis().getScrew() == null) {
+					throw new NoncomputableCriterionException("The case has a null getAxis()");
+				}
 				return result.getAxis().getScrew();
 			}
 

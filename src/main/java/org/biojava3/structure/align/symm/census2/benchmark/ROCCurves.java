@@ -22,11 +22,9 @@
  */
 package org.biojava3.structure.align.symm.census2.benchmark;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -48,79 +46,126 @@ import org.jfree.data.xy.XYSeriesCollection;
 
 /**
  * Generates and plots ROC curves for {@link Criterion Criteria} on benchmark {@link Case Cases}.
+ * 
  * @author dmyerstu
  */
 public class ROCCurves {
 
+	private static final int DEFAULT_HEIGHT = 800;
+
+	private static final int DEFAULT_WIDTH = 1000;
+
 	static final Logger logger = Logger.getLogger(ROCCurves.class.getPackage().getName());
 
+	private List<Criterion> criteria;
+
+	private XYSeriesCollection dataset;
+
+	private Sample sample;
 	static {
 		BasicConfigurator.configure();
 		logger.setLevel(Level.DEBUG);
 	}
 
-	private static final int DEFAULT_WIDTH = 1000;
-
-	private static final int DEFAULT_HEIGHT = 800;
-
+	/**
+	 * 
+	 * @param args
+	 * <ol>
+	 * <li>An input XML file (see {@link Sample}) of CE-Symm benchmark data</li>
+	 * <li>The path to which to output the ROC curves for CE-Symm</li>
+	 * <li>An input XML file (see {@link Sample}) of SymD benchmark data</li>
+	 * <li>The path to which to output the ROC curves for SymD</li>
+	 * </ol>
+	 * 
+	 */
 	public static void main(String[] args) {
-		run(new File(args[0]), new File(args[1]));
+		runForCeSymm(new File(args[0]), new File(args[1]));
+		runForSymD(new File(args[2]), new File(args[3]));
 	}
 
+	/**
+	 * Does two things:
+	 * <ol>
+	 * <li>Prints an ROC curve of the CE-Symm data to {@code ceSymmOutput}</li>
+	 * <li>Prints a list of data points for CE-Symm to standard output (for graphing in a spreadsheet)</li>
+	 * </ol>
+	 * @param input A benchmark XML file (see {@link Sample}) containing data from CE-Symm
+	 * @param ceSymmOutput
+	 * @param symdOutput
+	 */
+	public static void runForCeSymm(File input, File output) {
+		try {
+
+			// ROC curves
+			List<Criterion> ceSymmCriteria = new ArrayList<Criterion>();
+			ceSymmCriteria.add(Criterion.zScore());
+			ceSymmCriteria.add(Criterion.tmScore());
+			ceSymmCriteria.add(Criterion.screw().inverse());
+			ceSymmCriteria.add(Criterion.random());
+			ceSymmCriteria.add(Criterion.epsilon());
+			ROCCurves ceSymmRocs = new ROCCurves(input, ceSymmCriteria);
+			ceSymmRocs.graph(output);
+
+			// print text
+			ceSymmRocs.printText();
+
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Does two things:
+	 * <ol>
+	 * <li>Prints an ROC curve of the SymD data to {@code ceSymmOutput}</li>
+	 * <li>Prints a list of data points for SymD to standard output (for graphing in a spreadsheet)</li>
+	 * </ol>
+	 * @param input A benchmark XML file (see {@link Sample}) containing data from SymD
+	 * @param ceSymmOutput
+	 * @param symdOutput
+	 */
 	public static void runForSymD(File input, File output) {
-		ROCCurves rocs;
 		try {
-			List<Criterion> criteria = new ArrayList<Criterion>();
-			criteria.add(Criterion.symdZScore());
-			criteria.add(Criterion.symdTm());
-			rocs = new ROCCurves(input, criteria);
-			rocs.graph(output);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public static void run(File input, File output) {
-		ROCCurves rocs;
-		try {
-			List<Criterion> criteria = new ArrayList<Criterion>();
-			criteria.add(Criterion.zScore());
-			criteria.add(Criterion.tmScore());
-			criteria.add(Criterion.screw().inverse());
-			criteria.add(Criterion.random());
-			criteria.add(Criterion.epsilon());
-			criteria.add(Criterion.symdZScore());
-			criteria.add(Criterion.symdTm());
-//			criteria.add(Criterion.combine(Criterion.zScore(), Criterion.tmScore(), 1, 4));
-			rocs = new ROCCurves(input, criteria);
-			rocs.graph(output);
+
+			// ROC curves
+			List<Criterion> symdCriteria = new ArrayList<Criterion>();
+			symdCriteria.add(Criterion.symdZScore());
+			symdCriteria.add(Criterion.symdTm());
+			ROCCurves symdRocs = new ROCCurves(input, symdCriteria);
+			symdRocs.graph(output);
+
+			// print text
+			symdRocs.printText();
+
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private List<Criterion> criteria;
-	private Sample sample;
-
+	/**
+	 * @see #ROCCurves(Sample, List)
+	 * @param sampleFile
+	 * @param criteria
+	 * @throws IOException
+	 */
 	public ROCCurves(File sampleFile, List<Criterion> criteria) throws IOException {
 		this(Sample.fromXML(sampleFile), criteria);
 	}
+
+	/**
+	 * Initializes a new list of ROC curve data with the specified criteria. If a {@link Case} in the {@link Sample} has an error, logs the error but does not stop.
+	 * @param sample
+	 * @param criteria
+	 */
 	public ROCCurves(Sample sample, List<Criterion> criteria) {
 		List<Case> cases = new ArrayList<Case>(sample.size());
 		for (Case c : sample.getData()) {
-			if (c.getAlignment() == null) { // TODO  || c.getAxis() == null
-				logger.error("No alignment info for " + c.getScopId());
-				continue;
-			}
-			cases.add(c);
 			try {
-				if (c.hasKnownSymmetry()) {
-					nSymm++;
-				} else {
-					nAsymm++;
-				}
+				c.hasKnownSymmetry();
+				cases.add(c); // only add if the known/benchmark result is known
 			} catch (RuntimeException e) {
-				logger.error("Encountered an error on " + c.getScopId(), e);
+				logger.fatal("Encountered an error on " + c.getScopId(), e);
+				throw e; // just be safe
 			}
 		}
 		sample.setData(cases);
@@ -128,14 +173,67 @@ public class ROCCurves {
 		this.criteria = criteria;
 	}
 
-	private int nSymm;
+	public void graph(File file) throws IOException {
+		graph(file, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+	}
 
-	private int nAsymm;
+	public void graph(File file, int width, int height) throws IOException {
+		if (dataset == null) dataset = getRocPoints(); // lazy initialization
+		JFreeChart chart = ChartFactory.createXYLineChart("ROC", "FP", "TP", dataset, PlotOrientation.VERTICAL, true,
+				false, false);
+		ChartUtilities.saveChartAsPNG(file, chart, width, height);
+	}
 
-	public SortedSet<Case> resort(final Criterion criterion) {
+	public void graph(String file) throws IOException {
+		graph(new File(file), DEFAULT_WIDTH, DEFAULT_HEIGHT);
+	}
 
+	public void graph(String file, int width, int height) throws IOException {
+		graph(new File(file), width, height);
+	}
+
+	public void printText() throws IOException {
+		printText(System.out);
+	}
+
+	/**
+	 * For each {@link Criterion}, prints a line of X coordinates followed by a line of Y coordinates.
+	 * @param ps
+	 */
+	public void printText(PrintStream ps) {
+		
+		if (dataset == null) dataset = getRocPoints(); // lazy initialization
+		
+		for (int i = 0; i < criteria.size(); i++) {
+			
+			// print the name of the criterion
+			final Criterion criterion = criteria.get(i);
+			final XYSeries series = dataset.getSeries(i);
+			ps.println(criterion);
+			
+			// print the X points
+			for (int j = 0; j < series.getItemCount(); j++) {
+				final double x = series.getX(j).doubleValue();
+				ps.print(x + "\t");
+			}
+			ps.println();
+			
+			// print the Y points
+			for (int j = 0; j < series.getItemCount(); j++) {
+				final double y = series.getY(j).doubleValue();
+				ps.print(y + "\t");
+			}
+			ps.println("\n");
+			
+		}
+	}
+
+	private List<Case> resort(final Criterion criterion) {
+
+		// we want to sort by the scoring criterion
 		Comparator<Case> comparator = new Comparator<Case>() {
 			Random random = new Random();
+
 			@Override
 			public int compare(Case o1, Case o2) {
 
@@ -151,8 +249,8 @@ public class ROCCurves {
 					throw new IllegalArgumentException(e);
 				}
 
-				// select randomly
-				return random.nextBoolean()? 1 : -1;
+				// select randomly when there's a tie
+				return random.nextBoolean() ? 1 : -1;
 
 			}
 		};
@@ -161,81 +259,90 @@ public class ROCCurves {
 		for (Case c : sample.getData()) {
 			try {
 				criterion.get(c.getResult());
-			} catch (NoncomputableCriterionException e) {
+			} catch (NoncomputableCriterionException e) { // this shouldn't happen since we've already initialized
 				logger.error("Can't compute " + criterion.getName() + " on " + c.getScopId());
 				continue;
 			}
 			cases.add(c);
 		}
-		return cases;
+
+		// use a list to decrease overall time-complexity
+		List<Case> caseList = new ArrayList<Case>(cases.size());
+		caseList.addAll(cases);
+		return caseList;
 	}
 
-	public void printText(Criterion criterion, String file) throws IOException {
-		printText(criterion, new File(file));
-	}
-	public void printText(Criterion criterion, File file) throws IOException {
-		PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(file)));
-		for (Case c : sample.getData()) {
-			if (c.getResult() == null || c.getAlignment() == null) {
-				pw.close();
-				throw new DataIncompleteException(c.getScopId());
-			}
-			Number value;
-			try {
-				value = criterion.get(c.getResult());
-			} catch (NoncomputableCriterionException e) {
-				logger.error("Can't compute " + criterion.getName() + " on " + c.getScopId());
-				continue;
-			}
-			pw.println(value + "\t" + (c.hasKnownSymmetry()? 1 : 0));
-		}
-		pw.close();
-	}
+	public XYSeriesCollection getRocPoints() {
 
-	public void graph(String file) throws IOException {
-		graph(new File(file), DEFAULT_WIDTH, DEFAULT_HEIGHT);
-	}
-	public void graph(String file, int width, int height) throws IOException {
-		graph(new File(file), width, height);
-	}
-	public void graph(File file) throws IOException {
-		graph(file, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-	}
-	public void graph(File file, int width, int height) throws IOException {
+		if (dataset != null) return dataset;
+		
 		XYSeriesCollection dataset = new XYSeriesCollection();
+
 		for (Criterion criterion : criteria) {
+
+			// get the cases sorted by the current criterion
+			// this should contain only computable values
+			List<Case> cases = resort(criterion);
 			XYSeries series = new XYSeries(criterion.getName());
+
+			/*
+			 * Instead of creating a new subsample each time,
+			 * start with the minimal (size=0) subsample, then incrementally add cases to the subsample,
+			 * and increment true positives (tp; y) or false positives (fp; x) each iteration
+			 * This is equivalent to creating a totally new subsample each time,
+			 * but it's O(nlogn) + O(n) rather than O(nlogn) + O(n^2).
+			 */
 			int tp = 0, fp = 0;
-			SortedSet<Case> cases = resort(criterion);
-			logger.info("Adding series " + criterion.getName() + " with " + nSymm + " symmetric and " + nAsymm + " asymmetric:");
+			
+			/*
+			 * We need updated statistics for the number of positive and negative known values.
+			 * This is because data points may not exist for this criterion (or we may have new data points).
+			 */
+			int nSymm = 0, nAsymm = 0;
+			for (Case c: cases) {
+				if (c.hasKnownSymmetry()) {
+					nSymm++;
+				} else {
+					nAsymm++;
+				}
+			}
+
 			for (Case c : cases) {
+
+				// get the new x and y points
 				double x, y;
-				try {
-					if (c.hasKnownSymmetry()) {
-						tp++;
-					} else {
-						fp++;
-					}
-				} catch (RuntimeException e) {
-					logger.error("Encountered an error on " + c.getScopId(), e);
-					continue;
+				if (c.hasKnownSymmetry()) {
+					tp++;
+				} else {
+					fp++;
 				}
 				y = (double) tp / (double) nSymm;
 				x = (double) fp / (double) nAsymm;
+
+				// now just add the data point
 				NumberFormat nf = new DecimalFormat();
 				nf.setMaximumFractionDigits(3);
 				if (c.hasKnownSymmetry()) {
-					logger.debug(c.getScopId() + " (" + c.getKnownInfo() + ")" + " is symmetric: (" + nf.format(x) + ", " + nf.format(y) + ")");
+					logger.debug(c.getScopId() + " (" + c.getKnownInfo() + ")" + " is symmetric: (" + nf.format(x)
+							+ ", " + nf.format(y) + ")");
 				} else {
-					logger.debug(c.getScopId() + " (" + c.getKnownInfo() + ")" + " is asymmetric: (" + nf.format(x) + ", " + nf.format(y) + ")");
+					logger.debug(c.getScopId() + " (" + c.getKnownInfo() + ")" + " is asymmetric: (" + nf.format(x)
+							+ ", " + nf.format(y) + ")");
 				}
 				series.add(x, y);
+				
 			}
+
+			logger.info("Adding series " + criterion.getName() + " with " + nSymm + " symmetric and " + nAsymm
+					+ " asymmetric:");
+			
+			// add the series to the collection
 			series.setDescription(criterion.getName());
 			dataset.addSeries(series);
+			
 		}
-		JFreeChart chart = ChartFactory.createXYLineChart("ROC", "FP", "TP", dataset, PlotOrientation.VERTICAL, true, false, false);
-		ChartUtilities.saveChartAsPNG(file, chart, width, height);
+
+		return dataset;
 	}
 
 }

@@ -52,7 +52,7 @@ import org.jfree.data.xy.XYSeriesCollection;
  */
 public class ROCCurves {
 
-	static final Logger logger = Logger.getLogger(Case.class.getPackage().getName());
+	static final Logger logger = Logger.getLogger(ROCCurves.class.getPackage().getName());
 
 	static {
 		BasicConfigurator.configure();

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:SymDResults xmlns:ns2="http://source.rcsb.org">
+    <data>
+        <alignment>
+            <alignLength>40</alignLength>
+            <alternateTm>31.06</alternateTm>
+            <initialShift>-3</initialShift>
+            <tmpr>0.6903</tmpr>
+            <nNonSelfAligned>40</nNonSelfAligned>
+            <zScore>17.57</zScore>
+        </alignment>
+        <scopId>d1q90a3</scopId>
+    </data>
+    <data>
+        <alignment>
+            <alignLength>45</alignLength>
+            <alternateTm>38.22</alternateTm>
+            <initialShift>29</initialShift>
+            <tmpr>0.5621</tmpr>
+            <nNonSelfAligned>45</nNonSelfAligned>
+            <zScore>8.77</zScore>
+        </alignment>
+        <scopId>d1gmwa2</scopId>
+    </data>
+    <data>
+        <alignment>
+            <alignLength>23</alignLength>
+            <alternateTm>17.23</alternateTm>
+            <initialShift>-82</initialShift>
+            <tmpr>0.1795</tmpr>
+            <nNonSelfAligned>23</nNonSelfAligned>
+            <zScore>2.8</zScore>
+        </alignment>
+        <scopId>d3cira3</scopId>
+    </data>
+    <timestamp>2013-03-08 17:24:28</timestamp>
+</ns2:SymDResults>

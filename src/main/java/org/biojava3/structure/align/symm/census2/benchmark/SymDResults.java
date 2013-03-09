@@ -138,7 +138,8 @@ public class SymDResults extends Results {
 			pdbFilesPath += "/";
 		for (ScopDomain domain : scopDomains) {
 			final File file = new File(pdbFilesPath + domain.getScopId() + ".pdb");
-			//if (!file.exists()) { TODO why is this breaking everything?
+			if (!file.exists()) {
+				System.out.println("GOING INTO");
 				try {
 					Structure structure = cache.getStructure(domain.getScopId());
 					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
@@ -149,7 +150,7 @@ public class SymDResults extends Results {
 				} catch (StructureException e) {
 					throw new RuntimeException("Could not get Structure for domain " + domain.getScopId(), e);
 				}
-			//}
+			}
 			Result result;
 			try {
 				result = runSymD(symDPath, file.getPath());
@@ -232,22 +233,6 @@ public class SymDResults extends Results {
 		}
 		final InputStream out = process.getInputStream();
 		final StringBuilder sb = new StringBuilder();
-		Thread drainer = new Thread() {
-			@Override
-			public void run() {
-				int c;
-				do {
-					try {
-						c = out.read();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-					if (c >= 0)
-						sb.append((char) c);
-				} while (c >= 0);
-			}
-		};
-		drainer.start();
 		while (true) {
 			try {
 				process.waitFor();
@@ -255,6 +240,17 @@ public class SymDResults extends Results {
 			} catch (InterruptedException e) {
 			}
 		}
+
+		int c;
+		do {
+			try {
+				c = out.read();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+			if (c >= 0)
+				sb.append((char) c);
+		} while (c != -1);
 		return sb.toString();
 	}
 

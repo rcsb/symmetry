@@ -27,7 +27,7 @@ import java.io.Serializable;
 import org.biojava.bio.structure.align.model.AFPChain;
 
 /**
- * The results of a CE-Symm alignment.
+ * The results of a symmetry alignment. Includes information for CE-Symm or SymD.
  * 
  * @author dmyerstu
  */
@@ -39,6 +39,8 @@ public class Alignment implements Serializable {
 
 	private Float alignScore;
 
+	private Float alternateTm;
+
 	private Integer block1Length;
 
 	private Integer block2Length;
@@ -49,9 +51,15 @@ public class Alignment implements Serializable {
 
 	private Float identity;
 
+	private Integer initialShift;
+
+	private Integer nNonSelfAligned;
+
 	private Float rmsd;
 
 	private Float similarity;
+
+	private Float tmpr;
 
 	private Float tmScore;
 
@@ -98,43 +106,88 @@ public class Alignment implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
 		Alignment other = (Alignment) obj;
 		if (alignLength == null) {
-			if (other.alignLength != null) return false;
-		} else if (!alignLength.equals(other.alignLength)) return false;
+			if (other.alignLength != null)
+				return false;
+		} else if (!alignLength.equals(other.alignLength))
+			return false;
 		if (alignScore == null) {
-			if (other.alignScore != null) return false;
-		} else if (!alignScore.equals(other.alignScore)) return false;
+			if (other.alignScore != null)
+				return false;
+		} else if (!alignScore.equals(other.alignScore))
+			return false;
+		if (alternateTm == null) {
+			if (other.alternateTm != null)
+				return false;
+		} else if (!alternateTm.equals(other.alternateTm))
+			return false;
 		if (block1Length == null) {
-			if (other.block1Length != null) return false;
-		} else if (!block1Length.equals(other.block1Length)) return false;
+			if (other.block1Length != null)
+				return false;
+		} else if (!block1Length.equals(other.block1Length))
+			return false;
 		if (block2Length == null) {
-			if (other.block2Length != null) return false;
-		} else if (!block2Length.equals(other.block2Length)) return false;
+			if (other.block2Length != null)
+				return false;
+		} else if (!block2Length.equals(other.block2Length))
+			return false;
 		if (coverage == null) {
-			if (other.coverage != null) return false;
-		} else if (!coverage.equals(other.coverage)) return false;
+			if (other.coverage != null)
+				return false;
+		} else if (!coverage.equals(other.coverage))
+			return false;
 		if (gapLength == null) {
-			if (other.gapLength != null) return false;
-		} else if (!gapLength.equals(other.gapLength)) return false;
+			if (other.gapLength != null)
+				return false;
+		} else if (!gapLength.equals(other.gapLength))
+			return false;
 		if (identity == null) {
-			if (other.identity != null) return false;
-		} else if (!identity.equals(other.identity)) return false;
+			if (other.identity != null)
+				return false;
+		} else if (!identity.equals(other.identity))
+			return false;
+		if (initialShift == null) {
+			if (other.initialShift != null)
+				return false;
+		} else if (!initialShift.equals(other.initialShift))
+			return false;
+		if (nNonSelfAligned == null) {
+			if (other.nNonSelfAligned != null)
+				return false;
+		} else if (!nNonSelfAligned.equals(other.nNonSelfAligned))
+			return false;
 		if (rmsd == null) {
-			if (other.rmsd != null) return false;
-		} else if (!rmsd.equals(other.rmsd)) return false;
+			if (other.rmsd != null)
+				return false;
+		} else if (!rmsd.equals(other.rmsd))
+			return false;
 		if (similarity == null) {
-			if (other.similarity != null) return false;
-		} else if (!similarity.equals(other.similarity)) return false;
+			if (other.similarity != null)
+				return false;
+		} else if (!similarity.equals(other.similarity))
+			return false;
 		if (tmScore == null) {
-			if (other.tmScore != null) return false;
-		} else if (!tmScore.equals(other.tmScore)) return false;
+			if (other.tmScore != null)
+				return false;
+		} else if (!tmScore.equals(other.tmScore))
+			return false;
+		if (tmpr == null) {
+			if (other.tmpr != null)
+				return false;
+		} else if (!tmpr.equals(other.tmpr))
+			return false;
 		if (zScore == null) {
-			if (other.zScore != null) return false;
-		} else if (!zScore.equals(other.zScore)) return false;
+			if (other.zScore != null)
+				return false;
+		} else if (!zScore.equals(other.zScore))
+			return false;
 		return true;
 	}
 
@@ -144,6 +197,10 @@ public class Alignment implements Serializable {
 
 	public Float getAlignScore() {
 		return alignScore;
+	}
+
+	public Float getAlternateTm() {
+		return alternateTm;
 	}
 
 	public Integer getBlock1Length() {
@@ -166,12 +223,24 @@ public class Alignment implements Serializable {
 		return identity;
 	}
 
+	public Integer getInitialShift() {
+		return initialShift;
+	}
+
+	public Integer getnNonSelfAligned() {
+		return nNonSelfAligned;
+	}
+
 	public Float getRmsd() {
 		return rmsd;
 	}
 
 	public Float getSimilarity() {
 		return similarity;
+	}
+
+	public Float getTmpr() {
+		return tmpr;
 	}
 
 	public Float getTmScore() {
@@ -188,14 +257,18 @@ public class Alignment implements Serializable {
 		int result = 1;
 		result = prime * result + (alignLength == null ? 0 : alignLength.hashCode());
 		result = prime * result + (alignScore == null ? 0 : alignScore.hashCode());
+		result = prime * result + (alternateTm == null ? 0 : alternateTm.hashCode());
 		result = prime * result + (block1Length == null ? 0 : block1Length.hashCode());
 		result = prime * result + (block2Length == null ? 0 : block2Length.hashCode());
 		result = prime * result + (coverage == null ? 0 : coverage.hashCode());
 		result = prime * result + (gapLength == null ? 0 : gapLength.hashCode());
 		result = prime * result + (identity == null ? 0 : identity.hashCode());
+		result = prime * result + (initialShift == null ? 0 : initialShift.hashCode());
+		result = prime * result + (nNonSelfAligned == null ? 0 : nNonSelfAligned.hashCode());
 		result = prime * result + (rmsd == null ? 0 : rmsd.hashCode());
 		result = prime * result + (similarity == null ? 0 : similarity.hashCode());
 		result = prime * result + (tmScore == null ? 0 : tmScore.hashCode());
+		result = prime * result + (tmpr == null ? 0 : tmpr.hashCode());
 		result = prime * result + (zScore == null ? 0 : zScore.hashCode());
 		return result;
 	}
@@ -206,6 +279,10 @@ public class Alignment implements Serializable {
 
 	public void setAlignScore(Float alignScore) {
 		this.alignScore = alignScore;
+	}
+
+	public void setAlternateTm(Float alternateTm) {
+		this.alternateTm = alternateTm;
 	}
 
 	public void setBlock1Length(Integer block1Length) {
@@ -228,12 +305,24 @@ public class Alignment implements Serializable {
 		this.identity = identity;
 	}
 
+	public void setInitialShift(Integer initialShift) {
+		this.initialShift = initialShift;
+	}
+
+	public void setnNonSelfAligned(Integer nNonSelfAligned) {
+		this.nNonSelfAligned = nNonSelfAligned;
+	}
+
 	public void setRmsd(Float rmsd) {
 		this.rmsd = rmsd;
 	}
 
 	public void setSimilarity(Float similarity) {
 		this.similarity = similarity;
+	}
+
+	public void setTmpr(Float tmpr) {
+		this.tmpr = tmpr;
 	}
 
 	public void setTmScore(Float tmScore) {
@@ -246,10 +335,11 @@ public class Alignment implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Alignment [alignLength=" + alignLength + ", coverage=" + coverage + ", alignScore=" + alignScore
-				+ ", gapLength=" + gapLength + ", identity=" + identity + ", rmsd=" + rmsd + ", similarity="
-				+ similarity + ", tmScore=" + tmScore + ", zScore=" + zScore + ", block1Length=" + block1Length
-				+ ", block2Length=" + block2Length + "]";
+		return "Alignment [alignLength=" + alignLength + ", alignScore=" + alignScore + ", block1Length="
+				+ block1Length + ", block2Length=" + block2Length + ", coverage=" + coverage + ", gapLength="
+				+ gapLength + ", identity=" + identity + ", rmsd=" + rmsd + ", similarity=" + similarity + ", tmScore="
+				+ tmScore + ", alternateTm=" + alternateTm + ", zScore=" + zScore + ", initialShift=" + initialShift
+				+ ", nNonSelfAligned=" + nNonSelfAligned + ", tmpr=" + tmpr + "]";
 	}
 
 }

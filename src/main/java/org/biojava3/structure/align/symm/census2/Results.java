@@ -53,7 +53,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class Results implements Serializable {
 
 	private static final long serialVersionUID = -5517546595033480440L;
-	static JAXBContext jaxbContext;
+	private static JAXBContext jaxbContext;
 	private List<Result> data = new ArrayList<Result>();
 
 	private String timestamp;

@@ -99,11 +99,6 @@ public class CensusTest {
 	}
 	
 	@Test
-	public void testCrawlingProtodomainResult() {
-		
-	}
-	
-	@Test
 	public void testHard() {
 		
 	}

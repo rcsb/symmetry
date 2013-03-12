@@ -115,20 +115,20 @@ public class Census {
 		return new Significance() {
 			@Override
 			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return afpChain.getProbability() >= 3.5;
+				return afpChain.getTMScore() >= 0.3;
 			}
 
 			@Override
 			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				return afpChain.getProbability() >= 3.5;
+				return afpChain.getTMScore() >= 0.3;
 			}
 
 			@Override
 			public boolean isSignificant(Result result) {
 				if (result.getAlignment() == null) throw new IllegalArgumentException(
 						"The Result must have a non-null getAlignment()");
-				if (result.getAlignment().getzScore() == null) throw new IllegalArgumentException("Z-Score is null");
-				return result.getAlignment().getzScore() >= 3.5;
+				if (result.getAlignment().getTmScore() == null) throw new IllegalArgumentException("TM-Score is null");
+				return result.getAlignment().getTmScore() >= 0.3;
 			}
 		};
 	}

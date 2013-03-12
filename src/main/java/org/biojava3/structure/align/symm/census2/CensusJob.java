@@ -71,9 +71,12 @@ public class CensusJob implements Callable<Result> {
 
 	@Override
 	public Result call() {
+
 		if (domain == null || superfamily == null || count == null) throw new IllegalStateException (
 				"Must set domain, superfamily, and count first.");
 		String name = domain.getScopId();
+
+		// first, get the atoms
 		Atom[] ca1, ca2;
 		logger.debug("Getting atoms for " + name + " (job #" + count + ")");
 		try {
@@ -84,7 +87,9 @@ public class CensusJob implements Callable<Result> {
 			return null;
 		}
 		logger.debug("Got " + ca1.length + " atoms (job #" + count + ")");
-		AFPChain afpChain;
+
+		// run the alignment
+		AFPChain afpChain = null;
 		logger.debug("Running CE-Symm (job #" + count + ")");
 		try {
 			afpChain = findSymmetry(name, ca1, ca2);
@@ -96,44 +101,65 @@ public class CensusJob implements Callable<Result> {
 			logger.debug("CE-Symm returned null (job #" + count + ")");
 			return convertResult(null, null, superfamily, name, null, null, domain, null);
 		}
+		
+		// there are two cases in which we know there is no symmetry
 		if (afpChain.getBlockNum() != 2) {
 			logger.debug("CE-Symm returned a result with " + afpChain.getBlockNum() + " block(s) (job #" + count + ")");
 			return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
 		}
+		if (afpChain.getAlnLength() < 1) {
+			logger.debug("CE-Symm returned an empty alignment (job #" + count + ")");
+			return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
+		}
 
 		if (significance.isPossiblySignificant(afpChain)) {
+
 			logger.debug("Result is significant (job #" + count + ")");
+
+			// initializes these to null, then try setting them separately
+			Boolean isSignificant = null;
+			Integer order = null;
+			Float angle = null;
+			Protodomain protodomain = null;
+
+			// first try to find the protodomain
 			logger.debug("Finding protodomain (job #" + count + ")");
-			Protodomain protodomain;
 			try {
 				protodomain = Protodomain.fromSymmetryAlignment(afpChain, ca2, 1, cache);
 				logger.debug("Protodomain is " + protodomain + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.warn("Could not create protodomain because " + e.getMessage(), e);
-				return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
 			}
+
+			// now try to find the order
 			logger.debug("Finding order (job #" + count + ")");
-			int order;
 			try {
 				order = CeSymm.getSymmetryOrder(afpChain);
 				logger.debug("Order is " + order + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.error("Failed to determine the order of symmetry on " + name + ": " + e.getMessage(), e);
-				return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
 			}
+
+			// now try to find the angle
 			logger.debug("Finding angle (job #" + count + ")");
-			double angle;
 			try {
-				angle = getAngle(afpChain, ca1, ca2);
+				angle = (float) getAngle(afpChain, ca1, ca2);
 				logger.debug("Angle is " + angle + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.error("Failed to determine the angle on " + name + ": " + e.getMessage(), e);
-				return convertResult(null, false, superfamily, name, order, null, domain, null);
 			}
-			boolean isSymmetric = significance.isSignificant(protodomain, order, angle, afpChain);
-			return convertResult(afpChain, isSymmetric, superfamily, name, order, protodomain.toString(),
-					domain, (float) angle);
-		} else {
+
+			// now determine whether it's significant
+			logger.debug("Determining significance (job #" + count + ")");
+			try {
+				isSignificant = significance.isSignificant(protodomain, order, angle, afpChain);
+			} catch (RuntimeException e) {
+				logger.error("Failed to determine the signifcance of " + name + ": " + e.getMessage(), e);
+			}
+			return convertResult(afpChain, isSignificant, superfamily, name, order, protodomain.toString(),
+					domain, angle);
+
+		} else { // trying this would take too long
 			logger.debug("Result is not significant (job #" + count + ")");
 			return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
 		}
@@ -179,12 +205,12 @@ public class CensusJob implements Callable<Result> {
 		r.setAlignment(new Alignment(afpChain));
 		r.setIsSignificant(isSymmetric);
 		try {
-			if (afpChain != null) r.setAxis(new Axis(new RotationAxis(afpChain)));
+			r.setAxis(new Axis(new RotationAxis(afpChain)));
 		} catch (RuntimeException e) {
-			logger.error("Could not get rotation axis for " + scopId, e);
+			logger.error("Could not get rotation axis for " + scopId  + "(job #" + count + ")", e);
 		} catch (Exception e) {
-			logger.error("Alignment for "+scopId+" is empty",e);
-			if (angle != null) {
+			logger.error("Alignment for " + scopId + " is empty (job #" + count + ")", e);
+			if (angle != null) { // if the axis can't be found, at least we do have the angle
 				Axis axis = new Axis();
 				axis.setTheta((float) angle);
 				r.setAxis(axis);

@@ -6,6 +6,7 @@
             <alignScore>82.4591</alignScore>
             <block1Length>31</block1Length>
             <block2Length>34</block2Length>
+            <coverage>52</coverage>
             <gapLength>50</gapLength>
             <identity>0.12307692</identity>
             <rmsd>5.0854034</rmsd>

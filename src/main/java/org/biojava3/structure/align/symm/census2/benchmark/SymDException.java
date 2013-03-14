@@ -19,8 +19,6 @@ public class SymDException extends Exception {
 		super(message, cause);
 	}
 
-	public SymDException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
+	
 
 }

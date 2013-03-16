@@ -24,12 +24,12 @@ public class SymDResultsTest {
 
 	private static final String SYMD_PATH = "src/test/resources/census2/benchmark/symd";
 
-	@Before
+//	@Before
 	public void setUp() throws StructureException {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
 	}
 	
-	@Test
+//	@Test
 	public void testRunSymDSimple() throws SymDException {
 		final String pdbFile = "src/test/resources/census2/benchmark/1WOP.pdb";
 		Result result = SymDResults.runSymD(SYMD_PATH, pdbFile);
@@ -43,7 +43,7 @@ public class SymDResultsTest {
 		assertEquals(10.66, (float) alignment.getzScore(), 0.01f);
 	}
 
-	@Test
+//	@Test
 	public void testRunSymDMultiple() {
 		final String pdbFilesPath = "src/test/resources/census2/benchmark";
 		List<ScopDomain> domains = new ArrayList<ScopDomain>();
@@ -56,7 +56,7 @@ public class SymDResultsTest {
 		}
 	}
 	
-	@Test
+//	@Test
 	public void testWriteToFile() throws IOException {
 		
 		File lineByLine = new File("src/test/resources/census2/benchmark/list_for_symd");

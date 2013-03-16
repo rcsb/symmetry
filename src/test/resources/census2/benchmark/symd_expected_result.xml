@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<ns2:SymDResults xmlns:ns2="http://source.rcsb.org">
+<ns2:CensusResults xmlns:ns2="http://source.rcsb.org">
     <data>
         <alignment>
             <alignLength>40</alignLength>
@@ -34,4 +34,4 @@
         <scopId>d3cira3</scopId>
     </data>
     <timestamp>2013-03-08 17:24:28</timestamp>
-</ns2:SymDResults>
+</ns2:CensusResults>

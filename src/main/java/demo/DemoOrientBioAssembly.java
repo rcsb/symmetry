@@ -38,14 +38,14 @@ public class DemoOrientBioAssembly {
 	public static void main(String[] args){
 
 		//String[] pdbIDs = new String[]{"4INU", "4D8s","4EAR","4IYQ","3ZKR",};
-		String[] pdbIDs = new String[]{"4INU",};
+		String[] pdbIDs = new String[]{"1a0s",};
 		for ( String pdbID : pdbIDs){
 			runPDB(pdbID);
 		}
 
 	}
 
-	private static void runPDB(String pdbID){
+	public static void runPDB(String pdbID){
 
 		pdbID = pdbID.toLowerCase();
 		
@@ -62,11 +62,11 @@ public class DemoOrientBioAssembly {
 
 			StructureIO.setAtomCache(cache);
 			
-			//s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
+			s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
 
 			// Alternative access to structure:			
 			//
-			s = readStructure(pdbID, biolAssemblyNr);
+			//s = readStructure(pdbID, biolAssemblyNr);
 			
 			System.out.println("MODELS:" + s.nrModels());
 			
@@ -87,7 +87,7 @@ public class DemoOrientBioAssembly {
 	private static boolean analyzeSymmetry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
 
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
-		calc.getParams().setVerbose(true);
+		calc.getParams().setVerbose(false);
 		calc.setBioAssembly(s);
 
 		calc.getParams().setSequenceIdentityThreshold(threshold);
@@ -127,7 +127,7 @@ public class DemoOrientBioAssembly {
 			System.out.println("Symmetry RMSD : " + String.format("%.2f",calc.getRotationGroup().getAverageTraceRmsd()));
 
 			System.out.println("Transf. matrix: " + calc.getAxisTransformation().getTransformation());
-
+			System.out.println("Geomet. tansf : " + calc.getAxisTransformation().getGeometicCenterTransformation());
 			System.out.println("Dimension                : " + calc.getAxisTransformation().getDimension());
 			System.out.println("Subunit count            : " + calc.getFinder().getChainCount());
 

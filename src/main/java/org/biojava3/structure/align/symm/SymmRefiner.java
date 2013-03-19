@@ -7,6 +7,7 @@ import java.util.Map;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
@@ -41,7 +42,7 @@ public class SymmRefiner {
 		Map<Integer,Integer> deltas = new HashMap<Integer,Integer>();
 		
 		// convert alignment to a map between residue indices
-		Map<Integer,Integer> alignment = CeSymm.alignmentAsMap(afpChain);
+		Map<Integer,Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
 		alignment.put(null, null);
 		
 		//iterate over the alignment

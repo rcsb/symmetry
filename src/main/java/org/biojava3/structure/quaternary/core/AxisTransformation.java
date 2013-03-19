@@ -301,6 +301,8 @@ public class AxisTransformation {
 		} else {
 			calcTransformationBySymmetryAxes();
 		}
+		// make sure this value is zero. On Linux this value is 0.
+		transformationMatrix.setElement(3, 3, 1.0);
 	}
 
 	private void calcReverseTransformation() {

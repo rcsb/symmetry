@@ -1,8 +1,5 @@
 package org.biojava3.structure.align.symm;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.biojava.bio.structure.Atom;
@@ -21,9 +18,9 @@ import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
+import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
-
 import org.biojava3.structure.utils.SymmetryTools;
 
 
@@ -35,7 +32,7 @@ import org.biojava3.structure.utils.SymmetryTools;
 public class CeSymm extends AbstractStructureAlignment implements MatrixListener, StructureAlignment {
 	static final boolean debug = false;
 	boolean displayJmol = false;
-	
+
 	public static final String algorithmName = "jCE-symmetry";
 
 	public static final String version = "1.0";
@@ -51,7 +48,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	CeParameters params;
 	//int loopCount ;
 	int maxNrAlternatives = 1;
-	
+
 
 
 	public static void main(String[] args){
@@ -477,102 +474,12 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		// Avoids reporting slight improvements in favor of lower order
 		final float minimumMetricChange = 0.40f;
 		
-		Map<Integer,Integer> alignment = alignmentAsMap(afpChain);
+		Map<Integer,Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
 		
-		List<Integer> preimage = new ArrayList<Integer>(alignment.keySet()); // currently unmodified
-		List<Integer> image = new ArrayList<Integer>(preimage);
-		
-		alignment.put(null, null);
-		
-		int bestSymmetry = -1;
-		double bestMetric = Double.POSITIVE_INFINITY; //lower is better
-		boolean foundSymmetry = false;
-		
-		if(debug) {
-			System.out.println("Symm\tPos\tDelta");
-		}
-		
-		for(int n=1;n<=maxSymmetry;n++) {
-			int deltasSq = 0;
-			int numDeltas = 0;
-			// apply alignment
-			for(int i=0;i<image.size();i++) {
-				Integer pre = image.get(i);
-				Integer post = alignment.get(pre);
-				image.set(i, post);
-				
-				if(post != null) {
-					int delta = post-preimage.get(i);
-					
-					deltasSq += delta*delta;
-					numDeltas++;
-
-					if(debug) {
-						System.out.format("%d\t%d\t%d\n",n,preimage.get(i),delta);
-					}
-				}
-				
-			}
-			
-			double metric = Math.sqrt((double)deltasSq/numDeltas); // root mean squared distance
-			
-			//System.out.format("%d\t%f\n",n,metric);
-			
-			if(!foundSymmetry && metric < bestMetric * minimumMetricChange) {
-				// n = 1 is never the best symmetry
-				if(bestMetric < Double.POSITIVE_INFINITY) {
-					foundSymmetry = true;
-				}
-				bestSymmetry = n;
-				bestMetric = metric;
-			}
-			
-			// When debugging need to loop over everything. Unneeded in production
-			if(!debug && foundSymmetry) {
-				break;
-			}
-			
-		}
-		if(foundSymmetry) {
-			return bestSymmetry;
-		} else {
-			return -1;
-		}
+		return AlignmentTools.getSymmetryOrder(alignment,
+				new AlignmentTools.IdentityMap<Integer>(),
+				maxSymmetry, minimumMetricChange);
 	}
-
-	/**
-	 * Creates a Map specifying the alignment as a mapping between residue indices
-	 * of protein 1 and residue indices of protein 2.
-	 * 
-	 * <p>For example,<pre>
-	 * 1234
-	 * 5678</pre>
-	 * becomes<pre>
-	 * 1->5
-	 * 2->6
-	 * 3->7
-	 * 4->8</pre>
-	 * 
-	 * @param afpChain An alignment
-	 * @return A mapping from aligned residues of protein 1 to their partners in protein 2.
-	 * @throws StructureException If afpChain is not one-to-one
-	 */
-	public static Map<Integer, Integer> alignmentAsMap(AFPChain afpChain) throws StructureException {
-		Map<Integer,Integer> map = new HashMap<Integer,Integer>();
-		
-		int[][][] optAln = afpChain.getOptAln();
-		int[] optLen = afpChain.getOptLen();
-		for(int block = 0; block < afpChain.getBlockNum(); block++) {
-			for(int pos = 0; pos < optLen[block]; pos++) {
-				int res1 = optAln[block][0][pos];
-				int res2 = optAln[block][1][pos];
-				if(map.containsKey(res1)) {
-					throw new StructureException(String.format("Residue %d aligned to both %d and %d.", res1,map.get(res1),res2));
-				}
-				map.put(res1,res2);
-			}
-		}
-		return map;
-	}
+	
 
 }

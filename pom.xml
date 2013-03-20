@@ -4,6 +4,15 @@
 	<artifactId>structcomplayground</artifactId>
 	<version>0.1.21-SNAPSHOT</version>
 	<name>StructCompPlayground</name>
+	
+	<properties>
+		<jdk.version>1.6</jdk.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.build.targetEncoding>UTF-8</project.build.targetEncoding>
+		<maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
+		<timestamp>${maven.build.timestamp}</timestamp>
+	</properties>
+	
 	<repositories>
 		<repository>
 			<id>maven2-repository.dev.java.net</id>
@@ -136,12 +145,38 @@
 				<version>2.5.1</version>
 				<configuration>
 				<fork>true</fork>
-					<source>1.6</source>
-					<target>1.6</target>
+						<source>${jdk.version}</source>
+					<target>${jdk.version}</target>
 					<maxmem>1000m</maxmem>
 				</configuration>
 			</plugin>
+					
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.5</version>
+			</plugin>
+
 		</plugins>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.properties</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<includes>
+					<!-- <include>**/*.cif.gz</include>
+					<include>**/*.pdb</include>
+					<include>**/*.mat</include> -->
+				</includes>
+			</resource>
+		</resources>
+		
 		
 		<extensions>
 			<extension>

@@ -270,6 +270,8 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         Vector3d reverse = new Vector3d(centroid);
         reverse.negate();
         centroidInverse.set(reverse);
+        // On LINUX there seems to be a bug with vecmath, and element m33 is zero. Here we make sure it's 1.
+        centroidInverse.setElement(3, 3, 1.0);
 
         List<Point3d> centers = subunits.getCenters();
         int n = subunits.getSubunitCount();

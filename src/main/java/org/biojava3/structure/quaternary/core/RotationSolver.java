@@ -15,6 +15,7 @@ import org.biojava3.structure.quaternary.geometry.DistanceBox;
 import org.biojava3.structure.quaternary.geometry.MomentsOfInertia;
 import org.biojava3.structure.quaternary.geometry.SphereSampler;
 import org.biojava3.structure.quaternary.geometry.SuperPosition;
+import org.biojava3.structure.quaternary.geometry.SuperPositionQCP;
 
 
 /**
@@ -210,9 +211,10 @@ public class RotationSolver implements QuatSymmetrySolver {
 		// get optimal transformation and axisangle by superimposing subunits
 		AxisAngle4d axisAngle = new AxisAngle4d();
 		
-		// ---
+//		 ---
 //		long t1 = System.nanoTime();
 //		// are these coordinates precentered??
+//		SuperPositionQCP sp = new SuperPositionQCP();
 //		sp.set(transformedCoords, originalCoords);
 //		sp.setCentered(true);
 //		double subunitRmsd = sp.getRmsd();
@@ -231,15 +233,15 @@ public class RotationSolver implements QuatSymmetrySolver {
 		
 	//	long t3 = System.nanoTime();
 		// --
-//		System.out.println(" new rmsd: " + subunitRmsd);
+		System.out.println(" rmsd: " + subunitRmsd);
 //		System.out.println(" new: " + (t2-t1));
 		// --
 		
 		if (subunitRmsd < parameters.getRmsdThreshold()) {
 //			Matrix4d transformation = sp.getTransformationMatrix();
 //			transformedCoords = sp.getTransformedCoordinates();
-//			axisAngle.set(transformation);
-//			
+//			axisAngle.set(transformation); // creates alternative 2-fold without rotation for 4D8S
+			
 //			long t3 = System.nanoTime();
 //			System.out.println(" total time: " + (t3-t1));
 			// transform to original coordinate system
@@ -431,6 +433,8 @@ public class RotationSolver implements QuatSymmetrySolver {
         Vector3d reverse = new Vector3d(centroid);
         reverse.negate();
         centroidInverse.set(reverse);
+        // Make sure matrix element m33 is 1.0. An old version vecmath did not set this element.
+        centroidInverse.setElement(3, 3,  1.0);
 
         List<Point3d> centers = subunits.getCenters();
         int n = subunits.getSubunitCount();

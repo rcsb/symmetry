@@ -210,6 +210,8 @@ public class SystematicSolver implements QuatSymmetrySolver {
         Vector3d reverse = new Vector3d(centroid);
         reverse.negate();
         centroidInverse.set(reverse);
+        // Make sure matrix element m33 is 1.0. An old version vecmath did not set this element.
+        centroidInverse.setElement(3, 3, 1.0);
 
         List<Point3d> centers = subunits.getCenters();
         int n = subunits.getSubunitCount();

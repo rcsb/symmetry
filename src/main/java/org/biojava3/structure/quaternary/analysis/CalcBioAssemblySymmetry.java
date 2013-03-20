@@ -25,6 +25,7 @@
 package org.biojava3.structure.quaternary.analysis;
 
 import org.biojava.bio.structure.Structure;
+import org.biojava.bio.structure.align.util.ResourceManager;
 
 import org.biojava3.structure.quaternary.core.AxisTransformation;
 import org.biojava3.structure.quaternary.core.FindQuarternarySymmetry;
@@ -42,9 +43,25 @@ public class CalcBioAssemblySymmetry {
 	private JmolSymmetryScriptGenerator scriptGenerator;
 	
 	
-	public static String version = "0.1.21";
+	//public static String version = "0.1.21";
 	
 	public CalcBioAssemblySymmetry(){
+	}
+	static public String version;
+	static public String build; 
+	
+	static {
+		try {
+			ResourceManager about = ResourceManager.getResourceManager("about");
+
+			 version = about.getString("project_version");
+			 build   = about.getString("build");
+			
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+
+
 	}
 	
 	

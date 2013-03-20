@@ -30,7 +30,7 @@ public class OrientBiologicalAssembly {
 	}
 
 	public static void main(String[] args) {		
-		System.out.println("OrientBiologicalAssembly V " + CalcBioAssemblySymmetry.version + " : Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
+		System.out.println("OrientBiologicalAssembly V " + CalcBioAssemblySymmetry.version + " - "  +  CalcBioAssemblySymmetry.build + " : Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
 		System.out.println();
 		
 		AllChemCompProvider all = new AllChemCompProvider();

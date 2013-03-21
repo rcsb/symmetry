@@ -52,7 +52,7 @@ public class CalcBioAssemblySymmetry {
 	
 	static {
 		try {
-			ResourceManager about = ResourceManager.getResourceManager("about");
+			ResourceManager about = ResourceManager.getResourceManager("aboutplayground");
 
 			 version = about.getString("project_version");
 			 build   = about.getString("build");

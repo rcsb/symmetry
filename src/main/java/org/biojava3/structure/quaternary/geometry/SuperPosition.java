@@ -94,6 +94,7 @@ public final class SuperPosition {
     public static Matrix4d superposeAtOrigin(Point3d[] x, Point3d[] y, AxisAngle4d axisAngle) {
         Quat4d q = quaternionOrientation(x, y);    
         Matrix4d rotTrans = new Matrix4d();
+        rotTrans.setIdentity();
         rotTrans.set(q);
         axisAngle.set(q);
         Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);

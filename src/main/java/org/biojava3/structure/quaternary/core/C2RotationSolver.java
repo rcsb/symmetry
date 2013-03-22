@@ -45,9 +45,53 @@ public class C2RotationSolver implements QuatSymmetrySolver {
    
     public RotationGroup getSymmetryOperations() {
         if (rotations.getOrder() == 0) {
-            solve();
+ //           solve();
+        	solveNew();
         }
         return rotations;
+    }
+    
+    private void solveNew() {
+		Vector3d trans = new Vector3d(subunits.getCentroid());
+		trans.negate();
+		List<Point3d[]> traces = subunits.getTraces();
+
+		Point3d[] x = SuperPosition.clonePoint3dArray(traces.get(0));
+		SuperPosition.center(x);
+		Point3d[] y = SuperPosition.clonePoint3dArray(traces.get(1));
+		SuperPosition.center(y);
+
+		AxisAngle4d axisAngle = new AxisAngle4d();
+		Matrix4d transformation = SuperPosition.superposeAtOrigin(x, y, axisAngle);
+		double caRmsd = SuperPosition.rmsd(x,  y);
+		
+		if (parameters.isVerbose()) {
+			System.out.println("Transformation: ");
+			System.out.println(transformation);	
+			System.out.println("Axis angle: " + axisAngle);
+			System.out.println("Rmsd: " + caRmsd);
+		}
+		
+		// if rmsd is above threshold, stop
+		if (caRmsd > parameters.getRmsdThreshold()) {
+			return;
+		}
+		
+		// combine with translation
+		Matrix4d combined = new Matrix4d();
+		combined.setIdentity();
+		combined.setTranslation(trans);
+		transformation.mul(combined);
+
+		// add unit operation
+		addEOperation();
+		List<Integer> permutation = new ArrayList<Integer>();
+		permutation.add(new Integer(1));
+		permutation.add(new Integer(0));
+		
+		// add C2 operation
+		Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, 0.0, caRmsd, 2);
+		rotations.addRotation(symmetryOperation);
     }
 
     private void solve() {  	

@@ -165,7 +165,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 	private void evaluateSolution(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle) {
 		int fold = PermutationGroup.getOrder(permutation);
 		
-		System.out.println("C2RotationSolver evaluateSolution: " + fold + " " + permutation + " " + transformation.getElement(3,3));
+		//System.out.println("C2RotationSolver evaluateSolution: " + fold + " " + permutation + " " + transformation.getElement(3,3));
 		
 		double subunitRmsd = 0.0f; // should always be perfect for C2
 
@@ -174,8 +174,6 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 		if (caRmsd < 0.0 || caRmsd > parameters.getRmsdThreshold()) {
 			return;
 		}
-		
-		
 		
 		// if there is a better (lower RMSD) solution, remove the second solution and replace
 		// it with this solution. Note, by convention, the first solution is E and should not be changed.
@@ -188,6 +186,8 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 			Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, subunitRmsd, caRmsd, fold);
 			rotations.addRotation(symmetryOperation);
 		}
+		
+		System.out.println(String.format("C2RotationSolver evaluateSolution: %10.2f %10.2f %d", caRmsd , bestRmsd , rotations.getOrder()));
 	}
 
     /**

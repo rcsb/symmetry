@@ -114,6 +114,8 @@ public class RotationSolver implements QuatSymmetrySolver {
                 // apply rotation
                 sphereAngle.angle = angle;
                 transformation.set(sphereAngle);
+                // Make sure matrix element m33 is 1.0. It's not on Linux.
+                transformation.setElement(3, 3, 1.0);
                 for (int j = 0; j < n; j++) {
                     transformedCoords[j].set(originalCoords[j]);
                     transformation.transform(transformedCoords[j]);

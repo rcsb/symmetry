@@ -113,6 +113,7 @@ public final class SuperPosition {
 		System.out.println("SuperPosition.superposeAtOrigin: rotTrans");
 		System.out.println(rotTrans);
         Matrix4d temp = new Matrix4d();
+        temp.setIdentity();
         temp.set(axisAngle);
         System.out.println("SuperPosition.superposeAtOrigin: from axisAngle");
 		System.out.println(temp);

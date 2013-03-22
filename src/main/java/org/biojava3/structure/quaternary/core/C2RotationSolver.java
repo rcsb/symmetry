@@ -57,6 +57,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         addEOperation();
         
         AxisAngle4d sphereAngle = new AxisAngle4d();
+        
         Matrix4d transformation = new Matrix4d();
         transformation.setIdentity();
         
@@ -134,7 +135,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
     	orthogonalAxis.normalize();
 
     	Point3d[] subunitReferenceFrame = {new Point3d(subunitVector), new Point3d(0.0, 0.0, 0.0), new Point3d(orthogonalAxis)};
-    	Point3d[] cartesianReferenceFrame = {new Point3d(1.0, 0.0, 0.0), new Point3d(0.0, 0.0, 0.0), new Point3d(0.0, 0.0, 1.0)};
+    	Point3d[] cartesianReferenceFrame = {new Point3d(1.0, 0.0, 0.0), new Point3d(0.0, 1.0, 0.0), new Point3d(0.0, 0.0, 1.0)};
     	
     	AxisAngle4d a = new AxisAngle4d();
     	referenceTransformation = SuperPosition.superposeAtOrigin(cartesianReferenceFrame, subunitReferenceFrame, a);
@@ -274,6 +275,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         // translation back to original coordinate system
         Vector3d reverse = new Vector3d(centroid);
         reverse.negate();
+        
         centroidInverse.set(reverse);
         // On LINUX there seems to be a bug with vecmath, and element m33 is zero. Here we make sure it's 1.
         centroidInverse.setElement(3, 3, 1.0);

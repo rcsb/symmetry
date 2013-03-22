@@ -377,6 +377,8 @@ public class AxisTransformation {
 			axis.normalize();
 			a.set(axis, v1.angle(v2));
 			m1.set(a);
+			// make sure matrix element m33 is 1.0. It's 0 on Linux.
+			m1.setElement(3,  3, 1.0);
 		} else if (dot > 0) {
 			// parallel axis, nothing to do -> identity matrix
 			m1.setIdentity();
@@ -399,6 +401,8 @@ public class AxisTransformation {
 			axis.normalize();
 			a.set(axis, v1.angle(v2));
 			m2.set(a);
+			// make sure matrix element m33 is 1.0. It's 0 on Linux.
+			m2.setElement(3,  3, 1.0);
 		} else if (dot > 0) {
 			// parallel axis, nothing to do -> identity matrix
 			m2.setIdentity();

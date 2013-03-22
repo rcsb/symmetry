@@ -79,6 +79,8 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         		evaluateSolution(permutation, transformation, sphereAngle);
         	}
         }
+        
+        System.out.println("C2RotationSolver #rotations: " + rotations.getOrder());
     }
     
     private boolean isAllowedPermutation(List<Integer> permutation) {

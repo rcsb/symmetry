@@ -66,6 +66,8 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         	transformRotationAxis(sphereAngle);    	
         	sphereAngle.angle = Math.PI;
         	transformation.set(sphereAngle);
+        	// make sure matrix element m33 is 1. It's zero on Linux
+        	transformation.setElement(3, 3,  1);
         	for (int j = 0; j < n; j++) {
         		transformedCoords[j].set(originalCoords[j]);
         		transformation.transform(transformedCoords[j]);

@@ -13,7 +13,6 @@ import java.util.Map.Entry;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Color4f;
-import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
@@ -297,7 +296,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		}
 		int half = colors.length/2;
 		for (int i = 0; i < half; i++) {
-			if (i % 2 == 1) {
+			if (i % 2 != 0) {
 			   Color4f temp = colors[i];
 			   colors[i] = colors[half+i];
 			   colors[half+i] = temp;
@@ -822,6 +821,8 @@ public abstract class JmolSymmetryScriptGenerator {
 			axisAngle.angle = i * 2 * Math.PI/n;
 			vectors[i] = new Vector3d(ref);		
 			m.set(axisAngle);
+			// make sure matrix element m33 is 1.0. It's 0 on Linux.
+			m.setElement(3, 3, 1.0);
 			m.transform(vectors[i]);
 			vectors[i].add(center);
 		}
@@ -885,12 +886,16 @@ public abstract class JmolSymmetryScriptGenerator {
 		axisAngle.angle = (k+0.5) * 2 * Math.PI/(f*k);
 		Vector3d begin = new Vector3d(ref);		
 		m.set(axisAngle);
+		// make sure matrix element m33 is 1.0. It's 0 on Linux.
+		m.setElement(3, 3, 1.0);
 		m.transform(begin);
 		
 		// last point of arc
 		axisAngle.angle = (2*k-1+0.5) * 2 * Math.PI/(f*k);
 		Vector3d end = new Vector3d(ref);		
 		m.set(axisAngle);
+		// make sure matrix element m33 is 1.0. It's 0 on Linux.
+		m.setElement(3, 3, 1.0);
 		m.transform(end);
 		
 		// center of arc
@@ -907,6 +912,8 @@ public abstract class JmolSymmetryScriptGenerator {
 			axisAngle.angle = (k + i + 0.5) * 2 * Math.PI/(f*k);
 			vectors[i] = new Vector3d(ref);		
 			m.set(axisAngle);
+			// make sure matrix element m33 is 1.0. It's 0 on Linux.
+			m.setElement(3, 3, 1.0);
 			m.transform(vectors[i]);
 			vectors[i].add(arcCenter);
 			vectors[i].add(center);
@@ -917,6 +924,8 @@ public abstract class JmolSymmetryScriptGenerator {
 			axisAngle.angle = (f/2*k + i + 1.5) * 2 * Math.PI/(f*k);
 			vectors[i] = new Vector3d(ref);		
 			m.set(axisAngle);
+			// make sure matrix element m33 is 1.0. It's 0 on Linux.
+			m.setElement(3, 3, 1.0);
 			m.transform(vectors[i]);
 			vectors[i].sub(arcCenter);
 			vectors[i].add(center);

@@ -61,7 +61,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         transformation.setIdentity();
         
         int n = subunits.getSubunitCount();
-        System.out.println("C2 rotation solver subunits: " + subunits);
+        System.out.println("C2 rotation solver subunits: " + n);
         for (int i = 0; i < CircleSampler.getSphereCount(); i++) {
         	CircleSampler.getAxisAngle(i, sphereAngle);
         	transformRotationAxis(sphereAngle);    	

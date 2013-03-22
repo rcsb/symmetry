@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>structcomplayground</artifactId>
-	<version>0.1.22-SNAPSHOT</version>
+	<version>0.1.23-SNAPSHOT</version>
 	<name>StructCompPlayground</name>
 	
 	<properties>
@@ -136,6 +136,7 @@
 			<artifactId>commons-cli</artifactId>
 			<version>1.2</version>
 		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>

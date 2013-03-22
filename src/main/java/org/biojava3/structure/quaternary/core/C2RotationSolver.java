@@ -187,7 +187,8 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 			rotations.addRotation(symmetryOperation);
 		}
 		
-		System.out.println(String.format("C2RotationSolver evaluateSolution: %10.2f %10.2f %d", caRmsd , bestRmsd , rotations.getOrder()));
+		System.out.println("C2RotationSolver evaluateSolution: " + fold + " " + permutation + " " + transformation.getElement(3, 3) + 
+				String.format(" %10.2f %10.2f %d", caRmsd , bestRmsd , rotations.getOrder()));
 	}
 
     /**

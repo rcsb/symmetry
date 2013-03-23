@@ -45,13 +45,12 @@ public class C2RotationSolver implements QuatSymmetrySolver {
    
     public RotationGroup getSymmetryOperations() {
         if (rotations.getOrder() == 0) {
- //           solve();
-        	solveNew();
+            solve();
         }
         return rotations;
     }
     
-    private void solveNew() {
+    private void solve() {
 		Vector3d trans = new Vector3d(subunits.getCentroid());
 		trans.negate();
 		List<Point3d[]> traces = subunits.getTraces();
@@ -74,6 +73,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 		
 		// if rmsd is above threshold, stop
 		if (caRmsd > parameters.getRmsdThreshold()) {
+			rotations.setC1(subunits.getSubunitCount());
 			return;
 		}
 		
@@ -85,16 +85,16 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 
 		// add unit operation
 		addEOperation();
+		
+		// add C2 operation
 		List<Integer> permutation = new ArrayList<Integer>();
 		permutation.add(new Integer(1));
 		permutation.add(new Integer(0));
-		
-		// add C2 operation
 		Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, 0.0, caRmsd, 2);
 		rotations.addRotation(symmetryOperation);
     }
 
-    private void solve() {  	
+    private void solveOld() {  	
         initialize();
         
         // add the unit operation

@@ -153,14 +153,19 @@ public class SignificanceFactory {
 	}
 
 	public static Significance getGenerallySymmetric() {
-		return getByTmScore(0.35);
+		return getByTmScore(0.4);
 	}
 
 	public static Significance getRotationallySymmetric() {
+		
 		return new Significance() {
+			
+			private static final double THRESHOLD = 0.4;
+			private static final double EPSILON_THRESHOLD = Math.PI / 16.0;
+			
 			@Override
 			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return afpChain.getTMScore() >= 0.3;
+				return afpChain.getTMScore() >= THRESHOLD;
 			}
 
 			@Override
@@ -174,7 +179,7 @@ public class SignificanceFactory {
 				}
 				double epsilon = axis.evaluateEpsilon(order);
 				if (epsilon > Math.PI / 16) return false;
-				return afpChain.getTMScore() >= 0.3 && order >= 2;
+				return afpChain.getTMScore() >= THRESHOLD && order >= 2;
 			}
 
 			@Override
@@ -186,8 +191,8 @@ public class SignificanceFactory {
 				final int order = result.getOrder();
 				if (order < 2) return false;
 				double epsilon = result.getAxis().evaluateEpsilon(order);
-				if (epsilon > Math.PI / 16) return false;
-				return result.getAlignment().getzScore() >= 3.5;
+				if (epsilon > EPSILON_THRESHOLD) return false;
+				return result.getAlignment().getTmScore() >= THRESHOLD;
 			}
 		};
 	}

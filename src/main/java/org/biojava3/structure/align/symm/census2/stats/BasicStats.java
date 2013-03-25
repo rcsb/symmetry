@@ -69,13 +69,13 @@ public class BasicStats {
 	private final NavigableMap<String, Integer> nTotalFold = new TreeMap<String, Integer>();
 	private final NavigableMap<String, Integer> nSymmFold = new TreeMap<String, Integer>();
 	private final NavigableMap<String, Integer> nRotFold = new TreeMap<String, Integer>();
-	
+
 	private final NavigableMap<String, Integer> nTotalClass = new TreeMap<String, Integer>();
 	private final NavigableMap<String, Integer> nSymmClass = new TreeMap<String, Integer>();
 	private final NavigableMap<String, Integer> nRotClass = new TreeMap<String, Integer>();
 
 	private String text;
-	
+
 	protected Significance rotationallySymmetric = SignificanceFactory.getRotationallySymmetric();
 	protected Significance sig = SignificanceFactory.getGenerallySymmetric();
 	static {
@@ -92,9 +92,9 @@ public class BasicStats {
 
 	public static void main(String[] args) {
 		Grouping grouping = Grouping.byName(args[0]);
-		File[] files = new File[args.length];
+		File[] files = new File[args.length-1];
 		for (int i = 1; i < args.length; i++) {
-			files[i] = new File(args[i]);
+			files[i-1] = new File(args[i]);
 		}
 		printBasicStats(System.out, grouping, files);
 	}
@@ -150,8 +150,7 @@ public class BasicStats {
 
 			boolean isSymm = false, isRot = false, isUnknown = false, isRotUnknown = false;
 
-			// N total
-			plus(nTotalGroup, group);
+			nTotal++;
 
 			// N symmetric and unknown symmetry
 			try {
@@ -178,6 +177,7 @@ public class BasicStats {
 			}
 
 			// record stats per group
+			plus(nTotalGroup, group);
 			if (isSymm) plus(nSymmGroup, group);
 			if (isRot) plus(nRotGroup, group);
 			if (isUnknown) plus(nUnknownGroup, group);
@@ -188,64 +188,79 @@ public class BasicStats {
 		}
 
 		/*
-		 * Now collect stats per fold:
+		 * Now collect stats grouped by fold:
 		 * How many groups (e.g. superfamilies) in the fold are symmetric?
 		 */
 
 		for (Map.Entry<String, Integer> entry : nTotalGroup.entrySet()) {
 
 			final String group = entry.getKey();
-			final String fold = group.split("\\.")[1]; // should always be fold
+			final String fold;
+			try {
+				String[] parts = group.split("\\.");
+				fold = parts[0] + "." + parts[1]; // should always be fold
+			} catch (ArrayIndexOutOfBoundsException e) {
+				logger.error("Bad classification: " + group, e);
+				continue;
+			}
 
 			// N total
 			final int nTotalG = entry.getValue();
+			plus(nTotalFold, fold);
 
 			// % symmetric
 			Integer nSymmG = nSymmGroup.get(group);
 			if (nSymmG == null) nSymmG = 0;
 			double fractionSymmG = (double) nSymmG / (double) nTotalG;
-			plus(nTotalFold, fold);
-			if (fractionSymmG > 0.5) {
+			if (fractionSymmG >= 0.5) {
 				plus(nSymmFold, fold);
 			}
 
 			// % rotational
 			Integer nRotG = nRotGroup.get(group);
 			if (nRotG == null) nRotG = 0;
-			double fractionRotG = (double) nRotG / (double) nRotG;
-			if (fractionRotG > 0.5) {
+			double fractionRotG = (double) nRotG / (double) nTotalG;
+			if (fractionRotG >= 0.5) {
 				plus(nRotFold, fold);
 			}
 
 		}
 
 		/*
-		 * Finally, collect stats per class:
+		 * Finally, collect stats grouped by class:
 		 * How many folds in each class are symmetric?
 		 */
 
 		for (Map.Entry<String, Integer> entry : nTotalFold.entrySet()) {
 
 			final String fold = entry.getKey();
+			final String clas;
+			try {
+				String[] parts = fold.split("\\.");
+				clas = parts[0]; // should always be class
+			} catch (ArrayIndexOutOfBoundsException e) {
+				logger.error("Bad classification: " + fold, e);
+				continue;
+			}
 
 			// N total
 			final int nTotalG = entry.getValue();
-			plus(nTotalClass, fold);
+			plus(nTotalClass, clas);
 
 			// % symmetric
 			Integer nSymmG = nSymmFold.get(fold);
 			if (nSymmG == null) nSymmG = 0;
 			double fractionSymmG = (double) nSymmG / (double) nTotalG;
-			if (fractionSymmG > 0.5) {
-				plus(nSymmClass, fold);
+			if (fractionSymmG >= 0.5) {
+				plus(nSymmClass, clas);
 			}
 
 			// % rotational
 			Integer nRotG = nRotFold.get(fold);
 			if (nRotG == null) nRotG = 0;
-			double fractionRotG = (double) nRotG / (double) nRotG;
-			if (fractionRotG > 0.5) {
-				plus(nRotClass, fold);
+			double fractionRotG = (double) nRotG / (double) nTotalG;
+			if (fractionRotG >= 0.5) {
+				plus(nRotClass, clas);
 			}
 
 		}
@@ -322,13 +337,15 @@ public class BasicStats {
 			// % rotational
 			Integer nRotG = nRotGroup.get(group);
 			if (nRotG == null) nRotG = 0;
-			double fractionRotG = (double) nRotG / (double) nRotG;
+			double fractionRotG = (double) nRotG / (double) nTotalG;
 
 			// print for each group (e.g. superfamily)
-			sb.append(group + ":" + NEWLINE);
-			sb.append("\ttotal" + nTotalG + NEWLINE);
-			sb.append("\tsymmetric: " + fpc(fractionSymmG) + NEWLINE);
-			sb.append("\trotational: " + fpc(fractionRotG) + NEWLINE);
+			if (nSymmG > 0) {
+				sb.append(group + ":" + NEWLINE);
+				sb.append("\ttotal: " + nTotalG + NEWLINE);
+				sb.append("\tsymmetric: " + fpc(fractionSymmG) + NEWLINE);
+				sb.append("\trotational: " + fpc(fractionRotG) + NEWLINE);
+			}
 
 		}
 
@@ -338,7 +355,7 @@ public class BasicStats {
 		 * this is more important than the above, which is too detailed
 		 * we also need to collect stats per class to print after
 		 */
-		sb.append("---PER " + grouping.toString() + "ACCORDING TO FOLD---" + NEWLINE);
+		sb.append("---PER " + grouping.toString() + " GROUPED BY FOLD---" + NEWLINE);
 
 		for (Map.Entry<String, Integer> entry : nTotalFold.entrySet()) {
 
@@ -355,13 +372,15 @@ public class BasicStats {
 			// % rotational
 			Integer nRotG = nRotFold.get(fold);
 			if (nRotG == null) nRotG = 0;
-			double fractionRotG = (double) nRotG / (double) nRotG;
+			double fractionRotG = (double) nRotG / (double) nTotalG;
 
 			// print
-			sb.append(fold + ":" + NEWLINE);
-			sb.append("\ttotal: " + nTotalG + NEWLINE);
-			sb.append("\tsymmetric: " + fpc(fractionSymmG) + NEWLINE);
-			sb.append("\trotational: " + fpc(fractionRotG) + NEWLINE);
+			if (nSymmG > 0) {
+				sb.append(fold + ":" + NEWLINE);
+				sb.append("\ttotal: " + nTotalG + NEWLINE);
+				sb.append("\tsymmetric: " + fpc(fractionSymmG) + NEWLINE);
+				sb.append("\trotational: " + fpc(fractionRotG) + NEWLINE);
+			}
 		}
 
 		sb.append(NEWLINE);
@@ -369,7 +388,7 @@ public class BasicStats {
 		/*
 		 * now report the % of symmetric folds per class
 		 */
-		sb.append("---PER FOLD ACCORDING TO CLASS---" + NEWLINE);
+		sb.append("---PER FOLD GROUPED BY CLASS---" + NEWLINE);
 
 		for (Map.Entry<String, Integer> entry : nTotalClass.entrySet()) {
 
@@ -386,7 +405,7 @@ public class BasicStats {
 			// % rotational
 			Integer nRotG = nRotClass.get(clas);
 			if (nRotG == null) nRotG = 0;
-			double fractionRotG = (double) nRotG / (double) nRotG;
+			double fractionRotG = (double) nRotG / (double) nTotalG;
 
 			// print
 			sb.append(clas + ":" + NEWLINE);

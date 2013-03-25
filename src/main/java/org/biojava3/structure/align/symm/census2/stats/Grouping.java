@@ -62,7 +62,7 @@ public abstract class Grouping {
 			public String group(Result result) {
 				String[] parts = result.getClassification().split("\\.");
 				if (parts.length < 3) throw new IllegalArgumentException("Classification id is invalid for " + result.getScopId());
-				return parts[2];
+				return parts[0] + "." + parts[1] + "." + parts[2];
 			}
 
 			@Override
@@ -78,7 +78,7 @@ public abstract class Grouping {
 			public String group(Result result) {
 				String[] parts = result.getClassification().split("\\.");
 				if (parts.length < 2) throw new IllegalArgumentException("Classification id is invalid for " + result.getScopId());
-				return parts[1];
+				return parts[0] + "." + parts[1];
 			}
 
 			@Override

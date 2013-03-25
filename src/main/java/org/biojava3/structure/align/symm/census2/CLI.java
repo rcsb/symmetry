@@ -136,8 +136,11 @@ public class CLI {
 			final boolean prefetch = cmd.hasOption("prefetch");
 			final boolean oldScop = cmd.hasOption("oldscop");
 
+			final String sigClass = cmd.getOptionValue("sigclass");
+			final String sigMethod = cmd.getOptionValue("sigmethod");
+
 			run(pdbDir, censusFile, nThreads, writeEvery, number, clustering, sunIds, superfamilies, folds, randomize,
-					restart, prefetch, oldScop);
+					restart, prefetch, oldScop, sigClass, sigMethod);
 
 		} catch (RuntimeException e) {
 			printError(e);
@@ -157,8 +160,24 @@ public class CLI {
 	public static void run(final String pdbDir, final String censusFile, final Integer pNThreads,
 			final Integer writeEvery, final Integer number, final Integer clustering, final int[] pSunIds,
 			final String[] superfamilies, final String[] folds, final boolean randomize, final boolean restart,
-			boolean prefetch, final boolean oldScop) {
+			boolean prefetch, final boolean oldScop, String sigClass, String sigMethod) {
 
+		// get a significance object
+		final Significance sig;
+		if (sigClass != null) {
+			if (sigMethod != null) {
+				sig = SignificanceFactory.fromMethod(sigClass, sigMethod);
+			} else {
+				sig = SignificanceFactory.fromClass(sigClass);
+			}
+		} else {
+			if (sigMethod != null) {
+				sig = SignificanceFactory.fromMethod(SignificanceFactory.class.getName(), sigMethod);
+			} else {
+				sig = SignificanceFactory.getForCensus();
+			}
+		}
+		
 		// set the number of threads
 		final int nThreads;
 		if (pNThreads == null) {
@@ -171,6 +190,10 @@ public class CLI {
 		logger.info("Using " + nThreads + " threads");
 
 		Census census = new Census(nThreads) {
+			@Override
+			protected Significance getSignificance() {
+				return sig;
+			}
 			@Override
 			protected List<ScopDomain> getDomains() {
 
@@ -344,6 +367,16 @@ public class CLI {
 				.withDescription(
 						"Run on only the nth superfamily. Special option for running on OSG. Does not work with -oldscop.")
 				.isRequired(false).create("sfindex"));
+		options.addOption(OptionBuilder
+				.hasArg(true)
+				.withDescription(
+						"A fully-qualified class name for a Significance object. If sigmethod is also set, calls that factory method; otherwise, calls a constructor.")
+				.isRequired(false).create("sigclass"));
+		options.addOption(OptionBuilder
+				.hasArg(true)
+				.withDescription(
+						"The name of a factory method that returns a Significance object. If sigclass is also set, expects the factory method to be in that class; otherwise, checks in SignificanceFactory.")
+				.isRequired(false).create("sigmethod"));
 		return options;
 	}
 

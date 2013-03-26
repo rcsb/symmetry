@@ -64,7 +64,7 @@ import org.biojava3.structure.utils.FileUtils;
  */
 public class Census {
 
-	static abstract class AlgorithmGiver {
+	public static abstract class AlgorithmGiver {
 		static AlgorithmGiver getDefault() {
 			return new AlgorithmGiver() {
 				@Override

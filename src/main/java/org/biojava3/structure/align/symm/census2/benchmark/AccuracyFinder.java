@@ -10,6 +10,8 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.biojava3.structure.align.symm.census2.Census;
+import org.biojava3.structure.align.symm.census2.Significance;
+import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 public class AccuracyFinder {
 
@@ -30,16 +32,17 @@ public class AccuracyFinder {
 
 	public static void findAccuracy(Sample sample, PrintStream ps) {
 		int tp = 0, fp = 0, tn = 0, fn = 0;
+		final Significance sig = SignificanceFactory.getGenerallySymmetric();
 		for (Case c : sample.getData()) {
 			try {
 				if (c.hasKnownSymmetry()) {
-					if (Census.getDefaultSignificance().isSignificant(c.getResult())) {
+					if (sig.isSignificant(c.getResult())) {
 						tp++;
 					} else {
 						fn++;
 					}
 				} else {
-					if (Census.getDefaultSignificance().isSignificant(c.getResult())) {
+					if (sig.isSignificant(c.getResult())) {
 						fp++;
 					} else {
 						tn++;

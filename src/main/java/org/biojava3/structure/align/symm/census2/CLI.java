@@ -226,7 +226,7 @@ public class CLI {
 				Set<String> clusterRepresentatives = null;
 				if (clustering != null) {
 					clusterRepresentatives = AstralScopDescriptionCensus.getClusterRepresentatives(clustering);
-					logger.info("Using sequence clustering at " + clustering + "%");
+					logger.info("Using sequence clustering at " + clustering.getId());
 					logger.info("Number of clusters: " + clusterRepresentatives.size());
 				}
 
@@ -256,8 +256,11 @@ public class CLI {
 
 						boolean contains = clustering == null;
 						if (!contains) {
-							contains = PdbClusteringScopDescriptionCensus.isDomainOverChain(domain, clusterRepresentatives);
+							contains = clusterRepresentatives.contains(domain.getScopId());
 						}
+//						if (!contains) {
+//							contains = PdbClusteringScopDescriptionCensus.isDomainOverChain(domain, clusterRepresentatives);
+//						}
 						// logger.debug("Contains " + domain.getScopId());
 
 						if (contains) { // if we want to include the domain

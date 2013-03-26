@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
@@ -45,7 +44,7 @@ import org.biojava.bio.structure.scop.ScopNode;
 public class ScopDescriptionCensus extends Census {
 
 	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
-	private int[] sunIds;
+	protected int[] sunIds;
 
 	static {
 		BasicConfigurator.configure();

@@ -43,7 +43,6 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
-import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
@@ -53,7 +52,6 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.core.util.ConcurrencyTools;
 import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.protodomain.Protodomain;
 import org.biojava3.structure.utils.FileUtils;
 
 /**
@@ -68,13 +66,13 @@ public class Census {
 		public static AlgorithmGiver getDefault() {
 			return new AlgorithmGiver() {
 				@Override
-				StructureAlignment getAlgorithm() {
+				public StructureAlignment getAlgorithm() {
 					return new CeSymm();
 				}
 			};
 		}
 
-		abstract StructureAlignment getAlgorithm();
+		public abstract StructureAlignment getAlgorithm();
 	}
 	
 	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
@@ -112,25 +110,7 @@ public class Census {
 	}
 
 	public static Significance getDefaultSignificance() {
-		return new Significance() {
-			@Override
-			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return afpChain.getTMScore() >= 0.3;
-			}
-
-			@Override
-			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				return afpChain.getTMScore() >= 0.3;
-			}
-
-			@Override
-			public boolean isSignificant(Result result) {
-				if (result.getAlignment() == null) throw new IllegalArgumentException(
-						"The Result must have a non-null getAlignment()");
-				if (result.getAlignment().getTmScore() == null) throw new IllegalArgumentException("TM-Score is null");
-				return result.getAlignment().getTmScore() >= 0.3;
-			}
-		};
+		return SignificanceFactory.getForCensus();
 	}
 
 	public static void main(String[] args) {

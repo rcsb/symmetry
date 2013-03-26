@@ -47,6 +47,7 @@ import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.scop.ScopInstallation;
+import org.biojava3.structure.align.symm.census2.AstralScopDescriptionCensus.AstralSet;
 
 /**
  * Decent command-line interface to Census. Combines aspects of many of the other census subclasses.
@@ -100,8 +101,8 @@ public class CLI {
 					.getOptionValue("every"));
 			final Integer number = cmd.getOptionValue("number") == null ? null : Integer.parseInt(cmd
 					.getOptionValue("number"));
-			final Integer clustering = cmd.getOptionValue("clustering") == null ? null : Integer.parseInt(cmd
-					.getOptionValue("clustering"));
+			//final Integer clustering = cmd.getOptionValue("clustering") == null ? null : Integer.parseInt(cmd.getOptionValue("clustering"));
+			final AstralSet clustering = cmd.getOptionValue("clustering") == null ? null : AstralSet.parse(cmd.getOptionValue("clustering"));
 
 			int[] sunIds = null;
 			if (cmd.getOptionValue("sfindex") != null) {
@@ -158,7 +159,7 @@ public class CLI {
 	}
 
 	public static void run(final String pdbDir, final String censusFile, final Integer pNThreads,
-			final Integer writeEvery, final Integer number, final Integer clustering, final int[] pSunIds,
+			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] pSunIds,
 			final String[] superfamilies, final String[] folds, final boolean randomize, final boolean restart,
 			boolean prefetch, final boolean oldScop, String sigClass, String sigMethod) {
 
@@ -255,7 +256,7 @@ public class CLI {
 
 						boolean contains = clustering == null;
 						if (!contains) {
-							contains = AstralScopDescriptionCensus.isDomainOverChain(domain, clusterRepresentatives);
+							contains = PdbClusteringScopDescriptionCensus.isDomainOverChain(domain, clusterRepresentatives);
 						}
 						// logger.debug("Contains " + domain.getScopId());
 

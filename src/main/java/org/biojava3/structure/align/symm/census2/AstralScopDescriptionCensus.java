@@ -22,23 +22,21 @@
  */
 package org.biojava3.structure.align.symm.census2;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.MissingResourceException;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
-import org.biojava.bio.structure.align.client.FarmJobParameters;
-import org.biojava.bio.structure.align.client.JFatCatClient;
-import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
-import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
 
 /**
  * A census that takes a list of sun Ids and a sequence clustering.
@@ -47,21 +45,44 @@ import org.biojava.bio.structure.scop.ScopFactory;
  */
 public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 
-	private static final String SERVER_LOCATION = FarmJobParameters.DEFAULT_SERVER_URL;
-
 	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
-	private int identityCutoff;
-	private int[] sunIds;
 
+	public static enum AstralSet {
+		FORTY_175A("1.75A_40", "http://scop.berkeley.edu/downloads/scopseq-1.75A/astral-scopdom-seqres-gd-sel-gs-bib-40-1.75A.fa"),
+		NINETY_FIVE_175A("1.75A_95", "http://scop.berkeley.edu/downloads/scopseq-1.75A/astral-scopdom-seqres-gd-sel-gs-bib-90-1.75A.fa"),
+		FORTY_175B("1.75B_95", "http://scop.berkeley.edu/downloads/scopseq-1.75B/astral-scopdom-seqres-gd-sel-gs-bib-40-1.75B.fa"),
+		NINETY_FIVE_175B("1.75B_95", "http://scop.berkeley.edu/downloads/scopseq-1.75B/astral-scopdom-seqres-gd-sel-gs-bib-95-1.75B.fa"),
+		FORTY_175("1.75_95", "http://scop.berkeley.edu/downloads/scopseq-1.75/astral-scopdom-seqres-gd-sel-gs-bib-40-1.75.fa"),
+		NINETY_FIVE_175("1.75_95", "http://scop.berkeley.edu/downloads/scopseq-1.75/astral-scopdom-seqres-gd-sel-gs-bib-95-1.75.fa");
+		private String url;
+		private String id;
+		public static AstralSet parse(String str) {
+			for (AstralSet c : AstralSet.class.getEnumConstants()) {
+				if (c.getId().equals(str)) return c;
+			}
+			throw new IllegalArgumentException("No ASTRAL set with id " + str);
+		}
+		AstralSet(String id, String url) {
+			this.url = url;
+			this.id = id;
+		}
+		String getId() {
+			return id;
+		}
+		String getUrl() {
+			return url;
+		}
+	}
+	
 	static {
 		BasicConfigurator.configure();
 	}
 
-	public static void buildDefault(String pdbDir, File censusFile, int identityCutoff, int[] sunIds) {
+	public static void buildDefault(String pdbDir, File censusFile, AstralSet astral, int[] sunIds) {
 		try {
 			Census.setBerkeleyScop(pdbDir);
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
-			AstralScopDescriptionCensus census = new AstralScopDescriptionCensus(maxThreads, identityCutoff, sunIds);
+			AstralScopDescriptionCensus census = new AstralScopDescriptionCensus(maxThreads, astral, sunIds);
 			census.setOutputWriter(censusFile);
 			census.setCache(new AtomCache(pdbDir, false));
 			census.run();
@@ -71,70 +92,82 @@ public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 		}
 	}
 
-	public static Set<String> getClusterRepresentatives(int cutoff) {
-		Set<String> names = JFatCatClient.getRepresentatives(SERVER_LOCATION, cutoff);
-		if (names == null) throw new MissingResourceException("Could not retrieve representatives from "
-				+ SERVER_LOCATION, "JFatCatClient", "representative chains");
-		return names;
-	}
-
-	/**
-	 * We want to match domains to particular chains Unfortunately, chains can contain more than one domain, and domains
-	 * can be defined over more than one chain. Since for any chains A and B for some PDB id we won't have both a domain
-	 * defined over A AND a domain defined over A and B (at least I hope not), it's safe to include any domain that is
-	 * defined over a chain that is a cluster representative, even if the domain also includes other chains.
-	 */
-	public static boolean isDomainOverChain(ScopDomain domain, Set<String> clusterRepresentatives) {
-		final List<String> ranges = domain.getRanges();
-		for (String range : ranges) {
-			final int index = range.indexOf(':');
-			final String chain;
-			if (index == -1) {
-				// this happens when the string is just - (meaning everything/all?)
-				// ordinarily this fallback wouldn't work in every case
-				// but it's okay when we have -
-				final StructureName scopName = new StructureName(domain.getScopId());
-				chain = scopName.getPdbId() + "." + scopName.getChainId();
-			} else {
-				chain = domain.getPdbId() + "." + range.substring(0, index);
-			}
-			// System.out.println(chain);
-			if (clusterRepresentatives.contains(chain.toUpperCase())) { // the toUpperCase is critical
-				return true;
-			}
+	public static Set<String> getClusterRepresentatives(AstralSet cutoff) {
+		
+		URL url;
+		try {
+			url = new URL(cutoff.getUrl());
+		} catch (MalformedURLException e) {
+			throw new RuntimeException("The URL was invalid!", e);
 		}
-		return false;
+		
+		Set<String> names = new TreeSet<String>();
+		
+		try {
+			
+			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+
+			logger.info("Reading ASTRAL file...");
+			
+			String line = "";
+			int i = 0;
+			while ((line = br.readLine()) != null) {
+				if (line.startsWith(">")) {
+					try {
+						String scopId = line.split("\\s")[0].substring(1);
+						names.add(scopId);
+						if (i % 1000 == 0) {
+							logger.debug("Reading ASTRAL line for " + scopId);
+						}
+						i++;
+					} catch (RuntimeException e) {
+						logger.error("Couldn't read line " + line, e);
+					}
+				}
+			}
+
+			br.close();
+			
+		} catch (IOException e) {
+			throw new RuntimeException("Couldn't read the input stream to " + url.getPath(), e);
+		}
+
+		return names;
 	}
 
 	public static void main(String[] args) {
 		final String pdbDir = args[0];
 		final File censusFile = new File(args[1]);
-		final int identityCutoff = Integer.parseInt(args[2]);
-		int[] sunIds = new int[args.length - 2];
+		final AstralSet astral = AstralSet.parse(args[2]);
+		int[] sunIds = new int[args.length - 3];
 		for (int i = 3; i < args.length; i++) {
 			sunIds[i - 3] = Integer.parseInt(args[i]);
 		}
-		buildDefault(pdbDir, censusFile, identityCutoff, sunIds);
+		buildDefault(pdbDir, censusFile, astral, sunIds);
 	}
 
-	public AstralScopDescriptionCensus(int maxThreads, int identityCutoff, int[] sunIds) {
+	private AstralSet astral;
+	
+	public AstralScopDescriptionCensus(int maxThreads, AstralSet astral, int[] sunIds) {
 		super(maxThreads, sunIds);
-		this.identityCutoff = identityCutoff;
+		this.astral = astral;
 	}
 
 	@Override
 	protected List<ScopDomain> getDomains() {
 
-		final Set<String> clusterRepresentatives = getClusterRepresentatives(identityCutoff);
+		final Set<String> clusterRepresentatives = getClusterRepresentatives(astral);
 		List<ScopDomain> domains = new ArrayList<ScopDomain>();
 
-		for (int sunId : sunIds) {
+		if (sunIds == null) throw new RuntimeException("WHAT?!");
 
+		for (int sunId : sunIds) {
+			
 			List<ScopDomain> putative = new ArrayList<ScopDomain>();
 			ScopDescriptionCensus.getDomainsUnder(sunId, putative);
 
 			for (ScopDomain domain : putative) {
-				if (isDomainOverChain(domain, clusterRepresentatives)) domains.add(domain);
+				if (clusterRepresentatives.contains(domain.getScopId())) domains.add(domain);
 			}
 
 		}

@@ -81,7 +81,7 @@ public class CensusJobTest {
 		};
 		AlgorithmGiver giver = new AlgorithmGiver() {
 			@Override
-			StructureAlignment getAlgorithm() {
+			public StructureAlignment getAlgorithm() {
 				return ceSymm;
 			}
 		};

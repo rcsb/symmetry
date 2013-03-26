@@ -169,38 +169,51 @@ public class MockScopDatabase extends ScopInstallation {
 
 	@Override
 	protected void downloadClaFile() throws FileNotFoundException, IOException {
-		String remoteFilename = claFileName + scopVersion + ".txt";
-		URL url = new URL(scopDownloadURL + remoteFilename);
-
-		String localFileName = getClaFilename();
-		File localFile = new File(localFileName);
-
-		downloadFileFromRemote(url, localFile);
-
+		
 	}
 
 	@Override
 	protected void downloadDesFile() throws FileNotFoundException, IOException {
-		String remoteFilename = desFileName + scopVersion + ".txt";
-		URL url = new URL(scopDownloadURL + remoteFilename);
-
-		String localFileName = getDesFilename();
-		File localFile = new File(localFileName);
-
-		downloadFileFromRemote(url, localFile);
-
+		
 	}
 
 	@Override
 	protected void downloadHieFile() throws FileNotFoundException, IOException {
-		String remoteFilename = hieFileName + scopVersion + ".txt";
-		URL url = new URL(scopDownloadURL + remoteFilename);
+		
+	}
 
-		String localFileName = getHieFilename();
-		File localFile = new File(localFileName);
-
-		downloadFileFromRemote(url, localFile);
-
+	public void addClaLineWithHie(String string) {
+		addClaLine(string);
+		String[] parts = string.split("\\s")[4].split(",");
+		// ex: cl=46456,cf=47768,sf=47819,fa=69044,dm=69045,sp=140642,px=129717
+		String[] lines = new String[8];
+		String cl = null, cf = null, sf = null, fa = null, dm = null, sp = null, px = null;
+		for (String part : parts) {
+			if (part.startsWith("cl=")) {
+				cl = part.substring(3);
+			} else if (part.startsWith("cf")) {
+				cf = part.substring(3);
+			} else if (part.startsWith("sf")) {
+				sf = part.substring(3);
+			} else if (part.startsWith("fa")) {
+				fa = part.substring(3);
+			} else if (part.startsWith("cf")) {
+				dm = part.substring(3);
+			} else if (part.startsWith("cf")) {
+				sp = part.substring(3);
+			} else if (part.startsWith("cf")) {
+				px = part.substring(3);
+			}
+		}
+		lines[0] = "0\t-\t" + cl;
+		lines[1] = cl + "\t0\t" + cf;
+		lines[2] = cf + "\t" + cl + "\t" + sf;
+		lines[3] = sf + "\t" + cf + "\t" + fa;
+		lines[4] = fa + "\t" + sf + "\t" + dm;
+		lines[5] = dm + "\t" + fa + "\t" + sp;
+		lines[6] = sp + "\t" + dm + "\t" + px;
+		lines[7] = px + "\t" + sp + "\t-";
+		addHieLines(lines);
 	}
 
 }

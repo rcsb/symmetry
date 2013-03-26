@@ -47,17 +47,17 @@ public class SignificanceFactoryTest {
 
 	@Test
 	public void testFromClassNoArgs() {
-		SignificanceFactory.fromClass("org.biojava3.structure.align.symm.census2.stats.FakeSignificance", new Object[]{});
+		SignificanceFactory.fromClass("org.biojava3.structure.align.symm.census2.FakeSignificance", new Object[]{});
 	}
 
 	@Test
 	public void testFromClassWithArgs() {
-		SignificanceFactory.fromClass("org.biojava3.structure.align.symm.census2.stats.FakeSignificance", new Object[]{"thisisastring"});
+		SignificanceFactory.fromClass("org.biojava3.structure.align.symm.census2.FakeSignificance", new Object[]{"thisisastring"});
 	}
 
 	@Test(expected=IllegalArgumentException.class)
 	public void testFromClassWithArgsFail() {
-		SignificanceFactory.fromClass("org.biojava3.structure.align.symm.census2.stats.FakeSignificance", new Object[]{1});
+		SignificanceFactory.fromClass("org.biojava3.structure.align.symm.census2.FakeSignificance", new Object[]{1});
 	}
 	
 }

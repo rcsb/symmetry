@@ -24,45 +24,77 @@
  */
 package org.biojava3.structure.align.symm.census2;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
 
 public class ResultConverter {
 
-	public static String newline = System.getProperty("line.separator");
+	public static String NEWLINE = System.getProperty("line.separator");
+
+	/**
+	 * Makes an HTML census file from an XML census file.
+	 * @param args
+	 * <ol>
+	 * <li>The input XML file</li>
+	 * <li>The name/path of the HTML file to create; cannot exist (just for safety)</li>
+	 * </ol>
+	 * @throws IOException
+	 */
+	public static void main(String[] args) throws IOException {
+		if (args.length != 2) {
+			System.out.println("Usage: ResultConverter input-xml-file output-html-file");
+			return;
+		}
+		File xmlIn = new File(args[0]);
+		File htmlOut = new File(args[1]);
+//		if (htmlOut.exists()) throw new IllegalArgumentException("File " + htmlOut + " already exists; cannot overwrite. Delete it and run again.");
+		Results results = Results.fromXML(xmlIn);
+		String html = results.toHTML();
+		BufferedWriter bw = new BufferedWriter(new FileWriter(htmlOut));
+		bw.write(html);
+		bw.close();
+	}
 
 	public static String getHTMLFooter() {
-		return "</tbody></table></body></html>" + newline;
+		return "</tbody></table></body></html>" + NEWLINE;
 	}
 
 	public static String getHTMLHeader() {
 		StringWriter file = new StringWriter();
-		file.write("<!DOCTYPE html>" + newline);
-		file.write("<html xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"en\" xml:lang=\"en\">" + newline);
-		file.write("<head><title>Census results</title</head>" + newline);
-		file.write("<body>" + newline);
-		file.write("<table id=\"census\">" + newline);
-		file.write("<tr><th>index</th>");
-		file.write("<th>Symmetry</th>");
-		file.write("<th>SCOP superfamily</th>");
-		file.write("<th>SCOP name</th>");
-		file.write("<th>Z-score</th>");
-		file.write("<th>RMSD</th>");
-		file.write("<th>TM-score</th>");
-		file.write("<th>alignment score</th>");
-		file.write("<th>% ID</th>");
-		file.write("<th>% SIM </th>");
-		file.write("<th>domain length</th>");
-		file.write("<th>alignment length</th>");
-		file.write("<th>angle</th>");
-		file.write("<th>order</th>");
-		file.write("<th>symmetry unit</th>");
-		file.write("<th>SCOP description</th>");
-
-		file.write("</tr>" + newline);
-		file.write("<tbody>" + newline);
+		file.write("<!DOCTYPE html>" + NEWLINE);
+		file.write("<html xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"en\" xml:lang=\"en\">" + NEWLINE);
+		file.write("\t<head>" + NEWLINE);
+		file.write("\t\t<title>Census results</title>" + NEWLINE);
+		file.write("\t</head>" + NEWLINE);
+		file.write("\t<body>" + NEWLINE);
+		file.write("\t<table id=\"census\">" + NEWLINE);
+		file.write("\t\t<thead>" + NEWLINE);
+		file.write("\t\t\t<tr>" + NEWLINE);
+		file.write("\t\t\t<th>index</th>" + NEWLINE);
+		file.write("\t\t\t<th>Symmetry</th>" + NEWLINE);
+		file.write("\t\t\t<th>SCOP superfamily</th>" + NEWLINE);
+		file.write("\t\t\t<th>SCOP name</th>" + NEWLINE);
+		file.write("\t\t\t<th>TM-score</th>" + NEWLINE);
+		file.write("\t\t\t<th>Z-score</th>" + NEWLINE);
+		file.write("\t\t\t<th>RMSD</th>" + NEWLINE);
+		file.write("\t\t\t<th>alignment score</th>" + NEWLINE);
+		file.write("\t\t\t<th>% ID</th>" + NEWLINE);
+		file.write("\t\t\t<th>% SIM </th>" + NEWLINE);
+		file.write("\t\t\t<th>domain length</th>" + NEWLINE);
+		file.write("\t\t\t<th>alignment length</th>" + NEWLINE);
+		file.write("\t\t\t<th>angle</th>" + NEWLINE);
+		file.write("\t\t\t<th>order</th>" + NEWLINE);
+		file.write("\t\t\t<th>symmetry unit</th>" + NEWLINE);
+		file.write("\t\t\t<th>SCOP description</th>" + NEWLINE);
+		file.write("\t\t</tr>" + NEWLINE);
+		file.write("\t</thead>" + NEWLINE);
+		file.write("\t<tbody>" + NEWLINE);
 		return file.toString();
 
 	}
@@ -75,67 +107,64 @@ public class ResultConverter {
 	public static String toHTML(Result r) {
 
 		int count = r.getRank();
-		Boolean isSymmetric = r.getIsSignificant();
+		Boolean isSymm = r.getIsSignificant();
 		String name = r.getScopId();
+		StringBuilder str = new StringBuilder();
+		str.append("\t\t<tr>" + NEWLINE);
 
-		StringBuffer str = new StringBuffer();
+		addCol(str, String.valueOf(count), isSymm);
+		addCol(str, isSymm? "*" : "", isSymm);
+		addCol(str, "<a href=\"http://scop.berkeley.edu/sunid=" + r.getSunId() + "\">" + r.getClassification() + "</a>", isSymm);
+		addCol(str, "<a href=\"/jfatcatserver/showSymmetry.jsp?id=" + name + "\">" + name + "</a>", isSymm);
 
-		str.append("<tr>");
-		str.append("<td>" + count + "</td>");
-		if (isSymmetric) str.append("<td><strong>*</strong></td>");
-		else str.append("<td>&nbsp;</td>");
-		str.append("<td>");
-		if (isSymmetric) str.append("<strong>");
-		str.append("<a href=\"http://scop.berkeley.edu/sunid=" + r.getSunId() + "\">");
-		str.append(r.getClassification());
-		str.append("</a>");
-		if (isSymmetric) str.append("</strong>");
-		str.append("</td><td>");
-		if (isSymmetric) str.append("<strong>");
-		str.append("<a href=\"/jfatcatserver/showSymmetry.jsp?id=" + name + "&matrix=sdm&seqWeight=2.0\">" + name
-				+ "</a>");
-		if (isSymmetric) str.append("</strong>");
-		str.append("</td>");
-		str.append("<td>");
-		str.append(String.format("%.2f", r.getAlignment().getzScore()));
+		if (r.getAlignment() != null) {
+			addCol(str, String.format("%.2f", r.getAlignment().getTmScore()), isSymm);
+			addCol(str, String.format("%.2f", r.getAlignment().getzScore()), isSymm);
+			addCol(str, String.format("%.2f", r.getAlignment().getRmsd()), isSymm);
+			addCol(str, String.format("%.2f", r.getAlignment().getAlignScore()), isSymm);
+			addCol(str, String.format("%.2f%%", r.getAlignment().getIdentity()*100.0), isSymm);
+			addCol(str, String.format("%.2f%%", r.getAlignment().getSimilarity()*100.0), isSymm);
+			addCol(str, String.format("%d", r.getAlignment().getAlignLength() + r.getAlignment().getGapLength()), isSymm);
+			addCol(str, String.format("%d", r.getAlignment().getAlignLength()), isSymm);
+		} else {
+			str.append("\t\t\t<td></td><td></td><td></td><td></td><td></td><td></td><td></td>" + NEWLINE);
+		}
+		
+		if (r.getAxis() != null) {
+			addCol(str, String.format("%.1f", r.getAxis().getTheta()), isSymm);
+		} else {
+			str.append("\t\t\t<td></td>");
+		}
+		
+		if (r.getOrder() != null) {
+			addCol(str, String.format("%d", r.getOrder()), isSymm);
+		}
+		
+		if (r.getProtodomain() != null) {
+			addCol(str, r.getProtodomain(), isSymm);
+		} else {
+			str.append("\t\t\t<td></td>" + NEWLINE);
+		}
 
-		str.append("</td><td>");
-		if (isSymmetric) str.append("<strong>");
-		str.append(String.format("%.2f", r.getAlignment().getRmsd()));
-		if (isSymmetric) str.append("</strong>");
-		str.append("</td><td>");
-		if (isSymmetric) str.append("<strong>");
-		str.append(String.format("%.2f", r.getAlignment().getTmScore()));
-		if (isSymmetric) str.append("</strong>");
-		str.append("</td><td>");
-		if (isSymmetric) str.append("<strong>");
-		str.append(String.format("%.2f", r.getAlignment().getAlignScore()));
-		if (isSymmetric) str.append("</strong>");
-		str.append("</td>");
+		if (r.getDescription() != null) {
+			addCol(str, r.getDescription(), isSymm);
+		} else {
+			str.append("\t\t\t<td></td>" + NEWLINE);
+		}
 
-		addHtmlColumn(str, String.format("%.2f", r.getAlignment().getIdentity()), false);
-		addHtmlColumn(str, String.format("%.2f", r.getAlignment().getSimilarity()), false);
-		addHtmlColumn(str, String.format("%d", r.getAlignment().getAlignLength()), isSymmetric);
-		addHtmlColumn(str, String.format("%d", r.getAlignment().getAlignLength()), isSymmetric);
-		addHtmlColumn(str, String.format("%.1f", r.getAxis().getTheta()), isSymmetric);
-		addHtmlColumn(str, String.format("%d", r.getOrder()), isSymmetric);
-		addHtmlColumn(str, r.getProtodomain(), isSymmetric);
-
-		str.append("<td>");
-		str.append(r.getDescription());
-		str.append("</td>");
-
-		str.append("</tr>");
+		str.append("\t\t</tr>" + NEWLINE);
 
 		return str.toString();
 	}
 
-	private static void addHtmlColumn(StringBuffer str, String text, boolean isSymmetric) {
-		str.append("<td>");
-		if (isSymmetric) str.append("<strong>");
+	private static void addCol(StringBuilder str, String text, boolean isSymmetric) {
+		if (isSymmetric) {
+			str.append("\t\t\t<td class=\"sig\">");
+		} else {
+			str.append("\t\t\t<td>");
+		}
 		str.append(text);
-		if (isSymmetric) str.append("</strong>");
-
+		str.append("</td>" + NEWLINE);
 	}
 
 	private ResultConverter() {

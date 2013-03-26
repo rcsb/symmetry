@@ -246,6 +246,7 @@ public class BasicStats {
 			// N total
 			final int nTotalG = entry.getValue();
 			plus(nTotalClass, clas);
+			plus(nTotalClass, "overall");
 
 			// % symmetric
 			Integer nSymmG = nSymmFold.get(fold);
@@ -253,6 +254,7 @@ public class BasicStats {
 			double fractionSymmG = (double) nSymmG / (double) nTotalG;
 			if (fractionSymmG >= 0.5) {
 				plus(nSymmClass, clas);
+				plus(nSymmClass, "overall");
 			}
 
 			// % rotational
@@ -261,6 +263,7 @@ public class BasicStats {
 			double fractionRotG = (double) nRotG / (double) nTotalG;
 			if (fractionRotG >= 0.5) {
 				plus(nRotClass, clas);
+				plus(nRotClass, "overall");
 			}
 
 		}

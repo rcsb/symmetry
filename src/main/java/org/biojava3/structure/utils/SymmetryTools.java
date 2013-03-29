@@ -4,12 +4,10 @@ package org.biojava3.structure.utils;
 import javax.swing.JFrame;
 
 import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.ce.CECalculator;
-import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.helper.AlignTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.gui.ScaleableMatrixPanel;
@@ -18,11 +16,8 @@ import org.biojava.bio.structure.jama.Matrix;
 
 public class SymmetryTools {
 
-	// there won;t be an instance of this
+	// there won't be an instance of this
 	private SymmetryTools(){}
-
-	private static int RESET_VALUE= Integer.MIN_VALUE;
-
 
 	public static void showMatrix(Matrix m, String string) {
 		ScaleableMatrixPanel smp = new ScaleableMatrixPanel();
@@ -36,6 +31,126 @@ public class SymmetryTools {
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.pack();
 		frame.setVisible(true);
+
+	}
+
+	/**
+	 * Returns the "reset value" for graying out the main diagonal. If we're blanking out the main diagonal, this value is always Integer.MIN_VALUE. This is possible if {@code gradientPolyCoeff = {Integer.MIN_VALUE}} and {@code gradientExpCoeff = 0}.
+	 * @param unpenalizedScore
+	 * @param nResFromMainDiag
+	 * @param gradientPolyCoeff
+	 * @param gradientExpCoeff
+	 * @return
+	 */
+	private static double getResetVal(double unpenalizedScore, double nResFromMainDiag, double[] gradientPolyCoeff, double gradientExpCoeff) {
+		if (unpenalizedScore == Double.NaN) return 0; // what else?
+		double updateVal = unpenalizedScore; // notice that we can actually return a positive value if this is high enough
+		updateVal -= gradientExpCoeff * Math.pow(Math.E, -nResFromMainDiag);
+		for (int p = 0; p < gradientPolyCoeff.length; p++) {
+			updateVal -= gradientPolyCoeff[gradientPolyCoeff.length-1-p] * Math.pow(nResFromMainDiag, -p);
+		}
+		//System.out.println("For unpenalized " + unpenalizedScore + " and " + nResFromMainDiag + " residues from diagonal: " + (updateVal-unpenalizedScore));
+		return updateVal;
+	}
+
+	public static Matrix grayOutCEOrig(Atom[] ca2, int rows, int cols,
+			CECalculator calculator, Matrix origM, int blankWindowSize, double[] gradientPolyCoeff, double gradientExpCoeff) {
+
+		if ( origM == null)
+			origM =   new Matrix( calculator.getMatMatrix());
+
+		// symmetry hack, disable main diagonal
+
+		for ( int i = 0 ; i< rows; i++){
+			for ( int j = 0 ; j < cols ; j++){
+				int diff = Math.abs(i-j);
+
+				double resetVal = getResetVal(origM.get(i, j), diff, gradientPolyCoeff, gradientExpCoeff);
+
+				if ( diff < blankWindowSize ){
+					origM.set(i,j, origM.get(i, j) + resetVal);
+
+				}
+				int diff2 = Math.abs(i-(j-ca2.length/2)); // other side
+
+				double resetVal2 = getResetVal(origM.get(i, j), diff2, gradientPolyCoeff, gradientExpCoeff);
+
+				if ( diff2 < blankWindowSize ){
+					origM.set(i,j, origM.get(i, j) + resetVal2);
+
+				}
+			}
+		}
+		return origM;
+	}
+
+	public static Matrix grayOutPreviousAlignment(AFPChain afpChain, Atom[] ca2,
+			int rows, int cols, CECalculator calculator, Matrix max, int blankWindowSize, double[] gradientPolyCoeff, double gradientExpCoeff) {
+
+		max =  grayOutCEOrig(ca2, rows, cols, calculator, max,  blankWindowSize, gradientPolyCoeff, gradientExpCoeff);
+
+		double[][] dist1 = calculator.getDist1();
+		double[][] dist2 = calculator.getDist2();
+
+		int[][][] optAln = afpChain.getOptAln();
+		int blockNum = afpChain.getBlockNum();
+
+		int[] optLen = afpChain.getOptLen();
+
+		// ca2 is circularly permutated
+		int breakPoint = ca2.length / 2;
+		for (int bk = 0; bk < blockNum; bk++)       {
+
+			for ( int i=0;i< optLen[bk];i++){
+				int pos1 = optAln[bk][0][i];
+				int pos2 = optAln[bk][1][i];
+
+				int dist = blankWindowSize/2 ;
+				int start1 = Math.max(pos1-dist,0);
+				int start2 = Math.max(pos2-dist,0);
+				int end1 = Math.min(pos1+dist, rows-1);
+				int end2 = Math.min(pos2+dist, cols-1);
+
+				for ( int i1 = start1; i1< end1 ; i1++){
+
+					for ( int k=0; k < blankWindowSize/2 ; k ++){
+						if ( i1-k >= 0) {
+							double resetVal = getResetVal(max.get(i1-k, i1-k), 0, gradientPolyCoeff, gradientExpCoeff);
+							dist1[i1-k][i1-k] = resetVal;
+						} else if ( i1+k < rows) {
+							double resetVal = getResetVal(max.get(i1+k, i1+k), 0, gradientPolyCoeff, gradientExpCoeff);
+							dist1[i1+k][i1+k] = resetVal;
+						}
+
+					}
+
+					for ( int j2 = start2 ; j2 < end2 ; j2++){
+						double resetVal = getResetVal(max.get(i1, j2), Math.abs(i1-j2), gradientPolyCoeff, gradientExpCoeff);
+						max.set(i1,j2,resetVal);
+						if ( j2 < breakPoint) {
+							double resetVal2 = getResetVal(max.get(i1, j2+breakPoint), Math.abs(i1-(j2+breakPoint)), gradientPolyCoeff, gradientExpCoeff);
+							max.set(i1,j2+breakPoint,resetVal2);
+						} else {
+							double resetVal2 = getResetVal(max.get(i1, j2-breakPoint), Math.abs(i1-(j2-breakPoint)), gradientPolyCoeff, gradientExpCoeff);
+							max.set(i1,j2-breakPoint,resetVal2);
+						}
+						for ( int k=0; k <blankWindowSize/2 ; k ++){							
+							if ( j2-k >=0) {
+								double resetVal2 = getResetVal(max.get(j2-k, j2-k), 0, gradientPolyCoeff, gradientExpCoeff);
+								dist2[j2-k][j2-k] = resetVal2;
+							} else if ( j2+k < cols) {
+								double resetVal2 = getResetVal(max.get(j2+k, j2+k), 0, gradientPolyCoeff, gradientExpCoeff);
+								dist2[j2+k][j2+k] = resetVal2;
+							}
+						}
+					}
+				}
+
+			}
+		}
+		calculator.setDist1(dist1);
+		calculator.setDist2(dist2);
+		return max;
 
 	}
 
@@ -61,7 +176,7 @@ public class SymmetryTools {
 		}
 
 
-		// symmetry hack, disable main diagonale
+		// symmetry hack, disable main diagonal
 
 		for ( int i = 0 ; i< rows; i++){
 			for ( int j = 0 ; j < cols ; j++){
@@ -82,120 +197,13 @@ public class SymmetryTools {
 
 	public static Matrix blankOutPreviousAlignment(AFPChain afpChain, Atom[] ca2,
 			int rows, int cols, CECalculator calculator, Matrix max, int blankWindowSize) {
-
-		max =  blankOutCEOrig(ca2, rows, cols, calculator, max,  blankWindowSize);
-
-
-		double[][] dist1 = calculator.getDist1();
-		double[][] dist2 = calculator.getDist2();
-
-		int[][][] optAln = afpChain.getOptAln();
-		int blockNum = afpChain.getBlockNum();
-
-		int[] optLen = afpChain.getOptLen();
-
-		// ca2 is circularly permutated
-		int breakPoint = ca2.length / 2;
-		for(int bk = 0; bk < blockNum; bk ++)       {
-
-			//Matrix m= afpChain.getBlockRotationMatrix()[bk];
-			//Atom shift = afpChain.getBlockShiftVector()[bk];
-			for ( int i=0;i< optLen[bk];i++){
-				int pos1 = optAln[bk][0][i];
-				int pos2 = optAln[bk][1][i];
-				// blank out area around these positions...
-
-				int dist = blankWindowSize/2 ;
-				int start1 = Math.max(pos1-dist,0);
-				int start2 = Math.max(pos2-dist,0);
-				int end1 = Math.min(pos1+dist, rows-1);
-				int end2 = Math.min(pos2+dist, cols-1);
-
-				//System.out.println(pos1 + "  " + pos2 + " " + start1 + " " + end1 + " " + start2 + " " + end2);
-
-				for ( int i1 = start1; i1< end1 ; i1++){
-
-					for ( int k=0; k < blankWindowSize/2 ; k ++){
-						if ( i1-k >= 0)
-							dist1[i1-k][i1-k] = RESET_VALUE;
-						if ( i1+k < rows)
-							dist1[i1+k][i1+k] = RESET_VALUE;
-
-					}
-
-					for ( int j2 = start2 ; j2 < end2 ; j2++){
-						//System.out.println(i1 + " " + j2 + " (***)");
-						max.set(i1,j2,RESET_VALUE);
-						if ( j2 < breakPoint) {
-							max.set(i1,j2+breakPoint,RESET_VALUE);
-						} else {
-							max.set(i1,j2-breakPoint,RESET_VALUE);
-						}
-						for ( int k=0; k <blankWindowSize/2 ; k ++){							
-							if ( j2-k >=0)
-								dist2[j2-k][j2-k] = RESET_VALUE;
-							if ( j2+k < cols)
-								dist2[j2+k][j2+k] = RESET_VALUE;
-						}
-					}
-				}
-
-			}
-		}
-		calculator.setDist1(dist1);
-		calculator.setDist2(dist2);
-		return max;
+		return grayOutPreviousAlignment(afpChain, ca2, rows, cols, calculator, max, blankWindowSize, new double[] {Integer.MIN_VALUE}, 0.0);
 
 	}
 
 	public static Matrix blankOutCEOrig(Atom[] ca2, int rows, int cols,
 			CECalculator calculator, Matrix origM, int blankWindowSize) {
-
-		if ( origM == null)
-			origM =   new Matrix( calculator.getMatMatrix());
-
-		// symmetry hack, disable main diagonale
-
-		//double[][] dist1 = calculator.getDist1();
-		//double[][] dist2 = calculator.getDist2();
-
-		for ( int i = 0 ; i< rows; i++){
-			for ( int j = 0 ; j < cols ; j++){
-				int diff = Math.abs(i-j);
-
-				if ( diff < blankWindowSize ){
-					origM.set(i,j, RESET_VALUE);
-
-					//					for ( int k=0; k < 5 ; k ++){
-					//						if ( i-k >= 0)
-					//							dist1[i][i-k] = 99;
-					//						if ( i+k < rows)
-					//							dist1[i][i+k] = 99;
-					//						if ( j-k >=0)
-					//							dist2[j][j-k] = 499;
-					//						if ( j+k < cols)
-					//							dist2[j][j+k] = 499;
-					//					}
-				}
-				int diff2 = Math.abs(i-(j-ca2.length/2));
-				if ( diff2 < blankWindowSize ){
-					origM.set(i,j, RESET_VALUE);
-
-					//					for ( int k=0; k < 5 ; k ++){
-					//
-					//						if ( i-k >= 0)
-					//							dist1[i][i-k] = 99;
-					//						if ( i+k < rows)
-					//							dist1[i][i+k] = 99;
-					//						if ( j-k >=0)
-					//							dist2[j][j-k] = 99;
-					//						if ( j+k < cols)
-					//							dist2[j][j+k] = 99;
-					//					}
-				}
-			}
-		}
-		return origM;
+		return grayOutCEOrig(ca2, rows, cols, calculator, origM, blankWindowSize, new double[] {Integer.MIN_VALUE}, 0.0);
 	}
 
 	public static Atom[] cloneAtoms(Atom[] ca2) throws StructureException{
@@ -294,95 +302,17 @@ public class SymmetryTools {
 		return breakFlag;
 	}
 
-	/** Get the rotation angle between two sets of atoms
-	 * 
+	/**
+	 * Returns the <em>magnitude</em> of the angle between the first and second blocks of {@code afpChain}, measured in degrees. This is always a positive value (unsigned).
 	 * @param afpChain
 	 * @param ca1
 	 * @param ca2
 	 * @return
-	 * @throws StructureException
 	 */
-	public static double getAngle(AFPChain afpChain, Atom[] ca1, Atom[] ca2) throws StructureException {
-
-		// rotate ca2 and then get the angle
-
-		Atom[] ca2C = StructureTools.duplicateCA2(ca2);
-
-		StructureAlignmentDisplay.prepareGroupsForDisplay(afpChain,ca1, ca2C);
-
-		Atom centroid1 = Calc.getCentroid(ca1);
-		Atom centroid2 = Calc.getCentroid(ca2C);
-
-		
-		// don't get first two atoms, but get first two aligned atoms...
-		//Atom a1 = ca1[0]//;
-		//Atom a2 = ca2[0];
-		
-		//int alnbeg1 = afpChain.getAlnbeg1();
-		//int alnbeg2 = afpChain.getAlnbeg2();
-		
-		int alnbeg1 = 0;
-		int alnbeg2 = 0;
-		
-		if (( alnbeg1 < ca1.length) && ( alnbeg2 < ca2.length)) {
-		
-			Atom v1 = Calc.subtract(centroid1, ca1[alnbeg1]);
-			Atom v2 = Calc.subtract(centroid2, ca2C[alnbeg2]);
-
-			double ang= Calc.angle(v1,v2);
-			//System.out.println(v1 + " " + v2 + " " + ang);
-			return ang;
-		} else {
-			return -1;
-		}
-		
-		
+	public static double getAngle(AFPChain afpChain, Atom[] ca1, Atom[] ca2) {
+		Matrix rotation = afpChain.getBlockRotationMatrix()[0];
+		return Math.acos(rotation.trace() - 1) * 180/Math.PI;
 	}
-
-	//	/** compare the PDB positions from the two alignment and if more than X % are equivalent then they are similar
-	//	 * 
-	//	 * @param first
-	//	 * @param second
-	//	 * @return
-	//	 */
-	//	public boolean isSimilar(AFPChain first, AFPChain second){
-	//		
-	//		if (! first.getName1().equals(second.getName1()))
-	//			return false;
-	//		
-	//		if (! first.getName2().equals(second.getName2()))
-	//			return false;
-	//		
-	//		int[][][] optAln1 = first.getOptAln();
-	//		int[][][] optAln2 = second.getOptAln();
-	//		int[] blockLens1 = first.getOptLen();
-	//		int[] blockLens2 = first.getOptLen();
-	//		
-	//		
-	//		for(int block1=0;block1< first.getBlockNum();block1++) {
-	//		
-	//			if ( blockLens1[block1] > optAln2[block1][0].length) {
-	//				continue;
-	//			}
-	//			
-	//			if (  blockLens1[block1] > optAln1[block1][0].length) {
-	//				//errors reconstructing alignment block ["+ block +"]. Length is " + blockLens[block] + " but should be <=" + optAln[block][0].length );
-	//				continue;
-	//			}
-	//
-	//			for(int i=0;i<blockLens1[block1];i++) {
-	//				int pos11 = optAln1[block1][0][i];
-	//				int pos12 = optAln1[block1][1][i];
-	//				
-	//				//int pos21 = optAln2[block2][0][i];
-	//				//int pos22 = optAln2[block2][1][i]; 
-	//					
-	//				
-	//			}
-	//		}
-	//		
-	//		
-	//	}
-
+	
 
 }

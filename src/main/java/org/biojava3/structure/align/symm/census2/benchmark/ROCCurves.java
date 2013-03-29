@@ -106,7 +106,7 @@ public class ROCCurves {
 			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.zScore(), Criterion.hasOrder(), 1, 1));
 			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.alignLength(), Criterion.hasOrder(), 1, 1));
 			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.epsilon(), Criterion.hasOrder(), 1, 1));
-			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.helical().inverse(), Criterion.hasOrder(), 1, 1));
+//			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.helical().inverse(), Criterion.hasOrder(), 1, 1));
 			ROCCurves ceSymmRocs = new ROCCurves(input, ceSymmCriteria);
 			ceSymmRocs.graph(output);
 

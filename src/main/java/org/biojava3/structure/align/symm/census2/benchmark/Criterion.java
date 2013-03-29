@@ -361,23 +361,23 @@ public abstract class Criterion {
 
 		};
 	}
-	public static Criterion helical() {
-		return new Criterion() {
-			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getFractionHelical() == null) {
-					throw new NoncomputableCriterionException("The case has a null getFractionHelical()");
-				}
-				return result.getFractionHelical();
-			}
-
-			@Override
-			public String getName() {
-				return "% helical";
-			}
-
-		};
-	}
+//	public static Criterion helical() {
+//		return new Criterion() {
+//			@Override
+//			public double get(Result result) throws NoncomputableCriterionException {
+//				if (result.getFractionHelical() == null) {
+//					throw new NoncomputableCriterionException("The case has a null getFractionHelical()");
+//				}
+//				return result.getFractionHelical();
+//			}
+//
+//			@Override
+//			public String getName() {
+//				return "% helical";
+//			}
+//
+//		};
+//	}
 	public static Criterion alignLength() {
 		return new Criterion() {
 			@Override

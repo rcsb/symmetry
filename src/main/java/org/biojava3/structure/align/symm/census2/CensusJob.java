@@ -173,11 +173,11 @@ public class CensusJob implements Callable<Result> {
 			
 			// now find fraction helical
 			Float fractionHelical = null;
-			try {
-				fractionHelical = getFractionHelical(structure);
-			} catch (Exception e) {
-				logger.error("Could not assign secondary structure to " + name + " (job #" + count + ")", e);
-			}
+//			try {
+//				fractionHelical = getFractionHelical(structure);
+//			} catch (Exception e) {
+//				logger.error("Could not assign secondary structure to " + name + " (job #" + count + ")", e);
+//			}
 			
 			return convertResult(afpChain, isSignificant, superfamily, name, order, protodomain.toString(),
 					domain, angle, fractionHelical);
@@ -242,7 +242,7 @@ public class CensusJob implements Callable<Result> {
 
 		r.setAlignment(new Alignment(afpChain));
 		r.setIsSignificant(isSymmetric);
-		r.setFractionHelical(fractionHelical);
+//		r.setFractionHelical(fractionHelical);
 		try {
 			r.setAxis(new Axis(new RotationAxis(afpChain)));
 		} catch (RuntimeException e) {

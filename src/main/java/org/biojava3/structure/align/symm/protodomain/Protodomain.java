@@ -196,7 +196,12 @@ public class Protodomain {
 			}
 		}
 
-		final List<ResidueRange> splicedRanges = spliceApproxConsecutive(map, totalRanges, APPROX_CONSECUTIVE);
+		final List<ResidueRange> splicedRanges;
+		if (totalRanges.isEmpty()) {
+			splicedRanges = totalRanges;
+		} else {
+			splicedRanges = spliceApproxConsecutive(map, totalRanges, APPROX_CONSECUTIVE);
+		}
 
 		// note that we must include gaps in the argument to cut().
 		// also, truncation is okay here
@@ -410,7 +415,7 @@ public class Protodomain {
 			// We cannot use CA atoms only here because sometimes the C-alpha atom is missing
 			// Our AtomPositionMap should use something more liberal (see the AtomPositionMap constructor)
 			final Atom[] allAtoms = StructureTools.getAllAtomArray(cache.getStructure(pdbId)); // TODO is using scopId
-																								// ok here?
+			// ok here?
 			return new AtomPositionMap(allAtoms);
 		} catch (IOException e) {
 			throw new ProtodomainCreationException("unknown", scopId, e,
@@ -451,7 +456,7 @@ public class Protodomain {
 	private static List<ResidueRange> getBlockRanges(int protodomainStart, int protodomainEnd,
 			List<String> domainRanges, ResidueNumber protodomainStartR, ResidueNumber protodomainEndR,
 			Group blockStartGroup, Group blockEndGroup, AtomPositionMap map, String scopId)
-			throws ProtodomainCreationException {
+					throws ProtodomainCreationException {
 
 		/*
 		 * Okay, things get annoying here, since we need to handle:
@@ -759,7 +764,7 @@ public class Protodomain {
 					approxConsecutive);
 			return new Protodomain(pdbId, scopId, ranges, 1, cache);
 		} catch (ProtodomainCreationException e) { // this really shouldn't happen, unless the AtomCache has changed
-													// since this Protodomain was created
+			// since this Protodomain was created
 			throw new IllegalArgumentException(e);
 		}
 	}

@@ -135,6 +135,8 @@ public class SymDResults extends Results {
 
 	public static SymDResults runSymD(String symDPath, String pdbFilesPath, AtomCache cache, List<ScopDomain> scopDomains) {
 		SymDResults results = new SymDResults();
+		long timeTaken = 0;
+		int nSuccess = 0;
 		if (!pdbFilesPath.endsWith("/"))
 			pdbFilesPath += "/";
 		for (ScopDomain domain : scopDomains) {
@@ -153,13 +155,18 @@ public class SymDResults extends Results {
 			}
 			Result result;
 			try {
+				long startTime = System.currentTimeMillis();
 				result = runSymD(symDPath, file.getPath());
+				long endTime = System.currentTimeMillis();
+				timeTaken += (endTime - startTime);
+				nSuccess++;
 			} catch (SymDException e) {
 				logger.error("SymD failed on " + domain.getScopId(), e);
 				continue;
 			}
 			results.add(result);
 		}
+		System.err.println("AVG TIME TAKEN: " + ((double) timeTaken / (double) nSuccess));
 		return results;
 	}
 

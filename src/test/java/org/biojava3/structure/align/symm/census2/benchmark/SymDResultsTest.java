@@ -75,11 +75,13 @@ public class SymDResultsTest {
 		List<ScopDomain> domains = new ArrayList<ScopDomain>();
 		final ScopDatabase scop = ScopFactory.getSCOP();
 		domains.add(scop.getDomainByScopID("d3ejba1"));
-		SymDResults results = SymDResults.runSymD(SYMD_PATH, pdbFilesPath, ResourceList.get().getCache(), domains);
+		File outputFile = new File("src/test/resources/census2/benchmark/actual_symd_output.xml");
+		SymDResults results = SymDResults.runSymD(SYMD_PATH, pdbFilesPath, ResourceList.get().getCache(), domains, outputFile);
 		for (int i = 0; i < domains.size(); i++) {
 			final Result result = results.getData().get(i);
 			assertEquals(domains.get(i).getScopId(), result.getScopId());
 		}
+		outputFile.delete();
 	}
 	
 //	@Test

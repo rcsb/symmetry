@@ -37,6 +37,11 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 	public static final String version = "1.0";
 
+	/**
+	 * The penalty x residues from the main diagonal is: (standard score) - GRADIENT_EXP_COEFF*e^(-x) - GRADIENT_POLY_COEFF[n]*x^(-n) - GRADIENT_POLY_COEFF[n-1]*x^(-n+1) - GRADIENT_POLY_COEFF[n-2]*x^(-n+2) - ... - GRADIENT_POLY_COEFF[0]*x^0
+	 */
+	public static double[] GRADIENT_POLY_COEFF = {Integer.MIN_VALUE}; // from left to right: ..., quintic, quartic, cubic, quadratic, linear, constant; can be any length
+	public static double GRADIENT_EXP_COEFF = 0; // the corresponding radix is e
 
 	AFPChain afpChain;
 
@@ -252,7 +257,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 			afpChain = calculator.extractFragments(afpChain, ca1, ca2clone);
 
-			origM =  SymmetryTools.blankOutPreviousAlignment(afpChain, ca2, rows, cols, calculator, null, blankWindowSize);
+			origM =  SymmetryTools.grayOutPreviousAlignment(afpChain, ca2, rows, cols, calculator, null, blankWindowSize, GRADIENT_POLY_COEFF, GRADIENT_EXP_COEFF);
 
 			//SymmetryTools.showMatrix(origM, "original CE matrix");
 
@@ -263,7 +268,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			// we are doing an iteration on a previous alignment
 			// mask the previous alignment
 			//afpChain = calculator.extractFragments(afpChain, ca1, ca2clone);
-			origM =  SymmetryTools.blankOutPreviousAlignment(afpChain, ca2, rows, cols, calculator, origM, blankWindowSize);
+			origM =  SymmetryTools.grayOutPreviousAlignment(afpChain, ca2, rows, cols, calculator, origM, blankWindowSize, GRADIENT_POLY_COEFF, GRADIENT_EXP_COEFF);
 			//afpChain = calculator.extractFragments(afpChain, ca1, ca2clone);
 			//System.out.println("BLANK OUT PREVIOUS");
 			//SymmetryTools.showMatrix(origM, "iteration  matrix " +counter);
@@ -343,7 +348,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	}
 
 	public AFPChain align(Atom[] ca1, Atom[] ca2O, Object param)
-	throws StructureException {
+			throws StructureException {
 		if ( ! (param instanceof CeParameters))
 			throw new IllegalArgumentException("CE algorithm needs an object of call CeParameters as argument.");
 
@@ -469,17 +474,17 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	public static int getSymmetryOrder(AFPChain afpChain) throws StructureException {
 		//maximum degree of rotational symmetry to consider
 		final int maxSymmetry = 8;
-		
+
 		// Percentage change in RSSE required to improve score
 		// Avoids reporting slight improvements in favor of lower order
 		final float minimumMetricChange = 0.40f;
-		
+
 		Map<Integer,Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
-		
+
 		return AlignmentTools.getSymmetryOrder(alignment,
 				new AlignmentTools.IdentityMap<Integer>(),
 				maxSymmetry, minimumMetricChange);
 	}
-	
+
 
 }

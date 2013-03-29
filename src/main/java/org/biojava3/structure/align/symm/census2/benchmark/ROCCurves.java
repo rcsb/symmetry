@@ -24,7 +24,8 @@ package org.biojava3.structure.align.symm.census2.benchmark;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -80,7 +81,9 @@ public class ROCCurves {
 	 */
 	public static void main(String[] args) {
 		runForCeSymm(new File(args[0]), new File(args[1]));
-		runForSymD(new File(args[2]), new File(args[3]));
+		if (args.length > 2) {
+			runForSymD(new File(args[2]), new File(args[3]));
+		}
 	}
 
 	/**
@@ -98,11 +101,12 @@ public class ROCCurves {
 
 			// ROC curves
 			List<Criterion> ceSymmCriteria = new ArrayList<Criterion>();
-			ceSymmCriteria.add(Criterion.zScore());
 			ceSymmCriteria.add(Criterion.tmScore());
-			ceSymmCriteria.add(Criterion.screw().inverse());
-			ceSymmCriteria.add(Criterion.random());
-			ceSymmCriteria.add(Criterion.epsilon());
+			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.tmScore(), Criterion.hasOrder(), 1, 1));
+			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.zScore(), Criterion.hasOrder(), 1, 1));
+			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.alignLength(), Criterion.hasOrder(), 1, 1));
+			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.epsilon(), Criterion.hasOrder(), 1, 1));
+			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.helical().inverse(), Criterion.hasOrder(), 1, 1));
 			ROCCurves ceSymmRocs = new ROCCurves(input, ceSymmCriteria);
 			ceSymmRocs.graph(output);
 
@@ -196,11 +200,14 @@ public class ROCCurves {
 		printText(System.out);
 	}
 
+	public void printText(OutputStream os) {
+		printText(new PrintWriter(os));
+	}
 	/**
 	 * For each {@link Criterion}, prints a line of X coordinates followed by a line of Y coordinates.
 	 * @param ps
 	 */
-	public void printText(PrintStream ps) {
+	public void printText(PrintWriter ps) {
 		
 		if (dataset == null) dataset = getRocPoints(); // lazy initialization
 		

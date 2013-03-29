@@ -2,16 +2,17 @@ package org.biojava3.structure.align.symm.census2.benchmark;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.biojava3.structure.align.symm.census2.Census;
+import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Significance;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
+import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 public class AccuracyFinder {
 
@@ -23,16 +24,59 @@ public class AccuracyFinder {
 	}
 
 	public static void main(String[] args) throws IOException {
-		findAccuracy(new File(args[0]), System.out);
+		AccuracyFinder finder = new AccuracyFinder(new File(args[0]));
+		System.out.println(finder);
 	}
 
-	public static void findAccuracy(File input, PrintStream ps) throws IOException {
-		findAccuracy(Sample.fromXML(input), ps);
+	public AccuracyFinder(File input) throws IOException {
+		this(Sample.fromXML(input));
 	}
 
-	public static void findAccuracy(Sample sample, PrintStream ps) {
-		int tp = 0, fp = 0, tn = 0, fn = 0;
-		final Significance sig = SignificanceFactory.getGenerallySymmetric();
+	public int getTp() {
+		return tp;
+	}
+
+	public int getFn() {
+		return fn;
+	}
+
+	public int getFp() {
+		return fp;
+	}
+
+	public int getTn() {
+		return tn;
+	}
+
+	private int tp = 0;
+	private int fn = 0;
+	private int fp = 0;
+	private int tn = 0;
+	
+	private static Significance sig;
+	static {
+		sig = new Significance() {
+			private static final double cutoff = 0.55;
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return true; // whatever
+			}
+
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				return true; // whatever
+			}
+
+			@Override
+			public boolean isSignificant(Result result) {
+				if (result.getOrder() == null || result.getAlignment() == null || result.getAxis() == null) return false;
+				return result.getAlignment().getTmScore() >= cutoff && result.getOrder() > 1;
+			}
+		};
+	}
+	
+	
+	public AccuracyFinder(Sample sample) {
 		for (Case c : sample.getData()) {
 			try {
 				if (c.hasKnownSymmetry()) {
@@ -52,16 +96,22 @@ public class AccuracyFinder {
 				logger.error("Encountered an error on " + c.getScopId(), e);
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
 		NumberFormat nf = new DecimalFormat();
 		nf.setMaximumFractionDigits(2);
 		String tps = nf.format((double) tp / (double) (tp+tn+fp+fn) * 100.0) + "%";
 		String fps = nf.format((double) fp / (double) (tp+tn+fp+fn) * 100.0) + "%";
 		String tns = nf.format((double) tn / (double) (tp+tn+fp+fn) * 100.0) + "%";
 		String fns = nf.format((double) fn / (double) (tp+tn+fp+fn) * 100.0) + "%";
-		ps.println("True positives: \t" + tp + "\t(" + tps + ")");
-		ps.println("True negatives: \t" + tn + "\t(" + tns + ")");
-		ps.println("False positives: \t" + fp + "\t(" + fps + ")");
-		ps.println("False negatives: \t" + fn + "\t(" + fns + ")");
+		sb.append("True positives: \t" + tp + "\t(" + tps + ")\n");
+		sb.append("True negatives: \t" + tn + "\t(" + tns + ")\n");
+		sb.append("False positives: \t" + fp + "\t(" + fps + ")\n");
+		sb.append("False negatives: \t" + fn + "\t(" + fns + ")\n");
+		return sb.toString();
 	}
 
 }

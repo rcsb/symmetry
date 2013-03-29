@@ -42,6 +42,32 @@ public abstract class Criterion {
 		return getName();
 	}
 
+	public Criterion exp(final double radix) {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				return Math.pow(radix, Criterion.this.get(result));
+			}
+			@Override
+			public String getName() {
+				return radix + "^" + Criterion.this.getName();
+			}
+		};
+	}
+
+	public Criterion log() {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				return Math.log(Criterion.this.get(result));
+			}
+			@Override
+			public String getName() {
+				return "log" + Criterion.this.getName();
+			}
+		};
+	}
+	
 	public static Criterion combine(final Criterion a, final Criterion b, final double coeffA, final double coeffB) {
 		return new Criterion() {
 			@Override
@@ -54,7 +80,31 @@ public abstract class Criterion {
 			}
 		};
 	}
-	
+
+	public static Criterion combineNoFail(final Criterion a, final Criterion b, final double coeffA, final double coeffB) {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				double aa = 0, ba = 0;
+				try {
+					aa = a.get(result);
+				} catch (NoncomputableCriterionException e) {
+					e.printStackTrace();
+				}
+				try {
+					ba = b.get(result);
+				} catch (NoncomputableCriterionException e) {
+					e.printStackTrace();
+				}
+				return coeffA * aa + coeffB * ba;
+			}
+			@Override
+			public String getName() {
+				return coeffA + "*" + a.getName() + " + " + coeffB + "*" + b.getName();
+			}
+		};
+	}
+
 	public Criterion inverse() {
 		return new Criterion() {
 			@Override
@@ -67,7 +117,35 @@ public abstract class Criterion {
 			}
 		};
 	}
-	
+
+	public static Criterion hasOrder() {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				if (result.getOrder() == null || result.getOrder() < 2) return -100000000000000.0;
+				return 0;
+			}
+
+			@Override
+			public String getName() {
+				return "hasorder";
+			}
+		};
+	}
+	public static Criterion order() {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				if (result.getOrder() == null) throw new NoncomputableCriterionException("The case has a null getOrder()");
+				return result.getOrder();
+			}
+
+			@Override
+			public String getName() {
+				return "order";
+			}
+		};
+	}
 	public static Criterion zScore() {
 		return new Criterion() {
 			@Override
@@ -279,6 +357,23 @@ public abstract class Criterion {
 			@Override
 			public String getName() {
 				return "screw component";
+			}
+
+		};
+	}
+	public static Criterion helical() {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				if (result.getFractionHelical() == null) {
+					throw new NoncomputableCriterionException("The case has a null getFractionHelical()");
+				}
+				return result.getFractionHelical();
+			}
+
+			@Override
+			public String getName() {
+				return "% helical";
 			}
 
 		};

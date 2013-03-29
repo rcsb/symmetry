@@ -81,4 +81,9 @@ public class SampleBuilder {
 		return getOrders(new File(file));
 	}
 
+
+	public static void buildSample(File input, File output, File ordersFile) throws IOException {
+		buildSample(input, output, getOrders(ordersFile.getPath()));
+	}
+
 }

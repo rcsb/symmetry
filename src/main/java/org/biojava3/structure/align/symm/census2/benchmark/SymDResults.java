@@ -1,3 +1,25 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ * Created on 2013-03-08
+ *
+ */
 package org.biojava3.structure.align.symm.census2.benchmark;
 
 import java.io.BufferedReader;
@@ -11,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.JAXBContext;
@@ -34,7 +57,13 @@ import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.Alignment;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
+import org.biojava3.structure.utils.FileUtils;
 
+/**
+ * Results of SymD.
+ * @author dmyerstu
+ *
+ */
 @XmlRootElement(name = "CensusResults", namespace = "http://source.rcsb.org")
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public class SymDResults extends Results {
@@ -133,8 +162,28 @@ public class SymDResults extends Results {
 		writeToFile(symDPath, namesFile, cache, outputFile);
 	}
 
-	public static SymDResults runSymD(String symDPath, String pdbFilesPath, AtomCache cache, List<ScopDomain> scopDomains) {
-		SymDResults results = new SymDResults();
+	private static SymDResults getResultsFromPrevRun(File file) {
+		if (file.exists() && file.length() > 0) {
+			try {
+				SymDResults results = SymDResults.fromXML(file);
+				logger.info("Found " + results.size() + " previous results from " + file.getPath());
+				return results;
+			} catch (IOException e) {
+				final Date date = new Date();
+				try {
+					logger.warn("Could not load file " + file.getPath() + ". Starting from scratch.", e);
+					FileUtils.copy(file, new File(file.getPath() + " __backup " + date));
+					file.delete();
+				} catch (IOException e1) {
+					throw new RuntimeException("Could not read census file, and could not backup previous file", e1);
+				}
+			}
+		}
+		return new SymDResults();
+	}
+
+	public static SymDResults runSymD(String symDPath, String pdbFilesPath, AtomCache cache, List<ScopDomain> scopDomains, File resultsFile) {
+		SymDResults results = getResultsFromPrevRun(resultsFile);
 		long timeTaken = 0;
 		int nSuccess = 0;
 		if (!pdbFilesPath.endsWith("/"))
@@ -208,7 +257,7 @@ public class SymDResults extends Results {
 
 	public static void writeToFile(String symDPath, List<ScopDomain> scopDomains, AtomCache cache, File outputFile) {
 		final String filesPath = symDPath.substring(0, symDPath.lastIndexOf('/'));
-		SymDResults results = SymDResults.runSymD(symDPath, filesPath, cache, scopDomains);
+		SymDResults results = SymDResults.runSymD(symDPath, filesPath, cache, scopDomains, outputFile);
 		String xml;
 		try {
 			xml = results.toXML();

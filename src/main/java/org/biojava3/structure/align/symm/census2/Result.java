@@ -46,8 +46,15 @@ public class Result implements Serializable {
 	private Integer rank;
 	private String scopId;
 	private Integer sunId;
+	private Float fractionHelical;
 	public Axis getAxis() {
 		return axis;
+	}
+	public Float getFractionHelical() {
+		return fractionHelical;
+	}
+	public void setFractionHelical(Float fractionHelical) {
+		this.fractionHelical = fractionHelical;
 	}
 	public void setAxis(Axis axis) {
 		this.axis = axis;
@@ -108,9 +115,10 @@ public class Result implements Serializable {
 	}
 	@Override
 	public String toString() {
-		return "Result [axis=" + axis + ", alignmentInfo=" + alignment + ", classification=" + classification
+		return "Result [axis=" + axis + ", alignment=" + alignment + ", classification=" + classification
 				+ ", description=" + description + ", isSignificant=" + isSignificant + ", order=" + order
-				+ ", protodomain=" + protodomain + ", rank=" + rank + ", scopId=" + scopId + ", sunId=" + sunId + "]";
+				+ ", protodomain=" + protodomain + ", rank=" + rank + ", scopId=" + scopId + ", sunId=" + sunId
+				+ ", fractionHelical=" + fractionHelical + "]";
 	}
 	@Override
 	public int hashCode() {
@@ -120,6 +128,7 @@ public class Result implements Serializable {
 		result = prime * result + ((axis == null) ? 0 : axis.hashCode());
 		result = prime * result + ((classification == null) ? 0 : classification.hashCode());
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((fractionHelical == null) ? 0 : fractionHelical.hashCode());
 		result = prime * result + ((isSignificant == null) ? 0 : isSignificant.hashCode());
 		result = prime * result + ((order == null) ? 0 : order.hashCode());
 		result = prime * result + ((protodomain == null) ? 0 : protodomain.hashCode());
@@ -130,41 +139,69 @@ public class Result implements Serializable {
 	}
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
 		Result other = (Result) obj;
 		if (alignment == null) {
-			if (other.alignment != null) return false;
-		} else if (!alignment.equals(other.alignment)) return false;
+			if (other.alignment != null)
+				return false;
+		} else if (!alignment.equals(other.alignment))
+			return false;
 		if (axis == null) {
-			if (other.axis != null) return false;
-		} else if (!axis.equals(other.axis)) return false;
+			if (other.axis != null)
+				return false;
+		} else if (!axis.equals(other.axis))
+			return false;
 		if (classification == null) {
-			if (other.classification != null) return false;
-		} else if (!classification.equals(other.classification)) return false;
+			if (other.classification != null)
+				return false;
+		} else if (!classification.equals(other.classification))
+			return false;
 		if (description == null) {
-			if (other.description != null) return false;
-		} else if (!description.equals(other.description)) return false;
+			if (other.description != null)
+				return false;
+		} else if (!description.equals(other.description))
+			return false;
+		if (fractionHelical == null) {
+			if (other.fractionHelical != null)
+				return false;
+		} else if (!fractionHelical.equals(other.fractionHelical))
+			return false;
 		if (isSignificant == null) {
-			if (other.isSignificant != null) return false;
-		} else if (!isSignificant.equals(other.isSignificant)) return false;
+			if (other.isSignificant != null)
+				return false;
+		} else if (!isSignificant.equals(other.isSignificant))
+			return false;
 		if (order == null) {
-			if (other.order != null) return false;
-		} else if (!order.equals(other.order)) return false;
+			if (other.order != null)
+				return false;
+		} else if (!order.equals(other.order))
+			return false;
 		if (protodomain == null) {
-			if (other.protodomain != null) return false;
-		} else if (!protodomain.equals(other.protodomain)) return false;
+			if (other.protodomain != null)
+				return false;
+		} else if (!protodomain.equals(other.protodomain))
+			return false;
 		if (rank == null) {
-			if (other.rank != null) return false;
-		} else if (!rank.equals(other.rank)) return false;
+			if (other.rank != null)
+				return false;
+		} else if (!rank.equals(other.rank))
+			return false;
 		if (scopId == null) {
-			if (other.scopId != null) return false;
-		} else if (!scopId.equals(other.scopId)) return false;
+			if (other.scopId != null)
+				return false;
+		} else if (!scopId.equals(other.scopId))
+			return false;
 		if (sunId == null) {
-			if (other.sunId != null) return false;
-		} else if (!sunId.equals(other.sunId)) return false;
+			if (other.sunId != null)
+				return false;
+		} else if (!sunId.equals(other.sunId))
+			return false;
 		return true;
 	}
-
+	
 }

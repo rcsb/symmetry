@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.log4j.Logger;
 import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.model.AFPChain;
@@ -36,6 +37,9 @@ import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
+import org.biojava.bio.structure.secstruc.SecStruc;
+import org.biojava.bio.structure.secstruc.SecStrucGroup;
+import org.biojava.bio.structure.secstruc.SecStrucState;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
@@ -69,6 +73,12 @@ public class CensusJob implements Callable<Result> {
 		this.significance = significance;
 	}
 
+	private Long timeTaken;
+	
+	public Long getTimeTaken() {
+		return timeTaken;
+	}
+
 	@Override
 	public Result call() {
 
@@ -78,9 +88,12 @@ public class CensusJob implements Callable<Result> {
 
 		// first, get the atoms
 		Atom[] ca1, ca2;
+		Structure structure;
 		logger.debug("Getting atoms for " + name + " (job #" + count + ")");
 		try {
-			ca1 = cache.getAtoms(name);
+			structure = cache.getStructure(name);
+//			ca1 = cache.getAtoms(name);
+			ca1 = StructureTools.getAtomCAArray(structure);
 			ca2 = StructureTools.cloneCAArray(ca1);
 		} catch (Exception e) {
 			logger.error("Could not create the atom arrays for " + name + ": " + e.getMessage(), e);
@@ -95,21 +108,21 @@ public class CensusJob implements Callable<Result> {
 			afpChain = findSymmetry(name, ca1, ca2);
 		} catch (Exception e) {
 			logger.error("Failed running CE-Symm on " + name + ": " + e.getMessage(), e);
-			return convertResult(null, null, superfamily, name, null, null, domain, null);
+			return convertResult(null, null, superfamily, name, null, null, domain, null, null);
 		}
 		if (afpChain == null || afpChain.getOptAln() == null) {
 			logger.debug("CE-Symm returned null (job #" + count + ")");
-			return convertResult(null, null, superfamily, name, null, null, domain, null);
+			return convertResult(null, null, superfamily, name, null, null, domain, null, null);
 		}
 		
 		// there are two cases in which we know there is no symmetry
 		if (afpChain.getBlockNum() != 2) {
 			logger.debug("CE-Symm returned a result with " + afpChain.getBlockNum() + " block(s) (job #" + count + ")");
-			return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
+			return convertResult(afpChain, false, superfamily, name, null, null, domain, null, null);
 		}
 		if (afpChain.getAlnLength() < 1) {
 			logger.debug("CE-Symm returned an empty alignment (job #" + count + ")");
-			return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
+			return convertResult(afpChain, false, superfamily, name, null, null, domain, null, null);
 		}
 
 		if (significance.isPossiblySignificant(afpChain)) {
@@ -156,15 +169,40 @@ public class CensusJob implements Callable<Result> {
 			} catch (RuntimeException e) {
 				logger.error("Failed to determine the signifcance of " + name + ": " + e.getMessage(), e);
 			}
+			
+			
+			// now find fraction helical
+			Float fractionHelical = null;
+			try {
+				fractionHelical = getFractionHelical(structure);
+			} catch (Exception e) {
+				logger.error("Could not assign secondary structure to " + name + " (job #" + count + ")", e);
+			}
+			
 			return convertResult(afpChain, isSignificant, superfamily, name, order, protodomain.toString(),
-					domain, angle);
+					domain, angle, fractionHelical);
 
 		} else { // trying this would take too long
 			logger.debug("Result is not significant (job #" + count + ")");
-			return convertResult(afpChain, false, superfamily, name, null, null, domain, null);
+			return convertResult(afpChain, false, superfamily, name, null, null, domain, null, null);
 		}
 	}
 
+	private float getFractionHelical(Structure structure) throws StructureException {
+		SecStruc ss = new SecStruc();
+		ss.assign(structure);
+		SecStrucGroup[] ssgs = ss.getGroups();
+		int nHelix = 0;
+		for (SecStrucGroup ssg : ssgs) {
+			SecStrucState state = (SecStrucState) ssg.getProperty("secstruc");
+			if (state.getSecStruc().isHelixType()) {
+				nHelix++;
+			}
+		}
+		double fractionHelix = (double) nHelix / (double) ssgs.length;
+		return (float) fractionHelix;
+	}
+	
 	/**
 	 * Returns the <em>magnitude</em> of the angle between the first and second blocks of {@code afpChain}, measured in degrees. This is always a positive value (unsigned).
 	 * @param afpChain
@@ -189,7 +227,7 @@ public class CensusJob implements Callable<Result> {
 		this.superfamily = superfamily;
 	}
 
-	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, ScopDescription superfamily, String scopId, Integer order, String protodomain, ScopDomain domain, Float angle) {
+	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, ScopDescription superfamily, String scopId, Integer order, String protodomain, ScopDomain domain, Float angle, Float fractionHelical) {
 
 		final String description = superfamily.getDescription();
 
@@ -204,6 +242,7 @@ public class CensusJob implements Callable<Result> {
 
 		r.setAlignment(new Alignment(afpChain));
 		r.setIsSignificant(isSymmetric);
+		r.setFractionHelical(fractionHelical);
 		try {
 			r.setAxis(new Axis(new RotationAxis(afpChain)));
 		} catch (RuntimeException e) {
@@ -223,7 +262,10 @@ public class CensusJob implements Callable<Result> {
 
 	private AFPChain findSymmetry(String name, Atom[] ca1, Atom[] ca2) throws StructureException, IOException {
 		if (!sanityCheckPreAlign(ca1, ca2)) throw new RuntimeException("Can't align using same structure.");
+		long startTime = System.currentTimeMillis();
 		AFPChain afpChain = algorithm.getAlgorithm().align(ca1, ca2);
+		long endTime = System.currentTimeMillis();
+		this.timeTaken = endTime - startTime;
 		if (afpChain == null) return null;
 		afpChain.setName1(name);
 		afpChain.setName2(name);

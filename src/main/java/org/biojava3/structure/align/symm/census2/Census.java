@@ -43,6 +43,8 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
+import org.biojava.bio.structure.align.ce.CeParameters;
+import org.biojava.bio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
@@ -67,7 +69,16 @@ public class Census {
 			return new AlgorithmGiver() {
 				@Override
 				public StructureAlignment getAlgorithm() {
-					return new CeSymm();
+					CeSymm ceSymm = new CeSymm();
+//					ConfigStrucAligParams params = ceSymm.getParameters();
+//					if (params instanceof CeParameters) {
+//						CeParameters ceparams = (CeParameters) params;
+//						ceparams.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
+//						ceparams.setSeqWeight(2);
+//						ceparams.setScoringStrategy(CeParameters.SIDE_CHAIN_SCORING);
+//						ceSymm.setParameters(ceparams);
+//					}
+					return ceSymm;
 				}
 			};
 		}
@@ -159,7 +170,7 @@ public class Census {
 	}
 
 	public final void run() {
-
+		
 		try {
 
 			if (file == null) throw new IllegalStateException("Must set file first");
@@ -180,6 +191,8 @@ public class Census {
 				domains = getDomains();
 			}
 			logger.info("There are " + domains.size() + " domains");
+			
+			List<CensusJob> submittedJobs = new ArrayList<CensusJob>(domains.size()); // to get time taken
 
 			// submit jobs
 			for (ScopDomain domain : domains) {
@@ -195,6 +208,7 @@ public class Census {
 				calc.setDomain(domain);
 				calc.setSuperfamily(scop.getScopDescriptionBySunid(domain.getSuperfamilyId())); // TODO is this correct?
 				calc.setCount(count);
+				submittedJobs.add(calc);
 				Future<Result> result = ConcurrencyTools.submit(calc);
 				futures.add(result);
 				count++;
@@ -234,9 +248,25 @@ public class Census {
 			print(census);
 			logger.info("Finished!");
 
+			long timeTaken = 0;
+			int nSuccess = 0;
+			for (CensusJob job : submittedJobs) {
+				if (job.getTimeTaken() != null) {
+					timeTaken += job.getTimeTaken();
+					nSuccess++;
+				}
+			}
+			avgTimeTaken = (double) timeTaken / (double) nSuccess;
+			
 		} finally {
 			ConcurrencyTools.shutdown();
 		}
+	}
+
+	private double avgTimeTaken;
+	
+	public double getAvgTimeTaken() {
+		return avgTimeTaken;
 	}
 
 	public void setCache(AtomCache cache) {

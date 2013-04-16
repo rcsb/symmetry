@@ -1,20 +1,22 @@
 package org.biojava3.structure.align.symm;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 
+import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.ResidueNumber;
+import org.biojava.bio.structure.StructureException;
+import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
@@ -22,18 +24,6 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava.bio.structure.jama.Matrix;
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Group;
-import org.biojava.bio.structure.ResidueNumber;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartFrame;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.statistics.HistogramDataset;
-import org.jfree.data.statistics.HistogramType;
 
 /**
  * A utility class for refining symmetric alignments
@@ -41,7 +31,7 @@ import org.jfree.data.statistics.HistogramType;
  *
  */
 public class SymmRefiner {
-	
+
 	/**
 	 * Takes an AFPChain and replaces the optimal alignment based on an alignment map
 	 * @param afpChain The alignment to be modified
@@ -50,7 +40,7 @@ public class SymmRefiner {
 	 */
 	private static AFPChain replaceOptAln(AFPChain afpChain, Atom[] ca1, Atom[] ca2,
 			Map<Integer, Integer> alignment) throws StructureException {
-		
+
 		// Determine block lengths
 		Integer[] res1 = alignment.keySet().toArray(new Integer[0]);
 		Arrays.sort(res1);
@@ -74,7 +64,7 @@ public class SymmRefiner {
 		}
 		blockLens.add(blkLen);
 		optLength+=blkLen;
-		
+
 		// Create array structure for alignment
 		int[][][] optAln = new int[blockLens.size()][][];
 		int pos1 = 0; //index into res1
@@ -93,26 +83,26 @@ public class SymmRefiner {
 			}
 		}
 		assert(pos1 == optLength);
-		
+
 		// Create length array
 		int[] optLens = new int[blockLens.size()];
 		for(int i=0;i<blockLens.size();i++) {
 			optLens[i] = blockLens.get(i);
 		}
-		
+
 		//set everything
 		AFPChain refinedAFP = (AFPChain) afpChain.clone();
 		refinedAFP.setOptLength(optLength);
 		refinedAFP.setOptLen(optLens);
 		refinedAFP.setOptAln(optAln);
 		refinedAFP.setBlockNum(blockLens.size());
-		
+
 		//TODO recalculate properties: superposition, tm-score, etc
 		Atom[] ca2clone = StructureTools.cloneCAArray(ca2); // don't modify ca2 positions
 		AlignmentTools.updateSuperposition(refinedAFP, ca1, ca2clone);
 		return refinedAFP;
 	}
-	
+
 	/**
 	 * Refines a CE-Symm alignment so that it is perfectly symmetric.
 	 * 
@@ -126,14 +116,14 @@ public class SymmRefiner {
 	public static AFPChain refineSymmetry(AFPChain afpChain, Atom[] ca1, Atom[] ca2, int k) throws StructureException {
 		// The current alignment
 		Map<Integer, Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
-		
+
 		// Do the alignment
 		Map<Integer, Integer> refined = refineSymmetry(alignment, k);
-		
+
 		AFPChain refinedAFP = replaceOptAln(afpChain, ca1, ca2, refined);
 		return refinedAFP;
 	}
-	
+
 	/**
 	 * Refines a CE-Symm alignment so that it is perfectly symmetric.
 	 * 
@@ -149,17 +139,20 @@ public class SymmRefiner {
 		// Store scores
 		Map<Integer, Double> scores = null;
 		scores = initializeScores(alignment,scores, k);
-		
-		
+
 		// Store eligible residues
 		// Eligible if:
 		//  1. score(x)>0
 		//  2. f^K-1(x) is defined
 		//	3. score(f^K-1(x))>0
-		
+
+		TreeSet<Integer> forwardLoops = new TreeSet<Integer>();
+		TreeSet<Integer> backwardLoops = new TreeSet<Integer>();
+
+
 		List<Integer> eligible = null;
-		eligible = initializeEligible(alignment,scores,eligible,k);
-		
+		eligible = initializeEligible(alignment,scores,eligible,k,forwardLoops,backwardLoops);
+
 		/* For future heap implementation
 		Comparator<Integer> scoreComparator = new Comparator<Integer>() {
 			@Override public int compare(Integer o1, Integer o2) {
@@ -184,8 +177,8 @@ public class SymmRefiner {
 			}
 		};
 		PriorityQueue<Integer> heap = new PriorityQueue<Integer>(alignment.size(), scoreComparator);
-		*/
-		
+		 */
+
 		while(!eligible.isEmpty()) {
 			// Find eligible residue with lowest scores
 			Integer bestRes = null;
@@ -197,7 +190,7 @@ public class SymmRefiner {
 					bestRes = res;
 				}
 			}
-			
+
 			// Find f^k-1(bestRes)
 			Integer resK1 = bestRes;
 			for(int i=0;i<k-1;i++) {
@@ -206,18 +199,20 @@ public class SymmRefiner {
 			}
 			// Modify alignment
 			alignment.put(resK1, bestRes);
-			
+
 			//TODO remove edges into loops & too-short paths?
-			
+
 			// Update scores
 			//TODO only update scores that could change
 			scores = initializeScores(alignment,scores, k);
 
 			// Update eligible
 			//TODO only update residues which could become ineligible
-			eligible = initializeEligible(alignment,scores,eligible,k);
+			eligible = initializeEligible(alignment,scores,eligible,k,forwardLoops,backwardLoops);
+			
+			//System.out.format("Modifying %d -> %d. %d now eligible.%n", resK1,bestRes,eligible.size());
 		}
-		
+
 		// Remove remaining edges
 		Iterator<Integer> alignmentIt = alignment.keySet().iterator();
 		while(alignmentIt.hasNext()) {
@@ -227,8 +222,8 @@ public class SymmRefiner {
 				alignmentIt.remove();
 			}
 		}
-		
-		
+
+
 		return alignment;
 	}
 
@@ -240,28 +235,37 @@ public class SymmRefiner {
 	 *  1. score(x)>0
 	 *  2. f^K-1(x) is defined
 	 *  3. score(f^K-1(x))>0
+	 *  4. For all y, score(y)==0 implies sign(f^K-1(x)-y) == sign(x-f(y) )
 	 * @param alignment The alignment with respect to which to calculate eligibility
 	 * @param scores An up-to-date map from residues to their scores
 	 * @param eligible Starting list of eligible residues. If null will be generated.
 	 * @param k
-	 * @return
+	 * @param backwardLoops 
+	 * @param forwardLoops 
+	 * @return eligible after modification
 	 */
 	private static List<Integer> initializeEligible(Map<Integer, Integer> alignment,
-			Map<Integer, Double> scores, List<Integer> eligible, int k) {
+			Map<Integer, Double> scores, List<Integer> eligible, int k, NavigableSet<Integer> forwardLoops, NavigableSet<Integer> backwardLoops) {
 		// Eligible if:
 		//  1. score(x)>0
 		//  2. f^K-1(x) is defined
 		//	3. score(f^K-1(x))>0
+		//  4. For all y, score(y)==0 implies sign(f^K-1(x)-y) == sign(x-f(y) )
+
+
+		// Assume all residues are eligible to start
 		if(eligible == null) {
 			eligible = new LinkedList<Integer>(alignment.keySet());
 		}
-		
+
+		// Precalculate f^K-1(x)
 		Map<Integer, Integer> alignK1 = AlignmentTools.applyAlignment(alignment, k-1);
-		
+
+		// Remove ineligible residues
 		Iterator<Integer> eligibleIt = eligible.iterator();
 		while(eligibleIt.hasNext()) {
 			Integer res = eligibleIt.next();
-			
+
 			//  2. f^K-1(x) is defined
 			if(!alignK1.containsKey(res)) {
 				eligibleIt.remove();
@@ -272,11 +276,21 @@ public class SymmRefiner {
 				eligibleIt.remove();
 				continue;
 			}
-			
+
 			//  1. score(x)>0
 			Double score = scores.get(res);
 			if(score == null || score <= 0.0) {
 				eligibleIt.remove();
+
+				// res is in a loop. Add it to the proper set
+				if(res <= alignment.get(res)) {
+					//forward
+					forwardLoops.add(res);
+				} else {
+					//backward
+					backwardLoops.add(res);
+				}
+
 				continue;
 			}
 			//	3. score(f^K-1(x))>0
@@ -286,8 +300,36 @@ public class SymmRefiner {
 				continue;
 			}
 		}
-		
-		
+
+
+		// Now that loops are up-to-date, check for loop crossings
+		eligibleIt = eligible.iterator();
+		while(eligibleIt.hasNext()) {
+			Integer res = eligibleIt.next();
+
+			//4. For all y, score(y)==0 implies sign(f^K-1(x)-y) == sign(x-f(y) )
+			//Test equivalent: All loop edges should be properly ordered wrt edge f^k-1(x) -> x
+
+			Integer src = alignK1.get(res);
+			
+			if( src < res  ) {
+				//forward
+				// get interval [a,b) containing res
+				Integer a = forwardLoops.floor(src);
+				Integer b = forwardLoops.higher(src);
+				
+				// Ineligible unless f(a) < res < f(b) 
+				if(a != null && alignment.get(a) > res ) {
+					eligibleIt.remove();
+					continue;
+				}
+				if(b != null && alignment.get(b) < res ) {
+					eligibleIt.remove();
+					continue;
+				}
+			}
+		}
+
 		return eligible;
 	}
 
@@ -307,7 +349,7 @@ public class SymmRefiner {
 			scores.clear();
 		}
 		Map<Integer,Integer> alignK = AlignmentTools.applyAlignment(alignment, k);
-		
+
 		// calculate input range
 		int maxPre = Integer.MIN_VALUE;
 		int minPre = Integer.MAX_VALUE;
@@ -315,7 +357,7 @@ public class SymmRefiner {
 			if(pre>maxPre) maxPre = pre;
 			if(pre<minPre) minPre = pre;
 		}
-		
+
 		for(Integer pre : alignment.keySet()) {
 			Integer image = alignK.get(pre);			
 
@@ -326,7 +368,7 @@ public class SymmRefiner {
 		return scores;
 	}
 
-	
+
 
 	/**
 	 * Calculate the score for a residue, specifically the Absolute Error
@@ -347,31 +389,31 @@ public class SymmRefiner {
 		} else {
 			error = Math.abs(pre - image);
 		}
-		
+
 		//TODO favor lower degree-in
-		
+
 		// Add fractional portion relative to sequence position, for uniqueness
 		if(error > 0)
 			error += (double)(pre-minPre)/(1+maxPre-minPre);
-		
+
 		return error;
 	}
 
 	public static void main(String[] args) {
 		try {
 			String name;
-			
+
 			name = "1itb.A"; // b-trefoil, C3
-			//name = "1tim.A"; // tim-barrel, C8
-			//name = "d1p9ha_"; // not rotational symmetry
-			name = "3HKE.A"; // very questionable alignment
+			name = "1tim.A"; // tim-barrel, C8
+			name = "d1p9ha_"; // not rotational symmetry
+			//name = "3HKE.A"; // very questionable alignment
 			//name = "d1jlya1"; // C3 with minimum RSSE at C6
 			//name = "1YOX(A:95-160)";
-			
+
 			AtomCache cache = new AtomCache();
 			Atom[] ca1 = cache.getAtoms(name);
 			Atom[] ca2 = cache.getAtoms(name);
-			
+
 			StructureAlignmentFactory.addAlgorithm(new CeSymm());
 			CeSymm ce = (CeSymm) StructureAlignmentFactory.getAlgorithm(CeSymm.algorithmName);
 
@@ -379,45 +421,45 @@ public class SymmRefiner {
 			long startTime = System.currentTimeMillis();
 			AFPChain afpChain = ce.align(ca1, ca2);
 			long alignTime = System.currentTimeMillis()-startTime;
-			
+
 			afpChain.setName1(name);
 			afpChain.setName2(name);
-			
+
 			System.out.format("Alignment took %dms%n", alignTime);
 
 			startTime = System.currentTimeMillis();
 			int symm = CeSymm.getSymmetryOrder(afpChain);
 			long orderTime = System.currentTimeMillis()-startTime;
 			System.out.println("Symmetry="+symm);
-					
+
 			System.out.format("Finding order took %dms%n", orderTime);
 
 			//Output SIF file
-//			String path = "/Users/blivens/dev/bourne/symmetry/refinement/";
-//			String filename = path+name+".sif";
-//			System.out.println("Writing alignment to "+filename);
-//			Writer out = new FileWriter(filename);
-//			alignmentToSIF(out, afpChain, ca1, ca2, "bb","ur");
-			
+			String path = "/Users/blivens/dev/bourne/symmetry/refinement/";
+			String filename = path+name+".sif";
+			System.out.println("Writing alignment to "+filename);
+			Writer out = new FileWriter(filename);
+			alignmentToSIF(out, afpChain, ca1, ca2, "bb","ur");
+
 			//Refine alignment
 			startTime = System.currentTimeMillis();
 			AFPChain refinedAFP = refineSymmetry(afpChain, ca1, ca2, symm);
 			long refineTime = System.currentTimeMillis()-startTime;
-			
+
 			refinedAFP.setAlgorithmName(refinedAFP.getAlgorithmName()+"-refine");
-			
+
 			//Output refined to SIF
 			System.out.format("Refinement took %dms%n", refineTime);
-//			alignmentToSIF(out, refinedAFP, ca1, ca2,"bb","rr");
-//			out.close();
-			
+			alignmentToSIF(out, refinedAFP, ca1, ca2,"bb","rr");
+			out.close();
+
 			//display jmol of alignment
 			System.out.println("Original rmsd:"+afpChain.getTotalRmsdOpt());
 			System.out.println("New rmsd:"+refinedAFP.getTotalRmsdOpt());
 			StructureAlignmentJmol unrefined = StructureAlignmentDisplay.display(afpChain, ca1, StructureTools.cloneCAArray(ca2));
 			RotationAxis unrefinedAxis = new RotationAxis(afpChain);
 			unrefined.evalString(unrefinedAxis.getJmolScript(ca1));
-			
+
 			StructureAlignmentJmol refined = StructureAlignmentDisplay.display(refinedAFP, ca1, StructureTools.cloneCAArray(ca2));
 			RotationAxis refinedAxis = new RotationAxis(refinedAFP);
 			refined.evalString(refinedAxis.getJmolScript(ca1));
@@ -427,7 +469,7 @@ public class SymmRefiner {
 		}
 	}
 
-	
+
 	/**
 	 * Creates a simple interaction format (SIF) file for an alignment.
 	 * 
@@ -451,8 +493,8 @@ public class SymmRefiner {
 		String name1 = afpChain.getName1();
 		String name2 = afpChain.getName2();
 		if(name1==null) name1=""; else name1+=":";
-		if(name2==null) name2=""; else name1+=":";
-		
+		if(name2==null) name2=""; else name2+=":";
+	
 		// Print alignment edges
 		int nblocks = afpChain.getBlockNum();
 		int[] blockLen = afpChain.getOptLen();
@@ -474,14 +516,14 @@ public class SymmRefiner {
 
 		// Print first backbone edges
 		ResidueNumber rn = ca1[0].getGroup().getResidueNumber();
-		String last = rn.getChainId()+rn.toString();
+		String last = name1+rn.getChainId()+rn.toString();
 		for(int i=1;i<ca1.length;i++) {
 			rn = ca1[i].getGroup().getResidueNumber();
 			String curr = name1+rn.getChainId()+rn.toString();
 			out.write(String.format("%s\t%s\t%s\n",last, backboneInteraction, curr));
 			last = curr;
 		}
-		
+
 		// Print second backbone edges, if the proteins differ
 		// Do some quick checks for whether the proteins differ
 		// (Not perfect, but should detect major differences and CPs.)
@@ -490,7 +532,7 @@ public class SymmRefiner {
 				(ca1.length>0 && ca1[0].getGroup()!=null && ca2[0].getGroup()!=null &&
 						!ca1[0].getGroup().getResidueNumber().equals(ca2[0].getGroup().getResidueNumber()) ) ) {
 			rn = ca2[0].getGroup().getResidueNumber();
-			last = rn.getChainId()+rn.toString();
+			last = name2+rn.getChainId()+rn.toString();
 			for(int i=1;i<ca2.length;i++) {
 				rn = ca2[i].getGroup().getResidueNumber();
 				String curr = name2+rn.getChainId()+rn.toString();
@@ -500,4 +542,5 @@ public class SymmRefiner {
 		}
 
 	}
+
 }

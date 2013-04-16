@@ -3,8 +3,11 @@
  */
 package org.biojava3.structure.align.symm;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -234,5 +237,68 @@ public class SymmRefinerTest extends TestCase {
 			testSymmetric(refined,3);
 		}
 	}
+	
+	/* Didn't end up being a useful function, so never implemented.
+
+	public void testPartitionAlignment() throws SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+		// test private partitionAlignment method
+		Method partitionAlignment = SymmRefiner.class.getDeclaredMethod("partitionAlignment", new Class[] {Map.class});
+		partitionAlignment.setAccessible(true);
+		
+		Map<Integer,Integer> alignment = new HashMap<Integer, Integer>();
+		alignment.put(2, 11);
+		alignment.put(3, 12);
+		alignment.put(4, 13);
+		alignment.put(6, 14);
+		alignment.put(7, 15);
+		alignment.put(8, 16);
+		alignment.put(10, 18);
+		alignment.put(12, 20);
+		alignment.put(13, 21);
+		alignment.put(15, 22);
+		alignment.put(16, 23);
+		alignment.put(17, 24);
+		alignment.put(18, 2);
+		alignment.put(20, 3);
+		alignment.put(21, 4);
+		alignment.put(22, 6);
+		alignment.put(23, 8);
+		alignment.put(24, 10);
+		
+		List<Map<Integer,Integer>> expected = new ArrayList<Map<Integer,Integer>>();
+		//Note: should be insensitive to order (like a set), but that's harder to compare
+		Map<Integer,Integer> expectedAlign = new HashMap<Integer, Integer>();
+		expectedAlign.put(2, 11);
+		expectedAlign.put(10, 18);
+		expectedAlign.put(17, 24);
+		expectedAlign.put(18, 2);
+		expectedAlign.put(24, 10);
+		expected.add(expectedAlign);
+		
+		expectedAlign = new HashMap<Integer, Integer>();
+		expectedAlign.put(6, 14);
+		expectedAlign.put(7, 15);
+		expectedAlign.put(15, 22);
+		expectedAlign.put(22, 6);
+		expected.add(expectedAlign);
+
+
+		List<Map<Integer,Integer>> result;
+		
+		result = (List<Map<Integer, Integer>>) partitionAlignment.invoke(null, expectedAlign);
+		
+		assertEquals("Expected number of partitions differs.",expected.size(), result.size());
+		
+		Iterator<Map<Integer, Integer>> expIt = expected.iterator();
+		Iterator<Map<Integer, Integer>> resultIt = result.iterator();
+		while(expIt.hasNext()) {
+			Map<Integer, Integer> exp = expIt.next();
+			Map<Integer, Integer> res = resultIt.next();
+			
+			assertEquals("Mapping differs.",exp,res);
+		}
+		
+	}
+	*/
 	
 }

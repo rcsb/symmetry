@@ -19,6 +19,7 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 
 public class AlignTest {
 	private static String PDB_PATH = "C:/PDB/";
+	private static String FILENAME = "C:/Users/Peter/Documents/QuatStructureComparison/20130125_100800_symm95.csv";
 	private Map<String,List<String>> structureGroups = new HashMap<String,List<String>>();
 	private Map<String, String[]> csv = new HashMap<String,String[]>();
 
@@ -73,13 +74,13 @@ public class AlignTest {
 		// Transthyretin
 	//	List<String> pdbIds = Arrays.asList(new String[]{"3KGT","1TTC"});
 		
-		AligQuaternaryStructure aligner = new AligQuaternaryStructure();
-		double[] rmsds = aligner.align("1EVR", "1M5A");
+//		AligQuaternaryStructure aligner = new AligQuaternaryStructure();
+//		double[] rmsds = aligner.align("1EVR", "1M5A");
 		
-	//	AlignTest test = new AlignTest();
-	//	test.readFile(fileName);
-	//	test.createStructureGroups();
-	//	test.run();
+//		AlignTest test = new AlignTest();
+//		test.readFile(fileName);
+//		test.createStructureGroups();
+//		test.run();
 
 	}
 	

@@ -81,10 +81,16 @@ public class ProteinChainExtractor  {
 				   cAlphaTrace.add(ca);
 				   chainIds.add(c.getChainID());
 				   modelNumbers.add(i);
-				   sequences.add(c.getSeqResSequence());
+				   sequences.add(replaceQuestionMarks(c.getSeqResSequence()));
 				}
 			}
 		}
+	}
+	
+	// In some cases "?" are in the sequence string. Example 2WS1. This is caused
+	// because the chemical component file YNM doesn't contain a one-letter code.
+	private String replaceQuestionMarks(String sequence) {
+		return sequence.replaceAll("\\?", "X");
 	}
 	
 	private boolean containsUnknownResidues(Atom[] atoms) {

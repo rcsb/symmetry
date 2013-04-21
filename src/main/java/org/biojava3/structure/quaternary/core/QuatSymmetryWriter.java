@@ -28,11 +28,11 @@ public class QuatSymmetryWriter {
 		PrintWriter out = null;
 		try {
 			out = new PrintWriter(new FileWriter(fileName));
+			out.print(pdbFile);
+			out.close();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		out.print(pdbFile);
-		out.close();
 	}
 	
 	public void writeTransformedStructureCentered(Matrix4d matrix, String fileName) {
@@ -42,11 +42,11 @@ public class QuatSymmetryWriter {
 		PrintWriter out = null;
 		try {
 			out = new PrintWriter(new FileWriter(fileName));
+			out.print(pdbFile);
+			out.close();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		out.print(pdbFile);
-		out.close();
 	}
 	
 	private Structure getTransformedStructure(Matrix4d matrix) {

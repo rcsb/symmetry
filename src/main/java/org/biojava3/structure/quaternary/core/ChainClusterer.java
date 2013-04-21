@@ -23,9 +23,7 @@ public class ChainClusterer  {
 	private List<Integer> modelNumbers = new ArrayList<Integer>();
 	private List<String> sequences = new ArrayList<String>();
 	private List<Atom[]> caAligned = new ArrayList<Atom[]>();
-//	private List<Atom[]> cbAligned = new ArrayList<Atom[]>();
 	private List<Point3d[]> caCoords = new ArrayList<Point3d[]>();
-//	private List<Point3d[]> cbCoords = new ArrayList<Point3d[]>();
 
 	List<SequenceAlignmentCluster> seqClusters = new ArrayList<SequenceAlignmentCluster>();
 	
@@ -43,20 +41,10 @@ public class ChainClusterer  {
 		return caCoords;
 	}
 	
-//	public List<Point3d[]> getCbetaCoordinates() {
-//        run();
-//		return cbCoords;
-//	}
-	
 	public List<Atom[]> getCalphaTraces() {
 		run();
 		return caAligned;
 	}
-	
-//	public List<Atom[]> getCbetaTraces() {
-//		run();
-//		return cbAligned;
-//	}
 	
 	public boolean isHomomeric() {
 		run();
@@ -200,12 +188,6 @@ public class ChainClusterer  {
 			}
 			
 			createCalphaTraces();
-			if ( parameters.isVerbose() ) {
-				System.out.println("ChainClusterer: caCoords.size() = " + caCoords.size());				
-			}
-			
-			
-//			createCbetaTraces();
 			modified = false;
 		}
 	}
@@ -216,11 +198,6 @@ public class ChainClusterer  {
 		chainIds  = extractor.getChainIds();
 		sequences = extractor.getSequences();
 		modelNumbers = extractor.getModelNumbers();
-//	    System.out.println("Sequence clusters: " + chainIds);
-//        System.out.println("C alphas: ");
-//        for (Atom[] atoms: caUnaligned) {
-//        	System.out.println("Atoms: " + atoms.length);
-//        }
 	}
 	
 	private void calcSequenceClusters() {
@@ -233,7 +210,7 @@ public class ChainClusterer  {
 			}
 			processed[i] = true;
 			// create new sequence cluster
-            UniqueSequenceList seqList = new UniqueSequenceList(caUnaligned.get(i), chainIds.get(i), modelNumbers.get(i), sequences.get(i));
+            UniqueSequenceList seqList = new UniqueSequenceList(caUnaligned.get(i), chainIds.get(i), modelNumbers.get(i), 0, sequences.get(i));
             SequenceAlignmentCluster seqCluster = new SequenceAlignmentCluster(parameters);
             seqCluster.addUniqueSequenceList(seqList);	
             seqClusters.add(seqCluster);
@@ -245,7 +222,7 @@ public class ChainClusterer  {
             	for (SequenceAlignmentCluster c: seqClusters) {
             		// add to existing sequence cluster if there is a match
             		if (c.isSequenceMatch(sequences.get(j)) || parameters.isStructuralAlignmentOnly()) {
-            			if (c.addChain(caUnaligned.get(j), chainIds.get(j), modelNumbers.get(j), sequences.get(j))) {
+            			if (c.addChain(caUnaligned.get(j), chainIds.get(j), modelNumbers.get(j), 0, sequences.get(j))) {
             				processed[j] = true;
             				if (c.isPseudoSymmetric()) {	
             					pseudoSymmetric = true;
@@ -262,10 +239,8 @@ public class ChainClusterer  {
 	
 	private void calcAlignedSequences() {
 		caAligned = new ArrayList<Atom[]>();
-//		cbAligned = new ArrayList<Atom[]>();
 		for (SequenceAlignmentCluster cluster: seqClusters) {
 			caAligned.addAll(cluster.getAlignedCalphaAtoms());	
-//			cbAligned.addAll(cluster.getAlignedCBetaAtoms());
 		}
 	}
 	
@@ -278,16 +253,6 @@ public class ChainClusterer  {
 			caCoords.add(trace);
 		}
 	}
-	
-//	private void createCbetaTraces() {
-//		for (Atom[] atoms: cbAligned) {
-//			Point3d[] trace = new Point3d[atoms.length];
-//			for (int j = 0; j < atoms.length; j++) {
-//				trace[j] = new Point3d(atoms[j].getCoords());
-//			}
-//			cbCoords.add(trace);
-//		}
-//	}
 
 	public String toString() {
 		StringBuilder builder = new StringBuilder();

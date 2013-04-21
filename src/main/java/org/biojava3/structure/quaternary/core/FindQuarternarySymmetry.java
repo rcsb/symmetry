@@ -123,6 +123,8 @@ public class FindQuarternarySymmetry {
 			
 		}
 		
+		
+		
 		if (subunits.getFolds().size() == 1) {
 			
 			// no symmetry possible, create empty ("C1") rotation group
@@ -145,7 +147,7 @@ public class FindQuarternarySymmetry {
 			rotationGroup = solver.getSymmetryOperations();
 		} else {
 			method = "rotation";
-			
+		
 			if ( parameters.isVerbose()) {
 				System.out.println("FindQuaternarySymmetry: determineRotationGroups: " + method);
 			}
@@ -155,5 +157,10 @@ public class FindQuarternarySymmetry {
 			//			QuatSymmetrySolver solver = new SystematicSolver(subunits, parameters);
 			rotationGroup = solver.getSymmetryOperations();
 		}
+		// should check in w/ .complete() to make sure this is called under all circumstances
+		rotationGroup.complete();
+	//	HelixCheck hc = new HelixCheck(subunits, rotationGroup, this.parameters);
+	//	System.out.println("Helical: " + hc.isHelical());
+	//	System.exit(-1);
 	}
 }

@@ -349,6 +349,8 @@ public final class SuperPositionQCP {
         q2 /= normq;
         q3 /= normq;
         q4 /= normq;
+        
+        System.out.println("q: " + q1 + " " + q2 + " " + q3 + " " + q4);
 
         double a2 = q1 * q1;
         double x2 = q2 * q2;

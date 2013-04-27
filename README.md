@@ -21,6 +21,11 @@ This library depends on
 
 ## Getting Started
 
+ - Symmetry in Biological Assemblies
+   View [DemoOrientBioAssembly.java](https://github.com/rcsb/symmetry/blob/master/src/main/java/demo/DemoOrientBioAssembly.java)
+ 
+ - Intra-chain symmetry (algorithm name: CE-SYMM)
+   View [DemoCeSymm.java](https://github.com/rcsb/symmetry/blob/master/src/main/java/demo/DemoCeSymm.java)
 
 
 

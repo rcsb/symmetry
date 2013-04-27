@@ -22,10 +22,14 @@ This library depends on
 ## Getting Started
 
  - Symmetry in Biological Assemblies
-   View [DemoOrientBioAssembly.java](https://github.com/rcsb/symmetry/blob/master/src/main/java/demo/DemoOrientBioAssembly.java)
+  View the symmetry of the biological assembly of ![PDB ID 1a0s](https://raw.github.com/rcsb/symmetry/master/docu/img/BioAssemblySymmetryScreenshot1a0s.png)
+
+View [DemoOrientBioAssembly.java](https://github.com/rcsb/symmetry/blob/master/src/main/java/demo/DemoOrientBioAssembly.java)
  
  - Intra-chain symmetry (algorithm name: CE-SYMM)
-   View [DemoCeSymm.java](https://github.com/rcsb/symmetry/blob/master/src/main/java/demo/DemoCeSymm.java)
+   View the internal pseudo-symmetry for ![SCOP ID d1jlya1](https://raw.github.com/rcsb/symmetry/master/docu/img/CeSymmScreenshotd1jlya1.png)
+
+View [DemoCeSymm.java](https://github.com/rcsb/symmetry/blob/master/src/main/java/demo/DemoCeSymm.java)
 
 
 

@@ -18,6 +18,9 @@ This library depends on
 - [BioJava](http://www.biojava.org)
 - [Jmol](http://www.jmol.org)
 
+## Analysis of whole PDB
+
+- View the results when using this code base to [analyze all of the PDB](http://www.rcsb.org/pdb/browse/stoichiometry.do)
 
 ## Getting Started
 

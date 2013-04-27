@@ -30,6 +30,5 @@ View [DemoOrientBioAssembly.java](https://github.com/rcsb/symmetry/blob/master/s
 
 View [DemoCeSymm.java](https://github.com/rcsb/symmetry/blob/master/src/main/java/demo/DemoCeSymm.java)
 
-
 ### Build Status
-![](https://travis-ci.org/rcsb/symmetry.png)
+[![Build Status](https://travis-ci.org/rcsb/symmetry.png)](https://travis-ci.org/rcsb/symmetry)

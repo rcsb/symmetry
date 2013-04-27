@@ -10,5 +10,17 @@ Detect, analyze, and visualize **protein symmetry**
  - Detect **internal pseudo-symmetry** in protein chains
  
  - Visualize results in [Jmol](http://www.jmol.org)
+ 
+## Dependencies
+
+This library depends on 
+
+- [BioJava](http://www.biojava.org)
+- [Jmol](http://www.jmol.org)
+
+
+## Getting Started
+
+
 
 

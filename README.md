@@ -1,3 +1,7 @@
+### Build Status
+![](https://travis-ci.org/rcsb/symmetry.png)
+
+
 # Symmetry in Protein Structures
 
 > Detect, analyze, and visualize **protein symmetry**

@@ -39,7 +39,7 @@ public class CensusTest {
 		@Override
 		protected List<ScopDomain> getDomains() {
 			List<ScopDomain> domains = new ArrayList<ScopDomain>();
-			ScopDatabase scop = ScopFactory.getSCOP();
+			ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
 			for (String domain : CensusTest.domains) {
 				domains.add(scop.getDomainByScopID(domain));
 			}
@@ -56,10 +56,10 @@ public class CensusTest {
 	public void setUp() throws StructureException {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
 		expectedResult = ResourceList.get().openFileAsString("census2/expected1.xml");
-		ScopDatabase scop = ScopFactory.getSCOP();
-		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // ScopDatabase is too hard to mock well
-		}
+		
+		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);		
+		ScopFactory.setScopDatabase(scop); 
+		
 		CeSymm ceSymm = mock(CeSymm.class);
 		for (String domain : domains) {
 			AFPChain afpChain = new AFPChain();

@@ -56,9 +56,10 @@ public class CensusJobTest {
 	@Before
 	public void setUp() throws Exception {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
-		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // ScopDatabase is too hard to mock well
-		}
+		
+		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);		
+		ScopFactory.setScopDatabase(scop);
+		
 		final CeSymm ceSymm = mock(CeSymm.class);
 		AFPChain afpChain = new AFPChain();
 		afpChain.setProbability(zScore);
@@ -89,10 +90,11 @@ public class CensusJobTest {
 	}
 	
 	private CensusJob job;
-	private final ScopDatabase scop = ScopFactory.getSCOP();
+
 	
 	@Test
 	public void test() {
+		 ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
 		for (int i = 0; i < domains.length; i++) {
 			final ScopDomain domain = scop.getDomainByScopID(domains[i]);
 			job.setCount(i);

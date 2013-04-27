@@ -1,10 +1,12 @@
-Symmetry in Protein Structures
-========
+# Symmetry in Protein Structures
 
-Detect, analyze, and visualize protein symmetry
+![PDB ID 1G63](https://raw.github.com/rcsb/symmetry/master/docu/img/1G63.jpg)
 
- - detect symmetry in biological assemblies
 
- - detect internal pseudo-symmetry in protein chains
+Detect, analyze, and visualize **protein symmetry**
+
+ - detect symmetry in **biological assemblies**
+
+ - detect **internal pseudo-symmetry** in protein chains
 
 

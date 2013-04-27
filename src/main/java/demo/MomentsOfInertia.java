@@ -1,3 +1,4 @@
+package demo;
 /*
  *                  BioJava development code
  *

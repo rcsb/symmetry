@@ -1,3 +1,4 @@
+package demo;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.model.AFPChain;

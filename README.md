@@ -5,8 +5,10 @@
 
 Detect, analyze, and visualize **protein symmetry**
 
- - detect symmetry in **biological assemblies**
+ - Detect symmetry in **biological assemblies**
 
- - detect **internal pseudo-symmetry** in protein chains
+ - Detect **internal pseudo-symmetry** in protein chains
+ 
+ - Visualize results in [Jmol](http://www.jmol.org)
 
 

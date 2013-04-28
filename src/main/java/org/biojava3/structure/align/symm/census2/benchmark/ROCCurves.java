@@ -24,7 +24,7 @@ package org.biojava3.structure.align.symm.census2.benchmark;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -52,9 +52,9 @@ import org.jfree.data.xy.XYSeriesCollection;
  */
 public class ROCCurves {
 
-	private static final int DEFAULT_HEIGHT = 800;
+	private static final int DEFAULT_HEIGHT = 1600;
 
-	private static final int DEFAULT_WIDTH = 1000;
+	private static final int DEFAULT_WIDTH = 1600;
 
 	static final Logger logger = Logger.getLogger(ROCCurves.class.getPackage().getName());
 
@@ -101,12 +101,24 @@ public class ROCCurves {
 
 			// ROC curves
 			List<Criterion> ceSymmCriteria = new ArrayList<Criterion>();
-			ceSymmCriteria.add(Criterion.tmScore());
-			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.tmScore(), Criterion.hasOrder(), 1, 1));
-			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.zScore(), Criterion.hasOrder(), 1, 1));
-			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.alignLength(), Criterion.hasOrder(), 1, 1));
-			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.epsilon(), Criterion.hasOrder(), 1, 1));
-//			ceSymmCriteria.add(Criterion.combineNoFail(Criterion.helical().inverse(), Criterion.hasOrder(), 1, 1));
+			ceSymmCriteria.add(Criterion.tmScore().noFail(-10000000f));
+//			ceSymmCriteria.add(Criterion.zScore().noFail(-10000000f));
+//			ceSymmCriteria.add(Criterion.alignLength().noFail(-10000000f));
+//			ceSymmCriteria.add(Criterion.epsilon().noFail(-10000000f));
+//			ceSymmCriteria.add(Criterion.screw().noFail(-10000000f));
+//			ceSymmCriteria.add(Criterion.epsilon().noFail(-10000000f));
+//			ceSymmCriteria.add(Criterion.identity().noFail(-10000000f));
+//			ceSymmCriteria.add(Criterion.identity().noFail(-10000000f));
+//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.1));
+			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.15));
+//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.3));
+//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.4));
+//			ceSymmCriteria.add(Criterion.hasOrder(0.1f));
+//			ceSymmCriteria.add(Criterion.hasOrder(0.2f));
+//			ceSymmCriteria.add(Criterion.hasOrder(0.3f));
+			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1000));
+//			ceSymmCriteria.add(Criterion.random());
+//			ceSymmCriteria.add(Criterion.thetaIsCorrect());
 			ROCCurves ceSymmRocs = new ROCCurves(input, ceSymmCriteria);
 			ceSymmRocs.graph(output);
 
@@ -200,8 +212,31 @@ public class ROCCurves {
 		printText(System.out);
 	}
 
-	public void printText(OutputStream os) {
-		printText(new PrintWriter(os));
+	public void printText(PrintStream ps) {
+		if (dataset == null) dataset = getRocPoints(); // lazy initialization
+		
+		for (int i = 0; i < criteria.size(); i++) {
+			
+			// print the name of the criterion
+			final Criterion criterion = criteria.get(i);
+			final XYSeries series = dataset.getSeries(i);
+			ps.println(criterion);
+			
+			// print the X points
+			for (int j = 0; j < series.getItemCount(); j++) {
+				final double x = series.getX(j).doubleValue();
+				ps.print(x + "\t");
+			}
+			ps.println();
+			
+			// print the Y points
+			for (int j = 0; j < series.getItemCount(); j++) {
+				final double y = series.getY(j).doubleValue();
+				ps.print(y + "\t");
+			}
+			ps.println("\n");
+			
+		}
 	}
 	/**
 	 * For each {@link Criterion}, prints a line of X coordinates followed by a line of Y coordinates.

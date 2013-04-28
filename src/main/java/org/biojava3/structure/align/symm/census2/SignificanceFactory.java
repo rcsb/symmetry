@@ -117,10 +117,6 @@ public class SignificanceFactory {
 		}
 	}
 
-	public static Significance getByConservativeTmScore() {
-		return tm(0.5);
-	}
-
 	public static Significance conservative() {
 		return rotationallySymmetric(0.5, Math.PI);
 	}
@@ -133,15 +129,19 @@ public class SignificanceFactory {
 		return rotationallySymmetric(0.7, Math.PI);
 	}
 
-	public static Significance liberalTm() {
-		return tm(0.2);
-	}
-
-	public static Significance mediumTm() {
-		return tm(0.3);
+	public static Significance liberal() {
+		return rotationallySymmetric(0.3, Math.PI);
 	}
 	
-	public static Significance tm(final Double cutoff) { // cannot use a primitive double
+	public static Significance liberalTmScore() {
+		return tmScore(0.3);
+	}
+
+	public static Significance mediumTmScore() {
+		return tmScore(0.4);
+	}
+	
+	public static Significance tmScore(final Double cutoff) { // cannot use a primitive double
 		return new Significance() {
 			@Override
 			public boolean isPossiblySignificant(AFPChain afpChain) {
@@ -161,11 +161,11 @@ public class SignificanceFactory {
 	}
 
 	public static Significance forCensus() {
-		return tm(0.2);
+		return tmScore(0.2);
 	}
 
 	public static Significance generallySymmetric() {
-		return tm(0.4);
+		return tmScore(0.4);
 	}
 
 	public static Significance symmetric() {
@@ -209,7 +209,7 @@ public class SignificanceFactory {
 	}
 
 	public static Significance ultraLiberal() {
-		return tm(0.0);
+		return tmScore(0.0);
 	}
 
 	public static Significance or(final Significance a, final Significance b) {

@@ -68,6 +68,23 @@ public abstract class Criterion {
 		};
 	}
 	
+	public Criterion noFail(final float penalty) {
+		return new Criterion() {
+			@Override
+			public double get(Result result) {
+				try {
+					return Criterion.this.get(result);
+				} catch (NoncomputableCriterionException e) {
+					return -penalty;
+				}
+			}
+			@Override
+			public String getName() {
+				return Criterion.this.getName();
+			}
+		};
+	}
+	
 	public static Criterion combine(final Criterion a, final Criterion b, final double coeffA, final double coeffB) {
 		return new Criterion() {
 			@Override
@@ -88,14 +105,10 @@ public abstract class Criterion {
 				double aa = 0, ba = 0;
 				try {
 					aa = a.get(result);
-				} catch (NoncomputableCriterionException e) {
-					e.printStackTrace();
-				}
+				} catch (NoncomputableCriterionException e) {}
 				try {
 					ba = b.get(result);
-				} catch (NoncomputableCriterionException e) {
-					e.printStackTrace();
-				}
+				} catch (NoncomputableCriterionException e) {}
 				return coeffA * aa + coeffB * ba;
 			}
 			@Override
@@ -118,17 +131,17 @@ public abstract class Criterion {
 		};
 	}
 
-	public static Criterion hasOrder() {
+	public static Criterion hasOrder(final float penalty) {
 		return new Criterion() {
 			@Override
 			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getOrder() == null || result.getOrder() < 2) return -100000000000000.0;
+				if (result.getOrder() == null || result.getOrder() < 2) return -penalty;
 				return 0;
 			}
 
 			@Override
 			public String getName() {
-				return "hasorder";
+				return "hasorder(" + penalty + ")";
 			}
 		};
 	}
@@ -300,12 +313,12 @@ public abstract class Criterion {
 				if (result.getOrder() == null) throw new NoncomputableCriterionException("The case has a null getOrder()");
 				float theta = result.getAxis().getTheta();
 				float shouldBe = (float) (2*Math.PI / result.getOrder());
-				return Math.abs(shouldBe - theta);
+				return -Math.abs(shouldBe - theta);
 			}
 
 			@Override
 			public String getName() {
-				return "2pi/o - theta";
+				return "order~angle";
 			}
 
 		};

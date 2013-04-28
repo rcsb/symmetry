@@ -13,8 +13,8 @@ import java.util.List;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
@@ -49,7 +49,7 @@ public class CensusTest {
 	}
 
 	private static String[] domains = new String[] { "d2c35e1" };
-
+	
 	private static String expectedResult;
 
 	@Before
@@ -60,16 +60,12 @@ public class CensusTest {
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);		
 		ScopFactory.setScopDatabase(scop); 
 		
-		CeSymm ceSymm = mock(CeSymm.class);
-		for (String domain : domains) {
-			AFPChain afpChain = new AFPChain();
-			afpChain.setProbability(5.7);
-			Atom[] ca1 = ResourceList.get().getAtoms(domain);
-			Atom[] ca2 = StructureTools.cloneCAArray(ca1);
-			when(ceSymm.align(ca1, ca2)).thenReturn(afpChain);
-		}
 	}
 
+	/**
+	 * Test on live data.
+	 * @throws IOException
+	 */
 	@Test
 	public void testBasic() throws IOException {
 		final String actual = "census2/actualresult1.xml";
@@ -102,5 +98,5 @@ public class CensusTest {
 	public void testHard() {
 		
 	}
-	
+
 }

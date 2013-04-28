@@ -63,7 +63,6 @@ public class NamesCensus extends Census {
 					}
 				}
 				br.close();
-				System.err.println("AVG TIME TAKEN: " + census.getAvgTimeTaken());
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -71,7 +70,7 @@ public class NamesCensus extends Census {
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
-			logger.warn(e.getMessage(), e);
+			logger.fatal(e.getMessage(), e);
 		}
 	}
 

@@ -33,9 +33,9 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
 /**
  * A factory for {@link Significance} objects. Most importantly, standardizes definitions of significance across multiple classes. The methods important for this are:
  * <ul>
- * <li>{@link #getForCensus()}, which can be used to determine very liberal significance for running the {@link Census}</li>
- * <li>{@link #getGenerallySymmetric()}, which can be used to determine "general symmetry": both rotational and translational symmetry</li>
- * <li>{@link #getRotationallySymmetric()}, which can be used to determine only rotational symmetry by examining order and angle</li>
+ * <li>{@link #forCensus()}, which can be used to determine very liberal significance for running the {@link Census}</li>
+ * <li>{@link #generallySymmetric()}, which can be used to determine "general symmetry": both rotational and translational symmetry</li>
+ * <li>{@link #symmetric()}, which can be used to determine only rotational symmetry by examining order and angle</li>
  * </ul>
  * These objects, particularly the latter two, may change frequently.
  * Also helps running the {@link Census} with arbitrary Significance objects via {@link CLI}, using the methods:
@@ -118,18 +118,30 @@ public class SignificanceFactory {
 	}
 
 	public static Significance getByConservativeTmScore() {
-		return getByTmScore(0.4);
+		return tm(0.5);
 	}
 
-	public static Significance getByLiberalTmScore() {
-		return getByTmScore(0.2);
+	public static Significance conservative() {
+		return rotationallySymmetric(0.5, Math.PI);
 	}
 
-	public static Significance getByMediumTmScore() {
-		return getByTmScore(0.3);
+	public static Significance veryConservative() {
+		return rotationallySymmetric(0.6, Math.PI);
+	}
+
+	public static Significance superConservative() {
+		return rotationallySymmetric(0.7, Math.PI);
+	}
+
+	public static Significance liberalTm() {
+		return tm(0.2);
+	}
+
+	public static Significance mediumTm() {
+		return tm(0.3);
 	}
 	
-	public static Significance getByTmScore(final Double cutoff) { // cannot use a primitive double
+	public static Significance tm(final Double cutoff) { // cannot use a primitive double
 		return new Significance() {
 			@Override
 			public boolean isPossiblySignificant(AFPChain afpChain) {
@@ -148,24 +160,24 @@ public class SignificanceFactory {
 		};
 	}
 
-	public static Significance getForCensus() {
-		return getByTmScore(0.2);
+	public static Significance forCensus() {
+		return tm(0.2);
 	}
 
-	public static Significance getGenerallySymmetric() {
-		return getByTmScore(0.4);
+	public static Significance generallySymmetric() {
+		return tm(0.4);
 	}
 
-	public static Significance getRotationallySymmetric() {
+	public static Significance symmetric() {
+		return rotationallySymmetric(0.4, Double.MAX_VALUE);
+	}
+	public static Significance rotationallySymmetric(final double threshold, final double epsilonThreshold) {
 		
 		return new Significance() {
 			
-			private static final double THRESHOLD = 0.4;
-			private static final double EPSILON_THRESHOLD = Math.PI / 16.0;
-			
 			@Override
 			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return afpChain.getTMScore() >= THRESHOLD;
+				return afpChain.getTMScore() >= threshold;
 			}
 
 			@Override
@@ -174,31 +186,30 @@ public class SignificanceFactory {
 				try {
 					axis = new Axis(new RotationAxis(afpChain));
 				} catch (Exception e) {
-					throw new IllegalArgumentException("Could not create a rotation axis for "
-							+ protodomain.getString(), e);
+					return false;
 				}
 				double epsilon = axis.evaluateEpsilon(order);
-				if (epsilon > Math.PI / 16) return false;
-				return afpChain.getTMScore() >= THRESHOLD && order >= 2;
+				if (epsilon > epsilonThreshold) return false;
+				return afpChain.getTMScore() >= threshold && order >= 2;
 			}
 
 			@Override
 			public boolean isSignificant(Result result) {
 				NumberFormat nf = new DecimalFormat();
 				nf.setMaximumFractionDigits(5);
-				if (result.getOrder() == null) throw new IllegalArgumentException("Order cannot be null");
-				if (result.getAlignment() == null) throw new IllegalArgumentException("Alignment cannot be null");
+				if (result.getOrder() == null) return false;
+				if (result.getAlignment() == null) return false;
 				final int order = result.getOrder();
 				if (order < 2) return false;
 				double epsilon = result.getAxis().evaluateEpsilon(order);
-				if (epsilon > EPSILON_THRESHOLD) return false;
-				return result.getAlignment().getTmScore() >= THRESHOLD;
+				if (epsilon > epsilonThreshold) return false;
+				return result.getAlignment().getTmScore() >= threshold;
 			}
 		};
 	}
 
-	public static Significance getUltraLiberal() {
-		return getByTmScore(0.0);
+	public static Significance ultraLiberal() {
+		return tm(0.0);
 	}
 
 	public static Significance or(final Significance a, final Significance b) {

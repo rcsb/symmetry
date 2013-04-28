@@ -32,17 +32,17 @@ public class SignificanceFactoryTest {
 
 	@Test
 	public void testFromMethod() {
-		SignificanceFactory.fromMethod(null, "getByLiberalTmScore");
+		SignificanceFactory.fromMethod(null, "liberalTmScore");
 	}
 
 	@Test
 	public void testFromMethodWithArgs() {
-		SignificanceFactory.fromMethod(null, "getByTmScore", new Object[]{0.3});
+		SignificanceFactory.fromMethod(null, "tmScore", new Object[]{0.3});
 	}
 
 	@Test
 	public void testFromMethodAndClass() {
-		SignificanceFactory.fromMethod("org.biojava3.structure.align.symm.census2.SignificanceFactory", "getByLiberalTmScore", new Object[]{});
+		SignificanceFactory.fromMethod("org.biojava3.structure.align.symm.census2.SignificanceFactory", "liberalTmScore", new Object[]{});
 	}
 
 	@Test

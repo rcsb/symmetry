@@ -121,7 +121,7 @@ public class Census {
 	}
 
 	public static Significance getDefaultSignificance() {
-		return SignificanceFactory.getForCensus();
+		return SignificanceFactory.forCensus();
 	}
 
 	public static void main(String[] args) {

@@ -48,7 +48,7 @@ public class CensusCombiner {
 		File combined = new File(args[0]);
 		File[] files = new File[args.length-1];
 		for (int i = 1; i < args.length; i++) {
-			files[i] = new File(args[i]);
+			files[i-1] = new File(args[i]);
 		}
 		CensusCombiner combiner = new CensusCombiner(files);
 		combiner.print(combined);

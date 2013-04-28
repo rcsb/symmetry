@@ -37,6 +37,7 @@ import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
+import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.secstruc.SecStruc;
 import org.biojava.bio.structure.secstruc.SecStrucGroup;
 import org.biojava.bio.structure.secstruc.SecStrucState;
@@ -61,6 +62,15 @@ public class CensusJob implements Callable<Result> {
 	private Significance significance;
 	private ScopDescription superfamily;
 
+	public static Result runOn(ScopDomain domain, AtomCache cache, AlgorithmGiver algorithm, Significance sig) {
+		ScopDescription superfamily = ScopFactory.getSCOP().getScopDescriptionBySunid(domain.getSuperfamilyId());
+		CensusJob job = new CensusJob(cache, algorithm, sig);
+		job.setCount(0);
+		job.setDomain(domain);
+		job.setSuperfamily(superfamily);
+		return job.call();
+	}
+	
 	private static boolean sanityCheckPreAlign(Atom[] ca1, Atom[] ca2) {
 		if (ca1 == ca2) return false;
 		if (ca1[0].getGroup().getChain().getParent() == ca2[0].getGroup().getChain().getParent()) return false;

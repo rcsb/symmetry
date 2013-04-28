@@ -177,4 +177,8 @@ public class Results implements Serializable {
 
 	}
 
+	public static Results fromXML(String file) throws IOException {
+		return fromXML(new File(file));
+	}
+
 }

@@ -45,13 +45,34 @@ public class CensusRescorer {
 		}
 	}
 
-	public static void convert(Significance sig, File input, File output) throws IOException {
+	public static void convert(Significance sig, File input, File output, boolean remove) throws IOException {
 		CensusRescorer rescorer = new CensusRescorer(sig);
 		Results census = Results.fromXML(input);
-		rescorer.rescore(census);
+		if (remove) {
+			rescorer.filter(census);
+		} else {
+			rescorer.rescore(census);
+		}
 		BufferedWriter bw = new BufferedWriter(new FileWriter(output));
 		bw.write(census.toXML());
 		bw.close();
+	}
+
+	private void filter(Results census) {
+		Results oldCensus = new Results();
+		oldCensus.addAll(census.getData());
+		int i = 0;
+		for (Result result : oldCensus.getData()) {
+			/*
+			 * It is critical that exceptions not be ignored here.
+			 * Otherwise, i may not be what it should, so we'll keep deleting the wrong items.
+			 */
+			if (!sig.isSignificant(result)) {
+				census.getData().remove(i);
+			} else {
+				i++;
+			}
+		}
 	}
 
 	/**
@@ -64,18 +85,22 @@ public class CensusRescorer {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
-		if (args.length > 3 || args.length < 2) {
-			System.out.println("Usage: CensusRescorer intput-file output-file [significance-method]");
+		if (args.length > 4 || args.length < 2) {
+			System.out.println("Usage: CensusRescorer intput-file output-file [significance-method] [remove-insignificant (if \"true\")]");
 			return;
 		}
 		File input = new File(args[0]);
 		File output = new File(args[1]);
-		Significance sig = SignificanceFactory.getGenerallySymmetric();
-		if (args.length == 3) {
+		Significance sig = SignificanceFactory.generallySymmetric();
+		if (args.length >= 3) {
 			String sigMethod = args[2];
 			sig = SignificanceFactory.fromMethod(null, sigMethod);
 		}
-		convert(sig, input, output);
+		boolean remove = false;
+		if (args.length >= 4) {
+			if (args[3].toLowerCase().equals("true") || args[3].toLowerCase().equals("remove")) remove = true;
+		}
+		convert(sig, input, output, remove);
 	}
 
 }

@@ -1,24 +1,19 @@
 /*
- *                    BioJava development code
- *
- * This code may be freely distributed and modified under the
- * terms of the GNU Lesser General Public Licence.  This should
- * be distributed with the code.  If you do not have a copy,
- * see:
- *
- *      http://www.gnu.org/copyleft/lesser.html
- *
- * Copyright for this code is held jointly by the individual
- * authors.  These should be listed in @author doc comments.
- *
- * For more information on the BioJava project and its aims,
- * or to join the biojava-l mailing list, visit the home page
+ * BioJava development code
+ * 
+ * This code may be freely distributed and modified under the terms of the GNU Lesser General Public Licence. This
+ * should be distributed with the code. If you do not have a copy, see:
+ * 
+ * http://www.gnu.org/copyleft/lesser.html
+ * 
+ * Copyright for this code is held jointly by the individual authors. These should be listed in @author doc comments.
+ * 
+ * For more information on the BioJava project and its aims, or to join the biojava-l mailing list, visit the home page
  * at:
- *
- *      http://www.biojava.org/
- *
+ * 
+ * http://www.biojava.org/
+ * 
  * Created on 2013-02-20
- *
  */
 package org.biojava3.structure.align.symm.census2;
 
@@ -101,8 +96,10 @@ public class CLI {
 					.getOptionValue("every"));
 			final Integer number = cmd.getOptionValue("number") == null ? null : Integer.parseInt(cmd
 					.getOptionValue("number"));
-			//final Integer clustering = cmd.getOptionValue("clustering") == null ? null : Integer.parseInt(cmd.getOptionValue("clustering"));
-			final AstralSet clustering = cmd.getOptionValue("clustering") == null ? null : AstralSet.parse(cmd.getOptionValue("clustering"));
+			// final Integer clustering = cmd.getOptionValue("clustering") == null ? null :
+			// Integer.parseInt(cmd.getOptionValue("clustering"));
+			final AstralSet clustering = cmd.getOptionValue("clustering") == null ? null : AstralSet.parse(cmd
+					.getOptionValue("clustering"));
 
 			int[] sunIds = null;
 			if (cmd.getOptionValue("sfindex") != null) {
@@ -175,10 +172,10 @@ public class CLI {
 			if (sigMethod != null) {
 				sig = SignificanceFactory.fromMethod(SignificanceFactory.class.getName(), sigMethod);
 			} else {
-				sig = SignificanceFactory.getForCensus();
+				sig = SignificanceFactory.forCensus();
 			}
 		}
-		
+
 		// set the number of threads
 		final int nThreads;
 		if (pNThreads == null) {
@@ -191,10 +188,6 @@ public class CLI {
 		logger.info("Using " + nThreads + " threads");
 
 		Census census = new Census(nThreads) {
-			@Override
-			protected Significance getSignificance() {
-				return sig;
-			}
 			@Override
 			protected List<ScopDomain> getDomains() {
 
@@ -258,9 +251,10 @@ public class CLI {
 						if (!contains) {
 							contains = clusterRepresentatives.contains(domain.getScopId());
 						}
-//						if (!contains) {
-//							contains = PdbClusteringScopDescriptionCensus.isDomainOverChain(domain, clusterRepresentatives);
-//						}
+						// if (!contains) {
+						// contains = PdbClusteringScopDescriptionCensus.isDomainOverChain(domain,
+						// clusterRepresentatives);
+						// }
 						// logger.debug("Contains " + domain.getScopId());
 
 						if (contains) { // if we want to include the domain
@@ -274,6 +268,11 @@ public class CLI {
 				logger.info("Found " + domains.size() + " domains");
 				return domains;
 
+			}
+
+			@Override
+			protected Significance getSignificance() {
+				return sig;
 			}
 
 			@Override
@@ -351,7 +350,7 @@ public class CLI {
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
-						"Use only the specified number of entities from the sun ids or superfamilies selected. A value of -1 (default) means all.")
+						"Use only the specified number of entities from the sun ids or superfamilies selected. A value of -1 (default) means all. This option does not attempt to select diverse domains from the sets (will fix). Use with -randomize.")
 				.isRequired(false).create("number"));
 		options.addOption(OptionBuilder
 				.hasArg(false)

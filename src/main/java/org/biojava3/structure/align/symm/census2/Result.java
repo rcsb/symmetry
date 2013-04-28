@@ -50,12 +50,12 @@ public class Result implements Serializable {
 	public Axis getAxis() {
 		return axis;
 	}
-//	public Float getFractionHelical() {
-//		return fractionHelical;
-//	}
-//	public void setFractionHelical(Float fractionHelical) {
-//		this.fractionHelical = fractionHelical;
-//	}
+	public Float getFractionHelical() {
+		return fractionHelical;
+	}
+	public void setFractionHelical(Float fractionHelical) {
+		this.fractionHelical = fractionHelical;
+	}
 	public void setAxis(Axis axis) {
 		this.axis = axis;
 	}

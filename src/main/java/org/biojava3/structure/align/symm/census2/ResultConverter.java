@@ -30,7 +30,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
 
 public class ResultConverter {
@@ -48,7 +47,7 @@ public class ResultConverter {
 	 */
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
-			System.out.println("Usage: ResultConverter input-xml-file output-html-file");
+			System.err.println("Usage: ResultConverter input-xml-file output-html-file");
 			return;
 		}
 		File xmlIn = new File(args[0]);

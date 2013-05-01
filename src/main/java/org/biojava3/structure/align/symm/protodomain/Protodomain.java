@@ -38,6 +38,7 @@ import org.biojava.bio.structure.ResidueRange;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDatabase;
@@ -148,8 +149,22 @@ public class Protodomain {
 			int numBlocks, int chainIndex, AtomCache cache) throws ProtodomainCreationException {
 		final ScopDatabase scopInst = ScopFactory.getSCOP();
 		final ScopDomain scopDomain = scopInst.getDomainByScopID(afpChain.getName2());
-		final String scopId = scopDomain.getScopId();
-		final String pdbId = scopDomain.getPdbId();
+		
+		StructureName name = new StructureName(afpChain.getName2());
+		String pdbId = name.getPdbId();
+				
+		List<String> domainRanges ;
+		
+		String scopId = null;
+		if ( scopDomain != null) {
+			scopId = scopDomain.getScopId();
+			domainRanges = scopDomain.getRanges();
+		} else {
+			domainRanges = new ArrayList<String>();
+			domainRanges.add(name.getChainId());
+		}
+		
+		
 		// int numAtomsInBlock1Alignment = afpChain.getOptLen()[0];
 		// if (numAtomsInBlock1Alignment == 0) throw new ProtodomainCreationException("unknown", scopId);
 
@@ -160,8 +175,10 @@ public class Protodomain {
 		// from the start of block 1 to end end of block 1
 		// PLUS from the start of block 2 to the end of block 2
 
-		final List<String> domainRanges = scopDomain.getRanges();
-
+		  
+		System.out.println("ranges:" + domainRanges);
+		
+		
 		// we rely on the fact that SCOP won't give us a range that contains multiple chains
 		// instead, any residues from another chain will be in a different range
 		// however, CE-Symm CAN give us single blocks containing residues from different chains

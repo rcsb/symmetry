@@ -151,7 +151,7 @@ public class Protodomain {
 		final ScopDomain scopDomain = scopInst.getDomainByScopID(afpChain.getName2());
 		
 		StructureName name = new StructureName(afpChain.getName2());
-		String pdbId = name.getPdbId();
+		String pdbId = name.getPdbId().toLowerCase();
 				
 		List<String> domainRanges ;
 		

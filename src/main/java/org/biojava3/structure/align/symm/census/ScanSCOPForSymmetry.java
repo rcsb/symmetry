@@ -54,7 +54,7 @@ import org.biojava3.structure.utils.FileUtils;
  * @deprecated See {@link Census} instead
  */
 @Deprecated
-public class ScanSCOPForSymmetry {
+public class ScanSCOPForSymmetry implements Runnable {
 
 	public static String newline = System.getProperty("line.separator");
 	//protected static ExecutorService pool;
@@ -87,8 +87,8 @@ public class ScanSCOPForSymmetry {
 
 
 
-
-	private void run() {
+	@Override
+	public void run() {
 		AtomCache cache = new AtomCache();
 		
 		ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
@@ -99,13 +99,13 @@ public class ScanSCOPForSymmetry {
 
 		System.out.println("got " + superfamilies.size() + " superfamilies");
 
-		String f = cache.getPath() + File.separator + "scopCensus.html";
+		String htmlFilename = cache.getPath() + File.separator + "scopCensus.html";
 
-		String r = cache.getPath() + File.separator + "scopCensus.xml";
+		String xmlFilename = cache.getPath() + File.separator + "scopCensus.xml";
 		try {
 
 
-			CensusResults census = getExistingResults(r) ;
+			CensusResults census = getExistingResults(xmlFilename) ;
 			if ( census == null)
 				census = new CensusResults();
 
@@ -152,13 +152,13 @@ public class ScanSCOPForSymmetry {
 			}
 
 
-			File o = new File(f);
+			File o = new File(htmlFilename);
 			if ( o.exists())
 				o.delete();
-			SynchronizedOutFile outFile = new SynchronizedOutFile(o);
+			SynchronizedOutFile htmlOutFile = new SynchronizedOutFile(o);
 
 
-			ResultConverter.printHTMLHeader(outFile);
+			ResultConverter.printHTMLHeader(htmlOutFile);
 
 			//int fragmentLength = 8;
 
@@ -168,7 +168,7 @@ public class ScanSCOPForSymmetry {
 
 			List<CensusResult> allResults = census.getData();
 
-			withSymm = countNrSymm(outFile, withSymm, classStats, totalStats, allResults);
+			withSymm = countNrSymm(htmlOutFile, withSymm, classStats, totalStats, allResults);
 
 			System.out.println("starting to process multi threaded results...");
 			for (Future<CensusResult> futureResult : futureData) {
@@ -178,7 +178,7 @@ public class ScanSCOPForSymmetry {
 				if ( result == null)
 					continue;
 
-				boolean isSymmetric = processResult(result, outFile,totalStats,classStats);
+				boolean isSymmetric = processResult(result, htmlOutFile,totalStats,classStats);
 				if ( isSymmetric)
 					withSymm++;
 
@@ -186,14 +186,14 @@ public class ScanSCOPForSymmetry {
 				//if ( withSymm > 5)
 				//	break;
 				if ( allResults.size() % 100 == 0)
-					writeResults(census, r);
+					writeResults(census, xmlFilename);
 			} 
 
-			outFile.write("</tbody></table>");
+			htmlOutFile.write("</tbody></table>");
 
 			census.setData(allResults);
 
-			writeResults(census, r);
+			writeResults(census, xmlFilename);
 
 
 			System.out.println("===");
@@ -210,7 +210,7 @@ public class ScanSCOPForSymmetry {
 				System.out.println("Class: " + scopClass + " " + String.format("%.2f",(symm/(float)total))  + "%");
 			}
 
-			outFile.close();
+			htmlOutFile.close();
 		} catch (Exception e){
 			e.printStackTrace();
 		}

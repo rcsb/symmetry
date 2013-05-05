@@ -30,11 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.biojava3.structure.align.symm.census2.Result;
-import org.biojava3.structure.align.symm.protodomain.ResourceList;
-import org.biojava3.structure.align.symm.protodomain.ResourceList.NameProvider;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -43,14 +40,12 @@ import org.junit.Test;
  */
 public class ROCCurvesTest {
 
-	@Before
-	public void setUp() throws Exception {
-		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
-	}
+	private static String RESOURCE_PATH = "src/test/resources/";
+	
 	@Test
 	public void testGetRocPoints() throws IOException {
 		
-		File inputFile = ResourceList.get().openFile("census2/benchmark/benchmark2.xml");
+		File inputFile = new File(RESOURCE_PATH + "census2/benchmark/benchmark2.xml");
 		List<Criterion> criteria = new ArrayList<Criterion>();
 		criteria.add(Criterion.alignLength());
 		criteria.add(Criterion.screw());

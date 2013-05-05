@@ -22,15 +22,12 @@
  */
 package org.biojava3.structure.align.symm.census2.benchmark;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import org.biojava3.structure.align.symm.protodomain.ResourceList;
-import org.biojava3.structure.align.symm.protodomain.ResourceList.NameProvider;
-import org.junit.Before;
 import org.junit.Test;
 
 
@@ -40,17 +37,14 @@ import org.junit.Test;
  */
 public class SampleBuilderTest {
 
-	@Before
-	public void setUp() throws Exception {
-		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
-	}
+	private static String RESOURCE_PATH = "src/test/resources/";
+	
 	@Test
 	public void testBuildSample() throws IOException {
-		ResourceList.get().openFile("census2/benchmark/benchmark1_known_orders");
-		File knownInfosFile = ResourceList.get().openFile("census2/benchmark/benchmark1_known_orders");
-		File inputFile = ResourceList.get().openFile("census2/benchmark/benchmark1_stub.xml");
-		File outputFile = ResourceList.get().openFile("census2/benchmark/benchmark1_actual.xml");
-		File expectedOutputFile = ResourceList.get().openFile("census2/benchmark/benchmark1_expected.xml");
+		File knownInfosFile = new File(RESOURCE_PATH + "census2/benchmark/benchmark1_known_orders");
+		File inputFile = new File(RESOURCE_PATH + "census2/benchmark/benchmark1_stub.xml");
+		File outputFile = new File(RESOURCE_PATH + "census2/benchmark/benchmark1_actual.xml");
+		File expectedOutputFile = new File(RESOURCE_PATH + "census2/benchmark/benchmark1_expected.xml");
 		Map<String,KnownInfo> knownInfos = SampleBuilder.getOrders(knownInfosFile);
 		SampleBuilder.buildSample(inputFile, outputFile, knownInfos);
 		Sample actual = Sample.fromXML(outputFile);

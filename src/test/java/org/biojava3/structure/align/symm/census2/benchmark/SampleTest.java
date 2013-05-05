@@ -25,14 +25,13 @@ package org.biojava3.structure.align.symm.census2.benchmark;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.protodomain.ResourceList;
-import org.biojava3.structure.align.symm.protodomain.ResourceList.NameProvider;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,9 +41,10 @@ import org.junit.Test;
  */
 public class SampleTest {
 
+	private static String RESOURCE_PATH = "src/test/resources/";
+	
 	@Before
 	public void setUp() throws Exception {
-		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
 		ScopDatabase scop = ScopFactory.getSCOP();
 		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
 			ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // ScopDatabase is too hard to mock well
@@ -53,7 +53,7 @@ public class SampleTest {
 
 	@Test
 	public void testRead() throws IOException {
-		Sample sample = Sample.fromXML(ResourceList.get().openFile("census2/benchmark/test_read.xml"));
+		Sample sample = Sample.fromXML(new File(RESOURCE_PATH + "census2/benchmark/test_read.xml"));
 		List<Case> cases = sample.getData();
 		Case c = cases.get(0);
 		assertEquals(1, cases.size());

@@ -35,6 +35,8 @@ import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
+import org.biojava.bio.structure.scop.RemoteScopInstallation;
+import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
@@ -61,9 +63,13 @@ public class CensusJob implements Callable<Result> {
 	private ScopDomain domain;
 	private Significance significance;
 	private ScopDescription superfamily;
+	
+	private String scopVersion = null;
 
-	public static Result runOn(ScopDomain domain, AtomCache cache, AlgorithmGiver algorithm, Significance sig) {
-		ScopDescription superfamily = ScopFactory.getSCOP().getScopDescriptionBySunid(domain.getSuperfamilyId());
+	AFPChain afpChain = null;
+	
+	public static Result runOn(ScopDomain domain, AtomCache cache, AlgorithmGiver algorithm, Significance sig, String scopVersion) {
+		ScopDescription superfamily = ScopFactory.getSCOP(scopVersion).getScopDescriptionBySunid(domain.getSuperfamilyId());
 		CensusJob job = new CensusJob(cache, algorithm, sig);
 		job.setCount(0);
 		job.setDomain(domain);
@@ -96,6 +102,18 @@ public class CensusJob implements Callable<Result> {
 				"Must set domain, superfamily, and count first.");
 		String name = domain.getScopId();
 
+		if ( scopVersion != null ) {
+			System.out.println("censusJob setting SCOP version to: " + scopVersion);
+			ScopDatabase scop = ScopFactory.getSCOP(scopVersion);
+			ScopFactory.setScopDatabase(scop);
+		}
+		
+		// setting SCOP factory to latest BerkeleySCOP
+		if ( ScopFactory.getSCOP() instanceof RemoteScopInstallation) {
+			System.out.println("setting default scop to version " + ScopFactory.VERSION_1_75B);
+			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75B));
+		}
+		
 		// first, get the atoms
 		Atom[] ca1, ca2;
 		Structure structure;
@@ -112,7 +130,7 @@ public class CensusJob implements Callable<Result> {
 		logger.debug("Got " + ca1.length + " atoms (job #" + count + ")");
 
 		// run the alignment
-		AFPChain afpChain = null;
+		afpChain = null;
 		logger.debug("Running CE-Symm (job #" + count + ")");
 		try {
 			afpChain = findSymmetry(name, ca1, ca2);
@@ -236,6 +254,16 @@ public class CensusJob implements Callable<Result> {
 	public void setSuperfamily(ScopDescription superfamily) {
 		this.superfamily = superfamily;
 	}
+	
+	
+
+	public String getScopVersion() {
+		return scopVersion;
+	}
+
+	public void setScopVersion(String scopVersion) {
+		this.scopVersion = scopVersion;
+	}
 
 	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, ScopDescription superfamily, String scopId, Integer order, String protodomain, ScopDomain domain, Float angle, Float fractionHelical) {
 
@@ -282,6 +310,11 @@ public class CensusJob implements Callable<Result> {
 		double realTmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 		afpChain.setTMScore(realTmScore);
 		return afpChain;
+	}
+	
+	public AFPChain getAFPChain(){
+		return afpChain;
+		
 	}
 
 }

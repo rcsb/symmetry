@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>symmetry</artifactId>
-	<version>0.1.31-SNAPSHOT</version>
+	<version>0.1.32-SNAPSHOT</version>
 	<name>RCSB Symmetry</name>
 	
 	<properties>

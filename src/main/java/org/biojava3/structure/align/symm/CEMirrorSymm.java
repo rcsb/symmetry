@@ -11,22 +11,47 @@ import org.biojava.bio.structure.ChainImpl;
 import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.StructureAlignmentFactory;
-import org.biojava.bio.structure.align.ce.CeMain;
+import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava.bio.structure.jama.Matrix;
 
 /**
  * @author Spencer Bliven
  *
  */
-public class CEMirrorSymm extends CeMain {
+public class CEMirrorSymm extends CeCPMain {
 	static String algorithmName = "jCE-mirror-symmetry";
 	static String version = "0.1";
 	
+	
+	private boolean mirrorCoordinates;
+	private boolean mirrorSequence;
+	
+	/**
+	 * Search for mirror symmetry
+	 */
+	public CEMirrorSymm() {
+		this(true,true);
+	}
+	
+	/**
+	 * Search for complex alignments.
+	 * If both parameters are true, search for structures with 
+	 * @param mirrorCoordinates
+	 * @param mirrorSequence
+	 */
+	public CEMirrorSymm(boolean mirrorCoordinates, boolean mirrorSequence) {
+		super();
+		this.mirrorCoordinates = mirrorCoordinates;
+		this.mirrorSequence = mirrorSequence;
+	}
+
 	/**
 	 * Aligns the first protein against the second in reverse topological order.
 	 * This allows the detection of mirror symmetries.
@@ -41,10 +66,16 @@ public class CEMirrorSymm extends CeMain {
 			throws StructureException {
 		
 		// Optionally, mirror the coordinates
-		// TODO preference for this
-		mirrorCoordinates(ca2);
+		if(mirrorCoordinates) {
+			mirrorCoordinates(ca2);
+		}
 
-		Atom[] ca2m = reverseCA2(ca2);
+		Atom[] ca2m;
+		if(mirrorSequence) {
+			ca2m = reverseCA2(ca2);
+		} else {
+			ca2m = StructureTools.cloneCAArray(ca2);
+		}
 
 		AFPChain afpChain = super.align(ca1, ca2m, param);
 		
@@ -60,7 +91,9 @@ public class CEMirrorSymm extends CeMain {
 
 	private void postProcessAlignment(AFPChain afpChain) {
 		// reverse the optAln
-		reverseOptAln(afpChain);
+		if(mirrorSequence) {
+			reverseOptAln(afpChain);
+		}
 		
 		// reverse the distance matrix
 		afpChain.setDistanceMatrix(reverseMatrixCols(afpChain.getDistanceMatrix()));
@@ -178,21 +211,64 @@ public class CEMirrorSymm extends CeMain {
 		}
 	}
 	
+	/**
+	 * @return the mirrorCoordinates
+	 */
+	public boolean isMirrorCoordinates() {
+		return mirrorCoordinates;
+	}
+
+	/**
+	 * Set whether to mirror the coordinates of the protein when comparing
+	 * (defaults to true)
+	 * @param mirrorCoordinates
+	 */
+	public void setMirrorCoordinates(boolean mirrorCoordinates) {
+		this.mirrorCoordinates = mirrorCoordinates;
+	}
+
+	/**
+	 * @return the mirrorSequence
+	 */
+	public boolean isMirrorSequence() {
+		return mirrorSequence;
+	}
+
+	/**
+	 * Whether to mirror the sequence of the structure, forcing aligned
+	 * structures to be antiparallel
+	 * @param mirrorSequence the mirrorSequence to set
+	 */
+	public void setMirrorSequence(boolean mirrorSequence) {
+		this.mirrorSequence = mirrorSequence;
+	}
+
+	
 	public static void main(String[] args) {
-		String name = "1qys";
+		String name;
+		boolean mirrorCoords, mirrorSeq;
+		name = "1qys"; mirrorSeq = true; mirrorCoords = true;
+		//name = "d1kkeb2"; mirrorSeq = true; mirrorCoords = false;
+		//name = "d2okua1"; mirrorSeq = true; mirrorCoords = false;
 		
 		try {
-			StructureAlignmentFactory.addAlgorithm(new CEMirrorSymm());
-			CEMirrorSymm ce = (CEMirrorSymm) StructureAlignmentFactory.getAlgorithm(CEMirrorSymm.algorithmName);
+			CEMirrorSymm ce = new CEMirrorSymm(mirrorCoords, mirrorSeq);
 			
 			AtomCache cache = new AtomCache();
 			
 			Atom[] ca1 = cache.getAtoms(name);
 			Atom[] ca2 = cache.getAtoms(name);
-						
-			AFPChain afpChain = ce.align(ca1, ca2);
+					
+
+			PDBFileReader pdbreader = new PDBFileReader();
 			
-			StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+			AFPChain afpChain = ce.align(ca1, ca2);
+			afpChain.setName1(name);
+			afpChain.setName2(name+(mirrorSeq?" reversed":"")+(mirrorCoords?" mirrored":""));
+			
+			StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+			RotationAxis axis = new RotationAxis(afpChain);
+			jmol.evalString(axis.getJmolScript(ca1));
 
 		} catch (StructureException e) {
 			e.printStackTrace();

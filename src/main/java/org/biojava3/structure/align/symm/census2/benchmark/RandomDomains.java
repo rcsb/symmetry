@@ -27,9 +27,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
@@ -48,14 +47,9 @@ import org.biojava.bio.structure.scop.ScopNode;
  */
 public class RandomDomains {
 
-	static final Logger logger = Logger.getLogger(RandomDomains.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(RandomDomains.class.getName());
 
 	private List<ScopDomain> domains;
-
-	static {
-		BasicConfigurator.configure();
-		logger.setLevel(Level.DEBUG);
-	}
 
 	/**
 	 * Generates some random Berkeley SCOP domains from the distribution of superfamilies.

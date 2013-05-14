@@ -1,3 +1,25 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ * Created on 2013-02-22
+ *
+ */
 package org.biojava3.structure.align.symm.census2.benchmark;
 
 import java.io.File;
@@ -5,23 +27,20 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
+/**
+ * 
+ * @author dmyerstu
+ */
 public class AccuracyFinder {
 
-	static final Logger logger = Logger.getLogger(Case.class.getPackage().getName());
-
-	static {
-		BasicConfigurator.configure();
-		logger.setLevel(Level.DEBUG);
-	}
+	private static final Logger logger = LogManager.getLogger(AccuracyFinder.class.getName());
 
 	public static void main(String[] args) throws IOException {
 		AccuracyFinder finder = new AccuracyFinder(new File(args[0]));
@@ -52,11 +71,30 @@ public class AccuracyFinder {
 	private int fn = 0;
 	private int fp = 0;
 	private int tn = 0;
-	
+
 	private static Significance sig;
+	private static Significance symDSig;
 	static {
+//		sig = new Significance() {
+//			private static final double cutoff = 0.4;
+//			@Override
+//			public boolean isPossiblySignificant(AFPChain afpChain) {
+//				return true; // whatever
+//			}
+//
+//			@Override
+//			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+//				return true; // whatever
+//			}
+//
+//			@Override
+//			public boolean isSignificant(Result result) {
+//				if (result.getAlignment() == null) return false;
+//				return result.getAlignment().getTmScore() >= cutoff;
+//			}
+//		};
 		sig = new Significance() {
-			private static final double cutoff = 0.55;
+			private static final double cutoff = 10;
 			@Override
 			public boolean isPossiblySignificant(AFPChain afpChain) {
 				return true; // whatever
@@ -69,8 +107,8 @@ public class AccuracyFinder {
 
 			@Override
 			public boolean isSignificant(Result result) {
-				if (result.getOrder() == null || result.getAlignment() == null || result.getAxis() == null) return false;
-				return result.getAlignment().getTmScore() >= cutoff && result.getOrder() > 1;
+				if (result.getAlignment() == null) return false;
+				return result.getAlignment().getzScore() >= cutoff;
 			}
 		};
 	}

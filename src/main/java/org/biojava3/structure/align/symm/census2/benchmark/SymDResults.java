@@ -44,9 +44,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
@@ -70,8 +69,9 @@ public class SymDResults extends Results {
 
 	private static JAXBContext jaxbContext;
 
+	private static final Logger logger = LogManager.getLogger(SymDResults.class.getName());
+
 	private static final long serialVersionUID = -6877332751979209323L;
-	static final Logger logger = Logger.getLogger(SymDResults.class.getPackage().getName());
 
 	static {
 		try {
@@ -79,11 +79,6 @@ public class SymDResults extends Results {
 		} catch (Exception e) {
 			throw new RuntimeException(e); // fatal
 		}
-	}
-
-	static {
-		BasicConfigurator.configure();
-		logger.setLevel(Level.DEBUG);
 	}
 
 	/**

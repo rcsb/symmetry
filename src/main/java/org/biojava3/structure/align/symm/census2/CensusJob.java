@@ -25,7 +25,8 @@ package org.biojava3.structure.align.symm.census2;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
@@ -53,7 +54,7 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  */
 public class CensusJob implements Callable<Result> {
 
-	static final Logger logger = Census.logger;
+	private static final Logger logger = LogManager.getLogger(CensusJob.class.getPackage().getName());
 
 	private AlgorithmGiver algorithm;
 

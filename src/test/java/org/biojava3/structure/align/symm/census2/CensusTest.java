@@ -1,24 +1,18 @@
 package org.biojava3.structure.align.symm.census2;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.StructureAlignment;
-import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.protodomain.ResourceList;
 import org.biojava3.structure.align.symm.protodomain.ResourceList.NameProvider;
 import org.junit.Before;
@@ -68,15 +62,14 @@ public class CensusTest {
 	 */
 	@Test
 	public void testBasic() throws IOException {
-		final String actual = "census2/actualresult1.xml";
+		File actualFile = File.createTempFile("actualresult1", "xml");
 		Census census = new TinyCensus();
-		File file = ResourceList.get().openFile(actual);
 		census.setCache(ResourceList.get().getCache());
-		census.setOutputWriter(file);
+		census.setOutputWriter(actualFile);
 		census.run();
 		// unfortunately, the timestamp will be different
 		String[] expectedLines = expectedResult.split("\n");
-		BufferedReader br = ResourceList.get().openReader("census2/actualresult1.xml");
+		BufferedReader br = new BufferedReader(new FileReader(actualFile));
 		String line = "";
 		int i = 0;
 		while ((line = br.readLine()) != null) {
@@ -86,17 +79,17 @@ public class CensusTest {
 			i++;
 		}
 		br.close();
-		new File(actual).delete();
+		actualFile.delete();
 	}
 
 	@Test
 	public void testWithPartialResult() {
-		
+		// TODO
 	}
 	
 	@Test
 	public void testHard() {
-		
+		// TODO
 	}
 
 }

@@ -32,8 +32,8 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.census2.NamesCensus;
 
@@ -43,16 +43,12 @@ import org.biojava3.structure.align.symm.census2.NamesCensus;
  */
 public class GradientSampler {
 
+	private static final Logger logger = LogManager.getLogger(GradientSampler.class.getName());
+
 	private double[][] gradients;
 
 	private double[] tp;
 	private double[] fp;
-
-	static final Logger logger = Logger.getLogger(GradientSampler.class.getName());
-
-	static {
-		BasicConfigurator.configure();
-	}
 
 	public GradientSampler(double[][] gradients) {
 		this.gradients = gradients;

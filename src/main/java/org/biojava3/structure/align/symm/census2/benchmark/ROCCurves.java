@@ -35,9 +35,8 @@ import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -52,21 +51,17 @@ import org.jfree.data.xy.XYSeriesCollection;
  */
 public class ROCCurves {
 
+	private static final Logger logger = LogManager.getLogger(ROCCurves.class.getName());
+
 	private static final int DEFAULT_HEIGHT = 1600;
 
 	private static final int DEFAULT_WIDTH = 1600;
-
-	static final Logger logger = Logger.getLogger(ROCCurves.class.getPackage().getName());
 
 	private List<Criterion> criteria;
 
 	private XYSeriesCollection dataset;
 
 	private Sample sample;
-	static {
-		BasicConfigurator.configure();
-		logger.setLevel(Level.DEBUG);
-	}
 
 	/**
 	 * 

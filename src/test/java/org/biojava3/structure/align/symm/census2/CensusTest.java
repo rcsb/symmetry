@@ -1,10 +1,8 @@
 package org.biojava3.structure.align.symm.census2;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +12,9 @@ import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.protodomain.ResourceList;
+import org.biojava3.structure.align.symm.protodomain.ResourceList.ElementTextIgnoringDifferenceListener;
 import org.biojava3.structure.align.symm.protodomain.ResourceList.NameProvider;
+import org.custommonkey.xmlunit.DifferenceListener;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,16 +44,11 @@ public class CensusTest {
 
 	private static String[] domains = new String[] { "d2c35e1" };
 	
-	private static String expectedResult;
-
 	@Before
 	public void setUp() throws StructureException {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
-		expectedResult = ResourceList.get().openFileAsString("census2/expected1.xml");
-		
-		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);		
+		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
 		ScopFactory.setScopDatabase(scop); 
-		
 	}
 
 	/**
@@ -68,18 +63,10 @@ public class CensusTest {
 		census.setOutputWriter(actualFile);
 		census.run();
 		// unfortunately, the timestamp will be different
-		String[] expectedLines = expectedResult.split("\n");
-		BufferedReader br = new BufferedReader(new FileReader(actualFile));
-		String line = "";
-		int i = 0;
-		while ((line = br.readLine()) != null) {
-			if (!line.contains("<timestamp>")) {
-				assertEquals(expectedLines[i], line);
-			}
-			i++;
-		}
-		br.close();
-		actualFile.delete();
+		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp");
+		File expectedFile = ResourceList.get().openFile("census2/expected1.xml");
+		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
+		assertTrue(similar);
 	}
 
 	@Test

@@ -26,15 +26,18 @@ public class CensusTest {
 
 	class TinyCensus extends Census {
 
-		public TinyCensus() {
+		private String[] domains;
+		
+		public TinyCensus(String... domains) {
 			super(1); // 1 core only to ensure the results return in the expected order
+			this.domains = domains;
 		}
 
 		@Override
 		protected List<ScopDomain> getDomains() {
 			List<ScopDomain> domains = new ArrayList<ScopDomain>();
 			ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
-			for (String domain : CensusTest.domains) {
+			for (String domain : this.domains) {
 				domains.add(scop.getDomainByScopID(domain));
 			}
 			return domains;
@@ -42,8 +45,6 @@ public class CensusTest {
 
 	}
 
-	private static String[] domains = new String[] { "d2c35e1" };
-	
 	@Before
 	public void setUp() throws StructureException {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
@@ -58,7 +59,7 @@ public class CensusTest {
 	@Test
 	public void testBasic() throws IOException {
 		File actualFile = File.createTempFile("actualresult1", "xml");
-		Census census = new TinyCensus();
+		Census census = new TinyCensus("d2c35e1");
 		census.setCache(ResourceList.get().getCache());
 		census.setOutputWriter(actualFile);
 		census.run();

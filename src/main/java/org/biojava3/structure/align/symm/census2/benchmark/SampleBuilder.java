@@ -53,8 +53,8 @@ public class SampleBuilder {
 		BufferedReader br = new BufferedReader(new FileReader(knownInfoFile));
 		String line = "";
 		while ((line = br.readLine()) != null) {
-			String[] parts = line.split("\t");
-			KnownInfo info = new KnownInfo(parts[2], Integer.parseInt(parts[1]));
+			String[] parts = line.split("\t"); // domain tab group
+			KnownInfo info = new KnownInfo(parts[1]);
 			map.put(parts[0], info);
 		}
 		br.close();

@@ -23,64 +23,126 @@
 package org.biojava3.structure.align.symm.census2.benchmark;
 
 import java.io.Serializable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A known (true) group and order of symmetry.
+ * 
  * @author dmyerstu
  */
 public class KnownInfo implements Serializable, Comparable<KnownInfo> {
 	private static final long serialVersionUID = -2667699023747790086L;
 	private String group;
-	private int order;
+
+	public KnownInfo() {
+
+	}
+
+	public KnownInfo(String group) {
+		super();
+		this.group = group;
+	}
+
+	@Override
+	public int compareTo(KnownInfo o) {
+		if (equals(o))
+			return 0;
+		if (getOrder() < o.getOrder())
+			return -1;
+		if (getOrder() > o.getOrder())
+			return 1;
+		return group.compareTo(o.getGroup());
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		KnownInfo other = (KnownInfo) obj;
+		if (group == null) {
+			if (other.group != null)
+				return false;
+		} else if (!group.equals(other.group))
+			return false;
+		return true;
+	}
+
 	public String getGroup() {
 		return group;
 	}
+
 	public int getOrder() {
+		int order = 1;
+		Pattern pattern = Pattern.compile("([\\d])$");
+		Matcher matcher = pattern.matcher(group);
+		boolean found = matcher.find();
+		if (found && matcher.groupCount() == 1) {
+			order = Integer.parseInt(matcher.group(1));
+		}
 		return order;
 	}
-	public KnownInfo(String group, int order) {
-		super();
-		this.group = group;
-		this.order = order;
+
+	/**
+	 * @return Whether this info has dihedral symmetry.
+	 */
+	public boolean hasDihedralSymmetry() {
+		return !isAsymmetric() && group.contains("D");
 	}
-	public KnownInfo() {
-		
-	}
-	
-	public void setGroup(String group) {
-		this.group = group;
-	}
-	public void setOrder(int order) {
-		this.order = order;
-	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((group == null) ? 0 : group.hashCode());
+		result = prime * result + (group == null ? 0 : group.hashCode());
 		return result;
 	}
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
-		KnownInfo other = (KnownInfo) obj;
-		if (group == null) {
-			if (other.group != null) return false;
-		} else if (!group.equals(other.group)) return false;
-		return true;
+
+	/**
+	 * @return Whether this info <em>has helical but not</em> rotational symmetry.
+	 */
+	public boolean hasHelicalSymmetry() {
+		return !isAsymmetric() && group.contains("H");
 	}
-	
+
+	/**
+	 * @return Whether this info has rotational symmetry and its order of symmetry is an odd number.
+	 */
+	public boolean hasOddOrderSymmetry() {
+		return hasRotationalSymmetry() && getOrder() % 2 == 1;
+	}
+
+	/**
+	 * @return Whether this info has true rotational symmetry.
+	 */
+	public boolean hasRotationalSymmetry() {
+		return !isAsymmetric() && group.contains("C") || group.contains("D");
+	}
+
+	/**
+	 * @return Whether this info <em>has translational but not</em> rotational symmetry.
+	 */
+	public boolean hasTranslationalSymmetry() {
+		return !isAsymmetric() && group.contains("R");
+	}
+
+	/**
+	 * @return Whether this info has no symmetry of any kind.
+	 */
+	public boolean isAsymmetric() {
+		return group.equals("C1");
+	}
+
+	public void setGroup(String group) {
+		this.group = group;
+	}
+
 	@Override
 	public String toString() {
-		return "KnownInfo [group=" + group + ", order=" + order + "]";
-	}
-	@Override
-	public int compareTo(KnownInfo o) {
-		if (equals(o)) return 0;
-		if (order < o.getOrder()) return -1;
-		if (order > o.getOrder()) return 1;
-		return group.compareTo(o.getGroup());
+		return group;
 	}
 }

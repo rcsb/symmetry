@@ -60,6 +60,10 @@ public class RandomDomains {
 	 *            </ol>
 	 */
 	public static void main(String[] args) {
+		if (args.length != 2) {
+			System.err.println("Usage: RandomDomains pdb-dir number-of-domains");
+			return;
+		}
 		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR, args[0]);
 		ScopDatabase scop = ScopFactory.getSCOP();
 		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
@@ -93,6 +97,9 @@ public class RandomDomains {
 		RandomDomains names = new RandomDomains(number);
 		AtomCache cache = new AtomCache();
 		StringBuilder sb = new StringBuilder();
+		for (ScopDomain domain : names.domains) {
+			sb.append(domain.getScopId() + "\n");
+		}
 		for (ScopDomain domain : names.domains) {
 			String description = "";
 			try {

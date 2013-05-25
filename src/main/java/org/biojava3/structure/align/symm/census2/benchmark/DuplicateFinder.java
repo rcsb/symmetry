@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.biojava.bio.structure.scop.ScopCategory;
@@ -59,9 +60,10 @@ public class DuplicateFinder {
 		BufferedReader br = new BufferedReader(new FileReader(file));
 		String line = "";
 		while ((line = br.readLine()) != null) {
-			names.add(line);
+			if (!line.trim().equals("")) names.add(line);
 		}
 		br.close();
+		Collections.reverse(names);
 		return names;
 	}
 

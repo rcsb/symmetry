@@ -32,14 +32,32 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
+import org.biojava3.structure.quaternary.core.AxisTransformation;
+import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
+import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
+import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 
 public class DemoOrientBioAssembly {
 	
 	public static void main(String[] args){
 
 		//String[] pdbIDs = new String[]{"4INU", "4D8s","4EAR","4IYQ","3ZKR",};
-		String[] pdbIDs = new String[]{"1a0s",};
+		String[] pdbIDs = new String[]{"4F88",};
+		
+		/*
+			 2WPD has 2 local symmetries. I’ve attached my presentation from last week.
+			 
+			 
+			Other examples with a single local symmetry are:
+			4F88 – local C8
+			1LTI – local C5
+			2W6E – local C3
+			2LXC – local C2
+			3OE7 – local C3
+			
+		*/
+		
 		for ( String pdbID : pdbIDs){
 			runPDB(pdbID);
 		}
@@ -92,16 +110,45 @@ public class DemoOrientBioAssembly {
 		
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
 
-		boolean hasProtein = calc.orient();
+		QuatSymmetryDetector detector = calc.orient();
+		
+		boolean hasProtein = detector.hasProteinSubunits();
 
 		if (hasProtein) {
-			String jmolScript = calc.getScriptGenerator().playOrientations();
+			
 
 			String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
 					"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
 					"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
 
+			String jmolScript = "";
+			if ( detector.getLocalSymmetry().size() > 0){
+				int count = 0;
+				for (QuatSymmetryResults localSymmetry: detector.getLocalSymmetry()) {
+					AxisTransformation at = new AxisTransformation(localSymmetry);
+					System.out.println();
+					System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
+					System.out.println("Stoichiometry       : " + localSymmetry.getSubunits().getStoichiometry());
+					System.out.println("Pseudostoichiometry : " + localSymmetry.getSubunits().isPseudoStiochiometric());
+					System.out.println("Point group         : " + localSymmetry.getRotationGroup().getPointGroup());				
+					System.out.println("Symmetry RMSD       : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
+					System.out.println();
+					JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGenerator.getInstance(at, "l"+count);
+					if (count == 0) {
+						script +=  gen.getDefaultOrientation();
+					}
+					script +=  gen.drawPolyhedron();
+					script += gen.drawAxes();
+					script +=  gen.colorBySymmetry();
 
+					count++;
+				}
+				script += "draw poly* on; draw axes* on;";
+			} else {
+				jmolScript = calc.getScriptGenerator().playOrientations();
+			}
+			
+			
 			StructureAlignmentJmol jmol = new StructureAlignmentJmol();
 			jmol.setStructure(s);
 
@@ -109,9 +156,12 @@ public class DemoOrientBioAssembly {
 			jmol.setTitle(title);
 			jmol.evalString(script);
 			jmol.evalString(jmolScript);
-
+			
+			
+			
+			
 			// items for database:
-
+			/*
 			System.out.println("=================");
 			System.out.println(title );
 			System.out.println("=================");
@@ -146,7 +196,7 @@ public class DemoOrientBioAssembly {
 				System.out.println("Orientation name " + i + "       : " + calc.getScriptGenerator().getOrientationName(i));
 				System.out.println("Orientation " + i + "            : " + calc.getScriptGenerator().getOrientation(i));
 			}
-
+	*/
 			System.out.println("=================");
 			return calc.getSubunits().isPseudoStiochiometric();
 		} else {

@@ -41,6 +41,7 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
+import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 
 public class TestLoadingManyStoichs {
@@ -125,8 +126,8 @@ public class TestLoadingManyStoichs {
 
 		parameters.setSequenceIdentityThreshold(threshold);
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
-
-		boolean hasProtein = calc.orient();
+		QuatSymmetryDetector detector = calc.orient();
+		boolean hasProtein = detector.hasProteinSubunits();
 
 		String symmetry = null;
 		if ( hasProtein) {

@@ -499,6 +499,7 @@ public class Protodomain {
 			final String chainId = domainRange.substring(0, 1);
 
 			// a range is of the form: A:05-117 (chain:start-end) OR just A:
+			// 
 			ResidueNumber domainStartR, domainEndR;
 			int domainStart, domainEnd;
 			if (domainRange.length() > 2) {
@@ -514,7 +515,7 @@ public class Protodomain {
 				domainStartR = map.getFirst(chainId);
 				domainEndR = map.getLast(chainId);
 			}
-
+		
 			// these are the insertion-code-independent positions
 			Integer domainStartO = map.getPosition(domainStartR);
 			if (domainStartO == null) throw new ProtodomainCreationException("unknown", scopId,

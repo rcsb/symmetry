@@ -8,33 +8,17 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 
-import javax.vecmath.AxisAngle4d;
-import javax.vecmath.Matrix4d;
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
-
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.AtomImpl;
-import org.biojava.bio.structure.Chain;
-import org.biojava.bio.structure.ChainImpl;
-import org.biojava.bio.structure.Element;
-import org.biojava.bio.structure.Group;
-import org.biojava.bio.structure.HetatomImpl;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureImpl;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.io.PDBParseException;
 import org.biojava3.structure.dbscan.GetRepresentatives;
 import org.biojava3.structure.quaternary.core.AxisTransformation;
-import org.biojava3.structure.quaternary.core.FindQuarternarySymmetry;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
-import org.biojava3.structure.quaternary.core.QuatSymmetryWriter;
-import org.biojava3.structure.quaternary.core.Rotation;
+import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
+import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.RotationGroup;
 import org.biojava3.structure.quaternary.core.Subunits;
-import org.biojava3.structure.quaternary.geometry.MomentsOfInertia;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 
 public class ScanSymmetry implements Runnable {
@@ -175,7 +159,6 @@ public class ScanSymmetry implements Runnable {
 				QuatSymmetryParameters params = new QuatSymmetryParameters();
 				params.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
 				
-				FindQuarternarySymmetry finder = null;
 				List<String> chainIds = null;
 				String pointGroup = null;
 				String formula = null;
@@ -190,36 +173,38 @@ public class ScanSymmetry implements Runnable {
 				float rz = 0;
 				String jmolTransform = "";
 				
+				QuatSymmetryDetector workflow = null;
 				try {
-					finder = new FindQuarternarySymmetry(structure, params);
-
-					if (finder.getChainCount() == 0) {
+					workflow = new QuatSymmetryDetector(structure, params);
+					if (! workflow.hasProteinSubunits()) {
 						continue;
 					}
-					RotationGroup rotationGroup = finder.getRotationGroup();	
+					QuatSymmetryResults results = workflow.getGlobalSymmetry();
+
+					RotationGroup rotationGroup = results.getRotationGroup();	
 					pointGroup = rotationGroup.getPointGroup();
 					System.out.println("Point group: " + pointGroup);
 
-					formula = finder.getCompositionFormula();
+					formula = results.getSubunits().getStoichiometry();
 					System.out.println("Formula: " + formula);
 
 
 					// get metrics
-					caCount = finder.getSubunits().getCalphaCount();
+					caCount = results.getSubunits().getCalphaCount();
 					groupComplete = rotationGroup.isComplete();
 					rmsd = (float) rotationGroup.getAverageSubunitRmsd();
 					rmsdT = (float) rotationGroup.getAverageTraceRmsd();
 
 					order = rotationGroup.getOrder();
 
-					Subunits subunits = finder.getSubunits();
-					chainIds = finder.getChainIds();
+					Subunits subunits = results.getSubunits();
+					chainIds = results.getSubunits().getChainIds();
 					chainCount = subunits.getCenters().size();
-					AxisTransformation at = new AxisTransformation(subunits, rotationGroup);
+					AxisTransformation at = new AxisTransformation(results);
 					rx = (float) at.getDimension().x;
 					ry = (float) at.getDimension().y;
 					rz = (float) at.getDimension().z;
-					JmolSymmetryScriptGenerator g = JmolSymmetryScriptGenerator.getInstance(at);
+					JmolSymmetryScriptGenerator g = JmolSymmetryScriptGenerator.getInstance(at,"g");
 					jmolTransform = g.getDefaultOrientation();
 				} catch (Exception e) {
 					e.printStackTrace();

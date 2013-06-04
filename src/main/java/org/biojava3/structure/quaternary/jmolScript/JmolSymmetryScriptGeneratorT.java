@@ -13,8 +13,8 @@ import org.biojava3.structure.quaternary.geometry.Tetrahedron;
  */
 public class JmolSymmetryScriptGeneratorT extends JmolSymmetryScriptGenerator {
 
-	public JmolSymmetryScriptGeneratorT(AxisTransformation axisTransformation) {
-		super(axisTransformation);
+	public JmolSymmetryScriptGeneratorT(AxisTransformation axisTransformation, String name) {
+		super(axisTransformation, name);
 		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getXYRadius());
 		Tetrahedron t = new Tetrahedron();
 		t.setMidRadius(radius);

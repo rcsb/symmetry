@@ -13,8 +13,8 @@ import org.biojava3.structure.quaternary.geometry.RectangularPrism;
  */
 public class JmolSymmetryScriptGeneratorC1 extends JmolSymmetryScriptGenerator {
 
-	public JmolSymmetryScriptGeneratorC1(AxisTransformation axisTransformation) {
-		super(axisTransformation);
+	public JmolSymmetryScriptGeneratorC1(AxisTransformation axisTransformation, String name) {
+		super(axisTransformation, name);
 		setPolyhedron(new RectangularPrism(axisTransformation.getDimension().z*2, axisTransformation.getDimension().x*2, axisTransformation.getDimension().y*2));
 	}
 	

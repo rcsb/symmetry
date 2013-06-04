@@ -111,13 +111,13 @@ public final class SuperPosition {
         	axisAngle.z = axis.z;
         }
         transform(rotTrans, x);
-		System.out.println("SuperPosition.superposeAtOrigin: rotTrans");
-		System.out.println(rotTrans);
-        Matrix4d temp = new Matrix4d();
-        temp.setIdentity();
-        temp.set(axisAngle);
-        System.out.println("SuperPosition.superposeAtOrigin: from axisAngle");
-		System.out.println(temp);
+//		System.out.println("SuperPosition.superposeAtOrigin: rotTrans");
+//		System.out.println(rotTrans);
+//        Matrix4d temp = new Matrix4d();
+//        temp.setIdentity();
+//        temp.set(axisAngle);
+//        System.out.println("SuperPosition.superposeAtOrigin: from axisAngle");
+//		System.out.println(temp);
         return rotTrans;
     }
     
@@ -218,7 +218,7 @@ public final class SuperPosition {
         Quat4d q = new Quat4d(v[1][3], v[2][3], v[3][3], v[0][3]);
         q.normalize();
         q.conjugate();
-        System.out.println("SuperPosition.quaternionOrientation: " + q);
+ //       System.out.println("SuperPosition.quaternionOrientation: " + q);
         return q;
     }
     

@@ -40,6 +40,7 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
+import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 
 import junit.framework.TestCase;
 
@@ -153,16 +154,14 @@ extends TestCase{
 
 
 	private static String getStoichiometry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
+		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
+		parameters.setVerbose(false);
+        parameters.setSequenceIdentityThreshold(threshold);
 
-		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
-		calc.getParams().setVerbose(false);
-		calc.setBioAssembly(s);
-
-		calc.getParams().setSequenceIdentityThreshold(threshold);
-
+		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
 		boolean hasProtein = calc.orient();
 
-		return calc.getFinder().getCompositionFormula();
+		return calc.getSubunits().getStoichiometry();
 	}
 
 	private Structure getStructureFromIO(String pdbID, int biolAssemblyNr) throws IOException, StructureException {

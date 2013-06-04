@@ -14,8 +14,8 @@ import org.biojava3.structure.quaternary.geometry.RectangularPrism;
  */
 public class JmolSymmetryScriptGeneratorCn extends JmolSymmetryScriptGenerator {
 
-	public JmolSymmetryScriptGeneratorCn(AxisTransformation axisTransformation) {
-		super(axisTransformation);
+	public JmolSymmetryScriptGeneratorCn(AxisTransformation axisTransformation, String name) {
+		super(axisTransformation, name);
 		if (axisTransformation.getRotationGroup().getPointGroup().equals("C2")) {
 			setPolyhedron(new RectangularPrism(axisTransformation.getDimension().z*2, axisTransformation.getDimension().x*2, axisTransformation.getDimension().y*2));
 		} else {

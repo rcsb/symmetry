@@ -28,141 +28,109 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.ResourceManager;
 
 import org.biojava3.structure.quaternary.core.AxisTransformation;
-import org.biojava3.structure.quaternary.core.FindQuarternarySymmetry;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
+import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
+import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.RotationGroup;
+import org.biojava3.structure.quaternary.core.Subunits;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 
 public class CalcBioAssemblySymmetry {
-	Structure bioAssembly;
-	QuatSymmetryParameters params = new QuatSymmetryParameters();
-	
-	FindQuarternarySymmetry finder;
-	RotationGroup rotationGroup;
-	AxisTransformation axisTransformation;
+	private Structure bioAssembly;
+	private QuatSymmetryParameters parameters;
+	private QuatSymmetryResults globalSymmetry;
+	private AxisTransformation axisTransformation;
+
 	private JmolSymmetryScriptGenerator scriptGenerator;
 	
-	
-	//public static String version = "0.1.21";
-	
-	public CalcBioAssemblySymmetry(){
-	}
 	static public String version;
 	static public String build; 
-	
 	static {
 		try {
 			ResourceManager about = ResourceManager.getResourceManager("aboutplayground");
 
-			 version = about.getString("project_version");
-			 build   = about.getString("build");
-			
+			version = about.getString("project_version");
+			build   = about.getString("build");
+
 		} catch (Exception e){
 			e.printStackTrace();
 		}
-
-
 	}
 	
+	public CalcBioAssemblySymmetry(Structure bioAssembly, QuatSymmetryParameters parameters){
+		this.bioAssembly = bioAssembly;
+		this.parameters = parameters;
+	}
 	
 	public boolean orient(){
-		boolean hasProtein = false;
-		finder = new FindQuarternarySymmetry(bioAssembly, params);	
+		QuatSymmetryDetector detector = new QuatSymmetryDetector(bioAssembly, parameters);	
+		boolean hasProtein = detector.hasProteinSubunits();
 
-		rotationGroup = new RotationGroup();
-		if (finder.getChainCount() > 0) {
-			
-			rotationGroup = finder.getRotationGroup();
-			
-			if (params.isVerbose()) {
-				System.out.println("Results for " + Math.round(params.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
-				System.out.println("Stoichiometry  : " + finder.getCompositionFormula());
-				System.out.println("Point group    : " + rotationGroup.getPointGroup());	
-				System.out.println("Pseudosymmetric: " + finder.isPseudoSymmetric());	
-				System.out.println("Symmetry RMSD  : " + (float) rotationGroup.getAverageTraceRmsd());
+		if (hasProtein) {		
+			globalSymmetry = detector.getGlobalSymmetry();
+			if (parameters.isVerbose()) {
+				System.out.println();
+				System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
+				System.out.println();
+				System.out.println("Global symmetry:");
+				System.out.println("Stoichiometry       : " + globalSymmetry.getSubunits().getStoichiometry());
+				System.out.println("Pseudostoichiometry : " + globalSymmetry.getSubunits().isPseudoStiochiometric());
+				System.out.println("Point group         : " + globalSymmetry.getRotationGroup().getPointGroup());				
+				System.out.println("Symmetry RMSD       : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
 			}
 
-			axisTransformation = new AxisTransformation(finder.getSubunits(), rotationGroup);
+			axisTransformation = new AxisTransformation(globalSymmetry);
 
 			// use factory method to get point group specific instance of script generator
-			scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation);
+			scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation, "g");
 			hasProtein = true;
 			
 		} else {
-			System.out.println("No chains found for " + bioAssembly.getPDBCode() );
+			System.out.println("No protein chains found for " + bioAssembly.getPDBCode() );
+		}
+		
+		if (parameters.isVerbose() && detector.getLocalSymmetry().size() > 0) {
+			System.out.println();
+			System.out.println("Local symmetry: ");
+			int count = 0;
+			for (QuatSymmetryResults localSymmetry: detector.getLocalSymmetry()) {
+				AxisTransformation at = new AxisTransformation(localSymmetry);
+				System.out.println();
+				System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
+				System.out.println("Stoichiometry       : " + localSymmetry.getSubunits().getStoichiometry());
+				System.out.println("Pseudostoichiometry : " + localSymmetry.getSubunits().isPseudoStiochiometric());
+				System.out.println("Point group         : " + localSymmetry.getRotationGroup().getPointGroup());				
+				System.out.println("Symmetry RMSD       : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
+				System.out.println();
+				JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGenerator.getInstance(at, "l"+count);
+				if (count == 0) {
+					System.out.println(gen.getDefaultOrientation());
+				}
+				System.out.println(gen.drawPolyhedron());
+				System.out.println(gen.drawAxes());
+				System.out.println(gen.colorBySymmetry());
+
+				count++;
+			}
+			System.out.println("draw poly* on; draw axes* on;");
 		}
 		return hasProtein;
 	}
 	
-	public Structure getBioAssembly() {
-		return bioAssembly;
-	}
-
-
-	public void setBioAssembly(Structure bioAssembly) {
-		this.bioAssembly = bioAssembly;
-	}
-
-
-	public QuatSymmetryParameters getParams() {
-		return params;
-	}
-
-
-	public void setParams(QuatSymmetryParameters params) {
-		this.params = params;
-	}
-
-
-	public FindQuarternarySymmetry getFinder() {
-		return finder;
-	}
-
-
-	public void setFinder(FindQuarternarySymmetry finder) {
-		this.finder = finder;
-	}
-
 
 	public RotationGroup getRotationGroup() {
-		return rotationGroup;
+		return globalSymmetry.getRotationGroup();
 	}
 
-
-	public void setRotationGroup(RotationGroup rotationGroup) {
-		this.rotationGroup = rotationGroup;
+	public Subunits getSubunits() {
+		return globalSymmetry.getSubunits();
 	}
-
-
+	
 	public AxisTransformation getAxisTransformation() {
 		return axisTransformation;
 	}
 
-
-	public void setAxisTransformation(AxisTransformation axistTransformation) {
-		this.axisTransformation = axistTransformation;
-	}
-
-
 	public JmolSymmetryScriptGenerator getScriptGenerator() {
 		return scriptGenerator;
 	}
-
-
-	public void setScriptGenerator(JmolSymmetryScriptGenerator scriptGenerator) {
-		this.scriptGenerator = scriptGenerator;
-	}
-
-
-	public void destroy() {
-		// clean up all references so this can get garbage collected
-		bioAssembly = null;
-		finder = null;
-		rotationGroup = null;
-		axisTransformation = null;
-		
-	}
-	
-	
-	
 }

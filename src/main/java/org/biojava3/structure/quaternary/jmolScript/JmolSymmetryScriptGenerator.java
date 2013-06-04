@@ -41,11 +41,13 @@ public abstract class JmolSymmetryScriptGenerator {
 	private AxisTransformation axisTransformation = null;
 	private RotationGroup rotationGroup = null;
 	private Polyhedron polyhedron = null;
+	private String name = null;
 	
 	
-	public JmolSymmetryScriptGenerator(AxisTransformation axisTransformation) {
+	public JmolSymmetryScriptGenerator(AxisTransformation axisTransformation, String name) {
 		this.axisTransformation = axisTransformation;
 		this.rotationGroup = axisTransformation.getRotationGroup();
+		this.name = name;
 	}
 	
 	/**
@@ -54,20 +56,20 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @param rotationGroup
 	 * @return instance of JmolSymmetryScriptGenerator
 	 */
-	public static JmolSymmetryScriptGenerator getInstance(AxisTransformation axisTransformation) {
+	public static JmolSymmetryScriptGenerator getInstance(AxisTransformation axisTransformation,String name) {
 		String pointGroup = axisTransformation.getRotationGroup().getPointGroup();
 		if (pointGroup.equals("C1")) {
-			return new JmolSymmetryScriptGeneratorC1(axisTransformation);
+			return new JmolSymmetryScriptGeneratorC1(axisTransformation, name);
 		} else if (pointGroup.startsWith("C")) {
-			return new JmolSymmetryScriptGeneratorCn(axisTransformation);
+			return new JmolSymmetryScriptGeneratorCn(axisTransformation, name);
 		} else if (pointGroup.startsWith("D")) {
-			return new JmolSymmetryScriptGeneratorDn(axisTransformation);
+			return new JmolSymmetryScriptGeneratorDn(axisTransformation, name);
 		} else if (pointGroup.equals("T")) {
-			return new JmolSymmetryScriptGeneratorT(axisTransformation);
+			return new JmolSymmetryScriptGeneratorT(axisTransformation, name);
 		} else if (pointGroup.equals("O")) {
-			return new JmolSymmetryScriptGeneratorO(axisTransformation);
+			return new JmolSymmetryScriptGeneratorO(axisTransformation, name);
 		} else if (pointGroup.equals("I")) {
-			return new JmolSymmetryScriptGeneratorI(axisTransformation);
+			return new JmolSymmetryScriptGeneratorI(axisTransformation, name);
 		} 
 		
 		return null;
@@ -189,6 +191,7 @@ public abstract class JmolSymmetryScriptGenerator {
 
 		for (int[] lineLoop: polyhedron.getLineLoops()) {
 			s.append("draw polyhedron");
+			s.append(name);
 			s.append(index++);
 			s.append(" line");
 			for (int i: lineLoop) {
@@ -604,6 +607,7 @@ public abstract class JmolSymmetryScriptGenerator {
 
 		for (int i = 0; i < axes.length; i++) {
 			s.append("draw axesInertia");
+			s.append(name);
 			s.append(i);
 			s.append(" ");
 			s.append("line");
@@ -727,6 +731,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		StringBuilder s = new StringBuilder();
 		s.append("draw");
 		s.append(" axesSymmetry");
+		s.append(name);
 		s.append(i);
 		s.append(" cylinder");
 		s.append(getJmolPoint(p1));
@@ -751,23 +756,24 @@ public abstract class JmolSymmetryScriptGenerator {
 			double polygonRadius = getMeanExtension() * 0.06;
 			if (n == 2) {
 				referenceAxis = getAligmentVector(p1, axis);
-				s.append(getC2PolygonJmol(i, p1, referenceAxis, axis, color, polygonRadius));
+				s.append(getC2PolygonJmol(i, p1, referenceAxis, axis, color, polygonRadius, name));
 				referenceAxis = getAligmentVector(p2, axis);
-				s.append(getC2PolygonJmol(j, p2,  referenceAxis, axis, color, polygonRadius));
+				s.append(getC2PolygonJmol(j, p2,  referenceAxis, axis, color, polygonRadius, name));
 			} else if (n > 2) {
 				referenceAxis = getAligmentVector(p1, axis);
-				s.append(getPolygonJmol(i, p1, referenceAxis, axis, n, color, polygonRadius));
+				s.append(getPolygonJmol(i, p1, referenceAxis, axis, n, color, polygonRadius, name));
 				referenceAxis = getAligmentVector(p2, axis);
-				s.append(getPolygonJmol(j, p2, referenceAxis, axis, n, color, polygonRadius));
+				s.append(getPolygonJmol(j, p2, referenceAxis, axis, n, color, polygonRadius, name));
 			}
 		}
 
 		return s.toString();
 	}
 	
-	private static String getPolygonJmol(int index, Point3d center, Vector3d referenceAxis, Vector3d axis, int n, String color, double radius) {
+	private static String getPolygonJmol(int index, Point3d center, Vector3d referenceAxis, Vector3d axis, int n, String color, double radius, String name) {
 		StringBuilder s = new StringBuilder();
 		s.append("draw axesSymbol");
+		s.append(name);
 		s.append(index);
 		s.append(" ");
 		s.append("polygon");
@@ -829,10 +835,11 @@ public abstract class JmolSymmetryScriptGenerator {
 		return vectors;
 	}
 	
-	private static String getC2PolygonJmol(int index, Point3d center, Vector3d referenceAxis, Vector3d axis, String color, double radius) {
+	private static String getC2PolygonJmol(int index, Point3d center, Vector3d referenceAxis, Vector3d axis, String color, double radius, String name) {
 		StringBuilder s = new StringBuilder();
 		int n = 10;
 		s.append("draw axesSymbol");
+		s.append(name);
 		s.append(index);
 		s.append(" ");
 		s.append("polygon");

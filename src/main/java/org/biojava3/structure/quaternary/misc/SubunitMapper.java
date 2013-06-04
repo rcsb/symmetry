@@ -22,7 +22,6 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.quaternary.core.ChainClusterer;
-import org.biojava3.structure.quaternary.core.FindQuarternarySymmetry;
 import org.biojava3.structure.quaternary.core.PermutationGenerator;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.RotationGroup;

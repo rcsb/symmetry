@@ -32,6 +32,7 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
+import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 
 public class DemoOrientBioAssembly {
 	
@@ -85,12 +86,11 @@ public class DemoOrientBioAssembly {
 	}
 	
 	private static boolean analyzeSymmetry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
-
-		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
-		calc.getParams().setVerbose(false);
-		calc.setBioAssembly(s);
-
-		calc.getParams().setSequenceIdentityThreshold(threshold);
+		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
+		parameters.setVerbose(false);
+		parameters.setSequenceIdentityThreshold(threshold);
+		
+		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
 
 		boolean hasProtein = calc.orient();
 
@@ -105,31 +105,27 @@ public class DemoOrientBioAssembly {
 			StructureAlignmentJmol jmol = new StructureAlignmentJmol();
 			jmol.setStructure(s);
 
-			String title = "Symmetry results for " + pdbID + " bio assembly: " + biolAssemblyNr + " seq cutoff:" + calc.getParams().getSequenceIdentityThreshold();
+			String title = "Symmetry results for " + pdbID + " bio assembly: " + biolAssemblyNr + " seq cutoff:" + parameters.getSequenceIdentityThreshold();
 			jmol.setTitle(title);
-
-
 			jmol.evalString(script);
-
-
 			jmol.evalString(jmolScript);
-
 
 			// items for database:
 
 			System.out.println("=================");
 			System.out.println(title );
 			System.out.println("=================");
-			System.out.println("Sequence ID   : " + calc.getParams().getSequenceIdentityThreshold() );
-			System.out.println("Stoichiometry : " + calc.getFinder().getCompositionFormula());
-			System.out.println("Point Group   : " + calc.getRotationGroup().getPointGroup()	);
-			System.out.println("Pseudosymmetry: " + calc.getFinder().isPseudoSymmetric());
-			System.out.println("Symmetry RMSD : " + String.format("%.2f",calc.getRotationGroup().getAverageTraceRmsd()));
+			System.out.println("Sequence ID        : " + parameters.getSequenceIdentityThreshold() );
+			System.out.println("Stoichiometry      : " + calc.getSubunits().getStoichiometry());
+			System.out.println("Pseudostoichiometry: " + calc.getSubunits().isPseudoStiochiometric());
+			System.out.println("Point Group        : " + calc.getRotationGroup().getPointGroup());
 
-			System.out.println("Transf. matrix: " + calc.getAxisTransformation().getTransformation());
-			System.out.println("Geomet. tansf : " + calc.getAxisTransformation().getGeometicCenterTransformation());
-			System.out.println("Dimension                : " + calc.getAxisTransformation().getDimension());
-			System.out.println("Subunit count            : " + calc.getFinder().getChainCount());
+			System.out.println("Symmetry RMSD      : " + String.format("%.2f",calc.getRotationGroup().getAverageTraceRmsd()));
+
+			System.out.println("Transf. matrix     : " + calc.getAxisTransformation().getTransformation());
+			System.out.println("Geomet. tansf      : " + calc.getAxisTransformation().getGeometicCenterTransformation());
+			System.out.println("Dimension          : " + calc.getAxisTransformation().getDimension());
+			System.out.println("Subunit count      : " + calc.getSubunits().getSubunitCount());
 
 			System.out.println("Color by subunit         : " + calc.getScriptGenerator().colorBySubunit());
 			System.out.println("Color by subunit length  : " + calc.getScriptGenerator().colorBySubunit().length());
@@ -152,7 +148,7 @@ public class DemoOrientBioAssembly {
 			}
 
 			System.out.println("=================");
-			return calc.getFinder().isPseudoSymmetric();
+			return calc.getSubunits().isPseudoStiochiometric();
 		} else {
 			System.out.println("No protein chains found");
 			return false;

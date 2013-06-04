@@ -1,7 +1,10 @@
-package org.biojava3.structure.quaternary.misc;
+package org.biojava3.structure.utils;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.biojava3.structure.quaternary.utils.Edge;
+import org.biojava3.structure.quaternary.utils.Graph;
 
 /**
  *
@@ -152,5 +155,20 @@ public class SimpleGraph<V> implements Graph<V>, Cloneable {
         } else {
             return true;
         }
+    }
+    
+    public SimpleGraph<V> extractSubGraph(List<Integer> indices) {
+    	SimpleGraph<V> graph = new SimpleGraph<V>();
+    	for (int index: indices) {
+    		V vertex = vertices.get(index);
+    		graph.addVertex(vertex);
+    		List<Integer> neighbors = getNeighborIndices(index);
+    		for (int n: neighbors) {
+    			if (indices.contains(n)) {
+    				graph.addEdge(vertex, vertices.get(n));
+    			}
+    		}
+    	}
+    	return graph;
     }
 }

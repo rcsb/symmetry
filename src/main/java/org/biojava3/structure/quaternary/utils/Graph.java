@@ -1,6 +1,7 @@
-package org.biojava3.structure.quaternary.misc;
+package org.biojava3.structure.quaternary.utils;
 
 import java.util.List;
+
 
 /**
  *
@@ -40,6 +41,7 @@ public interface Graph<V> {
     
     public boolean removeEdge(V vertex1, V vertex2);
     
-//       public List<V> getVerticesOf(V vertex);
+    public Graph<V> extractSubGraph(List<Integer> indices);
+    
     public Object clone();
 }

@@ -1,4 +1,4 @@
-package org.biojava3.structure.quaternary.misc;
+package org.biojava3.structure.quaternary.utils;
 
 /**
  *

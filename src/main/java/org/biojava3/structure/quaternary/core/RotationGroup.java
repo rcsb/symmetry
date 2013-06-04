@@ -27,21 +27,6 @@ public class RotationGroup {
 	private boolean complete = true;
 	private boolean modified = true;
 
-
-
-	private boolean debug = false;
-
-
-
-
-	public boolean isDebug() {
-		return debug;
-	}
-
-	public void setDebug(boolean debug) {
-		this.debug = debug;
-	}
-
 	public int getOrder() {
 		return rotations.size();
 	}
@@ -79,16 +64,6 @@ public class RotationGroup {
 	}
 
 	public void complete() {
-
-		if ( debug){
-			System.out.println("RotationGroup.complete(): modified:" + modified + " rotations.size() " + rotations.size());
-			int rot = -1;
-			for ( Rotation r : rotations) {
-				rot++;
-				System.out.println("RotationGroup: rotation:" + rot + ": " + r.toString());
-			}
-		}
-
 		if (modified) {
 
 
@@ -106,11 +81,6 @@ public class RotationGroup {
 	}
 
 	public String getPointGroup() {
-
-		if ( debug){
-			System.out.println("RotationGroup.getPointGroup() modified: " + modified + " rotations.size() " + rotations.size());
-		}
-
 		if (modified) {
 			if (rotations.size() == 0) {
 				return "C1";
@@ -169,16 +139,6 @@ public class RotationGroup {
 		principalAxisIndex = 0;
 		double rmsd  = Double.MAX_VALUE;
 
-
-		if ( debug ) {
-			int rot = -1;
-			for ( Rotation r : rotations) {
-				rot++;
-				System.out.println("RotationGroup.findHighestOrderAxis() rotation:" + rot + ": " + r.toString());
-			}
-		}
-
-
 		for (int i = 0; i < rotations.size(); i++) {
 			Rotation s = rotations.get(i);
 			if (s.getFold() > highestOrder) {
@@ -190,10 +150,6 @@ public class RotationGroup {
 				principalAxisIndex = i;
 				rmsd = s.getTraceRmsd();
 			}
-		}
-
-		if ( debug) {
-			System.out.println("RotationGroup.findHighestOrderAxis: " + highestOrder + " principalAxisIndex: " + principalAxisIndex );
 		}
 	}
 
@@ -241,13 +197,6 @@ public class RotationGroup {
 			}
 		}
 		rotations.get(0).setDirection(0); // set the E axis to the principal axis (by definition)
-		if (debug) {
-			int n = 0;
-			for (Rotation s: rotations) {
-				System.out.println("Rotation: " + n + " direction: " + s.getDirection());
-				n++;
-			}
-		}
 	}
 
 	private void findTwoFoldsPerpendicular() {
@@ -259,42 +208,6 @@ public class RotationGroup {
 		}
 	}
 
-	//    private void calcPointGroup() {
-	//        if (higherOrderRotationAxis > 1) {
-	//            // cubic groups
-	//            if (highestOrder == 5) {
-	//                // rotational icosahedral symmetry or chiral icosahedral symmetry
-	//                pointGroup = "I";
-	//                complete = rotations.size() == 60;
-	//                return;
-	//            } else if (highestOrder == 4) {
-	//                // rotational octahedral symmetry or chiral octahedral symmetry
-	//                pointGroup = "O";
-	//                complete = rotations.size() == 24;
-	//                return;
-	//            } else if (highestOrder == 3) {
-	//                // rotational tetrahedral symmetry or chiral tetrahedral symmetry
-	//                pointGroup = "T";
-	//                complete = rotations.size() == 12;
-	//                return;
-	//            }
-	//        } else {
-	//            // Cn and Dn groups
-	//            // if E is not counted, subtract 1
-	//            if (Math.abs(twoFoldsPerpendicular - highestOrder) <= 1 && highestOrder > 1) {
-	//                pointGroup = "D" + highestOrder;
-	//                complete = rotations.size() == 2 * highestOrder;
-	//                return;
-	//            } else {
-	//                pointGroup = "C" + highestOrder;
-	//                complete = rotations.size() == highestOrder;
-	//                return;
-	//            }
-	//        }
-	//
-	//        pointGroup = "C1";
-	//        return;
-	//    }
 
 	public int getHigherOrderRotationAxis(){
 		return higherOrderRotationAxis;
@@ -331,12 +244,6 @@ public class RotationGroup {
 				pointGroup = "C" + highestOrder;
 				complete = rotations.size() == highestOrder;
 			}
-		}
-
-		if ( debug){
-
-			System.out.println("RotationGroup.calcPointGroup() " + pointGroup + " complete: " + complete + " rotations.size() " + rotations.size());
-			System.out.println("RotationGroup.calcPointGroup() " + twoFoldsPerpendicular + " " + higherOrderRotationAxis + " " + highestOrder);
 		}
 
 		if (!complete) {

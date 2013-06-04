@@ -1,12 +1,14 @@
 package org.biojava3.structure.quaternary.core;
 
 public class QuatSymmetryParameters {
-	private int minimumSequenceLength = 24;
+	private int minimumSequenceLength = 20;
 	private boolean structuralAlignmentOnly = false;
-	private double sequenceIdentityThreshold = 0.30;
+	private double sequenceIdentityThreshold = 0.95;
 	private double sequencePseudoSymmetryThreshold = 0.95;
 	private double alignmentFractionThreshold = 0.9;
-	private double rmsdThreshold = 5.0;
+	private double rmsdThreshold = 7.0;
+	private double angleThreshold = 10.0;
+	private boolean localSymmetry = true;
 	private boolean verbose = false;
 	private static final String n = System.getProperty("line.separator");
 	
@@ -58,20 +60,20 @@ public class QuatSymmetryParameters {
 	public void setRmsdThreshold(double rmsdThreshold) {
 		this.rmsdThreshold = rmsdThreshold;
 	}
-	/**
-	 * @return the structuralAlignmentOnly
-	 */
+	public double getAngleThreshold() {
+		return angleThreshold;
+	}
+	public void setAngleThreshold(double angleThreshold) {
+		this.angleThreshold = angleThreshold;
+	}
+
 	public boolean isStructuralAlignmentOnly() {
 		return structuralAlignmentOnly;
 	}
 	
-// Reserved for the future. This feature is currently not supported
-//	/**
-//	 * @param structuralAlignmentOnly the structuralAlignmentOnly to set
-//	 */
-//	public void setStructuralAlignmentOnly(boolean structuralAlignmentOnly) {
-//		this.structuralAlignmentOnly = structuralAlignmentOnly;
-//	}
+	public void setStructuralAlignmentOnly(boolean structuralAlignmentOnly) {
+		this.structuralAlignmentOnly = structuralAlignmentOnly;
+	}
 	
 	public double getSequencePseudoSymmetryThreshold() {
 		return sequencePseudoSymmetryThreshold;
@@ -82,6 +84,12 @@ public class QuatSymmetryParameters {
 		this.sequencePseudoSymmetryThreshold = sequencePseudoSymmetryThreshold;
 	}
 	
+	public boolean isLocalSymmetry() {
+		return localSymmetry;
+	}
+	public void setLocalSymmetry(boolean localSymmetry) {
+		this.localSymmetry = localSymmetry;
+	}
 	public boolean isVerbose() {
 		return verbose;
 	}
@@ -103,8 +111,17 @@ public class QuatSymmetryParameters {
 		s.append("Alignment fraction threshold     : ");
 		s.append(alignmentFractionThreshold);
 		s.append(n);
+		s.append("Angle threshold                  : ");
+		s.append(angleThreshold);
+		s.append(n);	
 		s.append("Symmetry RMSD threshold          : ");
 		s.append(rmsdThreshold);
+		s.append(n);
+		s.append("Structural alignment only        : ");
+		s.append(structuralAlignmentOnly);
+		s.append(n);
+		s.append("Local symmetry                   : ");
+		s.append(localSymmetry);
 		s.append(n);
 		s.append("Verbose                          : ");
 		s.append(verbose);

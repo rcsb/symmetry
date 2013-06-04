@@ -27,7 +27,6 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
 import org.biojava3.structure.quaternary.core.ChainClusterer;
-import org.biojava3.structure.quaternary.core.ChainClustererNew;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryWriter;
 import org.biojava3.structure.quaternary.core.SequenceAlignmentCluster;
@@ -205,7 +204,8 @@ public class AlignQuaternaryStructureBySymmetry {
 			}
 		};
 		
-		int offset = calc1.getFinder().getChainCount();
+//		int offset = calc1.getFinder().getChainCount();
+		int offset = calc1.getSubunits().getSubunitCount();
 		for (List<Integer> orbit: orbits2) {
 			System.out.println(orbit);
 			boolean check = checkOrbit(orbit, offset, grouper1.getSequenceClusterIds());
@@ -281,8 +281,8 @@ public class AlignQuaternaryStructureBySymmetry {
 	}
 
 	private CalcBioAssemblySymmetry orient(Structure structure) {
-		CalcBioAssemblySymmetry calc1 = new CalcBioAssemblySymmetry();
-		calc1.setBioAssembly(structure);
+		CalcBioAssemblySymmetry calc1 = new CalcBioAssemblySymmetry(structure, new QuatSymmetryParameters());
+//		calc1.setBioAssembly(structure);
 		calc1.orient();
 		Matrix4d transformation = calc1.getAxisTransformation().getTransformation();
 		transformStructure (structure, transformation);

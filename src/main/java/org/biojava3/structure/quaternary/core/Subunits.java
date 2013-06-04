@@ -3,7 +3,13 @@ package org.biojava3.structure.quaternary.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
@@ -13,12 +19,12 @@ import org.biojava3.structure.quaternary.geometry.SuperPosition;
 
 /**
  *
- * @author Peter
+ * @author Peter Rose
  */
 public class Subunits {
     private List<Point3d[]> caCoords = Collections.emptyList();
-//    private List<Point3d[]> cbCoords = new ArrayList<Point3d[]>();
     private List<Integer> sequenceClusterIds = Collections.emptyList();
+    private List<Boolean> pseudoStoichiometry = Collections.emptyList();
     private List<String> chainIds = Collections.emptyList();
     private List<Integer> modelNumbers =  Collections.emptyList();
     private List<Integer> folds = Collections.emptyList();
@@ -29,11 +35,10 @@ public class Subunits {
     private Point3d centroid;
     private MomentsOfInertia momentsOfInertia = new MomentsOfInertia();
 
-//    public Subunits(List<Point3d[]> caCoords, List<Point3d[]> cbCoords, List<Integer> sequenceClusterIds, List<Integer> folds) {
-      public Subunits(List<Point3d[]> caCoords, List<Integer> sequenceClusterIds, List<Integer> folds, List<String> chainIds, List<Integer> modelNumbers) {
+      public Subunits(List<Point3d[]> caCoords, List<Integer> sequenceClusterIds, List<Boolean> pseudoStoichiometry, List<Integer> folds, List<String> chainIds, List<Integer> modelNumbers) {
         this.caCoords = caCoords;
-//        this.cbCoords = cbCoords;
         this.sequenceClusterIds = sequenceClusterIds;
+        this.pseudoStoichiometry = pseudoStoichiometry;
         this.folds = folds;
         this.chainIds = chainIds;
         this.modelNumbers = modelNumbers;
@@ -42,18 +47,30 @@ public class Subunits {
     public List<Point3d[]> getTraces() {
         return caCoords;
     }
-    
-//    public List<Point3d[]> getCBCoords() {
-//        return cbCoords;
-//    }
 
     public int getSubunitCount() {
         run();
+        if (centers == null) {
+        	return 0;
+        }
         return centers.size();
     }
     
     public List<Integer> getSequenceClusterIds() {
     	return sequenceClusterIds;
+    }
+    
+    public boolean isPseudoStiochiometric() {
+    	for (Boolean b: pseudoStoichiometry) {
+    		if (b) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
+    public List<Boolean> getPseudoStoichiometry() {
+    	return pseudoStoichiometry;
     }
     
     public List<String> getChainIds() {
@@ -66,6 +83,37 @@ public class Subunits {
     
     public List<Integer>getFolds() {
     	return folds;
+    }
+    
+    public String getStoichiometry() {	
+		// count number of members in each cluster
+    	Map<Integer, Integer> map = new TreeMap<Integer, Integer>();
+		for (Integer id: sequenceClusterIds) {
+			Integer value = map.get(id);
+			if (value == null) {
+				value = new Integer(1);
+			} else {
+				value++;
+			}
+			map.put(id, value);
+		}
+		
+		// build formula string
+    	String alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		StringBuilder formula = new StringBuilder();
+		for (Entry<Integer, Integer> entry: map.entrySet()) {
+			String key = "?";
+			int id = entry.getKey();
+			if (id < alpha.length()) {
+				key = alpha.substring(id, id+1);
+			}
+			formula.append(key);
+			if (entry.getValue() > 1) {
+				formula.append(entry.getValue());
+			}
+		}
+
+        return formula.toString();
     }
     
     public int getCalphaCount() {
@@ -111,6 +159,27 @@ public class Subunits {
     public MomentsOfInertia getMomentsOfInertia() {
     	run();
     	return momentsOfInertia;
+    }
+    
+    public boolean overlaps(Subunits subunits) {
+    	Set<String> set1 = getSignatures(this);
+    	Set<String> set2 = getSignatures(subunits);
+    	set1.retainAll(set2);
+    	return set1.size() > 0;
+    }
+    
+    public boolean contains(Subunits subunits) {
+    	Set<String> set1 = getSignatures(this);
+    	Set<String> set2 = getSignatures(subunits);
+    	return set1.containsAll(set2);
+    }
+    
+    private static Set<String> getSignatures(Subunits subunits) {
+    	Set<String> set = new HashSet<String>(subunits.getSubunitCount());
+    	for (int i = 0; i < subunits.getSubunitCount(); i++) {
+    		set.add(subunits.getChainIds().get(i) + "_" + subunits.getModelNumbers().get(i));
+    	}
+    	return set;
     }
     
     private void run() {

@@ -13,8 +13,8 @@ import org.biojava3.structure.quaternary.geometry.Octahedron;
  */
 public class JmolSymmetryScriptGeneratorO extends JmolSymmetryScriptGenerator {
 
-	public JmolSymmetryScriptGeneratorO(AxisTransformation axisTransformation) {
-		super(axisTransformation);
+	public JmolSymmetryScriptGeneratorO(AxisTransformation axisTransformation, String name) {
+		super(axisTransformation, name);
 		Octahedron o = new Octahedron();
 		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getXYRadius());
 		o.setMidRadius(radius);

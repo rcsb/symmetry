@@ -13,8 +13,8 @@ import org.biojava3.structure.quaternary.geometry.Prism;
  */
 public class JmolSymmetryScriptGeneratorDn extends JmolSymmetryScriptGenerator {
 
-	public JmolSymmetryScriptGeneratorDn(AxisTransformation axisTransformation) {
-		super(axisTransformation);
+	public JmolSymmetryScriptGeneratorDn(AxisTransformation axisTransformation, String name) {
+		super(axisTransformation, name);
 		int fold = axisTransformation.getRotationGroup().getRotation(0).getFold();
 		
 		// special case for D2. Since there is no 2-fold prism, draw a 4-fold

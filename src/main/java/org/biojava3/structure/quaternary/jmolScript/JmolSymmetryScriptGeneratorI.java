@@ -13,8 +13,8 @@ import org.biojava3.structure.quaternary.geometry.Icosahedron;
  */
 public class JmolSymmetryScriptGeneratorI extends JmolSymmetryScriptGenerator {
 
-	public JmolSymmetryScriptGeneratorI(AxisTransformation axisTransformation) {
-		super(axisTransformation);
+	public JmolSymmetryScriptGeneratorI(AxisTransformation axisTransformation, String name) {
+		super(axisTransformation, name);
 		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getXYRadius());
 		Icosahedron i = new Icosahedron();
 		i.setMidRadius(radius);

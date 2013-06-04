@@ -11,7 +11,6 @@ import org.biojava.bio.structure.StructureTools;
 public class ProteinChainExtractor  {
 	private Structure structure = null;
 	private QuatSymmetryParameters parameters = null;
-	private boolean unknownSequence = false;
 	private boolean modified = true;
 	
 	private List<Atom[]> cAlphaTrace = new ArrayList<Atom[]>();	
@@ -45,10 +44,6 @@ public class ProteinChainExtractor  {
 		return sequences;
 	}
 	
-	public boolean containsUnknownSequence() {
-		return unknownSequence;
-	}
-	
     private void run() {
     	if (modified) {
     		extractProteinChains();
@@ -69,15 +64,14 @@ public class ProteinChainExtractor  {
 		for (int i = 0; i < models; i++) {
 			for (Chain c : structure.getChains(i)) {
 				Atom[] ca = StructureTools.getAtomCAArray(c);
-				if (containsUnknownResidues(ca)) {
-					ca = removeUnknownResidues(ca);
-					unknownSequence = true;
-				}
+				ca = retainStandardAminoAcidResidues(ca);
+
 				if (ca.length >= parameters.getMinimumSequenceLength()) {
 					if (parameters.isVerbose()) {
+						System.out.println("Number CA atoms: " + ca.length);
 				        System.out.println("Chain " + c.getChainID() + ": " + c.getSeqResSequence());
 					}
-//				   System.out.println("Number CA atoms: " + ca.length);
+				  
 				   cAlphaTrace.add(ca);
 				   chainIds.add(c.getChainID());
 				   modelNumbers.add(i);
@@ -93,21 +87,16 @@ public class ProteinChainExtractor  {
 		return sequence.replaceAll("\\?", "X");
 	}
 	
-	private boolean containsUnknownResidues(Atom[] atoms) {
-		for (Atom atom: atoms) {
-			if (atom.getGroup().getPDBName().equalsIgnoreCase("UNK")) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private Atom[] removeUnknownResidues(Atom[] atoms) {
+	private Atom[] retainStandardAminoAcidResidues(Atom[] atoms) {
 		List<Atom> atomList = new ArrayList<Atom>(atoms.length);
 		for (Atom atom: atoms) {
-			if (! atom.getGroup().getPDBName().equalsIgnoreCase("UNK")) {
-				atomList.add(atom);
+			if (atom.getGroup().getPDBName().equalsIgnoreCase("UNK")) {
+				continue;
 			}
+			if (! atom.getGroup().getType().equals("amino")) {
+				continue;
+			}
+			atomList.add(atom);
 		}
 		return atomList.toArray(new Atom[atomList.size()]);
 	}

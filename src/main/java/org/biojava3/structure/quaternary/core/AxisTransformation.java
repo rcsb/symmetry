@@ -3,10 +3,8 @@ package org.biojava3.structure.quaternary.core;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 import javax.vecmath.AxisAngle4d;
@@ -39,9 +37,9 @@ public class AxisTransformation {
 
 	boolean modified = true;
 
-	public AxisTransformation(Subunits subunits, RotationGroup rotationGroup) {
-		this.subunits = subunits;
-		this.rotationGroup = rotationGroup;
+	public AxisTransformation(QuatSymmetryResults results) {
+		this.subunits = results.getSubunits();
+		this.rotationGroup = results.getRotationGroup();
 		if (subunits == null) {
 			throw new IllegalArgumentException("AxisTransformation: Subunits are null");
 		} else if (rotationGroup == null) {
@@ -287,7 +285,7 @@ public class AxisTransformation {
 		}
 		Collections.reverse(orbit.subList(1,  orbit.size()));
 		if (orbit.get(1) != index2) {
-			System.err.println("Waring: alignWithReferenceAxis failed");
+			System.err.println("Warning: alignWithReferenceAxis failed");
 		}
 //		System.out.println("Orbit2: " + orbit);
 		return orbit;
@@ -425,7 +423,7 @@ public class AxisTransformation {
 		Point3d[] ref = new Point3d[2];
 		ref[0] = new Point3d(referenceVectors[0]);
 		ref[1] = new Point3d(referenceVectors[1]);
-		if (SuperPosition.rmsd(axes, ref) > 0.01) {
+		if (SuperPosition.rmsd(axes, ref) > 0.1) {
 			System.out.println("Warning: AxisTransformation: axes alignment is off. RMSD: " + SuperPosition.rmsd(axes, ref));
 		}
 		

@@ -25,6 +25,8 @@ public class Subunits {
     private List<Point3d[]> caCoords = Collections.emptyList();
     private List<Integer> sequenceClusterIds = Collections.emptyList();
     private List<Boolean> pseudoStoichiometry = Collections.emptyList();
+    private List<Double> minSequenceIdentity = Collections.emptyList();
+    private List<Double> maxSequenceIdentity = Collections.emptyList();
     private List<String> chainIds = Collections.emptyList();
     private List<Integer> modelNumbers =  Collections.emptyList();
     private List<Integer> folds = Collections.emptyList();
@@ -35,13 +37,15 @@ public class Subunits {
     private Point3d centroid;
     private MomentsOfInertia momentsOfInertia = new MomentsOfInertia();
 
-      public Subunits(List<Point3d[]> caCoords, List<Integer> sequenceClusterIds, List<Boolean> pseudoStoichiometry, List<Integer> folds, List<String> chainIds, List<Integer> modelNumbers) {
-        this.caCoords = caCoords;
-        this.sequenceClusterIds = sequenceClusterIds;
-        this.pseudoStoichiometry = pseudoStoichiometry;
-        this.folds = folds;
-        this.chainIds = chainIds;
-        this.modelNumbers = modelNumbers;
+    public Subunits(List<Point3d[]> caCoords, List<Integer> sequenceClusterIds, List<Boolean> pseudoStoichiometry, List<Double> minSequenceIdentity, List<Double> maxSequenceIdentity, List<Integer> folds, List<String> chainIds, List<Integer> modelNumbers) {
+    	this.caCoords = caCoords;
+    	this.sequenceClusterIds = sequenceClusterIds;
+    	this.pseudoStoichiometry = pseudoStoichiometry;
+    	this.minSequenceIdentity = minSequenceIdentity;
+    	this.maxSequenceIdentity = maxSequenceIdentity;
+    	this.folds = folds;
+    	this.chainIds = chainIds;
+    	this.modelNumbers = modelNumbers;
     }
 
     public List<Point3d[]> getTraces() {
@@ -60,7 +64,7 @@ public class Subunits {
     	return sequenceClusterIds;
     }
     
-    public boolean isPseudoStiochiometric() {
+    public boolean isPseudoStoichiometric() {
     	for (Boolean b: pseudoStoichiometry) {
     		if (b) {
     			return true;
@@ -69,10 +73,22 @@ public class Subunits {
     	return false;
     }
     
-    public List<Boolean> getPseudoStoichiometry() {
-    	return pseudoStoichiometry;
+    public double getMinSequenceIdentity() {
+    	double minId = 1.0;
+    	for (double seqId: minSequenceIdentity) {
+    		minId = Math.min(seqId,  minId);
+    	}
+    	return minId;
     }
     
+    public double getMaxSequenceIdentity() {
+    	double maxId = 1.0;
+    	for (double seqId: maxSequenceIdentity) {
+    		maxId = Math.min(seqId,  maxId);
+    	}
+    	return maxId;
+    }
+      
     public List<String> getChainIds() {
     	return chainIds;
     }

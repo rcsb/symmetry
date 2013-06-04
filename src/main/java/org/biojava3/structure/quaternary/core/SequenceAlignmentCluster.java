@@ -22,8 +22,8 @@ public class SequenceAlignmentCluster {
 
 	private int alignmentLength = 0;
 	private boolean pseudoStoichiometric = false;
-	private double minSequenceIdentity = 100;
-	private double maxSequenceIdentity = 0;
+	private double minSequenceIdentity = 1.0;
+	private double maxSequenceIdentity = 0.0;
 	
 	private boolean modified = true;
 
@@ -36,10 +36,16 @@ public class SequenceAlignmentCluster {
 	}
 	
 	public double getMinSequenceIdentity() {
+		if (! isPseudoStoichiometric()) {
+			return 1.0;
+		}
 		return minSequenceIdentity;
 	}
 
 	public double getMaxSequenceIdentity() {
+		if (! isPseudoStoichiometric()) {
+			return 1.0;
+		}
 		return maxSequenceIdentity;
 	}
 
@@ -49,11 +55,7 @@ public class SequenceAlignmentCluster {
 	}
 
 	public int getSequenceCount() {
-		int count = 0;
-		for (UniqueSequenceList list: uniqueSequenceList) {
-			count += list.getChainCount();
-		}
-		return count;
+		return uniqueSequenceList.size();
 	}
 	
 	public int getSequenceAlignmentLength() {
@@ -68,9 +70,7 @@ public class SequenceAlignmentCluster {
 	public List<String> getChainIds() {
 		List<String> ids = new ArrayList<String>();
 		for (UniqueSequenceList list: uniqueSequenceList) {
-			for (int i = 0, n = list.getChainCount(); i < n; i++) {
-				ids.add(list.getChainId(i));
-			}
+			ids.add(list.getChainId());
 		}
 		return ids;
 	}
@@ -78,9 +78,7 @@ public class SequenceAlignmentCluster {
 	public List<Integer> getModelNumbers() {
 		List<Integer> numbers = new ArrayList<Integer>();
 		for (UniqueSequenceList list: uniqueSequenceList) {
-			for (int i = 0, n = list.getChainCount(); i < n; i++) {
-				numbers.add(list.getModelNumber(i));
-			}
+			numbers.add(list.getModelNumber());
 		}
 		return numbers;
 	}
@@ -88,9 +86,7 @@ public class SequenceAlignmentCluster {
 	public List<Integer> getStructureIds() {
 		List<Integer> numbers = new ArrayList<Integer>();
 		for (UniqueSequenceList list: uniqueSequenceList) {
-			for (int i = 0, n = list.getChainCount(); i < n; i++) {
-				numbers.add(list.getStructureId(i));
-			}
+			numbers.add(list.getStructureId());
 		}
 		return numbers;
 	}
@@ -129,7 +125,7 @@ public class SequenceAlignmentCluster {
 		if (seqMatch) {
 			List<Integer> alig1 = new ArrayList<Integer>();
 			List<Integer> alig2 = new ArrayList<Integer>();
-			Atom[] referenceAtoms = u.getReferenceChain();
+			Atom[] referenceAtoms = u.getCalphaAtoms();
 			int inCommon = alignIdenticalSequence(referenceAtoms, cAlphaAtoms, alig1, alig2);
 //			System.out.println("in common: "  + inCommon);
 
@@ -154,8 +150,8 @@ public class SequenceAlignmentCluster {
 		pseudoStoichiometric = false;
 		
 		int[][][] alignment = null;
-		Atom[] referenceAtoms1 = this.getUniqueSequenceList().get(0).getReferenceChain();
-		Atom[] referenceAtoms2 = cluster.getUniqueSequenceList().get(0).getReferenceChain();
+		Atom[] referenceAtoms1 = this.getUniqueSequenceList().get(0).getCalphaAtoms();
+		Atom[] referenceAtoms2 = cluster.getUniqueSequenceList().get(0).getCalphaAtoms();
 		
 		double alignmentLengthFraction = (double)Math.min(referenceAtoms1.length, referenceAtoms2.length) /
 				Math.max(referenceAtoms1.length, referenceAtoms2.length);
@@ -318,14 +314,12 @@ public class SequenceAlignmentCluster {
 					alignmentIndices.add(alignment2.get(i));
 				}
 			}
-			for (int i = 0; i < u.getChainCount(); i++) {
-				Atom[] unalignedAtoms = u.getChain(i);
-				Atom[] alignedAtoms = new Atom[alignmentIndices.size()];
-				for (int j = 0; j < alignedAtoms.length; j++) {
-					alignedAtoms[j] = unalignedAtoms[alignmentIndices.get(j)];
-				}
-				alignedCAlphaAtoms.add(alignedAtoms);
+			Atom[] unalignedAtoms = u.getCalphaAtoms();
+			Atom[] alignedAtoms = new Atom[alignmentIndices.size()];
+			for (int j = 0; j < alignedAtoms.length; j++) {
+				alignedAtoms[j] = unalignedAtoms[alignmentIndices.get(j)];
 			}
+			alignedCAlphaAtoms.add(alignedAtoms);
 		}
 	}
 	

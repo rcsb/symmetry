@@ -117,7 +117,7 @@ public class DemoOrientBioAssembly {
 			System.out.println("=================");
 			System.out.println("Sequence ID        : " + parameters.getSequenceIdentityThreshold() );
 			System.out.println("Stoichiometry      : " + calc.getSubunits().getStoichiometry());
-			System.out.println("Pseudostoichiometry: " + calc.getSubunits().isPseudoStiochiometric());
+			System.out.println("Pseudostoichiometry: " + calc.getSubunits().isPseudoStoichiometric());
 			System.out.println("Point Group        : " + calc.getRotationGroup().getPointGroup());
 
 			System.out.println("Symmetry RMSD      : " + String.format("%.2f",calc.getRotationGroup().getAverageTraceRmsd()));
@@ -148,7 +148,7 @@ public class DemoOrientBioAssembly {
 			}
 
 			System.out.println("=================");
-			return calc.getSubunits().isPseudoStiochiometric();
+			return calc.getSubunits().isPseudoStoichiometric();
 		} else {
 			System.out.println("No protein chains found");
 			return false;

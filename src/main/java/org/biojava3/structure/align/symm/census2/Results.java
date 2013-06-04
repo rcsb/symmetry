@@ -209,4 +209,8 @@ public class Results implements Serializable {
 
 	}
 
+	public static Results fromXML(String queryFile) throws IOException {
+		return fromXML(new File(queryFile));
+	}
+
 }

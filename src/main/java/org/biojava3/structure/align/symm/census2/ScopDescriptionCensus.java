@@ -26,8 +26,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
@@ -43,12 +43,9 @@ import org.biojava.bio.structure.scop.ScopNode;
  */
 public class ScopDescriptionCensus extends Census {
 
-	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
-	protected int[] sunIds;
+	private static final Logger logger = LogManager.getLogger(ScopDescriptionCensus.class.getPackage().getName());
 
-	static {
-		BasicConfigurator.configure();
-	}
+	protected int[] sunIds;
 
 	public static void buildDefault(String pdbDir, File censusFile, int[] sunIds) {
 		try {

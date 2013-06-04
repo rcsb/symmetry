@@ -9,7 +9,9 @@
  
 ## Dependencies
 
-This library depends on 
+This project requires Java 1.6. The library is configured to build using [Apache Maven](http://maven.apache.org/).
+
+The following dependencies should be automatically resolved by maven:
 
 - [BioJava](http://www.biojava.org)
 - [Jmol](http://www.jmol.org)

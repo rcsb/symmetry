@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.AtomPositionMap;
@@ -149,12 +151,12 @@ public class Protodomain {
 			int numBlocks, int chainIndex, AtomCache cache) throws ProtodomainCreationException {
 		final ScopDatabase scopInst = ScopFactory.getSCOP();
 		final ScopDomain scopDomain = scopInst.getDomainByScopID(afpChain.getName2());
-		
+
 		StructureName name = new StructureName(afpChain.getName2());
 		String pdbId = name.getPdbId().toLowerCase();
-				
+
 		List<String> domainRanges ;
-		
+
 		String scopId = null;
 		if ( scopDomain != null) {
 			scopId = scopDomain.getScopId();
@@ -163,8 +165,8 @@ public class Protodomain {
 			domainRanges = new ArrayList<String>();
 			domainRanges.add(name.getChainId());
 		}
-		
-		
+
+
 		// int numAtomsInBlock1Alignment = afpChain.getOptLen()[0];
 		// if (numAtomsInBlock1Alignment == 0) throw new ProtodomainCreationException("unknown", scopId);
 
@@ -175,10 +177,10 @@ public class Protodomain {
 		// from the start of block 1 to end end of block 1
 		// PLUS from the start of block 2 to the end of block 2
 
-		  
+
 		System.out.println("ranges:" + domainRanges);
-		
-		
+
+
 		// we rely on the fact that SCOP won't give us a range that contains multiple chains
 		// instead, any residues from another chain will be in a different range
 		// however, CE-Symm CAN give us single blocks containing residues from different chains
@@ -504,9 +506,15 @@ public class Protodomain {
 			int domainStart, domainEnd;
 			if (domainRange.length() > 2) {
 				// chain:start-end
-				String[] myParts = domainRange.substring(2).split("-");
-				domainStartR = ResidueNumber.fromString(myParts[0]);
-				domainEndR = ResidueNumber.fromString(myParts[1]);
+				Pattern pattern = Pattern.compile("^([-]?[\\d]+[\\w]?)-([-]?[\\d]+[\\w]?)$");
+				Matcher matcher = pattern.matcher(domainRange.substring(2));
+				matcher.find();
+				try {
+					domainStartR = ResidueNumber.fromString(matcher.group(1));
+					domainEndR = ResidueNumber.fromString(matcher.group(2));
+				} catch (IllegalStateException e) {
+					throw new ProtodomainCreationException("Failed to match range " + domainRange.substring(2), scopId, e);
+				}
 				// set the chains because ResidueNumber doesn't
 				domainStartR.setChainId(chainId);
 				domainEndR.setChainId(chainId);

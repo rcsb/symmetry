@@ -37,13 +37,13 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  * <li>{@link #generallySymmetric()}, which can be used to determine "general symmetry": both rotational and translational symmetry</li>
  * <li>{@link #symmetric()}, which can be used to determine only rotational symmetry by examining order and angle</li>
  * </ul>
- * These objects, particularly the latter two, may change frequently.
- * Also helps running the {@link Census} with arbitrary Significance objects via {@link CLI}, using the methods:
+ * These objects, particularly the latter two, may change frequently. Also helps running the {@link Census} with arbitrary Significance objects via {@link CLI}, using the methods:
  * <ul>
  * <li>{@link #SignificanceFactory#fromClass(String)}</li>
  * <li>{@link #SignificanceFactory#fromClass(String, Object...)}</li>
  * <li>{@link #SignificanceFactory#fromMethod(String, String, Object...)}</li>
  * </ul>
+ * 
  * @author dmyerstu
  */
 public class SignificanceFactory {
@@ -68,6 +68,76 @@ public class SignificanceFactory {
 		};
 	}
 
+	public static Significance asymmetric() {
+		return asymmetric(0.4);
+	}
+
+	public static Significance asymmetric(final double tmScore) {
+		return new Significance() {
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return afpChain.getTMScore() < tmScore;
+			}
+
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				if (order < 2)
+					return true;
+				return afpChain.getTMScore() < tmScore;
+			}
+
+			@Override
+			public boolean isSignificant(Result result) {
+				if (result.getOrder() == null || result.getOrder() < 2)
+					return true;
+				return result.getAlignment().getTmScore() < tmScore;
+			}
+		};
+	}
+
+	public static Significance bin1() {
+		return binned(0.4, 0.5);
+	}
+
+	public static Significance bin2() {
+		return binned(0.5, 0.6);
+	}
+
+	public static Significance bin3() {
+		return binned(0.6, 1);
+	}
+
+	public static Significance binned(final double start, final double end) {
+		return new Significance() {
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return afpChain.getTMScore() >= start && afpChain.getTMScore() < end;
+			}
+
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				if (order < 2)
+					return false;
+				return afpChain.getTMScore() >= start && afpChain.getTMScore() < end;
+			}
+
+			@Override
+			public boolean isSignificant(Result result) {
+				if (result.getOrder() == null || result.getOrder() < 2)
+					return false;
+				return result.getAlignment().getTmScore() >= start && result.getAlignment().getTmScore() < end;
+			}
+		};
+	}
+
+	public static Significance conservative() {
+		return rotationallySymmetric(0.5, Math.PI);
+	}
+
+	public static Significance forCensus() {
+		return tmScore(0.2);
+	}
+
 	public static Significance fromClass(String className) {
 		try {
 			return (Significance) Class.forName(className).newInstance();
@@ -86,130 +156,50 @@ public class SignificanceFactory {
 		}
 	}
 
-	/**
+/**
 	 * Calls {@link #fromMethod(String, String, Object...) with no args for the method to be called.
 	 * @param className
 	 * @param methodName
 	 * @return
 	 */
 	public static Significance fromMethod(String className, String methodName) {
-		return fromMethod(className, methodName, new Object[]{});
+		return fromMethod(className, methodName, new Object[] {});
 	}
-	
+
 	/**
 	 * Gets a Significance object returned from the method {@code methodName} in the class {@code className}.
 	 * 
 	 * @param className
-	 *            A <em>fully-qualified</em> class name; e.g.
-	 *            org.biojava3.structure.align.symm.census2.SignificanceFactory. If null, defaults to this this class's
-	 *            name.
+	 *            A <em>fully-qualified</em> class name; e.g. org.biojava3.structure.align.symm.census2.SignificanceFactory. If null, defaults to this this class's name.
 	 * @param methodName
 	 * @param args
 	 * @return
 	 */
 	public static Significance fromMethod(String className, String methodName, Object... args) {
-		if (className == null) className = SignificanceFactory.class.getName();
+		if (className == null)
+			className = SignificanceFactory.class.getName();
 		try {
 			return (Significance) Class.forName(className).getMethod(methodName, params(args)).invoke(null, args);
 		} catch (Exception e) {
-			throw new IllegalArgumentException("Could not get a Significance object from the method " + methodName + " of "
-					+ className, e);
+			throw new IllegalArgumentException("Could not get a Significance object from the method " + methodName
+					+ " of " + className, e);
 		}
-	}
-
-	public static Significance conservative() {
-		return rotationallySymmetric(0.5, Math.PI);
-	}
-
-	public static Significance veryConservative() {
-		return rotationallySymmetric(0.6, Math.PI);
-	}
-
-	public static Significance superConservative() {
-		return rotationallySymmetric(0.7, Math.PI);
-	}
-
-	public static Significance liberal() {
-		return rotationallySymmetric(0.3, Math.PI);
-	}
-	
-	public static Significance liberalTmScore() {
-		return tmScore(0.3);
-	}
-
-	public static Significance mediumTmScore() {
-		return tmScore(0.4);
-	}
-	
-	public static Significance tmScore(final Double cutoff) { // cannot use a primitive double
-		return new Significance() {
-			@Override
-			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return afpChain.getTMScore() >= cutoff;
-			}
-
-			@Override
-			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				return afpChain.getTMScore() >= cutoff;
-			}
-
-			@Override
-			public boolean isSignificant(Result result) {
-				return result.getAlignment().getTmScore() >= cutoff;
-			}
-		};
-	}
-
-	public static Significance forCensus() {
-		return tmScore(0.2);
 	}
 
 	public static Significance generallySymmetric() {
 		return tmScore(0.4);
 	}
 
-	public static Significance symmetric() {
-		return rotationallySymmetric(0.4, Double.MAX_VALUE);
-	}
-	public static Significance rotationallySymmetric(final double threshold, final double epsilonThreshold) {
-		
-		return new Significance() {
-			
-			@Override
-			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return afpChain.getTMScore() >= threshold;
-			}
-
-			@Override
-			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				Axis axis;
-				try {
-					axis = new Axis(new RotationAxis(afpChain));
-				} catch (Exception e) {
-					return false;
-				}
-				double epsilon = axis.evaluateEpsilon(order);
-				if (epsilon > epsilonThreshold) return false;
-				return afpChain.getTMScore() >= threshold && order >= 2;
-			}
-
-			@Override
-			public boolean isSignificant(Result result) {
-				NumberFormat nf = new DecimalFormat();
-				nf.setMaximumFractionDigits(5);
-				if (result.getOrder() == null) return false;
-				if (result.getAlignment() == null) return false;
-				final int order = result.getOrder();
-				if (order < 2) return false;
-				double epsilon = result.getAxis().evaluateEpsilon(order);
-				if (epsilon > epsilonThreshold) return false;
-				return result.getAlignment().getTmScore() >= threshold;
-			}
-		};
+	public static Significance liberal() {
+		return rotationallySymmetric(0.3, Math.PI);
 	}
 
-	public static Significance ultraLiberal() {
-		return tmScore(0.0);
+	public static Significance liberalTmScore() {
+		return tmScore(0.3);
+	}
+
+	public static Significance mediumTmScore() {
+		return tmScore(0.4);
 	}
 
 	public static Significance or(final Significance a, final Significance b) {
@@ -230,6 +220,83 @@ public class SignificanceFactory {
 				return a.isSignificant(result) || b.isSignificant(result);
 			}
 		};
+	}
+
+	public static Significance rotationallySymmetric(final double threshold, final double epsilonThreshold) {
+
+		return new Significance() {
+
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return afpChain.getTMScore() >= threshold;
+			}
+
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				Axis axis;
+				try {
+					axis = new Axis(new RotationAxis(afpChain));
+				} catch (Exception e) {
+					return false;
+				}
+				double epsilon = axis.evaluateEpsilon(order);
+				if (epsilon > epsilonThreshold)
+					return false;
+				return afpChain.getTMScore() >= threshold && order >= 2;
+			}
+
+			@Override
+			public boolean isSignificant(Result result) {
+				NumberFormat nf = new DecimalFormat();
+				nf.setMaximumFractionDigits(5);
+				if (result.getOrder() == null)
+					return false;
+				if (result.getAlignment() == null)
+					return false;
+				final int order = result.getOrder();
+				if (order < 2)
+					return false;
+				double epsilon = result.getAxis().evaluateEpsilon(order);
+				if (epsilon > epsilonThreshold)
+					return false;
+				return result.getAlignment().getTmScore() >= threshold;
+			}
+		};
+	}
+
+	public static Significance superConservative() {
+		return rotationallySymmetric(0.7, Math.PI);
+	}
+
+	public static Significance symmetric() {
+		return rotationallySymmetric(0.4, Double.MAX_VALUE);
+	}
+
+	public static Significance tmScore(final Double cutoff) { // cannot use a primitive double
+		return new Significance() {
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return afpChain.getTMScore() >= cutoff;
+			}
+
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				return afpChain.getTMScore() >= cutoff;
+			}
+
+			@Override
+			public boolean isSignificant(Result result) {
+				return result.getAlignment().getTmScore() >= cutoff;
+			}
+		};
+	}
+
+	public static Significance ultraLiberal() {
+		return tmScore(0.0);
+	}
+
+	public static Significance veryConservative() {
+		return rotationallySymmetric(0.6, Math.PI);
 	}
 
 	private static Class<?>[] params(Object[] args) {

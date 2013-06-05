@@ -104,7 +104,7 @@ public class OrientBiologicalAssembly {
 		// initialize with default parameters
 		QuatSymmetryParameters params = new QuatSymmetryParameters();
 		params.setSequenceIdentityThreshold(0.95);
-//		params.setStructuralAlignmentOnly(true);
+		params.setStructuralAlignmentOnly(true);
 		params.setVerbose(verbose);
 
 		System.out.println("Default parameters:");

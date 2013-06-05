@@ -77,10 +77,12 @@ public class CalcBioAssemblySymmetry {
 				System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
 				System.out.println();
 				System.out.println("Global symmetry:");
-				System.out.println("Stoichiometry       : " + globalSymmetry.getSubunits().getStoichiometry());
-				System.out.println("Pseudostoichiometry : " + globalSymmetry.getSubunits().isPseudoStiochiometric());
-				System.out.println("Point group         : " + globalSymmetry.getRotationGroup().getPointGroup());				
-				System.out.println("Symmetry RMSD       : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
+				System.out.println("Stoichiometry         : " + globalSymmetry.getSubunits().getStoichiometry());
+				System.out.println("Pseudostoichiometry   : " + globalSymmetry.getSubunits().isPseudoStoichiometric());
+				System.out.println("Min sequence identity : " + Math.round(globalSymmetry.getSubunits().getMinSequenceIdentity()*100));
+				System.out.println("Max sequence identity : " + Math.round(globalSymmetry.getSubunits().getMaxSequenceIdentity()*100));
+				System.out.println("Point group           : " + globalSymmetry.getRotationGroup().getPointGroup());				
+				System.out.println("Symmetry RMSD         : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
 			}
 
 			axisTransformation = new AxisTransformation(globalSymmetry);
@@ -101,10 +103,12 @@ public class CalcBioAssemblySymmetry {
 				AxisTransformation at = new AxisTransformation(localSymmetry);
 				System.out.println();
 				System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
-				System.out.println("Stoichiometry       : " + localSymmetry.getSubunits().getStoichiometry());
-				System.out.println("Pseudostoichiometry : " + localSymmetry.getSubunits().isPseudoStiochiometric());
-				System.out.println("Point group         : " + localSymmetry.getRotationGroup().getPointGroup());				
-				System.out.println("Symmetry RMSD       : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
+				System.out.println("Stoichiometry         : " + localSymmetry.getSubunits().getStoichiometry());
+				System.out.println("Pseudostoichiometry   : " + localSymmetry.getSubunits().isPseudoStoichiometric());
+				System.out.println("Min sequence identity : " + Math.round(localSymmetry.getSubunits().getMinSequenceIdentity()*100));
+				System.out.println("Max sequence identity : " + Math.round(localSymmetry.getSubunits().getMaxSequenceIdentity()*100));
+				System.out.println("Point group           : " + localSymmetry.getRotationGroup().getPointGroup());				
+				System.out.println("Symmetry RMSD         : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
 				System.out.println();
 				JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGenerator.getInstance(at, "l"+count);
 				if (count == 0) {

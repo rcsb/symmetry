@@ -101,13 +101,13 @@ public class FindQuarternarySymmetry {
 		}
 		List<Integer> folds = chainClusterer.getFolds();
 		maxFolds = folds.get(folds.size()-1);
-		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
-				chainClusterer.getSequenceClusterIds(),
-				chainClusterer.getPseudoStoichiometry(),
-				folds,
-				chainClusterer.getChainIds(),
-				chainClusterer.getModelNumbers());
-		pseudoSymmetric = subunits.isPseudoStiochiometric();
+//		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
+//				chainClusterer.getSequenceClusterIds(),
+//				chainClusterer.getPseudoStoichiometry(),
+//				folds,
+//				chainClusterer.getChainIds(),
+//				chainClusterer.getModelNumbers());
+		pseudoSymmetric = subunits.isPseudoStoichiometric();
 		maxFolds = folds.get(folds.size()-1);
 		if ( parameters.isVerbose())
 			System.out.println("Subunits: centroids: " + subunits.getCentroid() + " folds:" + subunits.getFolds());

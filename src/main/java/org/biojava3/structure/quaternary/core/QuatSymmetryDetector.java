@@ -147,6 +147,8 @@ public class QuatSymmetryDetector {
 		Subunits subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
 				chainClusterer.getSequenceClusterIds(),
 				chainClusterer.getPseudoStoichiometry(),
+				chainClusterer.getMinSequenceIdentity(),
+				chainClusterer.getMaxSequenceIdentity(),
 				chainClusterer.getFolds(),
 				chainClusterer.getChainIds(),
 				chainClusterer.getModelNumbers());
@@ -166,6 +168,8 @@ public class QuatSymmetryDetector {
 	      List<Point3d[]> subCalphaCoordinates = new ArrayList<Point3d[]>(subCluster.size());   
 	      List<Integer> subSequenceIds = new ArrayList<Integer>(subCluster.size());
 	      List<Boolean> subPseudoStoichiometry = new ArrayList<Boolean>(subCluster.size());
+	      List<Double> subMinSequenceIdentity = new ArrayList<Double>(subCluster.size());
+	      List<Double> subMaxSequenceIdentity = new ArrayList<Double>(subCluster.size());
 	      List<String> subChainIds = new ArrayList<String>(subCluster.size());
 	      List<Integer> subModelNumbers = new ArrayList<Integer>(subCluster.size());
 
@@ -173,6 +177,8 @@ public class QuatSymmetryDetector {
 	    	  subCalphaCoordinates.add(chainClusterer.getCalphaCoordinates().get(index));
 	    	  subSequenceIds.add(chainClusterer.getSequenceClusterIds().get(index));
 	    	  subPseudoStoichiometry.add(chainClusterer.getPseudoStoichiometry().get(index));
+	    	  subMinSequenceIdentity.add(chainClusterer.getMinSequenceIdentity().get(index));
+	    	  subMaxSequenceIdentity.add(chainClusterer.getMaxSequenceIdentity().get(index));
 	    	  subChainIds.add(chainClusterer.getChainIds().get(index));
 	    	  subModelNumbers.add(chainClusterer.getModelNumbers().get(index));
 	      }
@@ -184,6 +190,8 @@ public class QuatSymmetryDetector {
 	      Subunits subunits = new Subunits(subCalphaCoordinates, 
 					subSequenceIds,
 					subPseudoStoichiometry,
+					subMinSequenceIdentity,
+					subMaxSequenceIdentity,
 			        subFolds,
 					subChainIds,
 					subModelNumbers);

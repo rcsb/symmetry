@@ -84,7 +84,7 @@ public class DemoOrientBioAssembly {
 			AtomCache cache = new AtomCache();
 			FileParsingParameters params = cache.getFileParsingParams();
 			params.setAlignSeqRes(true);
-			params.setParseCAOnly(false);
+			params.setParseCAOnly(true);
 			params.setLoadChemCompInfo(true);
 
 			StructureIO.setAtomCache(cache);
@@ -139,7 +139,7 @@ public class DemoOrientBioAssembly {
 
 					QuatSymmetryDetector detector30 = calc30.orient();
 
-					if ( detector30.getGlobalSymmetry().getSubunits().isPseudoStiochiometric() ) {
+					if ( detector30.getGlobalSymmetry().getSubunits().isPseudoStoichiometric() ) {
 
 						System.out.println(" Global pseudosymmetry!");
 						myType = SymmetryType.GlobalPseudoSymmetry;
@@ -250,7 +250,7 @@ public class DemoOrientBioAssembly {
 			System.out.println();
 			System.out.println("Global symmetry:");
 			System.out.println("Stoichiometry       : " + globalSymmetry.getSubunits().getStoichiometry());
-			System.out.println("Pseudostoichiometry : " + globalSymmetry.getSubunits().isPseudoStiochiometric());
+			System.out.println("Pseudostoichiometry : " + globalSymmetry.getSubunits().isPseudoStoichiometric());
 			System.out.println("Point group         : " + globalSymmetry.getRotationGroup().getPointGroup());				
 			System.out.println("Symmetry RMSD       : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
 		}
@@ -279,7 +279,7 @@ public class DemoOrientBioAssembly {
 			System.out.println();
 			System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
 			System.out.println("Stoichiometry       : " + localSymmetry.getSubunits().getStoichiometry());
-			System.out.println("Pseudostoichiometry : " + localSymmetry.getSubunits().isPseudoStiochiometric());
+			System.out.println("Pseudostoichiometry : " + localSymmetry.getSubunits().isPseudoStoichiometric());
 			System.out.println("Point group         : " + localSymmetry.getRotationGroup().getPointGroup());				
 			System.out.println("Symmetry RMSD       : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
 			System.out.println();

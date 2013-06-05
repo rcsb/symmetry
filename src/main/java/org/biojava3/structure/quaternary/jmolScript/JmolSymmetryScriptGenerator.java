@@ -254,8 +254,7 @@ public abstract class JmolSymmetryScriptGenerator {
 		StringBuilder s = new StringBuilder();
 		
 		// draw point group
-		System.out.println("got point group for Jmol display: >" + rotationGroup.getPointGroup() +"<");
-		
+				
 		if ( rotationGroup.getPointGroup().equals("C1")) {
 			s.append(drawFooter("Asymmetric", "white"));
 		} else {

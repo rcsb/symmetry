@@ -329,11 +329,11 @@ public class QuatSymmetryDetector {
 
 		rotationGroup.complete();
 		
-//		String pointGroup = rotationGroup.getPointGroup();
-//		if (pointGroup.startsWith("C")) {
-//			HelixCheck hc = new HelixCheck(subunits, rotationGroup, this.parameters);
-//			System.out.println("Helical: " + hc.isHelical());
-//		}
+		String pointGroup = rotationGroup.getPointGroup();
+		if (pointGroup.startsWith("C")) {
+			HelixCheck hc = new HelixCheck(subunits, rotationGroup, this.parameters);
+			System.out.println("Helical: " + hc.isHelical());
+		}
 	//	System.exit(-1);
 		QuatSymmetryResults results = new QuatSymmetryResults(subunits, rotationGroup, method);
 		return results;

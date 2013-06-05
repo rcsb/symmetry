@@ -148,8 +148,7 @@ public class SequenceAlignmentCluster {
 		run();
 		cluster.run();
 		pseudoStoichiometric = false;
-		
-		int[][][] alignment = null;
+			
 		Atom[] referenceAtoms1 = this.getUniqueSequenceList().get(0).getCalphaAtoms();
 		Atom[] referenceAtoms2 = cluster.getUniqueSequenceList().get(0).getCalphaAtoms();
 		
@@ -160,12 +159,12 @@ public class SequenceAlignmentCluster {
 			System.out.println("SequenceAlignmentCluster: alignmentLengthFraction: " + alignmentLengthFraction);
 		}
 		if (alignmentLengthFraction < parameters.getAlignmentFractionThreshold()) {
-			return alignment;
+			return null;
 		}
 		
 		AFPChain afp = alignPairByStructure(referenceAtoms1, referenceAtoms2);
 		if (afp == null) {
-			return alignment;
+			return null;
 		}
 		double identity = afp.getIdentity();
 		double rmsd = afp.getChainRmsd();
@@ -173,17 +172,16 @@ public class SequenceAlignmentCluster {
 		if (parameters.isVerbose()) {
 			System.out.println("SequenceAlignmentCluster: CE: seq. identity: " + (float)identity + " RMSD: " + (float)rmsd + " alignment length: " + afp.getOptLength());
 		}
-		
-		
+			
 		// if this is not a structural alignment, check the sequence identity threshold
 		if (! parameters.isStructuralAlignmentOnly() && identity < parameters.getSequenceIdentityThreshold()) {
 			return null;
 		}
 		
-//		System.out.println(afp.getAlnseq1());
-//		System.out.println(afp.getAlnseq2());
+		System.out.println(afp.getAlnseq1());
+		System.out.println(afp.getAlnseq2());
 	
-    	alignment = afp.getOptAln();
+		int[][][] alignment = afp.getOptAln();
     	if (alignment != null) {		
     		alignmentLengthFraction = (double)afp.getOptLength()/Math.max(referenceAtoms1.length, referenceAtoms2.length);
     		if (parameters.isVerbose()) {
@@ -194,16 +192,6 @@ public class SequenceAlignmentCluster {
     			return alignment;
     		}
     	}
-		
-		List<Integer> align1 = new ArrayList<Integer>(alignment[0][0].length);
-		for (Integer a1: alignment[0][0]) {
-			align1.add(a1);
-		}
-
-		List<Integer> align2 = new ArrayList<Integer>(alignment[0][1].length);
-		for (Integer a2: alignment[0][1]) {
-			align2.add(a2);
-		}
 
 		// if pseudo stoichiometric, keep track of min and max idenity found
 		if (identity < parameters.getSequencePseudoSymmetryThreshold()) {
@@ -225,18 +213,12 @@ public class SequenceAlignmentCluster {
 			afp = aligner.align(ca1Seq, ca2Seq);
 		} catch (StructureException e) {
 			e.printStackTrace();
-			return afp;
 		} 
 		return afp;
 	}
 	
 	private AFPChain alignPairByStructure(Atom[] ca1Seq, Atom[] ca2Seq) {
-	    CeParameters params = new CeParameters();
-		params.setMaxGapSize(-1);
-		// should set this only when seq. id. is high
-		params.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
-		params.setSeqWeight(2.0);
-		
+	    CeParameters params = new CeParameters();		
         AFPChain afp = null;
 		try {
 			StructureAlignment algorithm  = StructureAlignmentFactory.getAlgorithm(CeMain.algorithmName);

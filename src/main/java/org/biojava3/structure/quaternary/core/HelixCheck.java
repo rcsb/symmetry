@@ -21,7 +21,7 @@ import org.biojava3.structure.quaternary.misc.ColorBrewer;
 import org.biojava3.structure.quaternary.utils.ComponentFinder;
 import org.biojava3.structure.quaternary.utils.Graph;
 import org.biojava3.structure.quaternary.utils.MarkFromRoot;
-import org.biojava3.structure.utils.SimpleGraph;
+import org.biojava3.structure.quaternary.utils.SimpleGraph;
 
 // 3J06, 1PFI (part helix, then expanding radius) helical
 public class HelixCheck {

@@ -189,7 +189,7 @@ public class ChainClusterer  {
 				return;
 			}		
 			
-			calcSequenceClustersNew();
+			calcSequenceClusters();
 			mergeSequenceClusters();		
 			calcAlignedSequences();
 			createCalphaTraces();
@@ -204,7 +204,7 @@ public class ChainClusterer  {
 		modelNumbers = extractor.getModelNumbers();
 	}
 	
-	private void calcSequenceClustersNew() {
+	private void calcSequenceClusters() {
 		boolean[] processed = new boolean[caUnaligned.size()];
 		Arrays.fill(processed, false);
 	

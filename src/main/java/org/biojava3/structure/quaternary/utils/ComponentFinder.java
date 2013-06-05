@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.biojava3.structure.utils.SimpleGraph;
 
 /**
  *

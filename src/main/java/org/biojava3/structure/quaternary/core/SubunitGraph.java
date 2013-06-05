@@ -5,7 +5,7 @@ import java.util.List;
 import javax.vecmath.Point3d;
 
 import org.biojava3.structure.quaternary.utils.Graph;
-import org.biojava3.structure.utils.SimpleGraph;
+import org.biojava3.structure.quaternary.utils.SimpleGraph;
 
 public class SubunitGraph {
 	private static double DISTANCE_CUTOFF = 8;

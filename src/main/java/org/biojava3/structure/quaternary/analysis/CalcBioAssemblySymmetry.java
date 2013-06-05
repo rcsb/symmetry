@@ -62,6 +62,10 @@ public class CalcBioAssemblySymmetry {
 		this.parameters = parameters;
 	}
 	
+	public QuatSymmetryParameters getParameters(){
+		return parameters;
+	}
+	
 	public QuatSymmetryDetector orient(){
 		QuatSymmetryDetector detector = new QuatSymmetryDetector(bioAssembly, parameters);	
 		boolean hasProtein = detector.hasProteinSubunits();

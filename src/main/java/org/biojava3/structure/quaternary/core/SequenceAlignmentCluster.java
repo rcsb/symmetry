@@ -236,15 +236,16 @@ public class SequenceAlignmentCluster {
 	
 	private AFPChain alignPairByStructure(Atom[] ca1Seq, Atom[] ca2Seq) {
 	    CeParameters params = new CeParameters();
-		params.setMaxGapSize(-1);
+		//params.setMaxGapSize(-1);
 		// should set this only when seq. id. is high
-		params.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
-		params.setSeqWeight(2.0);
+		//params.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
+		//params.setSeqWeight(2.0);
 		
         AFPChain afp = null;
 		try {
 			StructureAlignment algorithm  = StructureAlignmentFactory.getAlgorithm(CeMain.algorithmName);
 			afp = algorithm.align(ca1Seq,ca2Seq,params);
+			//System.out.println(afp.toFatcat(ca1Seq, ca2Seq));
 		} catch (StructureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

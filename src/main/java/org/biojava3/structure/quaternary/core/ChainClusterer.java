@@ -189,7 +189,7 @@ public class ChainClusterer  {
 				return;
 			}		
 			
-			calcSequenceClusters();
+			calcSequenceClustersNew();
 			mergeSequenceClusters();		
 			calcAlignedSequences();
 			createCalphaTraces();
@@ -204,7 +204,7 @@ public class ChainClusterer  {
 		modelNumbers = extractor.getModelNumbers();
 	}
 	
-	private void calcSequenceClusters() {
+	private void calcSequenceClustersNew() {
 		boolean[] processed = new boolean[caUnaligned.size()];
 		Arrays.fill(processed, false);
 	
@@ -226,7 +226,7 @@ public class ChainClusterer  {
             	for (SequenceAlignmentCluster c: seqClusters) {
             			if (c.identityMatch(caUnaligned.get(j), chainIds.get(j), modelNumbers.get(j), 0, sequences.get(j))) {
             				processed[j] = true;
-            				System.out.println("found identity match: " + i + " - " + j);
+            				//System.out.println("found identity match: " + i + " - " + j);
             				break;
             			}
             	} 
@@ -247,7 +247,7 @@ public class ChainClusterer  {
 					int[][][] alignment = c1.alignClustersByStructure(c2);
 					if (alignment != null) {
 						merged[j] = true;
-						System.out.println("Merged cluster: " + j + " -> " + i);
+						//System.out.println("Merged cluster: " + j + " -> " + i);
 						mergeCluster(c1, c2, alignment);
 					}
 					//				System.out.println("Cluster strutural overlap: " + i + " - " + j + ": " + overlap);
@@ -256,7 +256,7 @@ public class ChainClusterer  {
 		}
 		for (int i = seqClusters.size()-1; i > 0; i--) {
 			if (merged[i]) {
-				System.out.println("removing merged cluster: " + i);
+				//System.out.println("removing merged cluster: " + i);
 				seqClusters.remove(i);
 			}
 		}

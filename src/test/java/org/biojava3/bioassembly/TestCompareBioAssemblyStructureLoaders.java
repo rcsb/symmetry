@@ -159,7 +159,9 @@ extends TestCase{
         parameters.setSequenceIdentityThreshold(threshold);
 
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
-		boolean hasProtein = calc.orient();
+		
+		
+		boolean hasProtein = calc.orient().hasProteinSubunits();
 
 		return calc.getSubunits().getStoichiometry();
 	}

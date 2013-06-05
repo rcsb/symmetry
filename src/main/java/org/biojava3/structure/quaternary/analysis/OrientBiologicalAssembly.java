@@ -17,6 +17,7 @@ import org.biojava.bio.structure.io.mmcif.ChemCompProvider;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 
 import org.biojava3.structure.quaternary.core.AxisTransformation;
+import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 
 
@@ -118,11 +119,17 @@ public class OrientBiologicalAssembly {
 			prefix += "_" + bioassemblyId;
 		}
 
-		boolean hasProtein = calc.orient();
+		
+		QuatSymmetryDetector detector = calc.orient();
+		
+		boolean hasProtein = detector.hasProteinSubunits();
+		
 		long t2 = System.nanoTime();
+		
 		System.out.println("CalcBioAssemblySymmetry: " + (t2-t1)*0.000001 + " ms");
 
 		if (hasProtein) {		
+			
 			System.out.println("Bioassembly id: " + getBioassemblyId());
 			
 			System.out.println("Point group:             : " + calc.getRotationGroup().getPointGroup());
@@ -137,7 +144,9 @@ public class OrientBiologicalAssembly {
 
 			System.out.println("Zoom                     : " + calc.getScriptGenerator().getZoom());
 			System.out.println("Default orientation      : " + calc.getScriptGenerator().getDefaultOrientation());
+			
 			System.out.println("Orientation count        : " + calc.getScriptGenerator().getOrientationCount());
+			
 			for (int i = 0; i <  calc.getScriptGenerator().getOrientationCount(); i++) {
 				System.out.println("Orientation name " + i + "       : " + calc.getScriptGenerator().getOrientationName(i));
 				System.out.println("Orientation " + i + "            : " + calc.getScriptGenerator().getOrientation(i));

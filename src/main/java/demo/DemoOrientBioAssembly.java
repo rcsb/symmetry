@@ -39,26 +39,32 @@ import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 
 public class DemoOrientBioAssembly {
-	
+
 	public static void main(String[] args){
 
 		//String[] pdbIDs = new String[]{"4INU", "4D8s","4EAR","4IYQ","3ZKR",};
-		String[] pdbIDs = new String[]{"4F88",};
-		
+
+		//String[] pdbIDs = new String[]{"4HHB","4AQ5","1LTI","1STP","4F88","2W6E","2LXC","3OE7","4INU","4D8s","4EAR","4IYQ","3ZKR"};
+
+		String[] pdbIDs = new String[]{"3ZDY",};
+
 		/*
-			 2WPD has 2 local symmetries. I’ve attached my presentation from last week.
-			 
-			 
+		  
+		    Local symmetry
+		    
+			2WPD has 2 local symmetries. 
+
 			Other examples with a single local symmetry are:
 			4F88 – local C8
 			1LTI – local C5
 			2W6E – local C3
 			2LXC – local C2
 			3OE7 – local C3
-			
-		*/
-		
-		for ( String pdbID : pdbIDs){
+
+		 */
+
+		for ( String pdbID : pdbIDs)
+		{
 			runPDB(pdbID);
 		}
 
@@ -67,10 +73,11 @@ public class DemoOrientBioAssembly {
 	public static void runPDB(String pdbID){
 
 		pdbID = pdbID.toLowerCase();
-		
-		int  biolAssemblyNr =1;
+
+		int  biolAssemblyNr = 2;
 
 		Structure s;
+		
 		try {
 
 			//			
@@ -78,133 +85,220 @@ public class DemoOrientBioAssembly {
 			FileParsingParameters params = cache.getFileParsingParams();
 			params.setAlignSeqRes(true);
 			params.setParseCAOnly(false);
+			params.setLoadChemCompInfo(true);
 
 			StructureIO.setAtomCache(cache);
-			
+
 			s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
 
 			// Alternative access to structure:			
 			//
 			//s = readStructure(pdbID, biolAssemblyNr);
-			
-			System.out.println("MODELS:" + s.nrModels());
-			
-			boolean pseudosymmetric = analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.30);
-
-			if (pseudosymmetric) {
-				analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.95);
-			}
-			
-		
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-	}
-	
-	private static boolean analyzeSymmetry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
-		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
-		parameters.setVerbose(false);
-		parameters.setSequenceIdentityThreshold(threshold);
-		
-		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
-
-		QuatSymmetryDetector detector = calc.orient();
-		
-		boolean hasProtein = detector.hasProteinSubunits();
-
-		if (hasProtein) {
-			
 
 			String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
 					"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
 					"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
 
-			String jmolScript = "";
-			if ( detector.getLocalSymmetry().size() > 0){
-				int count = 0;
-				for (QuatSymmetryResults localSymmetry: detector.getLocalSymmetry()) {
-					AxisTransformation at = new AxisTransformation(localSymmetry);
-					System.out.println();
-					System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
-					System.out.println("Stoichiometry       : " + localSymmetry.getSubunits().getStoichiometry());
-					System.out.println("Pseudostoichiometry : " + localSymmetry.getSubunits().isPseudoStiochiometric());
-					System.out.println("Point group         : " + localSymmetry.getRotationGroup().getPointGroup());				
-					System.out.println("Symmetry RMSD       : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
-					System.out.println();
-					JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGenerator.getInstance(at, "l"+count);
-					if (count == 0) {
-						script +=  gen.getDefaultOrientation();
-					}
-					script +=  gen.drawPolyhedron();
-					script += gen.drawAxes();
-					script +=  gen.colorBySymmetry();
+			String jmolScript = "";			
+			
 
-					count++;
-				}
-				script += "draw poly* on; draw axes* on;";
-			} else {
-				jmolScript = calc.getScriptGenerator().playOrientations();
+
+			CalcBioAssemblySymmetry calc95 = analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.95,false);
+
+			QuatSymmetryDetector detector95 = calc95.orient();
+
+
+			boolean hasProtein = detector95.hasProteinSubunits();
+
+			if ( ! hasProtein){
+				System.err.println("Provided PDB entry has no protein content!");
+				return;
 			}
+		
+			double sequenceIdThreshold = calc95.getParameters().getSequenceIdentityThreshold();
+
+			SymmetryType myType = SymmetryType.Asymmetric;
 			
-			
+			if ( hasProtein ){
+
+				String globalPointGroup = null;
+
+				if (calc95.getRotationGroup() != null )
+					globalPointGroup = calc95.getRotationGroup().getPointGroup();
+
+				if ( globalPointGroup != null && (! globalPointGroup.equals("C1")) ){
+
+					System.out.println(" Global symmetry: " + globalPointGroup);
+					myType = SymmetryType.GlobalSymmetry;
+					jmolScript = calc95.getScriptGenerator().playOrientations();
+
+				} else {
+
+					// test for global pseudosymmetry
+					CalcBioAssemblySymmetry calc30 = analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.30,false);
+
+					QuatSymmetryDetector detector30 = calc30.orient();
+
+					if ( detector30.getGlobalSymmetry().getSubunits().isPseudoStiochiometric() ) {
+
+						System.out.println(" Global pseudosymmetry!");
+						myType = SymmetryType.GlobalPseudoSymmetry;
+						jmolScript += getGlobalPseudoSymmetry(detector30,calc30.getParameters());
+						sequenceIdThreshold = calc30.getParameters().getSequenceIdentityThreshold();
+
+
+					} else if  ( detector95.getLocalSymmetry().size() > 0 ){
+
+						System.out.println(" Local symmetry!");
+						myType = SymmetryType.LocalSymmetry;
+						jmolScript += getLocalSymmetryScript(detector95,calc95.getParameters());
+
+					} else {
+					
+						sequenceIdThreshold = 0;
+						
+						// same again, structure only
+
+						CalcBioAssemblySymmetry calcPC = analyzeSymmetry(s, pdbID, biolAssemblyNr, 0,true);
+						QuatSymmetryDetector detectorPC = calcPC.orient();
+
+						globalPointGroup = null;
+
+						System.out.println("!!! Local symmetry size:" + detectorPC.getLocalSymmetry().size());						
+						
+						if ( calcPC.getRotationGroup() != null) {
+							globalPointGroup = calcPC.getRotationGroup().getPointGroup();
+						}
+						
+						
+
+						if ( globalPointGroup != null && (! globalPointGroup.equals("C1")) ){
+
+							System.out.println(" Global pseudosymmetry, structure only: " + globalPointGroup);
+							myType = SymmetryType.GlobalPseudosymmetrStructureOnly;
+							jmolScript = calcPC.getScriptGenerator().playOrientations();
+						
+						}  else if  ( detectorPC.getLocalSymmetry().size() > 0 ){
+
+							System.out.println(" Local pseudosymmetry, structure only!");
+							myType = SymmetryType.LocalPseudosymmetryStructureOnly;
+							jmolScript += getLocalSymmetryScript(detectorPC,calcPC.getParameters());
+
+						} else {
+
+							System.out.println(" Asymmetric");
+							
+							jmolScript = calc95.getScriptGenerator().playOrientations();
+							
+						}
+
+					}
+
+				}
+			}
+
 			StructureAlignmentJmol jmol = new StructureAlignmentJmol();
 			jmol.setStructure(s);
 
-			String title = "Symmetry results for " + pdbID + " bio assembly: " + biolAssemblyNr + " seq cutoff:" + parameters.getSequenceIdentityThreshold();
+			String title = "Symmetry results for " + pdbID + " bio assembly: " + biolAssemblyNr + " seq cutoff:" + sequenceIdThreshold;
 			jmol.setTitle(title);
 			jmol.evalString(script);
 			jmol.evalString(jmolScript);
-			
-			
-			
-			
-			// items for database:
-			/*
-			System.out.println("=================");
-			System.out.println(title );
-			System.out.println("=================");
-			System.out.println("Sequence ID        : " + parameters.getSequenceIdentityThreshold() );
-			System.out.println("Stoichiometry      : " + calc.getSubunits().getStoichiometry());
-			System.out.println("Pseudostoichiometry: " + calc.getSubunits().isPseudoStiochiometric());
-			System.out.println("Point Group        : " + calc.getRotationGroup().getPointGroup());
 
-			System.out.println("Symmetry RMSD      : " + String.format("%.2f",calc.getRotationGroup().getAverageTraceRmsd()));
 
-			System.out.println("Transf. matrix     : " + calc.getAxisTransformation().getTransformation());
-			System.out.println("Geomet. tansf      : " + calc.getAxisTransformation().getGeometicCenterTransformation());
-			System.out.println("Dimension          : " + calc.getAxisTransformation().getDimension());
-			System.out.println("Subunit count      : " + calc.getSubunits().getSubunitCount());
+			System.out.println("MY TYPE:" + myType);
 
-			System.out.println("Color by subunit         : " + calc.getScriptGenerator().colorBySubunit());
-			System.out.println("Color by subunit length  : " + calc.getScriptGenerator().colorBySubunit().length());
-			System.out.println("Color by sequence cluster: " + calc.getScriptGenerator().colorBySequenceCluster());
-			System.out.println("Color by seq. clst. len  : " + calc.getScriptGenerator().colorBySequenceCluster().length());
-			System.out.println("Color by symmetry        : " + calc.getScriptGenerator().colorBySymmetry());
-			System.out.println("Color by symmetry length : " + calc.getScriptGenerator().colorBySymmetry().length());
-
-			System.out.println("Draw axes                : " + calc.getScriptGenerator().drawAxes());
-			System.out.println("Draw axes length         : " + calc.getScriptGenerator().drawAxes().length());
-			System.out.println("Draw polyhedron          : " + calc.getScriptGenerator().drawPolyhedron());
-			System.out.println("Draw polyhedron length   : " + calc.getScriptGenerator().drawPolyhedron().length());
-
-			System.out.println("Zoom                     : " + calc.getScriptGenerator().getZoom());
-			System.out.println("Default orientation      : " + calc.getScriptGenerator().getDefaultOrientation());
-			System.out.println("Orientation count        : " + calc.getScriptGenerator().getOrientationCount());
-			for (int i = 0; i <  calc.getScriptGenerator().getOrientationCount(); i++) {
-				System.out.println("Orientation name " + i + "       : " + calc.getScriptGenerator().getOrientationName(i));
-				System.out.println("Orientation " + i + "            : " + calc.getScriptGenerator().getOrientation(i));
-			}
-	*/
-			System.out.println("=================");
-			return calc.getSubunits().isPseudoStiochiometric();
-		} else {
-			System.out.println("No protein chains found");
-			return false;
-		}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
 	}
-	
+
+	private static CalcBioAssemblySymmetry  analyzeSymmetry(
+			Structure s,
+			String pdbID,
+			int biolAssemblyNr, 
+			double threshold,
+			boolean structureOnly) 
+	{
+		
+		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
+		
+		parameters.setVerbose(false);
+		parameters.setSequenceIdentityThreshold(threshold);
+		parameters.setStructuralAlignmentOnly(structureOnly);
+		
+		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
+
+		return calc;
+	}
+
+
+
+
+	private static String getGlobalPseudoSymmetry(
+			QuatSymmetryDetector detector, QuatSymmetryParameters parameters) {
+
+		String script = "";
+		QuatSymmetryResults globalSymmetry = detector.getGlobalSymmetry();
+		if ( globalSymmetry == null)
+			return "";
+
+		if (parameters.isVerbose()) {
+			System.out.println();
+			System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
+			System.out.println();
+			System.out.println("Global symmetry:");
+			System.out.println("Stoichiometry       : " + globalSymmetry.getSubunits().getStoichiometry());
+			System.out.println("Pseudostoichiometry : " + globalSymmetry.getSubunits().isPseudoStiochiometric());
+			System.out.println("Point group         : " + globalSymmetry.getRotationGroup().getPointGroup());				
+			System.out.println("Symmetry RMSD       : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
+		}
+
+		AxisTransformation axisTransformation = new AxisTransformation(globalSymmetry);
+
+		// use factory method to get point group specific instance of script generator
+		JmolSymmetryScriptGenerator scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation, "g");
+
+		script += scriptGenerator.getOrientationWithZoom(0);
+		script += scriptGenerator.drawPolyhedron();
+		script += scriptGenerator.drawAxes();
+		script += scriptGenerator.colorBySymmetry();
+		
+		script += "draw axes* on; draw poly* on;";
+		
+		return script;
+	}
+
+	private static String getLocalSymmetryScript(QuatSymmetryDetector detector,QuatSymmetryParameters parameters) {
+		String script = "";
+
+		int count = 0;
+		for (QuatSymmetryResults localSymmetry: detector.getLocalSymmetry()) {
+			AxisTransformation at = new AxisTransformation(localSymmetry);
+			System.out.println();
+			System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
+			System.out.println("Stoichiometry       : " + localSymmetry.getSubunits().getStoichiometry());
+			System.out.println("Pseudostoichiometry : " + localSymmetry.getSubunits().isPseudoStiochiometric());
+			System.out.println("Point group         : " + localSymmetry.getRotationGroup().getPointGroup());				
+			System.out.println("Symmetry RMSD       : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
+			System.out.println();
+			JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGenerator.getInstance(at, "l"+count);
+			if (count == 0) {
+				script +=  gen.getOrientationWithZoom(0);
+				
+			} 
+			script +=  gen.drawPolyhedron();
+			script += gen.drawAxes();
+			script +=  gen.colorBySymmetry();
+
+			count++;
+		}
+		script += "draw poly* on; draw axes* on;";
+
+		return script;
+	}
+
 	private static Structure  readStructure(String pdbId, int bioAssemblyId) {
 		// initialize the PDB_DIR env variable
 		AtomCache cache = new AtomCache();
@@ -236,5 +330,11 @@ public class DemoOrientBioAssembly {
 		}
 		return structure;
 	}
+
+}
+
+enum SymmetryType{
+	Asymmetric, GlobalSymmetry, GlobalPseudoSymmetry,
+	LocalSymmetry, GlobalPseudosymmetrStructureOnly, LocalPseudosymmetryStructureOnly
 	
 }

@@ -14,6 +14,7 @@ import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
+import org.biojava.bio.structure.align.util.AFPChainScorer;
 
 public class SequenceAlignmentCluster {
 	private QuatSymmetryParameters parameters = null;
@@ -189,10 +190,24 @@ public class SequenceAlignmentCluster {
     		if (parameters.isVerbose()) {
     			System.out.println("SequenceAlignmentCluster: alignmentLengthFraction: " + alignmentLengthFraction);
     		}
-    		if (rmsd > parameters.getRmsdThreshold() || alignmentLengthFraction < parameters.getAlignmentFractionThreshold()) {
+//    		if (rmsd > parameters.getRmsdThreshold() || 
+//    				alignmentLengthFraction < parameters.getAlignmentFractionThreshold()) {
+//    			alignment = null;
+//    			return alignment;
+//    		}
+    		
+    		// alternative: tmSCore:
+    		// double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
+    		// if ( tmScore < 0.35) {
+    		// return null ...
+    		//}
+    		
+    		if ( !afp.isSignificantResult()  || 
+    				alignmentLengthFraction < parameters.getAlignmentFractionThreshold() ) {
     			alignment = null;
-    			return alignment;
+    			return null;
     		}
+    		
     	}
 		
 		List<Integer> align1 = new ArrayList<Integer>(alignment[0][0].length);

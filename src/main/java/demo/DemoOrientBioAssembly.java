@@ -36,17 +36,19 @@ import org.biojava3.structure.quaternary.core.AxisTransformation;
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
+import org.biojava3.structure.quaternary.core.SymmetryType;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 
 public class DemoOrientBioAssembly {
 
 	public static void main(String[] args){
 
-		//String[] pdbIDs = new String[]{"4INU", "4D8s","4EAR","4IYQ","3ZKR",};
 
-		//String[] pdbIDs = new String[]{"4HHB","4AQ5","1LTI","1STP","4F88","2W6E","2LXC","3OE7","4INU","4D8s","4EAR","4IYQ","3ZKR"};
+		// These cases should all be symmetric:
+		//String[] pdbIDs = new String[]{"4HHB","4AQ5","1LTI","1STP","4F88","2W6E","2LXC",
+		//			"3OE7","4INU","4D8s","4EAR","4IYQ","3ZKR","3ZDY"};
 
-		String[] pdbIDs = new String[]{"3ZDY",};
+		String[] pdbIDs = new String[]{"1M4X",};
 
 		/*
 		  
@@ -60,6 +62,10 @@ public class DemoOrientBioAssembly {
 			2W6E – local C3
 			2LXC – local C2
 			3OE7 – local C3
+			
+			Local Pseudosymmetry, structure only
+			
+			3ZDY
 
 		 */
 
@@ -74,7 +80,7 @@ public class DemoOrientBioAssembly {
 
 		pdbID = pdbID.toLowerCase();
 
-		int  biolAssemblyNr = 2;
+		int  biolAssemblyNr = 1;
 
 		Structure s;
 		
@@ -164,8 +170,7 @@ public class DemoOrientBioAssembly {
 
 						globalPointGroup = null;
 
-						System.out.println("!!! Local symmetry size:" + detectorPC.getLocalSymmetry().size());						
-						
+																		
 						if ( calcPC.getRotationGroup() != null) {
 							globalPointGroup = calcPC.getRotationGroup().getPointGroup();
 						}
@@ -333,8 +338,3 @@ public class DemoOrientBioAssembly {
 
 }
 
-enum SymmetryType{
-	Asymmetric, GlobalSymmetry, GlobalPseudoSymmetry,
-	LocalSymmetry, GlobalPseudosymmetrStructureOnly, LocalPseudosymmetryStructureOnly
-	
-}

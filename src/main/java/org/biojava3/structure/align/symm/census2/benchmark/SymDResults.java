@@ -154,7 +154,7 @@ public class SymDResults extends Results {
 		final String symDPath = args[1];
 		final File namesFile = new File(args[2]);
 		final File outputFile = new File(args[3]);
-		ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 		AtomCache cache = new AtomCache(pdbDir, false);
 		writeToFile(symDPath, namesFile, cache, outputFile);
 	}

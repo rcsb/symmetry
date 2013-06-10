@@ -43,6 +43,10 @@ public class AccuracyFinder {
 	private static final Logger logger = LogManager.getLogger(AccuracyFinder.class.getName());
 
 	public static void main(String[] args) throws IOException {
+		if (args.length != 1) {
+			System.err.println("Usage: " + AccuracyFinder.class.getSimpleName() + " input-file");
+			return;
+		}
 		AccuracyFinder finder = new AccuracyFinder(new File(args[0]));
 		System.out.println(finder);
 	}
@@ -75,8 +79,27 @@ public class AccuracyFinder {
 	private static Significance sig;
 	private static Significance symDSig;
 	static {
+		sig = new Significance() {
+			private static final double cutoff = 0.4;
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return true; // whatever
+			}
+
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				return true; // whatever
+			}
+
+			@Override
+			public boolean isSignificant(Result result) {
+				if (result.getOrder() == null || result.getOrder() < 2) return false;
+				if (result.getAlignment() == null) return false;
+				return result.getAlignment().getTmScore() >= cutoff;
+			}
+		};
 //		sig = new Significance() {
-//			private static final double cutoff = 0.4;
+//			private static final double cutoff = 10;
 //			@Override
 //			public boolean isPossiblySignificant(AFPChain afpChain) {
 //				return true; // whatever
@@ -90,27 +113,9 @@ public class AccuracyFinder {
 //			@Override
 //			public boolean isSignificant(Result result) {
 //				if (result.getAlignment() == null) return false;
-//				return result.getAlignment().getTmScore() >= cutoff;
+//				return result.getAlignment().getzScore() >= cutoff;
 //			}
 //		};
-		sig = new Significance() {
-			private static final double cutoff = 10;
-			@Override
-			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return true; // whatever
-			}
-
-			@Override
-			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				return true; // whatever
-			}
-
-			@Override
-			public boolean isSignificant(Result result) {
-				if (result.getAlignment() == null) return false;
-				return result.getAlignment().getzScore() >= cutoff;
-			}
-		};
 	}
 	
 	

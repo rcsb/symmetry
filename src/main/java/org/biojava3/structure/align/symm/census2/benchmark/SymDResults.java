@@ -49,6 +49,7 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.io.FastaAFPChainConverter;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopDatabase;
@@ -185,26 +186,34 @@ public class SymDResults extends Results {
 		if (!pdbFilesPath.endsWith("/"))
 			pdbFilesPath += "/";
 		for (ScopDomain domain : scopDomains) {
-			Structure structure = null;
+			Structure structure;
+			try {
+				structure = cache.getStructure(domain.getScopId());
+			} catch (StructureException e) {
+				throw new RuntimeException("Could not get Structure for domain " + domain.getScopId(), e);
+			} catch (IOException e) {
+				throw new RuntimeException("Could not create PDB file for domain " + domain.getScopId(), e);
+			}
 			final File file = new File(pdbFilesPath + domain.getScopId() + ".pdb");
 			if (!file.exists()) {
 				try {
-					structure = cache.getStructure(domain.getScopId());
 					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 					bw.write(structure.toPDB());
 					bw.close();
 				} catch (IOException e) {
 					throw new RuntimeException("Could not create PDB file for domain " + domain.getScopId(), e);
-				} catch (StructureException e) {
-					throw new RuntimeException("Could not get Structure for domain " + domain.getScopId(), e);
 				}
 			}
 			Result result;
 			try {
 				long startTime = System.currentTimeMillis();
 				result = runSymD(symDPath, file.getPath());
-				float tmScore = getTmScoreFromFastaFile(symDPath, domain.getScopId(), structure);
-				result.getAlignment().setTmScore(tmScore);
+				try {
+					float tmScore = getTmScoreFromFastaFile(domain.getScopId(), structure);
+					result.getAlignment().setTmScore(tmScore);
+				} catch (SymDException e) {
+					logger.error("Couldn't set TM-score for " + domain.getScopId(), e);
+				}
 				long endTime = System.currentTimeMillis();
 				timeTaken += (endTime - startTime);
 				nSuccess++;
@@ -218,18 +227,20 @@ public class SymDResults extends Results {
 		return results;
 	}
 
-	public static float getTmScoreFromFastaFile(String symDPath, String scopId, Structure structure) throws SymDException {
-		File fastaFile = new File(new File(symDPath).getParent() + scopId + "-best.fasta");
+	public static float getTmScoreFromFastaFile(String scopId, Structure structure) throws SymDException {
+		File fastaFile = new File(scopId + "-best.fasta");
 		try {
 			AFPChain afpChain = FastaAFPChainConverter.fastaFileToAfpChain(fastaFile, structure, structure);
+			if (afpChain == null) throw new SymDException("AFPChain is null");
+			System.out.println(afpChain.getTMScore());
 			return (float) afpChain.getTMScore();
 		} catch (Exception e) {
-			throw new SymDException("The FASTA file was wrong or could not be converted to an AFPChain");
+			throw new SymDException("The FASTA file was wrong or could not be converted to an AFPChain", e);
 		}
 	}
-	
-	public static Result runSymD(String symDPath, String pdbFilePath) throws SymDException {
-		final String[] cmd = new String[] {symDPath, pdbFilePath};
+
+	public static Result runSymD(String directory, String pdbFilePath) throws SymDException {
+		final String[] cmd = new String[] {directory, pdbFilePath};
 		final String output = runCmd(cmd); // waits for completion
 		try {
 			return fromOutput(output);

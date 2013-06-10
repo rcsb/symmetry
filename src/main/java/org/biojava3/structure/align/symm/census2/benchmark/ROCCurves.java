@@ -37,6 +37,7 @@ import java.util.TreeSet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.biojava3.structure.align.symm.census2.Result;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -75,6 +76,10 @@ public class ROCCurves {
 	 * 
 	 */
 	public static void main(String[] args) {
+		if (args.length != 2 && args.length != 4) {
+			System.err.println("Usage: " + ROCCurves.class.getSimpleName() + " input-cesymm-benchmark-file output-cesymm-file [input-symd-benchmark-file output-symd-file]");
+			return;
+		}
 		runForCeSymm(new File(args[0]), new File(args[1]));
 		if (args.length > 2) {
 			runForSymD(new File(args[2]), new File(args[3]));
@@ -105,7 +110,7 @@ public class ROCCurves {
 //			ceSymmCriteria.add(Criterion.identity().noFail(-10000000f));
 //			ceSymmCriteria.add(Criterion.identity().noFail(-10000000f));
 //			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.1));
-			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.15));
+//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.15));
 //			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.3));
 //			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.4));
 //			ceSymmCriteria.add(Criterion.hasOrder(0.1f));
@@ -142,6 +147,16 @@ public class ROCCurves {
 			List<Criterion> symdCriteria = new ArrayList<Criterion>();
 			symdCriteria.add(Criterion.symdZScore());
 			symdCriteria.add(Criterion.symdTm());
+			symdCriteria.add(new Criterion() {
+				@Override
+				public double get(Result result) throws NoncomputableCriterionException {
+					return result.getAlignment().getTmpr();
+				}
+				@Override
+				public String getName() {
+					return "Tmpr";
+				}
+			});
 			ROCCurves symdRocs = new ROCCurves(input, symdCriteria);
 			symdRocs.graph(output);
 

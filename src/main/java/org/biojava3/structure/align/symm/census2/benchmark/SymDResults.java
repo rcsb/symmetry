@@ -22,12 +22,10 @@
  */
 package org.biojava3.structure.align.symm.census2.benchmark;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +33,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -48,7 +47,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
+import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.io.FastaAFPChainConverter;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
@@ -184,10 +185,11 @@ public class SymDResults extends Results {
 		if (!pdbFilesPath.endsWith("/"))
 			pdbFilesPath += "/";
 		for (ScopDomain domain : scopDomains) {
+			Structure structure = null;
 			final File file = new File(pdbFilesPath + domain.getScopId() + ".pdb");
 			if (!file.exists()) {
 				try {
-					Structure structure = cache.getStructure(domain.getScopId());
+					structure = cache.getStructure(domain.getScopId());
 					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 					bw.write(structure.toPDB());
 					bw.close();
@@ -201,6 +203,8 @@ public class SymDResults extends Results {
 			try {
 				long startTime = System.currentTimeMillis();
 				result = runSymD(symDPath, file.getPath());
+				float tmScore = getTmScoreFromFastaFile(symDPath, domain.getScopId(), structure);
+				result.getAlignment().setTmScore(tmScore);
 				long endTime = System.currentTimeMillis();
 				timeTaken += (endTime - startTime);
 				nSuccess++;
@@ -214,6 +218,16 @@ public class SymDResults extends Results {
 		return results;
 	}
 
+	public static float getTmScoreFromFastaFile(String symDPath, String scopId, Structure structure) throws SymDException {
+		File fastaFile = new File(new File(symDPath).getParent() + scopId + "-best.fasta");
+		try {
+			AFPChain afpChain = FastaAFPChainConverter.fastaFileToAfpChain(fastaFile, structure, structure);
+			return (float) afpChain.getTMScore();
+		} catch (Exception e) {
+			throw new SymDException("The FASTA file was wrong or could not be converted to an AFPChain");
+		}
+	}
+	
 	public static Result runSymD(String symDPath, String pdbFilePath) throws SymDException {
 		final String[] cmd = new String[] {symDPath, pdbFilePath};
 		final String output = runCmd(cmd); // waits for completion
@@ -228,22 +242,14 @@ public class SymDResults extends Results {
 
 		List<ScopDomain> domains = new ArrayList<ScopDomain>();
 		ScopDatabase scop = ScopFactory.getSCOP();
+		Map<String,KnownInfo> infos;
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(lineByLine));
-			String line = "";
-			while ((line = br.readLine()) != null) {
-				if (line.trim().isEmpty())
-					continue;
-				ScopDomain domain = scop.getDomainByScopID(line);
-				if (domain == null) {
-					logger.error("No SCOP domain with id " + line + " was found");
-				} else {
-					domains.add(domain);
-				}
-			}
-			br.close();
+			infos = SampleBuilder.getOrders(lineByLine);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
+		}
+		for (String d : infos.keySet()) {
+			domains.add(scop.getDomainByScopID(d));
 		}
 
 		writeToFile(symDPath, domains, cache, outputFile);

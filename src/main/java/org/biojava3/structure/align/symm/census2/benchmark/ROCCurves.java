@@ -147,6 +147,7 @@ public class ROCCurves {
 			List<Criterion> symdCriteria = new ArrayList<Criterion>();
 			symdCriteria.add(Criterion.symdZScore());
 			symdCriteria.add(Criterion.symdTm());
+			symdCriteria.add(Criterion.tmScore());
 			symdCriteria.add(new Criterion() {
 				@Override
 				public double get(Result result) throws NoncomputableCriterionException {

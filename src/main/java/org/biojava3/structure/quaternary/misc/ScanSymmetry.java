@@ -157,7 +157,7 @@ public class ScanSymmetry implements Runnable {
 				long tc1 = System.nanoTime(); 	
 
 				QuatSymmetryParameters params = new QuatSymmetryParameters();
-				params.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
+
 				
 				List<String> chainIds = null;
 				String pointGroup = null;
@@ -179,7 +179,7 @@ public class ScanSymmetry implements Runnable {
 					if (! workflow.hasProteinSubunits()) {
 						continue;
 					}
-					QuatSymmetryResults results = workflow.getGlobalSymmetry();
+					QuatSymmetryResults results = workflow.getGlobalSymmetry().get(0);
 
 					RotationGroup rotationGroup = results.getRotationGroup();	
 					pointGroup = rotationGroup.getPointGroup();

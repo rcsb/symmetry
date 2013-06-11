@@ -35,8 +35,10 @@ public class ClusterMerger {
 							alignment.getRmsd() <= parameters.getRmsdThreshold()) {
 						merged[j] = true;
 						pairwiseAlignments.add(alignment);
-						System.out.println("Pairwise alignment: " + i + "-" + j + ": " + alignment.getSequenceIdentity());
-						System.out.println(alignment);
+						if (parameters.isVerbose()) {
+							System.out.println("ClusterMerger: pairwise cluster alignment: " + i + "-" + j + " seq. identity: " + alignment.getSequenceIdentity());
+							System.out.println(alignment);
+						}
 					}
 				}
 			}
@@ -61,11 +63,8 @@ public class ClusterMerger {
 			
 			for (PairwiseAlignment alignment: pairwiseAlignments) {
 				if (alignment.getCluster1() == cluster && alignment.getSequenceIdentity() >= sequenceIdentityCutoff) {
-//					clone.setMinSeqId ...Min(cluster1, cluster2, alignment.getSequenceIdentity);a
-					System.out.println("ClusterMerger: seq id: " + alignment.getSequenceIdentity());
 					clone.setMinSequenceIdentity(Math.min(clone.getMinSequenceIdentity(), alignment.getSequenceIdentity()));
 					clone.setMaxSequenceIdentity(Math.max(clone.getMaxSequenceIdentity(), alignment.getSequenceIdentity()));
-					System.out.println("ClusterMerger: seq id: " + clone.getMinSequenceIdentity() + " - " + clone.getMaxSequenceIdentity());
 					combineClusters(clone, alignment);
 					int index = map.get(alignment.getCluster2());
 					processed[index] = true;
@@ -74,7 +73,6 @@ public class ClusterMerger {
 		}
 		
 		ProteinSequenceClusterer.sortSequenceClustersBySize(mergedClusters);
-		System.out.println("MergedClusters: " + sequenceIdentityCutoff + ": \n"+ mergedClusters);
 		return mergedClusters;
 	}
 	

@@ -90,27 +90,22 @@ public class FindQuarternarySymmetry {
 	}
 
 	private void createSubunits() {
-		ChainClusterer chainClusterer = new ChainClusterer(structure, parameters);
-		compositionFormula = chainClusterer.getStoichiometry();
-		chainIds = chainClusterer.getChainIds();
+//		ChainClusterer chainClusterer = new ChainClusterer(structure, parameters);
+//		compositionFormula = chainClusterer.getStoichiometry();
+//		chainIds = chainClusterer.getChainIds();
+//
+//		if (chainIds.size() == 0) {
+//			System.err.println("createSubunits Could not find chainIds!"); 
+//			maxFolds = 0;
+//			return;
+//		}
+//		List<Integer> folds = chainClusterer.getFolds();
+//		maxFolds = folds.get(folds.size()-1);
 
-		if (chainIds.size() == 0) {
-			System.err.println("createSubunits Could not find chainIds!"); 
-			maxFolds = 0;
-			return;
-		}
-		List<Integer> folds = chainClusterer.getFolds();
-		maxFolds = folds.get(folds.size()-1);
-//		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
-//				chainClusterer.getSequenceClusterIds(),
-//				chainClusterer.getPseudoStoichiometry(),
-//				folds,
-//				chainClusterer.getChainIds(),
-//				chainClusterer.getModelNumbers());
-		pseudoSymmetric = subunits.isPseudoStoichiometric();
-		maxFolds = folds.get(folds.size()-1);
-		if ( parameters.isVerbose())
-			System.out.println("Subunits: centroids: " + subunits.getCentroid() + " folds:" + subunits.getFolds());
+//		pseudoSymmetric = subunits.isPseudoStoichiometric();
+//		maxFolds = folds.get(folds.size()-1);
+//		if ( parameters.isVerbose())
+//			System.out.println("Subunits: centroids: " + subunits.getCentroid() + " folds:" + subunits.getFolds());
 		//		subunits = new Subunits(chainClusterer.getCalphaCoordinates(), 
 		//				chainClusterer.getSequenceClusterIds(),
 		//				folds,

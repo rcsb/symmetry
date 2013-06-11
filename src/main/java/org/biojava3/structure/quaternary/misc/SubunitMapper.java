@@ -2,6 +2,7 @@ package org.biojava3.structure.quaternary.misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -157,17 +158,17 @@ public class SubunitMapper {
 	}
 	
 	private List<Integer> getMappingByStructuralSuperposition() {
-		StructureAlignment algo = null;
-		try {
-			algo = StructureAlignmentFactory.getAlgorithm(SmithWaterman3Daligner.algorithmName);
-		} catch (StructureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		ChainClusterer seqGroup1 = new ChainClusterer(structure1, parameters);
-		List<Atom[]> cas1 = seqGroup1.getCalphaTraces();
-		ChainClusterer seqGroup2 = new ChainClusterer(structure2, parameters);
-		List<Atom[]> cas2 = seqGroup2.getCalphaTraces();
+//		StructureAlignment algo = null;
+//		try {
+//			algo = StructureAlignmentFactory.getAlgorithm(SmithWaterman3Daligner.algorithmName);
+//		} catch (StructureException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		ChainClusterer seqGroup1 = new ChainClusterer(structure1, parameters);
+//		List<Atom[]> cas1 = seqGroup1.getCalphaTraces();
+//		ChainClusterer seqGroup2 = new ChainClusterer(structure2, parameters);
+//		List<Atom[]> cas2 = seqGroup2.getCalphaTraces();
 		
 	
 //		System.out.println("Chain1: orig:");
@@ -180,40 +181,40 @@ public class SubunitMapper {
 //			System.out.println(Arrays.toString(a.getCoords()));
 //		}
 		
-		AFPChain afpChain = null;
-		try {
-			afpChain = algo.align(cas2.get(0), cas1.get(0));
-		} catch (StructureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		System.out.println("Identity: " + afpChain.getIdentity());
-		System.out.println("Chain rmsd: " + afpChain.getChainRmsd());
+//		AFPChain afpChain = null;
+//		try {
+//			afpChain = algo.align(cas2.get(0), cas1.get(0));
+//		} catch (StructureException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		System.out.println("Identity: " + afpChain.getIdentity());
+//		System.out.println("Chain rmsd: " + afpChain.getChainRmsd());
+//		
+//		Atom[] trans = afpChain.getBlockShiftVector();
+//		Matrix[] mb = afpChain.getBlockRotationMatrix();	
+//		
+//		if (mb == null || mb[0] == null || trans == null | trans[0] == null) {
+//			return new ArrayList<Integer>();
+//		}
 		
-		Atom[] trans = afpChain.getBlockShiftVector();
-		Matrix[] mb = afpChain.getBlockRotationMatrix();	
 		
-		if (mb == null || mb[0] == null || trans == null | trans[0] == null) {
-			return new ArrayList<Integer>();
-		}
-		
-		
-		List<Point3d> transformed = new ArrayList<Point3d>();
-		for (int i = 0; i < subunits1.getOriginalCenters().size(); i++) {
-			Point3d p = new Point3d(subunits1.getOriginalCenters().get(i));
-			double[] c = {p.x, p.y, p.z};
-			Atom a = new AtomImpl();
-			a.setCoords(c);
-			Calc.rotate(a, mb[0]);
-			Calc.shift(a, trans[0]);
-			c = a.getCoords();
-			p.set(c);
-			transformed.add(p);
-		}
-		
-		List<Integer> map = calcMapping(subunits2.getOriginalCenters(), transformed);
+//		List<Point3d> transformed = new ArrayList<Point3d>();
+//		for (int i = 0; i < subunits1.getOriginalCenters().size(); i++) {
+//			Point3d p = new Point3d(subunits1.getOriginalCenters().get(i));
+//			double[] c = {p.x, p.y, p.z};
+//			Atom a = new AtomImpl();
+//			a.setCoords(c);
+//			Calc.rotate(a, mb[0]);
+//			Calc.shift(a, trans[0]);
+//			c = a.getCoords();
+//			p.set(c);
+//			transformed.add(p);
+//		}
+//		
+//		List<Integer> map = calcMapping(subunits2.getOriginalCenters(), transformed);
 
-		return map;
+		return Collections.emptyList();
 	}
 	
 	private static Vector3d[] getAxisVectors(Subunits subunits, RotationGroup rotGroup, int sign) {

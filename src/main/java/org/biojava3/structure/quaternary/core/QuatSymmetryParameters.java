@@ -1,9 +1,10 @@
 package org.biojava3.structure.quaternary.core;
 
+import java.util.Arrays;
+
 public class QuatSymmetryParameters {
 	private int minimumSequenceLength = 20;
-	private boolean structuralAlignmentOnly = false;
-	private double sequenceIdentityThreshold = 0.95;
+	private double[] sequenceIdentityThresholds = {0.0, 0.95};
 	private double sequencePseudoSymmetryThreshold = 0.95;
 	private double alignmentFractionThreshold = 0.9;
 	private double rmsdThreshold = 7.0;
@@ -27,15 +28,21 @@ public class QuatSymmetryParameters {
 	/**
 	 * @return the sequenceIdentityThreshold
 	 */
-	public double getSequenceIdentityThreshold() {
-		return sequenceIdentityThreshold;
-	}
+	
 	/**
-	 * @param sequenceIdentityThreshold the sequenceIdentityThreshold to set
+	 * @return the sequenceIdentityThreshold
 	 */
-	public void setSequenceIdentityThreshold(double sequenceIdentityThreshold) {
-		this.sequenceIdentityThreshold = sequenceIdentityThreshold;
+	public double[] getSequenceIdentityThresholds() {
+		return sequenceIdentityThresholds;
 	}
+	
+	/**
+	 * @param sequenceIdentityThresholds the sequenceIdentityThresholds to set
+	 */
+	public void setSequenceIdentityThresholds(double[] sequenceIdentityThresholds) {
+		this.sequenceIdentityThresholds = sequenceIdentityThresholds;
+	}
+	
 	/**
 	 * @return the alignmentFractionThreshold
 	 */
@@ -66,14 +73,6 @@ public class QuatSymmetryParameters {
 	public void setAngleThreshold(double angleThreshold) {
 		this.angleThreshold = angleThreshold;
 	}
-
-	public boolean isStructuralAlignmentOnly() {
-		return structuralAlignmentOnly;
-	}
-	
-	public void setStructuralAlignmentOnly(boolean structuralAlignmentOnly) {
-		this.structuralAlignmentOnly = structuralAlignmentOnly;
-	}
 	
 	public double getSequencePseudoSymmetryThreshold() {
 		return sequencePseudoSymmetryThreshold;
@@ -99,31 +98,28 @@ public class QuatSymmetryParameters {
 	
 	public String toString() {
 		StringBuilder s = new StringBuilder();
-		s.append("Minimum protein sequence length  : ");
+		s.append("Minimum protein sequence length   : ");
 		s.append(minimumSequenceLength);
 		s.append(n);
-		s.append("Sequence identity threshold      : ");
-		s.append(sequenceIdentityThreshold);
+		s.append("Sequence identity thresholds      : ");
+		s.append(Arrays.toString(sequenceIdentityThresholds));
 		s.append(n);
-		s.append("Sequence pseudosymmetry threshold: ");
+		s.append("Sequence pseudosymmetry threshold : ");
 		s.append(sequencePseudoSymmetryThreshold);
 		s.append(n);
-		s.append("Alignment fraction threshold     : ");
+		s.append("Alignment fraction threshold      : ");
 		s.append(alignmentFractionThreshold);
 		s.append(n);
-		s.append("Angle threshold                  : ");
+		s.append("Angle threshold                   : ");
 		s.append(angleThreshold);
 		s.append(n);	
-		s.append("Symmetry RMSD threshold          : ");
+		s.append("Symmetry RMSD threshold           : ");
 		s.append(rmsdThreshold);
 		s.append(n);
-		s.append("Structural alignment only        : ");
-		s.append(structuralAlignmentOnly);
-		s.append(n);
-		s.append("Local symmetry                   : ");
+		s.append("Local symmetry                    : ");
 		s.append(localSymmetry);
 		s.append(n);
-		s.append("Verbose                          : ");
+		s.append("Verbose                           : ");
 		s.append(verbose);
 		s.append(n);
 		return s.toString();

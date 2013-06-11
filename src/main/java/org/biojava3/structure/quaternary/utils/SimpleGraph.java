@@ -1,10 +1,8 @@
-package org.biojava3.structure.utils;
+package org.biojava3.structure.quaternary.utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.biojava3.structure.quaternary.utils.Edge;
-import org.biojava3.structure.quaternary.utils.Graph;
 
 /**
  *

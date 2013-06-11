@@ -33,6 +33,7 @@ public class Subunits {
     private List<Point3d> originalCenters = new ArrayList<Point3d>();
     private List<Point3d> centers = new ArrayList<Point3d>();
     private List<Vector3d> unitVectors = new ArrayList<Vector3d>();
+    private boolean pseudoSymmetric = false;
 
     private Point3d centroid;
     private MomentsOfInertia momentsOfInertia = new MomentsOfInertia();
@@ -73,7 +74,15 @@ public class Subunits {
     	return false;
     }
     
-    public double getMinSequenceIdentity() {
+    public boolean isPseudoSymmetric() {
+		return pseudoSymmetric;
+	}
+
+	public void setPseudoSymmetric(boolean pseudoSymmetric) {
+		this.pseudoSymmetric = pseudoSymmetric;
+	}
+
+	public double getMinSequenceIdentity() {
     	double minId = 1.0;
     	for (double seqId: minSequenceIdentity) {
     		minId = Math.min(seqId,  minId);

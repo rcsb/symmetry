@@ -32,6 +32,8 @@ public class QuatSymmetryResults {
 	private Subunits subunits = null;
 	private RotationGroup rotationGroup = null;
 	private String method = null;
+	private boolean local = false;
+	private boolean preferredResult = false;
 	
 	public QuatSymmetryResults(Subunits subunits, RotationGroup rotationGroup, String method) {
 		this.subunits = subunits;
@@ -65,5 +67,25 @@ public class QuatSymmetryResults {
 	 */
 	public String getMethod() {
 		return method;
+	}
+
+	/**
+	 * Return true 
+	 * @return
+	 */
+	public boolean isLocal() {
+		return local;
+	}
+
+	public void setLocal(boolean local) {
+		this.local = local;
+	}
+
+	public boolean isPreferredResult() {
+		return preferredResult;
+	}
+
+	public void setPreferredResult(boolean preferredResult) {
+		this.preferredResult = preferredResult;
 	}
 }

@@ -73,7 +73,7 @@ public class HelixParameters {
 		return this.alignmentMatrix;
 	}
 	
-	public void setAlignmetMatrix(Matrix4d alignmentMatrix) {
+	public void setAlignmentMatrix(Matrix4d alignmentMatrix) {
 		this.alignmentMatrix = alignmentMatrix;
 	}
 	

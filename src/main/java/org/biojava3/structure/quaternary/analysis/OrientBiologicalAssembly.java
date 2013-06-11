@@ -5,8 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import javax.vecmath.Matrix4d;
-
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
@@ -14,7 +12,6 @@ import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.ChemCompProvider;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
-import org.biojava3.structure.quaternary.core.AxisTransformation;
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 
@@ -114,8 +111,7 @@ public class OrientBiologicalAssembly {
 		if (! bioassemblyId.isEmpty()) {
 			prefix += "_" + bioassemblyId;
 		}
-
-		
+	
 		QuatSymmetryDetector detector = calc.orient();
 		
 		boolean hasProtein = detector.hasProteinSubunits();

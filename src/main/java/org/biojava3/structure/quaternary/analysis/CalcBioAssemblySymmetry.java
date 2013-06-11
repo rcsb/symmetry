@@ -71,42 +71,40 @@ public class CalcBioAssemblySymmetry {
 
 	public QuatSymmetryDetector orient(){
 		QuatSymmetryDetector detector = new QuatSymmetryDetector(bioAssembly, parameters);
-		double seqIdentityThresholds[] = parameters.getSequenceIdentityThresholds();
 
 		if (detector.hasProteinSubunits()) {	
-			for (int i = 0; i < seqIdentityThresholds.length; i++) {
+			for (int i = 0; i < detector.getGlobalSymmetryCount(); i++) {
 
-				QuatSymmetryResults globalSymmetry = detector.getGlobalSymmetry(seqIdentityThresholds[i]);
-				if (globalSymmetry != null) {
-					
-					if (parameters.isVerbose()) {
-						System.out.println();
-//						System.out.println("Results for " + Math.round(seqIdentityThresholds[i]*100) + "% sequence identity threshold:");
-						System.out.println();
-						System.out.println("Global symmetry:");
-						System.out.println("Stoichiometry         : " + globalSymmetry.getSubunits().getStoichiometry());
-						System.out.println("Pseudostoichiometry   : " + globalSymmetry.getSubunits().isPseudoStoichiometric());
-						System.out.println("Pseudosymmetry        : " + globalSymmetry.getSubunits().isPseudoSymmetric());
-						System.out.println("Min sequence identity : " + Math.round(globalSymmetry.getSubunits().getMinSequenceIdentity()*100));
-						System.out.println("Max sequence identity : " + Math.round(globalSymmetry.getSubunits().getMaxSequenceIdentity()*100));
-						System.out.println("Point group           : " + globalSymmetry.getRotationGroup().getPointGroup());				
-						System.out.println("Symmetry RMSD         : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
-						System.out.println("Prefered result       : " + globalSymmetry.isPreferredResult());
-					}
+				QuatSymmetryResults globalSymmetry = detector.getGlobalSymmetry(i);
 
-					if (globalSymmetry.isPreferredResult()) {
-						this.results = globalSymmetry;
-						this.axisTransformation = new AxisTransformation(globalSymmetry);
-
-						// use factory method to get point group specific instance of script generator
-						this.scriptGenerator = JmolSymmetryScriptGenerator.getInstance(this.axisTransformation, "g");
-					}
-					
+				if (parameters.isVerbose()) {
+					System.out.println();
+					System.out.println();
+					System.out.println("Global symmetry:");
+					System.out.println("Stoichiometry         : " + globalSymmetry.getSubunits().getStoichiometry());
+					System.out.println("Pseudostoichiometry   : " + globalSymmetry.getSubunits().isPseudoStoichiometric());
+					System.out.println("Pseudosymmetry        : " + globalSymmetry.getSubunits().isPseudoSymmetric());
+					System.out.println("Min sequence identity : " + Math.round(globalSymmetry.getSubunits().getMinSequenceIdentity()*100));
+					System.out.println("Max sequence identity : " + Math.round(globalSymmetry.getSubunits().getMaxSequenceIdentity()*100));
+					System.out.println("Point group           : " + globalSymmetry.getRotationGroup().getPointGroup());				
+					System.out.println("Symmetry RMSD         : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
+					System.out.println("Prefered result       : " + globalSymmetry.isPreferredResult());
 				}
 
-				List<QuatSymmetryResults> localSymmetryResults = detector.getLocalSymmetry(seqIdentityThresholds[i]);
+				if (globalSymmetry.isPreferredResult()) {
+					this.results = globalSymmetry;
+					this.axisTransformation = new AxisTransformation(globalSymmetry);
 
-				if (parameters.isVerbose() && localSymmetryResults != null) {
+					// use factory method to get point group specific instance of script generator
+					this.scriptGenerator = JmolSymmetryScriptGenerator.getInstance(this.axisTransformation, "g");
+				}
+			}
+			
+			for (int i = 0; i < detector.getLocalSymmetryCount(); i++) {	
+
+				List<QuatSymmetryResults> localSymmetryResults = detector.getLocalSymmetry(i);
+
+				if (parameters.isVerbose()) {
 					System.out.println();
 					System.out.println("Local symmetry: ");
 					int count = 0;
@@ -114,7 +112,6 @@ public class CalcBioAssemblySymmetry {
 					for (QuatSymmetryResults localSymmetry: localSymmetryResults) {
 						AxisTransformation at = new AxisTransformation(localSymmetry);
 						System.out.println();
-//						System.out.println("Results for " + Math.round(seqIdentityThresholds[i]*100) + "% sequence identity threshold:");
 						System.out.println("Stoichiometry         : " + localSymmetry.getSubunits().getStoichiometry());
 						System.out.println("Pseudostoichiometry   : " + localSymmetry.getSubunits().isPseudoStoichiometric());
 						System.out.println("Pseudosymmetry        : " + localSymmetry.getSubunits().isPseudoSymmetric());

@@ -21,7 +21,6 @@ public class SequenceAlignmentCluster implements Cloneable {
 	private List<Atom[]> alignedCAlphaAtoms = null;
 
 	private int alignmentLength = 0;
-	private boolean pseudoStoichiometric = false;
 	private double minSequenceIdentity = 1.0;
 	private double maxSequenceIdentity = 0.0;
 	
@@ -33,7 +32,6 @@ public class SequenceAlignmentCluster implements Cloneable {
 	
 	public boolean isPseudoStoichiometric() {
 		return minSequenceIdentity < parameters.getSequencePseudoSymmetryThreshold();
-//		return pseudoStoichiometric;
 	}
 	
 	public double getMinSequenceIdentity() {
@@ -152,7 +150,6 @@ public class SequenceAlignmentCluster implements Cloneable {
 			List<Integer> alig2 = new ArrayList<Integer>();
 			Atom[] referenceAtoms = u.getCalphaAtoms();
 			int inCommon = alignIdenticalSequence(referenceAtoms, cAlphaAtoms, alig1, alig2);
-//			System.out.println("in common: "  + inCommon);
 
 			if (inCommon > 0) {
 				UniqueSequenceList seqList = new UniqueSequenceList(cAlphaAtoms, chainId, modelNumber, structureId, sequence);
@@ -209,7 +206,6 @@ public class SequenceAlignmentCluster implements Cloneable {
 		// create aligned C alpha atom lists
 		run();
 		cluster.run();
-		pseudoStoichiometric = false;
 			
 		Atom[] referenceAtoms1 = this.getUniqueSequenceList().get(0).getCalphaAtoms();
 		Atom[] referenceAtoms2 = cluster.getUniqueSequenceList().get(0).getCalphaAtoms();
@@ -234,20 +230,12 @@ public class SequenceAlignmentCluster implements Cloneable {
 		if (parameters.isVerbose()) {
 			System.out.println("SequenceAlignmentCluster: CE: seq. identity: " + (float)identity + " RMSD: " + (float)rmsd + " alignment length: " + afp.getOptLength());
 		}
-			
-		// if this is not a structural alignment, check the sequence identity threshold
-//		if (! parameters.isStructuralAlignmentOnly() && identity < parameters.getSequenceIdentityThreshold()) {
-//			return null;
-//		}
-		
-		System.out.println(afp.getAlnseq1());
-		System.out.println(afp.getAlnseq2());
 	
 		int[][][] alignment = afp.getOptAln();
     	if (alignment != null) {		
     		alignmentLengthFraction = (double)afp.getOptLength()/Math.max(referenceAtoms1.length, referenceAtoms2.length);
     		if (parameters.isVerbose()) {
-    			System.out.println("SequenceAlignmentCluster: alignmentLengthFraction: " + alignmentLengthFraction);
+    			System.out.println("SequenceAlignmentCluster: alignmentLengthFraction from CE alignment: " + alignmentLengthFraction);
     		}
     		if (afp.isSignificantResult() && alignmentLengthFraction < parameters.getAlignmentFractionThreshold()) {
     			alignment = null;
@@ -263,7 +251,6 @@ public class SequenceAlignmentCluster implements Cloneable {
 			if (identity > maxSequenceIdentity) {
 				maxSequenceIdentity = identity;
 			}
-			pseudoStoichiometric = true;
 		}
 		return alignment;
 	}
@@ -300,7 +287,6 @@ public class SequenceAlignmentCluster implements Cloneable {
 			return 0;
 		}
 		int len =  afp.getOptLength();
-		System.out.println("identity: " + afp.getIdentity() + " len: " + len);
 
 		List<Integer> delta = new ArrayList<Integer>();
 		Set<Integer> unique = new HashSet<Integer>();
@@ -345,7 +331,6 @@ public class SequenceAlignmentCluster implements Cloneable {
 	}
 	
 	private void createAlignedCAlphaAtoms() {
-		System.out.println("SequenceAlignmentCluster: createAlingedCAlphaAtoms");
 		List<Integer> indices = getReferenceResidueIndices();
 		alignmentLength = indices.size();
 		alignedCAlphaAtoms = new ArrayList<Atom[]>();

@@ -32,6 +32,7 @@ public class QuatSymmetryResults {
 	private Subunits subunits = null;
 	private RotationGroup rotationGroup = null;
 	private String method = null;
+	private double sequenceIdentityThreshold = 0;
 	private boolean local = false;
 	private boolean preferredResult = false;
 	
@@ -67,6 +68,14 @@ public class QuatSymmetryResults {
 	 */
 	public String getMethod() {
 		return method;
+	}
+
+	public double getSequenceIdentityThreshold() {
+		return sequenceIdentityThreshold;
+	}
+
+	public void setSequenceIdentityThreshold(double sequenceIdentityThreshold) {
+		this.sequenceIdentityThreshold = sequenceIdentityThreshold;
 	}
 
 	/**

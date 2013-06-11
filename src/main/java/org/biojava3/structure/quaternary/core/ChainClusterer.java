@@ -205,6 +205,4 @@ public class ChainClusterer  {
 			caCoords.add(trace);
 		}
 	}
-
-	
 }

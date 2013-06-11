@@ -154,8 +154,6 @@ public class XYShapeRendererDemo1 extends ApplicationFrame {
 	public static XYZDataset createDataset() {
 
 		AtomCache cache = new AtomCache();
-		cache.setPath("/Users/andreas/WORK/PDB/");
-
 		
 
 		SortedSet<String> repres = JFatCatClient.getRepresentatives("http://emmy.rcsb.org/jfatcatserver/align/", 40);

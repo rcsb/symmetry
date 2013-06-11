@@ -3,9 +3,11 @@ package org.biojava3.structure.quaternary.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.vecmath.AxisAngle4d;
@@ -24,7 +26,7 @@ import org.biojava3.structure.quaternary.utils.MarkFromRoot;
 import org.biojava3.structure.quaternary.utils.SimpleGraph;
 
 // 3J06, 1PFI (part helix, then expanding radius) helical
-public class HelixCheck {
+public class HelixCheckNew {
 	private static final Vector3d Y_AXIS = new Vector3d(0,1,0);
 	private static final Vector3d Z_AXIS = new Vector3d(0,0,1);
 	private static String N_FOLD_AXIS_COLOR = "red";
@@ -41,7 +43,7 @@ public class HelixCheck {
 	
 	private List<HelixParameters> helixList = new ArrayList<HelixParameters>();
 
-	public HelixCheck(Subunits subunits, RotationGroup rotationGroup, QuatSymmetryParameters quatSymmetryParameters) {
+	public HelixCheckNew(Subunits subunits, RotationGroup rotationGroup, QuatSymmetryParameters quatSymmetryParameters) {
 		this.subunits = subunits;
 		this.rotationGroup = rotationGroup;
 		this.quatSymmetryParameters = quatSymmetryParameters;
@@ -208,6 +210,12 @@ public class HelixCheck {
 		return colors;	
 	}
 	
+		
+    private List<Integer> getSmallestSubunitCluster() {
+    	Set<Integer> uniqueModelNumbers = new HashSet<Integer>(subunits.getModelNumbers());
+    	return new ArrayList<Integer>();
+    }
+    
 	private void run() {
 		for (Entry<Integer,List<Integer>> entry: getPairs().entrySet()) {
 			int contacts = (int)Math.floor(entry.getKey()/1000.0);

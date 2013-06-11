@@ -124,7 +124,6 @@ public class TestLoadingManyStoichs {
         QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 	    parameters.setVerbose(false);
 
-		parameters.setSequenceIdentityThreshold(threshold);
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
 		QuatSymmetryDetector detector = calc.orient();
 		boolean hasProtein = detector.hasProteinSubunits();

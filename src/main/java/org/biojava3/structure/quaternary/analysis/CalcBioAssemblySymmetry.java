@@ -24,6 +24,9 @@
  */
 package org.biojava3.structure.quaternary.analysis;
 
+
+import java.util.List;
+
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.ResourceManager;
 
@@ -38,7 +41,7 @@ import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 public class CalcBioAssemblySymmetry {
 	private Structure bioAssembly;
 	private QuatSymmetryParameters parameters;
-	private QuatSymmetryResults globalSymmetry;
+	private QuatSymmetryResults results;
 	private AxisTransformation axisTransformation;
 
 	private JmolSymmetryScriptGenerator scriptGenerator;
@@ -61,77 +64,92 @@ public class CalcBioAssemblySymmetry {
 		this.bioAssembly = bioAssembly;
 		this.parameters = parameters;
 	}
-	
+
 	public QuatSymmetryParameters getParameters(){
 		return parameters;
 	}
-	
+
 	public QuatSymmetryDetector orient(){
-		QuatSymmetryDetector detector = new QuatSymmetryDetector(bioAssembly, parameters);	
-		boolean hasProtein = detector.hasProteinSubunits();
+		QuatSymmetryDetector detector = new QuatSymmetryDetector(bioAssembly, parameters);
+		double seqIdentityThresholds[] = parameters.getSequenceIdentityThresholds();
 
-		if (hasProtein) {		
-			globalSymmetry = detector.getGlobalSymmetry();
-			if (parameters.isVerbose()) {
-				System.out.println();
-				System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
-				System.out.println();
-				System.out.println("Global symmetry:");
-				System.out.println("Stoichiometry         : " + globalSymmetry.getSubunits().getStoichiometry());
-				System.out.println("Pseudostoichiometry   : " + globalSymmetry.getSubunits().isPseudoStoichiometric());
-				System.out.println("Min sequence identity : " + Math.round(globalSymmetry.getSubunits().getMinSequenceIdentity()*100));
-				System.out.println("Max sequence identity : " + Math.round(globalSymmetry.getSubunits().getMaxSequenceIdentity()*100));
-				System.out.println("Point group           : " + globalSymmetry.getRotationGroup().getPointGroup());				
-				System.out.println("Symmetry RMSD         : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
+		if (detector.hasProteinSubunits()) {	
+			for (int i = 0; i < seqIdentityThresholds.length; i++) {
+
+				QuatSymmetryResults globalSymmetry = detector.getGlobalSymmetry(seqIdentityThresholds[i]);
+				if (globalSymmetry != null) {
+					
+					if (parameters.isVerbose()) {
+						System.out.println();
+//						System.out.println("Results for " + Math.round(seqIdentityThresholds[i]*100) + "% sequence identity threshold:");
+						System.out.println();
+						System.out.println("Global symmetry:");
+						System.out.println("Stoichiometry         : " + globalSymmetry.getSubunits().getStoichiometry());
+						System.out.println("Pseudostoichiometry   : " + globalSymmetry.getSubunits().isPseudoStoichiometric());
+						System.out.println("Pseudosymmetry        : " + globalSymmetry.getSubunits().isPseudoSymmetric());
+						System.out.println("Min sequence identity : " + Math.round(globalSymmetry.getSubunits().getMinSequenceIdentity()*100));
+						System.out.println("Max sequence identity : " + Math.round(globalSymmetry.getSubunits().getMaxSequenceIdentity()*100));
+						System.out.println("Point group           : " + globalSymmetry.getRotationGroup().getPointGroup());				
+						System.out.println("Symmetry RMSD         : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
+						System.out.println("Prefered result       : " + globalSymmetry.isPreferredResult());
+					}
+
+					if (globalSymmetry.isPreferredResult()) {
+						this.results = globalSymmetry;
+						this.axisTransformation = new AxisTransformation(globalSymmetry);
+
+						// use factory method to get point group specific instance of script generator
+						this.scriptGenerator = JmolSymmetryScriptGenerator.getInstance(this.axisTransformation, "g");
+					}
+					
+				}
+
+				List<QuatSymmetryResults> localSymmetryResults = detector.getLocalSymmetry(seqIdentityThresholds[i]);
+
+				if (parameters.isVerbose() && localSymmetryResults != null) {
+					System.out.println();
+					System.out.println("Local symmetry: ");
+					int count = 0;
+
+					for (QuatSymmetryResults localSymmetry: localSymmetryResults) {
+						AxisTransformation at = new AxisTransformation(localSymmetry);
+						System.out.println();
+//						System.out.println("Results for " + Math.round(seqIdentityThresholds[i]*100) + "% sequence identity threshold:");
+						System.out.println("Stoichiometry         : " + localSymmetry.getSubunits().getStoichiometry());
+						System.out.println("Pseudostoichiometry   : " + localSymmetry.getSubunits().isPseudoStoichiometric());
+						System.out.println("Pseudosymmetry        : " + localSymmetry.getSubunits().isPseudoSymmetric());
+						System.out.println("Min sequence identity : " + Math.round(localSymmetry.getSubunits().getMinSequenceIdentity()*100));
+						System.out.println("Max sequence identity : " + Math.round(localSymmetry.getSubunits().getMaxSequenceIdentity()*100));
+						System.out.println("Point group           : " + localSymmetry.getRotationGroup().getPointGroup());				
+						System.out.println("Symmetry RMSD         : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
+						System.out.println("Prefered result       : " + localSymmetry.isPreferredResult());
+						System.out.println();
+						JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGenerator.getInstance(at, "l"+count);
+						if (count == 0) {
+							System.out.println(gen.getDefaultOrientation());
+						}
+						System.out.println(gen.drawPolyhedron());
+						System.out.println(gen.drawAxes());
+						System.out.println(gen.colorBySymmetry());
+
+						count++;
+					}
+					System.out.println("draw poly* on; draw axes* on;");
+				}
 			}
-
-			axisTransformation = new AxisTransformation(globalSymmetry);
-
-			// use factory method to get point group specific instance of script generator
-			scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation, "g");
-			hasProtein = true;
-			
 		} else {
 			System.out.println("No protein chains found for " + bioAssembly.getPDBCode() );
-		}
-		
-		if (parameters.isVerbose() && detector.getLocalSymmetry().size() > 0) {
-			System.out.println();
-			System.out.println("Local symmetry: ");
-			int count = 0;
-			for (QuatSymmetryResults localSymmetry: detector.getLocalSymmetry()) {
-				AxisTransformation at = new AxisTransformation(localSymmetry);
-				System.out.println();
-				System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
-				System.out.println("Stoichiometry         : " + localSymmetry.getSubunits().getStoichiometry());
-				System.out.println("Pseudostoichiometry   : " + localSymmetry.getSubunits().isPseudoStoichiometric());
-				System.out.println("Min sequence identity : " + Math.round(localSymmetry.getSubunits().getMinSequenceIdentity()*100));
-				System.out.println("Max sequence identity : " + Math.round(localSymmetry.getSubunits().getMaxSequenceIdentity()*100));
-				System.out.println("Point group           : " + localSymmetry.getRotationGroup().getPointGroup());				
-				System.out.println("Symmetry RMSD         : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
-				System.out.println();
-				JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGenerator.getInstance(at, "l"+count);
-				if (count == 0) {
-					System.out.println(gen.getDefaultOrientation());
-				}
-				System.out.println(gen.drawPolyhedron());
-				System.out.println(gen.drawAxes());
-				System.out.println(gen.colorBySymmetry());
-
-				count++;
-			}
-			System.out.println("draw poly* on; draw axes* on;");
 		}
 		return detector;
 	}
 	
 
 	public RotationGroup getRotationGroup() {
-		return globalSymmetry.getRotationGroup();
+		return results.getRotationGroup();
 	}
 
 	public Subunits getSubunits() {
-		return globalSymmetry.getSubunits();
+		return results.getSubunits();
 	}
 	
 	public AxisTransformation getAxisTransformation() {

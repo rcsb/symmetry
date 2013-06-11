@@ -23,8 +23,11 @@
 package org.biojava3.structure.quaternary.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.vecmath.Point3d;
 
@@ -46,8 +49,10 @@ public class QuatSymmetryDetector {
 	private QuatSymmetryParameters parameters = null;
 	
 	private ChainClusterer chainClusterer = null;
-	private QuatSymmetryResults globalSymmetry = null;
-	private List<QuatSymmetryResults> localSymmetry = new ArrayList<QuatSymmetryResults>();
+	private Map<Double, QuatSymmetryResults> gSymmetry = new HashMap<Double, QuatSymmetryResults>();
+	private Map<Double, List<QuatSymmetryResults>> lSymmetry = new HashMap<Double, List<QuatSymmetryResults>>();
+	private QuatSymmetryResults[] globalSymmetry = null;
+	private List<List<QuatSymmetryResults>> localSymmetry = null;
 	private boolean complete = false;
 
 	public QuatSymmetryDetector(Structure structure, QuatSymmetryParameters parameters) {
@@ -73,9 +78,19 @@ public class QuatSymmetryDetector {
 	 * 
 	 * @return global quaternary structure symmetry results
 	 */
-	public QuatSymmetryResults getGlobalSymmetry() {
+	public QuatSymmetryResults getGlobalSymmetry(int index) {
 		run();
-		return globalSymmetry;
+		return globalSymmetry[index];
+	}
+	
+	/**
+	 * Returns quaternary structure symmetry results for the global structure
+	 * 
+	 * @return global quaternary structure symmetry results
+	 */
+	public QuatSymmetryResults getGlobalSymmetry(double sequenceIdentityThreshold) {
+		run();
+		return gSymmetry.get(sequenceIdentityThreshold);
 	}
 	
 	/**
@@ -83,9 +98,19 @@ public class QuatSymmetryDetector {
 	 * 
 	 * @return list of local quaternary structure symmetry results
 	 */
-	public List<QuatSymmetryResults> getLocalSymmetry() {
+	public List<QuatSymmetryResults> getLocalSymmetry(int index) {
 		run();
-		return localSymmetry;
+		return localSymmetry.get(index);
+	}
+	
+	/**
+	 * Returns a list of local quaternary structure symmetry results
+	 * 
+	 * @return list of local quaternary structure symmetry results
+	 */
+	public List<QuatSymmetryResults> getLocalSymmetry(double sequenceIdentityThreshold) {
+		run();
+		return lSymmetry.get(sequenceIdentityThreshold);
 	}
 	
 	private void run() {
@@ -93,38 +118,224 @@ public class QuatSymmetryDetector {
 			return;
 		}
 		complete = true;
-		chainClusterer = new ChainClusterer(structure, parameters);
+		ClusterProteinChains clusterer = new ClusterProteinChains(structure, parameters);
 		
-		int chainCount = chainClusterer.getChainIds().size();
-		int clusterCount = chainClusterer.getSequenceClusterCount();
+		// sort seq. identity thresholds from smallest to largest. This reduces the total number of calculations necessary.
+		double[] thresholds = parameters.getSequenceIdentityThresholds().clone();
+		Arrays.sort(thresholds);
 		
-		if (chainCount == 0) {
+		QuatSymmetryResults globalSymmetry = null;
+		localSymmetry = new ArrayList<List<QuatSymmetryResults>>(thresholds.length);
+
+		for (int index = 0; index < thresholds.length; index++) {
+			chainClusterer = new ChainClusterer(clusterer.getSequenceAlignmentClusters(thresholds[index]));
+
+			int chainCount = chainClusterer.getChainIds().size();
+			int clusterCount = chainClusterer.getSequenceClusterCount();
+
+			if (chainCount == 0) {
+				return;
+			}
+
+			// determine global symmetry
+			Subunits globalSubunits = createGlobalSubunits();
+			globalSymmetry = calcQuatSymmetry(globalSubunits);
+			gSymmetry.put(thresholds[index], globalSymmetry);
+
+			// determine local symmetry if global structure is 
+			// (1) asymmetric (C1)
+			// (2) heteromeric (belongs to more than 1 sequence cluster)
+			// (3) more than 2 chains (heteromers with just 2 chains cannot have local symmetry)
+			
+			localSymmetry.add(new ArrayList<QuatSymmetryResults>());
+			List<QuatSymmetryResults> ls = new ArrayList<QuatSymmetryResults>();
+
+			// TODO example 2PT7: global C2, but local C6 symm., should that be included here ...?
+			// i.e., include all heteromers here, for example if higher symmetry is possible by stoichiometry? A6B2 -> local A6  can have higher symmetry
+			if(parameters.isLocalSymmetry()) {
+				if (globalSymmetry.getRotationGroup().getPointGroup().equals("C1") &&
+						clusterCount > 1 && chainCount > 2) {
+
+					List<Subunits> localSubunits = createLocalSubunits();
+
+					for (Subunits subunits: localSubunits) {
+						QuatSymmetryResults result = calcQuatSymmetry(subunits);
+						addToLocalSymmetry(result, ls);
+					}
+					lSymmetry.put(thresholds[index], ls);
+				}
+			}
+			
+			if (! globalSymmetry.getSubunits().isPseudoStoichiometric()) {
+				break;
+			}
+		}
+		setPreferredResults(thresholds);
+		setPseudoSymmetry(thresholds);
+	}
+	
+	/**
+	 * Set preferred results flag for symmetry result that should be shown by default in visualization programs
+	 * @param thresholds sequence identity thresholds
+	 */
+	private void setPreferredResults(double[] thresholds) {
+		int[] score = new int[thresholds.length];
+		
+		for (int i = 0; i < thresholds.length; i++) {
+			QuatSymmetryResults result = getGlobalSymmetry(thresholds[i]);
+			if (result == null) {
+				continue;
+			}
+			if (! result.getRotationGroup().getPointGroup().equals("C1")) {
+				score[i] += 2;
+			}
+			if (! result.getSubunits().isPseudoStoichiometric()) {
+				score[i]++;
+			}
+		}
+
+		double bestGlobal = 0;
+		int bestScore = 0;
+		for (int i = 0; i < thresholds.length; i++) {
+			if (score[i] > bestScore) {
+				bestScore = score[i];
+				bestGlobal = thresholds[i];
+			}
+		}
+		if (bestScore >= 2) {
+			QuatSymmetryResults g = getGlobalSymmetry(bestGlobal);
+			g.setPreferredResult(true);
 			return;
 		}
-		
-		// determine global symmetry
-		Subunits globalSubunits = createGlobalSubunits();
-		globalSymmetry = calcQuatSymmetry(globalSubunits);
-		
-		// determine local symmetry if global structure is 
-		// (1) asymmetric (C1)
-		// (2) heteromeric (belongs to more than 1 sequence cluster)
-		// (3) more than 2 chains (heteromers with just 2 chains cannot have local symmetry)
-		if(parameters.isLocalSymmetry()) {
-			if (globalSymmetry.getRotationGroup().getPointGroup().equals("C1") &&
-					clusterCount > 1 && chainCount > 2) {
-				
-				List<Subunits> localSubunits = createLocalSubunits();
-				
-				for (Subunits subunits: localSubunits) {
-					QuatSymmetryResults result = calcQuatSymmetry(subunits);
-					addToLocalSymmetry(result);
+
+		// check local symmetry
+		Arrays.fill(score, 0);
+
+		for (int i = 0; i < thresholds.length; i++) {
+			List<QuatSymmetryResults> results = getLocalSymmetry(thresholds[i]);
+			if (results == null || results.size() == 0) {
+				continue;
+			}
+			for (QuatSymmetryResults result: results) {
+				if (! result.getRotationGroup().getPointGroup().equals("C1")) {
+					score[i] += 2;
+				}
+				if (! result.getSubunits().isPseudoStoichiometric()) {
+					score[i]++;
 				}
 			}
 		}
+	
+		double bestLocal = 0;
+		bestScore = 0;
+		for (int i = 0; i < thresholds.length; i++) {
+			if (score[i] > bestScore) {
+				bestScore = score[i];
+				bestLocal = thresholds[i];
+			}
+		}
+		if (bestScore > 0) {
+			List<QuatSymmetryResults> results = getLocalSymmetry(bestLocal);
+			for (QuatSymmetryResults result: results) {
+				result.setPreferredResult(true);
+			}
+		} else {
+			QuatSymmetryResults g = getGlobalSymmetry(bestGlobal);
+			g.setPreferredResult(true);
+		}
 	}
 	
-	private void addToLocalSymmetry(QuatSymmetryResults testResults) {
+	/**
+	 * Sets pseudosymmetry flag for results that have pseudosymmetry
+	 * @param thresholds sequence identity thresholds
+	 */
+	private void setPseudoSymmetry(double[] thresholds) {
+		int[] score = new int[thresholds.length];
+		String symmPointGroup = "";
+		String pseudoPointGroup = "";
+		QuatSymmetryResults pseudo = null;
+		for (int i = 0; i < thresholds.length; i++) {
+			QuatSymmetryResults result = getGlobalSymmetry(thresholds[i]);
+			if (result == null) {
+				continue;
+			}
+			if (result.getSubunits().isPseudoStoichiometric()) {
+				pseudoPointGroup = result.getRotationGroup().getPointGroup();
+				pseudo = result;
+			} else {
+				symmPointGroup = result.getRotationGroup().getPointGroup();
+			}
+		}
+
+		if (! pseudoPointGroup.equals(symmPointGroup)) {
+			pseudo.getSubunits().setPseudoSymmetric(true);
+		}
+
+		// check for local pseudosymmetry
+		Arrays.fill(score, 0);
+
+		List<QuatSymmetryResults> pseudoLocal = null;
+		for (int i = 0; i < thresholds.length; i++) {
+			List<QuatSymmetryResults> results = getLocalSymmetry(thresholds[i]);
+			if (results == null || results.size() == 0) {
+				continue;
+			}
+			for (QuatSymmetryResults result: results) {
+				if (result.getSubunits().isPseudoStoichiometric()) {
+					pseudoPointGroup = result.getRotationGroup().getPointGroup();
+					pseudoLocal = results;
+				} else {
+					symmPointGroup = result.getRotationGroup().getPointGroup();
+				}
+			}
+		}
+		if (pseudoLocal != null && ! pseudoPointGroup.equals(symmPointGroup)) {
+			for (QuatSymmetryResults result: pseudoLocal) {
+				result.getSubunits().setPseudoSymmetric(true);
+			}
+		}
+	}
+//		
+//	}
+	
+//	private void runOld() {
+//		if (complete) {
+//			return;
+//		}
+//		complete = true;
+//
+////		chainClusterer = new ChainClusterer(structure, parameters);
+//		
+//		int chainCount = chainClusterer.getChainIds().size();
+//		int clusterCount = chainClusterer.getSequenceClusterCount();
+//		
+//		if (chainCount == 0) {
+//			return;
+//		}
+//		
+//		// determine global symmetry
+//		Subunits globalSubunits = createGlobalSubunits();
+////		globalSymmetry = calcQuatSymmetry(globalSubunits);
+//		
+//		// determine local symmetry if global structure is 
+//		// (1) asymmetric (C1)
+//		// (2) heteromeric (belongs to more than 1 sequence cluster)
+//		// (3) more than 2 chains (heteromers with just 2 chains cannot have local symmetry)
+//		if(parameters.isLocalSymmetry()) {
+////			if (globalSymmetry.getRotationGroup().getPointGroup().equals("C1") &&
+////					clusterCount > 1 && chainCount > 2) {
+//				
+//				List<Subunits> localSubunits = createLocalSubunits();
+//				
+//				for (Subunits subunits: localSubunits) {
+//					QuatSymmetryResults result = calcQuatSymmetry(subunits);
+////					addToLocalSymmetry(result);
+////				}
+//			}
+//		}
+//	}
+	
+	private void addToLocalSymmetry(QuatSymmetryResults testResults, List<QuatSymmetryResults> localSymmetry) {
 		if (testResults.getRotationGroup().getPointGroup().equals("C1")) {
 			return;
 		}
@@ -140,6 +351,7 @@ public class QuatSymmetryDetector {
 				}
 			}
 		}
+		testResults.setLocal(true);
 		localSymmetry.add(testResults);
 	}
 
@@ -202,7 +414,7 @@ public class QuatSymmetryDetector {
 	 * Resets list of arbitrary sequence ids into integer order: 0, 1, ...
 	 * @param subSequenceIds
 	 */
-	private void standardizeSequenceIds(List<Integer> subSequenceIds) {
+	private static void standardizeSequenceIds(List<Integer> subSequenceIds) {
 		int count = 0;
 	      int current = subSequenceIds.get(0);
 	      for (int i = 0; i < subSequenceIds.size(); i++) {
@@ -214,7 +426,7 @@ public class QuatSymmetryDetector {
 	      }
 	}
 	
-	private List<List<Integer>> decomposeClusters(List<Point3d[]> caCoords, List<Integer> clusterIds) {
+	private static List<List<Integer>> decomposeClusters(List<Point3d[]> caCoords, List<Integer> clusterIds) {
 		List<List<Integer>> subClusters = new ArrayList<List<Integer>>();
 
 		int last = getLastMultiSubunit(clusterIds);
@@ -259,7 +471,7 @@ public class QuatSymmetryDetector {
 		return subClusters;
 	}
 
-	private int getLastMultiSubunit(List<Integer> clusterIds) {
+	private static int getLastMultiSubunit(List<Integer> clusterIds) {
 		for (int i = 0, n = clusterIds.size(); i < n; i++) {
 			if (i < n-2) {
 				if (clusterIds.get(i)!=clusterIds.get(i+1) && 
@@ -282,7 +494,7 @@ public class QuatSymmetryDetector {
 		return finder.getComponentCount() == 1;
 	}
 	
-	private List<Integer> getFolds(Integer[] subCluster, int size) {
+	private static List<Integer> getFolds(Integer[] subCluster, int size) {
 		List<Integer> denominators = new ArrayList<Integer>();
 		int[] counts = new int[size];
 		for (int element: subCluster) {
@@ -329,11 +541,11 @@ public class QuatSymmetryDetector {
 
 		rotationGroup.complete();
 		
-		String pointGroup = rotationGroup.getPointGroup();
-		if (pointGroup.startsWith("C")) {
-			HelixCheck hc = new HelixCheck(subunits, rotationGroup, this.parameters);
-			System.out.println("Helical: " + hc.isHelical());
-		}
+//		String pointGroup = rotationGroup.getPointGroup();
+//		if (pointGroup.startsWith("C")) {
+//			HelixCheck hc = new HelixCheck(subunits, rotationGroup, this.parameters);
+//			System.out.println("Helical: " + hc.isHelical());
+//		}
 	//	System.exit(-1);
 		QuatSymmetryResults results = new QuatSymmetryResults(subunits, rotationGroup, method);
 		return results;

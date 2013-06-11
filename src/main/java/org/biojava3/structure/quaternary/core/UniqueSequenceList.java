@@ -1,20 +1,21 @@
 package org.biojava3.structure.quaternary.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Group;
 
-public class UniqueSequenceList {
+public class UniqueSequenceList implements Cloneable {
 	private String sequenceString = "";
 	private String seqResSequence = "";
     private List<Integer> alignment1 = null;
     private List<Integer> alignment2 = null;
     private Atom[] caAtoms = null;
     private String chainId = null;
-    private Integer modelNumber = null;
-    private Integer structureId = null;
+    private int modelNumber = -1;
+    private int structureId = -1;
     
     public UniqueSequenceList(Atom[] cAlphaAtoms, String chainId, int modelNumber, int structureId, String seqResSequence) {
     	this.caAtoms = cAlphaAtoms;
@@ -93,6 +94,21 @@ public class UniqueSequenceList {
 		this.alignment2 = alignment2;
 	}
 	
+	public Object clone() {
+		UniqueSequenceList copy = null;
+		try {
+			copy = (UniqueSequenceList) super.clone();
+		} catch (CloneNotSupportedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// deep copy lists and arrays
+		copy.alignment1 = new ArrayList<Integer>(this.alignment1);
+		copy.alignment2 = new ArrayList<Integer>(this.alignment2);
+		copy.caAtoms = Arrays.copyOf(this.caAtoms, this.caAtoms.length); // note, that atoms in this array will be identical (this is intended)
+		return copy;
+	}
+	
 	public static String getSequenceString(Atom[] caAlphaAtoms) {
 		StringBuilder builder = new StringBuilder();
 
@@ -111,7 +127,7 @@ public class UniqueSequenceList {
      
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("#: ");
+		builder.append("length: ");
 		builder.append(caAtoms.length);
 		builder.append(" seq: ");
 		builder.append(sequenceString);

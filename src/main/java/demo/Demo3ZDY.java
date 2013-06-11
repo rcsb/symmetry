@@ -99,10 +99,12 @@ public class Demo3ZDY {
 				return;
 			}
 
-			double sequenceIdThreshold = calc.getParameters().getSequenceIdentityThreshold();
+			
+			
+			
 
 			if ( hasProtein ){
-				if  ( detector.getLocalSymmetry().size() > 0 ){
+				if  ( detector.get ().size() > 0 ){
 
 					System.out.println(" Local pseudosymmetry, structure only!");
 
@@ -137,9 +139,7 @@ public class Demo3ZDY {
 		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 
 		parameters.setVerbose(true);
-		parameters.setSequenceIdentityThreshold(threshold);
-		parameters.setStructuralAlignmentOnly(structureOnly);
-
+		
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
 
 		return calc;
@@ -186,10 +186,10 @@ public class Demo3ZDY {
 		String script = "";
 
 		int count = 0;
-		for (QuatSymmetryResults localSymmetry: detector.getLocalSymmetry()) {
+		for (QuatSymmetryResults localSymmetry: detector.get) {
 			AxisTransformation at = new AxisTransformation(localSymmetry);
 			System.out.println();
-			System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
+
 			System.out.println("Stoichiometry       : " + localSymmetry.getSubunits().getStoichiometry());
 			System.out.println("Pseudostoichiometry : " + localSymmetry.getSubunits().isPseudoStoichiometric());
 			System.out.println("Point group         : " + localSymmetry.getRotationGroup().getPointGroup());				

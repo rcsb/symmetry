@@ -106,7 +106,7 @@ public class AlignQuaternaryStructureBySymmetry {
 	//	align.run();
     }
     public void run() throws IOException {
-    	parameters.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
+    	//parameters.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
     	String outfile = FILENAME;
 		outfile = outfile.substring(0, outfile.length()-4);
 		String errfile = outfile;

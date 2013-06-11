@@ -11,21 +11,19 @@ import org.biojava.bio.structure.ChainImpl;
 import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava.bio.structure.jama.Matrix;
 
 /**
  * @author Spencer Bliven
  *
  */
-public class CEMirrorSymm extends CeCPMain {
+public class CEMirrorSymm extends CeSymm {
 	static String algorithmName = "jCE-mirror-symmetry";
 	static String version = "0.1";
 	
@@ -90,19 +88,19 @@ public class CEMirrorSymm extends CeCPMain {
 	}
 
 	private void postProcessAlignment(AFPChain afpChain) {
-		// reverse the optAln
 		if(mirrorSequence) {
+			// reverse the optAln
 			reverseOptAln(afpChain);
+
+			// reverse the distance matrix
+			afpChain.setDistanceMatrix(reverseMatrixCols(afpChain.getDistanceMatrix()));
+			
+			// reverse the ca2 matrix
+			Matrix distMat2 = afpChain.getDisTable2();
+			distMat2 = reverseMatrixRows(distMat2);
+			distMat2 = reverseMatrixCols(distMat2);
+			afpChain.setDisTable2(distMat2);
 		}
-		
-		// reverse the distance matrix
-		afpChain.setDistanceMatrix(reverseMatrixCols(afpChain.getDistanceMatrix()));
-		
-		// reverse the ca2 matrix
-		Matrix distMat2 = afpChain.getDisTable2();
-		distMat2 = reverseMatrixRows(distMat2);
-		distMat2 = reverseMatrixCols(distMat2);
-		afpChain.setDisTable2(distMat2);
 		
 	}
 	
@@ -250,9 +248,9 @@ public class CEMirrorSymm extends CeCPMain {
 		name = "1qys"; mirrorSeq = true; mirrorCoords = true;
 		//name = "d1kkeb2"; mirrorSeq = true; mirrorCoords = false;
 		//name = "d2okua1"; mirrorSeq = true; mirrorCoords = false;
-		
+		name = "2cb2.A";mirrorSeq = true; mirrorCoords = false;
+		//name = "d1in0a2"; mirrorSeq = true; mirrorCoords = true; //mirror topology, but poor rmsd
 		try {
-			CEMirrorSymm ce = new CEMirrorSymm(mirrorCoords, mirrorSeq);
 			
 			AtomCache cache = new AtomCache();
 			
@@ -260,7 +258,23 @@ public class CEMirrorSymm extends CeCPMain {
 			Atom[] ca2 = cache.getAtoms(name);
 					
 
-			PDBFileReader pdbreader = new PDBFileReader();
+//			PDBFileReader pdbreader = new PDBFileReader();
+//
+//			try{
+//				name = "1qys_mirror";
+//				mirrorCoords = true;
+//				mirrorSeq = false;
+//				
+//				Structure struc = pdbreader.getStructure("/Users/blivens/dev/bourne/1qys_mirror.pdb");
+//				ca1 = StructureTools.getAtomCAArray(struc);
+//				Structure struc2 = pdbreader.getStructure("/Users/blivens/dev/bourne/1qys_mirror.pdb");
+//				ca2 = StructureTools.getAtomCAArray(struc2);
+//			} catch (Exception e){
+//				e.printStackTrace();
+//				return;
+//			}
+			
+			CEMirrorSymm ce = new CEMirrorSymm(mirrorCoords, mirrorSeq);
 			
 			AFPChain afpChain = ce.align(ca1, ca2);
 			afpChain.setName1(name);

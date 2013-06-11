@@ -179,7 +179,7 @@ public class ScanSymmetry implements Runnable {
 					if (! workflow.hasProteinSubunits()) {
 						continue;
 					}
-					QuatSymmetryResults results = workflow.getGlobalSymmetry(0);
+					QuatSymmetryResults results = workflow.getGlobalSymmetry().get(0);
 
 					RotationGroup rotationGroup = results.getRotationGroup();	
 					pointGroup = rotationGroup.getPointGroup();

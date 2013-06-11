@@ -73,9 +73,7 @@ public class CalcBioAssemblySymmetry {
 		QuatSymmetryDetector detector = new QuatSymmetryDetector(bioAssembly, parameters);
 
 		if (detector.hasProteinSubunits()) {	
-			for (int i = 0; i < detector.getGlobalSymmetryCount(); i++) {
-
-				QuatSymmetryResults globalSymmetry = detector.getGlobalSymmetry(i);
+			for (QuatSymmetryResults globalSymmetry: detector.getGlobalSymmetry()) {
 
 				if (parameters.isVerbose()) {
 					System.out.println();
@@ -100,18 +98,15 @@ public class CalcBioAssemblySymmetry {
 				}
 			}
 			
-			for (int i = 0; i < detector.getLocalSymmetryCount(); i++) {	
-
-				List<QuatSymmetryResults> localSymmetryResults = detector.getLocalSymmetry(i);
+			for (List<QuatSymmetryResults> localSymmetries: detector.getLocalSymmetries()) {	
 
 				if (parameters.isVerbose()) {
 					System.out.println();
 					System.out.println("Local symmetry: ");
 					int count = 0;
 
-					for (QuatSymmetryResults localSymmetry: localSymmetryResults) {
+					for (QuatSymmetryResults localSymmetry: localSymmetries) {
 						AxisTransformation at = new AxisTransformation(localSymmetry);
-						System.out.println();
 						System.out.println("Stoichiometry         : " + localSymmetry.getSubunits().getStoichiometry());
 						System.out.println("Pseudostoichiometry   : " + localSymmetry.getSubunits().isPseudoStoichiometric());
 						System.out.println("Pseudosymmetry        : " + localSymmetry.getSubunits().isPseudoSymmetric());

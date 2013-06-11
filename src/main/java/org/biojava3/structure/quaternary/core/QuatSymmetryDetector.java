@@ -50,7 +50,7 @@ public class QuatSymmetryDetector {
 	
 	private ChainClusterer chainClusterer = null;
 	private List<QuatSymmetryResults> globalSymmetry = new ArrayList<QuatSymmetryResults>();
-	private List<List<QuatSymmetryResults>> localSymmetry = new ArrayList<List<QuatSymmetryResults>>();
+	private List<List<QuatSymmetryResults>> localSymmetries = new ArrayList<List<QuatSymmetryResults>>();
 	private boolean complete = false;
 
 	public QuatSymmetryDetector(Structure structure, QuatSymmetryParameters parameters) {
@@ -72,41 +72,23 @@ public class QuatSymmetryDetector {
 	}
 	
 	/**
-	 * Returns the number of global symmetry results
+	 * Returns list of global quaternary structure symmetry results
 	 * 
-	 * @return number of global symmetry results
+	 * @return list of global quaternary structure symmetry results
 	 */
-	public int getGlobalSymmetryCount() {
-		return globalSymmetry.size();
-	}
-	
-	/**
-	 * Returns quaternary structure symmetry results for the global structure
-	 * 
-	 * @return global quaternary structure symmetry results
-	 */
-	public QuatSymmetryResults getGlobalSymmetry(int index) {
+	public List<QuatSymmetryResults> getGlobalSymmetry() {
 		run();
-		return globalSymmetry.get(index);
+		return globalSymmetry;
 	}
 	
 	/**
-	 * Returns the number of local symmetry results
+	 * Returns a list of lists of local quaternary structure symmetry results
 	 * 
-	 * @return number of local symmetry results
+	 * @return list of lists of local quaternary structure symmetry results
 	 */
-    public int getLocalSymmetryCount() {
-		return localSymmetry.size();
-	}
-	
-	/**
-	 * Returns a list of local quaternary structure symmetry results
-	 * 
-	 * @return list of local quaternary structure symmetry results
-	 */
-	public List<QuatSymmetryResults> getLocalSymmetry(int index) {
+	public List<List<QuatSymmetryResults>> getLocalSymmetries() {
 		run();
-		return localSymmetry.get(index);
+		return localSymmetries;
 	}
 	
 	private void run() {
@@ -154,7 +136,7 @@ public class QuatSymmetryDetector {
 						QuatSymmetryResults result = calcQuatSymmetry(subunits);
 						addToLocalSymmetry(result, lsymmetry);
 					}
-					localSymmetry.add(lsymmetry);
+					localSymmetries.add(lsymmetry);
 				}
 			}
 			
@@ -173,8 +155,8 @@ public class QuatSymmetryDetector {
 	private void setPreferredResults(double[] thresholds) {
 		int[] score = new int[thresholds.length];
 		
-		for (int i = 0; i < getGlobalSymmetryCount(); i++) {
-			QuatSymmetryResults result = getGlobalSymmetry(i);
+		for (int i = 0; i < globalSymmetry.size(); i++) {
+			QuatSymmetryResults result = globalSymmetry.get(i);
 			if (result == null) {
 				continue;
 			}
@@ -195,7 +177,7 @@ public class QuatSymmetryDetector {
 			}
 		}
 		if (bestScore >= 2) {
-			QuatSymmetryResults g = getGlobalSymmetry(bestGlobal);
+			QuatSymmetryResults g = globalSymmetry.get(bestGlobal);
 			g.setPreferredResult(true);
 			return;
 		}
@@ -203,8 +185,8 @@ public class QuatSymmetryDetector {
 		// check local symmetry
 		Arrays.fill(score, 0);
 
-		for (int i = 0; i < getLocalSymmetryCount(); i++) {
-			List<QuatSymmetryResults> results = getLocalSymmetry(i);
+		for (int i = 0; i < localSymmetries.size(); i++) {
+			List<QuatSymmetryResults> results = localSymmetries.get(i);
 			if (results == null || results.size() == 0) {
 				continue;
 			}
@@ -227,12 +209,12 @@ public class QuatSymmetryDetector {
 			}
 		}
 		if (bestScore > 0) {
-			List<QuatSymmetryResults> results = getLocalSymmetry(bestLocal);
+			List<QuatSymmetryResults> results = localSymmetries.get(bestLocal);
 			for (QuatSymmetryResults result: results) {
 				result.setPreferredResult(true);
 			}
 		} else {
-			QuatSymmetryResults g = getGlobalSymmetry(bestGlobal);
+			QuatSymmetryResults g = globalSymmetry.get(bestGlobal);
 			g.setPreferredResult(true);
 		}
 	}
@@ -246,8 +228,8 @@ public class QuatSymmetryDetector {
 		String symmPointGroup = "";
 		String pseudoPointGroup = "";
 		QuatSymmetryResults pseudo = null;
-		for (int i = 0; i < getGlobalSymmetryCount(); i++) {
-			QuatSymmetryResults result = getGlobalSymmetry(i);
+		for (int i = 0; i < globalSymmetry.size(); i++) {
+			QuatSymmetryResults result = globalSymmetry.get(i);
 			if (result == null) {
 				continue;
 			}
@@ -267,8 +249,8 @@ public class QuatSymmetryDetector {
 		Arrays.fill(score, 0);
 
 		List<QuatSymmetryResults> pseudoLocal = null;
-		for (int i = 0; i < getLocalSymmetryCount(); i++) {
-			List<QuatSymmetryResults> results = getLocalSymmetry(i);
+		for (int i = 0; i < localSymmetries.size(); i++) {
+			List<QuatSymmetryResults> results = localSymmetries.get(i);
 			if (results == null || results.size() == 0) {
 				continue;
 			}

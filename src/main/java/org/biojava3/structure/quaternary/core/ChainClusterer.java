@@ -189,6 +189,7 @@ public class ChainClusterer  {
 			createCalphaTraces();
 		}
 	}
+	
 
 	private void calcAlignedSequences() {
 		caAligned = new ArrayList<Atom[]>();

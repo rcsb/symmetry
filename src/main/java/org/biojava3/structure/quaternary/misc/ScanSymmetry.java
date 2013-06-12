@@ -28,7 +28,7 @@ public class ScanSymmetry implements Runnable {
 
 	public ScanSymmetry () {
 	}
-	
+
 	public static void main(String[] args) {
 		new ScanSymmetry().run();
 	}
@@ -45,8 +45,8 @@ public class ScanSymmetry implements Runnable {
 		//p.setMaxAtoms(50000000);
 
 		p.setAtomCaThreshold(Integer.MAX_VALUE);
-	//	System.out.println("PARSING ALL ATOMS!!!");
-	//	p.setAcceptedAtomNames(new String[]{" CA ", " CB "});
+		//	System.out.println("PARSING ALL ATOMS!!!");
+		//	p.setAcceptedAtomNames(new String[]{" CA ", " CB "});
 		cache.setFileParsingParams(p);
 
 		System.out.println("Reading blastclust files");
@@ -62,15 +62,15 @@ public class ScanSymmetry implements Runnable {
 		//		reps.add("2BG9"); // acetylcholin receptor, 2 alpha, 1 beta, 1 delta, 1 gamma
 		//		reps.add("2WRN"); // ribosome
 		//		reps.add("3SYW"); // DNA, no protein chains
-		
-	
 
-//	    boolean writeFile = true;
+
+
+		//	    boolean writeFile = true;
 		boolean writeFile = false;
 		PrintWriter out = null;
 		PrintWriter out1 = null;
 		PrintWriter error = null;
-		
+
 		int seqId = (int)(SEQUENCE_IDENTITY_THRESHOLD * 100);
 		try {
 			out = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_symm" + seqId + ".csv"));
@@ -94,36 +94,36 @@ public class ScanSymmetry implements Runnable {
 		out1.println(header);
 
 		System.out.println("Getting PdbEntryInfo");
-//		List<PdbEntryInfo> list = PdbEntryInfoParser.getPdbEntryInfo();
-      
-        boolean skip = true;
-        String restartId = "3K1P";
-        Set<String> set = GetRepresentatives.getAll();
+		//		List<PdbEntryInfo> list = PdbEntryInfoParser.getPdbEntryInfo();
 
-//		for (int k = 0; k < list.size(); k++) {	
-//			PdbEntryInfo entry = list.get(k);
-//			total++;
-//			String pdbId = entry.getPdbId();
-        for (String pdbId: set) {
-			
+		boolean skip = true;
+		String restartId = "3K1P";
+		Set<String> set = GetRepresentatives.getAll();
+
+		//		for (int k = 0; k < list.size(); k++) {	
+		//			PdbEntryInfo entry = list.get(k);
+		//			total++;
+		//			String pdbId = entry.getPdbId();
+		for (String pdbId: set) {
+
 			if (skip && pdbId.equals(restartId)) {
 				skip = false;
 			} 
-			
+
 			if (skip) {
 				continue;
 			}
 
-//			if (!pdbId.equals("1M5Q")) continue; // good example
+			//			if (!pdbId.equals("1M5Q")) continue; // good example
 
 			System.out.println("------------- " + pdbId  + "-------------");
 
-		//	int bioAssemblyCount = entry.getBioAssemblyCount();
+			//	int bioAssemblyCount = entry.getBioAssemblyCount();
 			int bioAssemblyCount = 1; // do only first bioassembly
 			System.out.println("Bioassemblies: " + bioAssemblyCount);
 			int n = Math.max(bioAssemblyCount, 1);
 			for (int i = 0; i < n; i++) {		
-	
+
 				Structure structure = null;
 				int bioassemblyId = 0;
 				try {
@@ -157,8 +157,8 @@ public class ScanSymmetry implements Runnable {
 				long tc1 = System.nanoTime(); 	
 
 				QuatSymmetryParameters params = new QuatSymmetryParameters();
+				//params.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
 
-				
 				List<String> chainIds = null;
 				String pointGroup = null;
 				String formula = null;
@@ -172,40 +172,42 @@ public class ScanSymmetry implements Runnable {
 				float ry = 0;
 				float rz = 0;
 				String jmolTransform = "";
-				
+
 				QuatSymmetryDetector workflow = null;
 				try {
 					workflow = new QuatSymmetryDetector(structure, params);
 					if (! workflow.hasProteinSubunits()) {
 						continue;
 					}
-					QuatSymmetryResults results = workflow.getGlobalSymmetry().get(0);
+					List<QuatSymmetryResults> resultAll = workflow.getGlobalSymmetry();
 
-					RotationGroup rotationGroup = results.getRotationGroup();	
-					pointGroup = rotationGroup.getPointGroup();
-					System.out.println("Point group: " + pointGroup);
+					for (QuatSymmetryResults results : resultAll) {
+						RotationGroup rotationGroup = results.getRotationGroup();	
+						pointGroup = rotationGroup.getPointGroup();
+						System.out.println("Point group: " + pointGroup);
 
-					formula = results.getSubunits().getStoichiometry();
-					System.out.println("Formula: " + formula);
+						formula = results.getSubunits().getStoichiometry();
+						System.out.println("Formula: " + formula);
 
 
-					// get metrics
-					caCount = results.getSubunits().getCalphaCount();
-					groupComplete = rotationGroup.isComplete();
-					rmsd = (float) rotationGroup.getAverageSubunitRmsd();
-					rmsdT = (float) rotationGroup.getAverageTraceRmsd();
+						// get metrics
+						caCount = results.getSubunits().getCalphaCount();
+						groupComplete = rotationGroup.isComplete();
+						rmsd = (float) rotationGroup.getAverageSubunitRmsd();
+						rmsdT = (float) rotationGroup.getAverageTraceRmsd();
 
-					order = rotationGroup.getOrder();
+						order = rotationGroup.getOrder();
 
-					Subunits subunits = results.getSubunits();
-					chainIds = results.getSubunits().getChainIds();
-					chainCount = subunits.getCenters().size();
-					AxisTransformation at = new AxisTransformation(results);
-					rx = (float) at.getDimension().x;
-					ry = (float) at.getDimension().y;
-					rz = (float) at.getDimension().z;
-					JmolSymmetryScriptGenerator g = JmolSymmetryScriptGenerator.getInstance(at,"g");
-					jmolTransform = g.getDefaultOrientation();
+						Subunits subunits = results.getSubunits();
+						chainIds = results.getSubunits().getChainIds();
+						chainCount = subunits.getCenters().size();
+						AxisTransformation at = new AxisTransformation(results);
+						rx = (float) at.getDimension().x;
+						ry = (float) at.getDimension().y;
+						rz = (float) at.getDimension().z;
+						JmolSymmetryScriptGenerator g = JmolSymmetryScriptGenerator.getInstance(at,"g");
+						jmolTransform = g.getDefaultOrientation();
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					error.println(pdbId + "------------------------------------");
@@ -214,25 +216,25 @@ public class ScanSymmetry implements Runnable {
 					err++;
 					continue;
 				}
-				
-				
-                ProteinComplexSignature s100 = new ProteinComplexSignature(pdbId, chainIds, reader100);
+
+
+				ProteinComplexSignature s100 = new ProteinComplexSignature(pdbId, chainIds, reader100);
 				String signature100 = s100.getComplexSignature();
 				String stoich100 = s100.getComplexStoichiometry();
-				
+
 				ProteinComplexSignature s95 = new ProteinComplexSignature(pdbId, chainIds, reader95);
 				String signature95 = s95.getComplexSignature();
 				String stoich95 = s95.getComplexStoichiometry();
-				
+
 				ProteinComplexSignature s30 = new ProteinComplexSignature(pdbId, chainIds, reader30);
 				String signature30 = s30.getComplexSignature();
 				String stoich30 = s30.getComplexStoichiometry();
-				
+
 				// TODO use chain signatures to label interactions of ligands
 				long tc2 = System.nanoTime();
 				long time = (tc2 - tc1)/1000000;
 				symTime += time;
-				
+
 				// write .csv summary file
 				if (groupComplete) {			
 					out.print(pdbId + "," + bioassemblyId + "," + formula + "," + 

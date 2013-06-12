@@ -14,6 +14,7 @@ import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
+import org.biojava.bio.structure.align.util.AFPChainScorer;
 
 public class SequenceAlignmentCluster implements Cloneable {
 	private QuatSymmetryParameters parameters = null;
@@ -159,11 +160,33 @@ public class SequenceAlignmentCluster implements Cloneable {
 			return null;
 		}
 		
-		alignmentLengthFraction = (double)afp.getOptLength()/Math.max(referenceAtoms1.length, referenceAtoms2.length);
-		alignment.setAlignmentLengthFraction(alignmentLengthFraction);
-		alignment.setAlignment(align);
-		alignment.setSequenceIdentity(afp.getIdentity());
-		alignment.setRmsd(afp.getChainRmsd());
+	
+    	//alignment = afp.getOptAln();
+    	if (alignment != null) {		
+    		alignmentLengthFraction = (double)afp.getOptLength()/Math.max(referenceAtoms1.length, referenceAtoms2.length);
+    		if (parameters.isVerbose()) {
+    			System.out.println("SequenceAlignmentCluster: alignmentLengthFraction: " + alignmentLengthFraction);
+    		}
+//    		if (rmsd > parameters.getRmsdThreshold() || 
+//    				alignmentLengthFraction < parameters.getAlignmentFractionThreshold()) {
+//    			alignment = null;
+//    			return alignment;
+//    		}
+    		
+    		// alternative: tmSCore:
+    		// double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
+    		// if ( tmScore < 0.35) {
+    		// return null ...
+    		//}
+    		
+    		if ( !afp.isSignificantResult()  || 
+    				alignmentLengthFraction < parameters.getAlignmentFractionThreshold() ) {
+    			alignment = null;
+    			return null;
+    		}
+    		
+    	}
+
 		
 		return alignment;
 	}
@@ -212,11 +235,18 @@ public class SequenceAlignmentCluster implements Cloneable {
 	}
 	
 	private AFPChain alignPairByStructure(Atom[] ca1Seq, Atom[] ca2Seq) {
-	    CeParameters params = new CeParameters();		
+       CeParameters params = new CeParameters();
+		//params.setMaxGapSize(-1);
+		// should set this only when seq. id. is high
+		//params.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
+		//params.setSeqWeight(2.0);
+		
+
         AFPChain afp = null;
 		try {
 			StructureAlignment algorithm  = StructureAlignmentFactory.getAlgorithm(CeMain.algorithmName);
 			afp = algorithm.align(ca1Seq,ca2Seq,params);
+			//System.out.println(afp.toFatcat(ca1Seq, ca2Seq));
 		} catch (StructureException e) {
 			e.printStackTrace();
 		}            

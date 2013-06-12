@@ -294,7 +294,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		//if ( isSignificant(afpChain)) {
 		//AFPChain c = (AFPChain) afpChain.clone();
 		//afpChain = CeMain.filterDuplicateAFPs(c,calculator,ca1,ca2);
-		//afpChain.setDistanceMatrix(origM);
+		afpChain.setDistanceMatrix(origM);
 		//	afpChain = CeMain.filterDuplicateAFPs(afpChain, calculator, ca1, ca2clone);
 		//afpChain.setDistanceMatrix((Matrix)origM.clone());
 		//	}
@@ -408,7 +408,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 			afpChain.setTMScore(tmScore2);
 			try {
-				afpChain = CeCPMain.filterDuplicateAFPs(afpChain, calculator, ca1, ca2);
+				afpChain = CeCPMain.postProcessAlignment(afpChain, ca1, ca2, calculator);
 				afpChain.setTMScore(tmScore2);
 			} catch (Exception e){
 				e.printStackTrace();

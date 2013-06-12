@@ -41,10 +41,6 @@ public class ScanRepresentativesForSymmetry {
 
 	public static void main(String[] args){
 
-		String path =  "/Users/ap3/WORK/PDB/";
-
-		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
-
 		ScopDatabase scop = new ScopInstallation();
 		ScopFactory.setScopDatabase(scop);
 		

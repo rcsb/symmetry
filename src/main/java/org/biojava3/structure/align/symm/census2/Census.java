@@ -36,15 +36,12 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
-import org.biojava.bio.structure.align.ce.CeParameters;
-import org.biojava.bio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
@@ -63,6 +60,8 @@ import org.biojava3.structure.utils.FileUtils;
  * @author dmyerstu
  */
 public class Census {
+
+	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
 
 	public static abstract class AlgorithmGiver {
 		public static AlgorithmGiver getDefault() {
@@ -86,12 +85,6 @@ public class Census {
 		public abstract StructureAlignment getAlgorithm();
 	}
 	
-	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
-
-	static {
-		BasicConfigurator.configure();
-	}
-
 	private AtomCache cache;
 
 	private boolean doPrefetch = false;
@@ -125,7 +118,6 @@ public class Census {
 	}
 
 	public static void main(String[] args) {
-		Logger.getRootLogger().setLevel(Level.DEBUG);
 		final String pdbDir = args[0];
 		final File censusFile = new File(args[1]);
 		buildDefault(pdbDir, censusFile);

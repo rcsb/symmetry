@@ -31,8 +31,8 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
@@ -41,16 +41,15 @@ import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 /**
  * 
  * @author dmyerstu
- * 
  */
 public class BasicStats {
+
+	private static final Logger logger = LogManager.getLogger(BasicStats.class.getPackage().getName());
 
 	public static final String NEWLINE;
 	private static final int MAX_FRACTION_DIGITS = 2;
 
 	private static NumberFormat nf = new DecimalFormat();
-
-	static final Logger logger = Logger.getLogger(BasicStats.class.getPackage().getName());
 
 	private final Grouping grouping;
 
@@ -81,10 +80,7 @@ public class BasicStats {
 	static {
 		NEWLINE = System.getProperty("line.separator");
 	}
-	static {
-		BasicConfigurator.configure();
-	}
-
+	
 	static {
 		nf.setMaximumFractionDigits(MAX_FRACTION_DIGITS);
 		nf.setMinimumFractionDigits(1);

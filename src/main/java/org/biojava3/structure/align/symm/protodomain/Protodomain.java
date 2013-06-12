@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.AtomPositionMap;
@@ -38,6 +40,7 @@ import org.biojava.bio.structure.ResidueRange;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDatabase;
@@ -148,8 +151,22 @@ public class Protodomain {
 			int numBlocks, int chainIndex, AtomCache cache) throws ProtodomainCreationException {
 		final ScopDatabase scopInst = ScopFactory.getSCOP();
 		final ScopDomain scopDomain = scopInst.getDomainByScopID(afpChain.getName2());
-		final String scopId = scopDomain.getScopId();
-		final String pdbId = scopDomain.getPdbId();
+
+		StructureName name = new StructureName(afpChain.getName2());
+		String pdbId = name.getPdbId().toLowerCase();
+
+		List<String> domainRanges ;
+
+		String scopId = null;
+		if ( scopDomain != null) {
+			scopId = scopDomain.getScopId();
+			domainRanges = scopDomain.getRanges();
+		} else {
+			domainRanges = new ArrayList<String>();
+			domainRanges.add(name.getChainId());
+		}
+
+
 		// int numAtomsInBlock1Alignment = afpChain.getOptLen()[0];
 		// if (numAtomsInBlock1Alignment == 0) throw new ProtodomainCreationException("unknown", scopId);
 
@@ -160,7 +177,9 @@ public class Protodomain {
 		// from the start of block 1 to end end of block 1
 		// PLUS from the start of block 2 to the end of block 2
 
-		final List<String> domainRanges = scopDomain.getRanges();
+
+		System.out.println("ranges:" + domainRanges);
+
 
 		// we rely on the fact that SCOP won't give us a range that contains multiple chains
 		// instead, any residues from another chain will be in a different range
@@ -482,13 +501,20 @@ public class Protodomain {
 			final String chainId = domainRange.substring(0, 1);
 
 			// a range is of the form: A:05-117 (chain:start-end) OR just A:
+			// 
 			ResidueNumber domainStartR, domainEndR;
 			int domainStart, domainEnd;
 			if (domainRange.length() > 2) {
 				// chain:start-end
-				String[] myParts = domainRange.substring(2).split("-");
-				domainStartR = ResidueNumber.fromString(myParts[0]);
-				domainEndR = ResidueNumber.fromString(myParts[1]);
+				Pattern pattern = Pattern.compile("^([-]?[\\d]+[\\w]?)-([-]?[\\d]+[\\w]?)$");
+				Matcher matcher = pattern.matcher(domainRange.substring(2));
+				matcher.find();
+				try {
+					domainStartR = ResidueNumber.fromString(matcher.group(1));
+					domainEndR = ResidueNumber.fromString(matcher.group(2));
+				} catch (IllegalStateException e) {
+					throw new ProtodomainCreationException("Failed to match range " + domainRange.substring(2), scopId, e);
+				}
 				// set the chains because ResidueNumber doesn't
 				domainStartR.setChainId(chainId);
 				domainEndR.setChainId(chainId);
@@ -497,7 +523,7 @@ public class Protodomain {
 				domainStartR = map.getFirst(chainId);
 				domainEndR = map.getLast(chainId);
 			}
-
+		
 			// these are the insertion-code-independent positions
 			Integer domainStartO = map.getPosition(domainStartR);
 			if (domainStartO == null) throw new ProtodomainCreationException("unknown", scopId,

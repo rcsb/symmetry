@@ -176,10 +176,7 @@ public class SequenceAlignmentCluster {
 		}
 		
 		
-		// if this is not a structural alignment, check the sequence identity threshold
-		if (! parameters.isStructuralAlignmentOnly() && identity < parameters.getSequenceIdentityThreshold()) {
-			return null;
-		}
+	
 		
 //		System.out.println(afp.getAlnseq1());
 //		System.out.println(afp.getAlnseq2());

@@ -168,6 +168,7 @@ public class ChainClusterer  {
 	}
 	
 	public String toString() {
+		run();
 		StringBuilder builder = new StringBuilder();
 		builder.append("Sequence alignment clusters: " + seqClusters.size());
 		builder.append("\n");

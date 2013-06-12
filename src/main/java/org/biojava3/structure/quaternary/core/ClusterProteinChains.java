@@ -1,5 +1,6 @@
 package org.biojava3.structure.quaternary.core;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.biojava.bio.structure.Structure;
@@ -16,6 +17,9 @@ public class ClusterProteinChains {
 	}
 	
 	public List<SequenceAlignmentCluster> getSequenceAlignmentClusters(double sequenceIdentityThreshold) {
+		if (merger == null) {
+			return Collections.emptyList();
+		}
 		return merger.getMergedClusters(sequenceIdentityThreshold);
 	}
 	

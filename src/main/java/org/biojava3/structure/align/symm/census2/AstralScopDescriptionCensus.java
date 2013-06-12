@@ -33,8 +33,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDomain;
 
@@ -45,7 +45,7 @@ import org.biojava.bio.structure.scop.ScopDomain;
  */
 public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 
-	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
 
 	public static enum AstralSet {
 		FORTY_175A("1.75A_40", "http://scop.berkeley.edu/downloads/scopseq-1.75A/astral-scopdom-seqres-gd-sel-gs-bib-40-1.75A.fa"),
@@ -74,10 +74,6 @@ public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 		}
 	}
 	
-	static {
-		BasicConfigurator.configure();
-	}
-
 	public static void buildDefault(String pdbDir, File censusFile, AstralSet astral, int[] sunIds) {
 		try {
 			Census.setBerkeleyScop(pdbDir);

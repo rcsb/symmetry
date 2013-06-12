@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
@@ -39,6 +41,8 @@ import org.biojava.bio.structure.scop.ScopFactory;
  * @author dmyerstu
  */
 public class RandomCensus extends Census {
+
+	private static final Logger logger = LogManager.getLogger(RandomCensus.class.getPackage().getName());
 
 	private final int domainsPerSf;
 	private final boolean shuffle;

@@ -254,7 +254,12 @@ public abstract class JmolSymmetryScriptGenerator {
 		StringBuilder s = new StringBuilder();
 		
 		// draw point group
-		s.append(drawFooter("Point group" + rotationGroup.getPointGroup(), "white"));
+				
+		if ( rotationGroup.getPointGroup().equals("C1")) {
+			s.append(drawFooter("Asymmetric", "white"));
+		} else {
+			s.append(drawFooter("Point group" + rotationGroup.getPointGroup(), "white"));
+		}
 		
 		// draw polygon
 		s.append(drawPolyhedron()); // draw invisibly
@@ -990,8 +995,9 @@ public abstract class JmolSymmetryScriptGenerator {
 		s.append(color);
 		s.append(";");
 		s.append("font echo 24 sanserif;");
-		s.append("echo Point group ");
-		s.append(rotationGroup.getPointGroup());
+		s.append("echo "+ text);
+		//s.append("echo Point group ");
+		//s.append(rotationGroup.getPointGroup());
 		s.append(";");
 		return s.toString();
 	}

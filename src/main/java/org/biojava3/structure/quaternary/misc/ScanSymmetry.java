@@ -31,14 +31,28 @@ public class ScanSymmetry implements Runnable {
 
 	public ScanSymmetry () {
 	}
-	
+
 	public static void main(String[] args) {
 		new ScanSymmetry().run();
 	}
 
 	public void run() {
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-	
+
+		AtomCache cache = new AtomCache();
+		cache.setAutoFetch(true);
+
+		FileParsingParameters p = new FileParsingParameters();
+		p.setStoreEmptySeqRes(true);
+		p.setLoadChemCompInfo(true);
+		p.setParseCAOnly(true);
+		//p.setMaxAtoms(50000000);
+
+		p.setAtomCaThreshold(Integer.MAX_VALUE);
+		//	System.out.println("PARSING ALL ATOMS!!!");
+		//	p.setAcceptedAtomNames(new String[]{" CA ", " CB "});
+		cache.setFileParsingParams(p);
+
 
 		System.out.println("Reading blastclust files");
 
@@ -53,15 +67,15 @@ public class ScanSymmetry implements Runnable {
 		//		reps.add("2BG9"); // acetylcholin receptor, 2 alpha, 1 beta, 1 delta, 1 gamma
 		//		reps.add("2WRN"); // ribosome
 		//		reps.add("3SYW"); // DNA, no protein chains
-		
-	
 
-//	    boolean writeFile = true;
+
+
+		//	    boolean writeFile = true;
 		boolean writeFile = false;
 		PrintWriter out = null;
 		PrintWriter out1 = null;
 		PrintWriter error = null;
-		
+
 		int seqId = (int)(SEQUENCE_IDENTITY_THRESHOLD * 100);
 		try {
 			out = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_symm" + seqId + ".csv"));
@@ -85,31 +99,39 @@ public class ScanSymmetry implements Runnable {
 		out1.println(header);
 
 		System.out.println("Getting PdbEntryInfo");
-//		List<PdbEntryInfo> list = PdbEntryInfoParser.getPdbEntryInfo();
-      
-        boolean skip = false;
-        String restartId = "3K1P";
-        Set<String> set = GetRepresentatives.getAll();
 
-        for (String pdbId: set) {
-			
+		//		List<PdbEntryInfo> list = PdbEntryInfoParser.getPdbEntryInfo();
+
+		boolean skip = true;
+		String restartId = "3K1P";
+		Set<String> set = GetRepresentatives.getAll();
+
+		//		for (int k = 0; k < list.size(); k++) {	
+		//			PdbEntryInfo entry = list.get(k);
+		//			total++;
+		//			String pdbId = entry.getPdbId();
+		for (String pdbId: set) {
+
+
 			if (skip && pdbId.equals(restartId)) {
 				skip = false;
 			} 
-			
+
 			if (skip) {
 				continue;
 			}
 
-//			if (!pdbId.equals("1M5Q")) continue; // good example
+			//			if (!pdbId.equals("1M5Q")) continue; // good example
 
 			System.out.println("------------- " + pdbId  + "-------------");
+
 
 			StructureIO.setAtomCache(cache);
 			int bioAssemblyCount = StructureIO.getNrBiologicalAssemblies(pdbId);
 			System.out.println("Bioassemblies: " + bioAssemblyCount);
 			for (int i = 0; i < bioAssemblyCount; i++) {		
 	
+
 				try {
 					Structure structure = StructureIO.getBiologicalAssembly(pdbId, i);
 				} catch (IOException e) {
@@ -123,6 +145,7 @@ public class ScanSymmetry implements Runnable {
 				long tc1 = System.nanoTime(); 	
 
 				QuatSymmetryParameters params = new QuatSymmetryParameters();
+				//params.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
 
 	
 //				try {
@@ -205,6 +228,8 @@ public class ScanSymmetry implements Runnable {
 //					excluded++;
 //				}
 //
+
+
 			}
 		}
 		long t2 = System.nanoTime();

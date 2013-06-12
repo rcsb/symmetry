@@ -1,3 +1,25 @@
+/*
+ *                    BioJava development code
+ *
+ * This code may be freely distributed and modified under the
+ * terms of the GNU Lesser General Public Licence.  This should
+ * be distributed with the code.  If you do not have a copy,
+ * see:
+ *
+ *      http://www.gnu.org/copyleft/lesser.html
+ *
+ * Copyright for this code is held jointly by the individual
+ * authors.  These should be listed in @author doc comments.
+ *
+ * For more information on the BioJava project and its aims,
+ * or to join the biojava-l mailing list, visit the home page
+ * at:
+ *
+ *      http://www.biojava.org/
+ *
+ * Created on 2013-03-10
+ *
+ */
 package org.biojava3.structure.align.symm.census2.stats;
 
 import java.io.File;
@@ -12,29 +34,30 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
+/**
+ * 
+ * @author dmyerstu
+ */
 public class PropertyDistribution {
+
+	private static final Logger logger = LogManager.getLogger(PropertyDistribution.class.getPackage().getName());
 
 	public static final String NEWLINE;
 	private static final int MAX_FRACTION_DIGITS = 5;
 
 	private static NumberFormat nf = new DecimalFormat();
 
-	static final Logger logger = Logger.getLogger(BasicStats.class.getPackage().getName());
-
 	static {
 		NEWLINE = System.getProperty("line.separator");
 	}
-	static {
-		BasicConfigurator.configure();
-	}
-
+	
 	static {
 		nf.setMaximumFractionDigits(MAX_FRACTION_DIGITS);
 		nf.setMinimumFractionDigits(1);

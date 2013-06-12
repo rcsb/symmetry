@@ -156,7 +156,7 @@ extends TestCase{
 	private static String getStoichiometry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
 		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 		parameters.setVerbose(false);
-        parameters.setSequenceIdentityThreshold(threshold);
+		//parameters.setSequenceIdentityThreshold(threshold);
 
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
 		

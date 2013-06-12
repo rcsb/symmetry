@@ -21,6 +21,7 @@ import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.bio.structure.align.util.AFPAlignmentDisplay;
 import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
@@ -96,10 +97,12 @@ public class SymmRefiner {
 		refinedAFP.setOptLen(optLens);
 		refinedAFP.setOptAln(optAln);
 		refinedAFP.setBlockNum(blockLens.size());
-
+		
 		//TODO recalculate properties: superposition, tm-score, etc
 		Atom[] ca2clone = StructureTools.cloneCAArray(ca2); // don't modify ca2 positions
 		AlignmentTools.updateSuperposition(refinedAFP, ca1, ca2clone);
+		
+		AFPAlignmentDisplay.getAlign(refinedAFP, ca1, ca2clone);
 		return refinedAFP;
 	}
 
@@ -404,12 +407,17 @@ public class SymmRefiner {
 			String name;
 
 			name = "1itb.A"; // b-trefoil, C3
-			name = "1tim.A"; // tim-barrel, C8
-			name = "d1p9ha_"; // not rotational symmetry
-			//name = "3HKE.A"; // very questionable alignment
+			//name = "1tim.A"; // tim-barrel, C8
+			//name = "d1p9ha_"; // not rotational symmetry
+			name = "3HKE.A"; // very questionable alignment
 			//name = "d1jlya1"; // C3 with minimum RSSE at C6
 			//name = "1YOX(A:95-160)";
+			name = "3jut.A"; // b-trefoil FGF-1, C3
+			name = "2jaj.A"; //C5
 
+			boolean writeSIF = true;
+			boolean displayStruct = false;
+			
 			AtomCache cache = new AtomCache();
 			Atom[] ca1 = cache.getAtoms(name);
 			Atom[] ca2 = cache.getAtoms(name);
@@ -437,9 +445,12 @@ public class SymmRefiner {
 			//Output SIF file
 			String path = "/Users/blivens/dev/bourne/symmetry/refinement/";
 			String filename = path+name+".sif";
-			System.out.println("Writing alignment to "+filename);
-			Writer out = new FileWriter(filename);
-			alignmentToSIF(out, afpChain, ca1, ca2, "bb","ur");
+			Writer out = null;
+			if(writeSIF) {
+				System.out.println("Writing alignment to "+filename);
+				out = new FileWriter(filename);
+				alignmentToSIF(out, afpChain, ca1, ca2, "bb","ur");
+			}
 
 			//Refine alignment
 			startTime = System.currentTimeMillis();
@@ -450,20 +461,24 @@ public class SymmRefiner {
 
 			//Output refined to SIF
 			System.out.format("Refinement took %dms%n", refineTime);
-			alignmentToSIF(out, refinedAFP, ca1, ca2,"bb","rr");
-			out.close();
+			if(writeSIF) {
+				alignmentToSIF(out, refinedAFP, ca1, ca2,"bb","rr");
+				out.close();
+			}
 
 			//display jmol of alignment
 			System.out.println("Original rmsd:"+afpChain.getTotalRmsdOpt());
 			System.out.println("New rmsd:"+refinedAFP.getTotalRmsdOpt());
-			StructureAlignmentJmol unrefined = StructureAlignmentDisplay.display(afpChain, ca1, StructureTools.cloneCAArray(ca2));
-			RotationAxis unrefinedAxis = new RotationAxis(afpChain);
-			unrefined.evalString(unrefinedAxis.getJmolScript(ca1));
+			
+			if(displayStruct) {
+				StructureAlignmentJmol unrefined = StructureAlignmentDisplay.display(afpChain, ca1, StructureTools.cloneCAArray(ca2));
+				RotationAxis unrefinedAxis = new RotationAxis(afpChain);
+				unrefined.evalString(unrefinedAxis.getJmolScript(ca1));
 
-			StructureAlignmentJmol refined = StructureAlignmentDisplay.display(refinedAFP, ca1, StructureTools.cloneCAArray(ca2));
-			RotationAxis refinedAxis = new RotationAxis(refinedAFP);
-			refined.evalString(refinedAxis.getJmolScript(ca1));
-
+				StructureAlignmentJmol refined = StructureAlignmentDisplay.display(refinedAFP, ca1, StructureTools.cloneCAArray(ca2));
+				RotationAxis refinedAxis = new RotationAxis(refinedAFP);
+				refined.evalString(refinedAxis.getJmolScript(ca1));
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDatabase;
@@ -40,6 +42,8 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  * @author dmyerstu
  */
 public class NamesCensus extends Census {
+
+	private static final Logger logger = LogManager.getLogger(NamesCensus.class.getPackage().getName());
 
 	private List<ScopDomain> domains;
 

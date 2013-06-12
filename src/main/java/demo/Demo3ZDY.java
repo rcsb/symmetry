@@ -112,6 +112,8 @@ public class Demo3ZDY {
 
 				}
 
+				System.out.println(jmolScript);
+				
 				StructureAlignmentJmol jmol = new StructureAlignmentJmol();
 				jmol.setStructure(s);
 
@@ -192,6 +194,7 @@ public class Demo3ZDY {
 
 		int count = 0;
 		for (List<QuatSymmetryResults> localSymmetries: detector.getLocalSymmetries()) {
+			System.out.println("result nr XXX ");
 			for ( QuatSymmetryResults localSymmetry : localSymmetries) {
 				AxisTransformation at = new AxisTransformation(localSymmetry);
 				System.out.println();

@@ -25,7 +25,11 @@
 package demo;
 
 
+import java.io.IOException;
+import java.util.List;
+
 import org.biojava.bio.structure.Structure;
+import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
@@ -45,8 +49,12 @@ public class DemoOrientBioAssembly {
 	public static void main(String[] args){
 
 
-		String[] pdbIDs = new String[]{"4HHB","4AQ5","1LTI","1STP","4F88","2W6E","2LXC","3OE7","4INU","4D8s","4EAR","4IYQ","3ZKR"};
+		//String[] pdbIDs = new String[]{"4HHB","4AQ5","1LTI","1STP","4F88","2W6E","2LXC","3OE7","4INU","4D8s","4EAR","4IYQ","3ZKR"};
+		
+		String[] pdbIDs = new String[]{"4HHB"};
 
+		int bioAssemblyNr = 1;
+		
 		/*		  
 		    Local symmetry
 		    
@@ -67,32 +75,103 @@ public class DemoOrientBioAssembly {
 
 		for ( String pdbID : pdbIDs)
 		{
-			runPDB(pdbID);
+			try {
+			
+				runPDB(pdbID,bioAssemblyNr);
+			
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
 		}
 
 	}
 
-	public static void runPDB(String pdbID){}
-
-	private static CalcBioAssemblySymmetry  analyzeSymmetry(
-			Structure s,
-			String pdbID,
-			int biolAssemblyNr, 
-			double threshold,
-			boolean structureOnly) 
-	{
+	public static void runPDB(String pdbID, int bioAssemblyNr) throws IOException, StructureException{
+		
+		
+		
+		pdbID = pdbID.toLowerCase();
+		
+		
+		//Structure s = StructureIO.getBiologicalAssembly(pdbID, bioAssemblyNr);
+		Structure s = readStructure(pdbID, bioAssemblyNr);
 		
 		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
-		
-		parameters.setVerbose(false);
-		
-		
-		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
 
-		return calc;
+		parameters.setVerbose(true);
+
+
+		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
+		
+		QuatSymmetryDetector detector = calc.orient();
+		
+		List<QuatSymmetryResults> globalResults = detector.getGlobalSymmetry();
+		
+		System.out.println("# of global results: " + globalResults.size());
+		
+		List<List<QuatSymmetryResults>> localResults = detector.getLocalSymmetries();
+		
+		
+		
+		showResults(s, pdbID + "[" + bioAssemblyNr + "] Global", globalResults);
+		
+		
+		for (int counter = 0;counter < localResults.size() ; counter++){
+			List<QuatSymmetryResults> localResultsL = localResults.get(counter);
+			
+			showResults(s,pdbID + "[" + bioAssemblyNr + "] Local #" + (counter+1) , localResultsL);
+		}
+		
+		
+		
 	}
 
+	private static void showResults(Structure s, String title,
+			List<QuatSymmetryResults> results) {
+		
+		String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
+				"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
+				"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
 
+		int count = 0 ;
+		for (QuatSymmetryResults result: results) {
+			count++;
+			
+			if ( result.getSubunits().isPseudoSymmetric()) {
+				System.out.println("pseudosymmetric!");
+			} else {
+				System.out.println(" not pseudosymmetric!");
+				
+			}
+			
+			AxisTransformation axisTransformation = new AxisTransformation(result);
+
+			// use factory method to get point group specific instance of script generator
+			JmolSymmetryScriptGenerator scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation, "g");
+
+			script += scriptGenerator.getOrientationWithZoom(0);
+			script += scriptGenerator.drawPolyhedron();
+			script += scriptGenerator.drawAxes();
+			script += scriptGenerator.colorBySymmetry();
+			
+			title += " count:"+ count + " [" + result.getSubunits().getStoichiometry() +"]";
+			
+			script += "draw axes* on; draw poly* on;";
+			
+			
+			// show in Jmol...
+
+			StructureAlignmentJmol jmol = new StructureAlignmentJmol();
+			jmol.setStructure(s);
+			
+			jmol.setTitle(title);
+			jmol.evalString(script);
+		}
+		
+		
+		
+	}
 
 
 	

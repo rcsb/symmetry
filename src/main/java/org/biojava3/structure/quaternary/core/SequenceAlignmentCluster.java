@@ -153,41 +153,27 @@ public class SequenceAlignmentCluster implements Cloneable {
 		
 		if (! afp.isSignificantResult()) {
 			return null;
+
+    		// alternative: tmSCore:
+    		// double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
+    		// if ( tmScore < 0.35) {
+    		// return null ...
 		}
 		
 		int[][][] align = afp.getOptAln();
 		if (align == null) {
 			return null;
 		}
-		
-	
-    	//alignment = afp.getOptAln();
-    	if (alignment != null) {		
-    		alignmentLengthFraction = (double)afp.getOptLength()/Math.max(referenceAtoms1.length, referenceAtoms2.length);
-    		if (parameters.isVerbose()) {
+			
+    	alignmentLengthFraction = (double)afp.getOptLength()/Math.max(referenceAtoms1.length, referenceAtoms2.length);
+    	if (parameters.isVerbose()) {
     			System.out.println("SequenceAlignmentCluster: alignmentLengthFraction: " + alignmentLengthFraction);
-    		}
-//    		if (rmsd > parameters.getRmsdThreshold() || 
-//    				alignmentLengthFraction < parameters.getAlignmentFractionThreshold()) {
-//    			alignment = null;
-//    			return alignment;
-//    		}
-    		
-    		// alternative: tmSCore:
-    		// double tmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
-    		// if ( tmScore < 0.35) {
-    		// return null ...
-    		//}
-    		
-    		if ( !afp.isSignificantResult()  || 
-    				alignmentLengthFraction < parameters.getAlignmentFractionThreshold() ) {
-    			alignment = null;
-    			return null;
-    		}
-    		
     	}
-
-		
+    	alignment.setAlignmentLengthFraction(alignmentLengthFraction);
+    	alignment.setRmsd(afp.getChainRmsd());
+    	alignment.setSequenceIdentity(afp.getIdentity());
+    	alignment.setAlignment(afp.getOptAln());
+    	
 		return alignment;
 	}
 	

@@ -32,8 +32,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
@@ -51,9 +51,9 @@ import org.biojava3.structure.align.symm.census2.AstralScopDescriptionCensus.Ast
  */
 public class CLI {
 
-	private static final String NEWLINE = "\n";
+	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
 
-	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
+	private static final String NEWLINE = "\n";
 
 	public static int foldByIndex(int index) {
 		ScopDatabase scop = ScopFactory.getSCOP();
@@ -124,8 +124,6 @@ public class CLI {
 				}
 			}
 
-			if (cmd.getOptionValue("verbosity") != null) Logger.getRootLogger().setLevel(
-					Level.toLevel(cmd.getOptionValue("verbosity")));
 			final String[] superfamilies = cmd.getOptionValue("superfamilies") == null ? null : cmd.getOptionValue(
 					"superfamilies").split(" ");
 			final String[] folds = cmd.getOptionValue("folds") == null ? null : cmd.getOptionValue("folds").split(" ");
@@ -357,9 +355,6 @@ public class CLI {
 				.withDescription(
 						"Randomize the order in which the entities are chosen (from sun ids or superfamilies).")
 				.isRequired(false).create("randomize"));
-		options.addOption(OptionBuilder.hasArg(true)
-				.withDescription("The verbosity of debug statements printed to stdout.").isRequired(false)
-				.create("verbosity"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(

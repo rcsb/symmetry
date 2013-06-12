@@ -88,7 +88,6 @@ public class FastScatterPlotDemo extends ApplicationFrame {
 		//        }
 
 		AtomCache cache = new AtomCache();
-		cache.setPath("/Users/andreas/WORK/PDB/");
 		
 		SortedSet<String> repres = JFatCatClient.getRepresentatives("http://emmy.rcsb.org/jfatcatserver/align/", 40);
 

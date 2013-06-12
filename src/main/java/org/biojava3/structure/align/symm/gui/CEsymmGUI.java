@@ -70,21 +70,21 @@ public class CEsymmGUI {
 		String prompt=default_prompt;
 		while(ca1 == null) {
 //			pdb = "1VR8";
-			pdb = "3C1G";
+//			pdb = "3C1G";
 //			pdb = "3JUT.A";
 //			pdb = "d1bwua_";
-			pdb = "d2biba1"; // screw symmetry
+//			pdb = "d2biba1"; // screw symmetry
 //			pdb = "d1lghb_"; // negative screw symmetry
-			pdb = "d1v3wa_"; // purely translational
+//			pdb = "d1v3wa_"; // purely translational
 //			pdb = "d1yqha1"; // buggy case
 //			pdb = "d1fwka2";
 //			pdb = "d1ewfa1";
 
-//			pdb = (String)JOptionPane.showInputDialog(
-//					null,
-//					prompt,
-//					"CE-Symm",
-//					JOptionPane.PLAIN_MESSAGE);
+			pdb = (String)JOptionPane.showInputDialog(
+					null,
+					prompt,
+					"CE-Symm",
+					JOptionPane.PLAIN_MESSAGE);
 			
 			if(pdb == null) return; //User cancel
 			else if(pdb.length()==0) continue; // Empty

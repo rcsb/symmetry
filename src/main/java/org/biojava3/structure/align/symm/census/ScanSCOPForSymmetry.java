@@ -73,12 +73,7 @@ public class ScanSCOPForSymmetry {
 
 
 	public static void main(String[] args){
-
-		String path =  "/Users/dmyerstu/Desktop/the_pdb/";
-
-		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
-
-
+		
 		try {
 			ScanSCOPForSymmetry me = new ScanSCOPForSymmetry();
 

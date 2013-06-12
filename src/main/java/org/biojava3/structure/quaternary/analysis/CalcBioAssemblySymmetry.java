@@ -64,6 +64,8 @@ public class CalcBioAssemblySymmetry {
 		this.bioAssembly = bioAssembly;
 		this.parameters = parameters;
 	}
+	
+	
 
 	public QuatSymmetryParameters getParameters(){
 		return parameters;

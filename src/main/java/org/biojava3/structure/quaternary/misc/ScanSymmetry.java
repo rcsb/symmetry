@@ -12,6 +12,8 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
+import org.biojava.bio.structure.io.PDBFileReader;
+import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
 import org.biojava3.structure.quaternary.core.AxisTransformation;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
@@ -22,7 +24,8 @@ import org.biojava3.structure.quaternary.core.Subunits;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 
 public class ScanSymmetry implements Runnable {
-	private static String PDB_PATH = "C:/Users/Peter/Documents/PDB/";
+//	private static String PDB_PATH = "C:/Users/Peter/Documents/PDB/";
+	private AtomCache cache = null;
 	private static String RESULT_DIR = "C:/Users/Peter/Documents/QuatStructureComparison/";
 	private static final double SEQUENCE_IDENTITY_THRESHOLD = 0.95;
 
@@ -35,19 +38,7 @@ public class ScanSymmetry implements Runnable {
 
 	public void run() {
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-		AtomCache cache = new AtomCache();
-		cache.setAutoFetch(true);
-		cache.setPath(PDB_PATH);	
-		FileParsingParameters p = new FileParsingParameters();
-		p.setStoreEmptySeqRes(true);
-		p.setLoadChemCompInfo(true);
-		p.setParseCAOnly(true);
-		//p.setMaxAtoms(50000000);
-
-		p.setAtomCaThreshold(Integer.MAX_VALUE);
-	//	System.out.println("PARSING ALL ATOMS!!!");
-	//	p.setAcceptedAtomNames(new String[]{" CA ", " CB "});
-		cache.setFileParsingParams(p);
+	
 
 		System.out.println("Reading blastclust files");
 
@@ -96,14 +87,10 @@ public class ScanSymmetry implements Runnable {
 		System.out.println("Getting PdbEntryInfo");
 //		List<PdbEntryInfo> list = PdbEntryInfoParser.getPdbEntryInfo();
       
-        boolean skip = true;
+        boolean skip = false;
         String restartId = "3K1P";
         Set<String> set = GetRepresentatives.getAll();
 
-//		for (int k = 0; k < list.size(); k++) {	
-//			PdbEntryInfo entry = list.get(k);
-//			total++;
-//			String pdbId = entry.getPdbId();
         for (String pdbId: set) {
 			
 			if (skip && pdbId.equals(restartId)) {
@@ -118,156 +105,160 @@ public class ScanSymmetry implements Runnable {
 
 			System.out.println("------------- " + pdbId  + "-------------");
 
-		//	int bioAssemblyCount = entry.getBioAssemblyCount();
-			int bioAssemblyCount = 1; // do only first bioassembly
+			StructureIO.setAtomCache(cache);
+			int bioAssemblyCount = StructureIO.getNrBiologicalAssemblies(pdbId);
 			System.out.println("Bioassemblies: " + bioAssemblyCount);
-			int n = Math.max(bioAssemblyCount, 1);
-			for (int i = 0; i < n; i++) {		
+			for (int i = 0; i < bioAssemblyCount; i++) {		
 	
-				Structure structure = null;
-				int bioassemblyId = 0;
 				try {
-					if (bioAssemblyCount == 0) {
-						structure = cache.getStructure(pdbId);
-					} else {
-						structure = cache.getBiologicalAssembly(pdbId, i+1, true);
-						bioassemblyId = i+1;
-						if (! structure.isBiologicalAssembly()) {
-							bioassemblyId = 0;
-						}
-						System.out.println("Bioassembly: " + bioassemblyId);
-					}
-
-				} catch (StructureException e) {
-					e.printStackTrace();
-					error.println(pdbId + "------------------------------------");
-					error.println("Error loading structure: " + e.getMessage());
-					error.flush();
-					err++;
-					continue;
+					Structure structure = StructureIO.getBiologicalAssembly(pdbId, i);
 				} catch (IOException e) {
+					// TODO Auto-generated catch block
 					e.printStackTrace();
-					error.println(pdbId + "------------------------------------");
-					error.println("Error loading structure: " + e.getMessage());
-					error.flush();
-					err++;
-					continue;
+				} catch (StructureException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 
 				long tc1 = System.nanoTime(); 	
 
 				QuatSymmetryParameters params = new QuatSymmetryParameters();
 
-				
-				List<String> chainIds = null;
-				String pointGroup = null;
-				String formula = null;
-				int caCount = 0;
-				boolean groupComplete = false;
-				float rmsd = 0;
-				float rmsdT = 0;
-				int order = 0;
-				int chainCount = 0;
-				float rx = 0;
-				float ry = 0;
-				float rz = 0;
-				String jmolTransform = "";
-				
-				QuatSymmetryDetector workflow = null;
-				try {
-					workflow = new QuatSymmetryDetector(structure, params);
-					if (! workflow.hasProteinSubunits()) {
-						continue;
-					}
-					QuatSymmetryResults results = workflow.getGlobalSymmetry().get(0);
-
-					RotationGroup rotationGroup = results.getRotationGroup();	
-					pointGroup = rotationGroup.getPointGroup();
-					System.out.println("Point group: " + pointGroup);
-
-					formula = results.getSubunits().getStoichiometry();
-					System.out.println("Formula: " + formula);
-
-
-					// get metrics
-					caCount = results.getSubunits().getCalphaCount();
-					groupComplete = rotationGroup.isComplete();
-					rmsd = (float) rotationGroup.getAverageSubunitRmsd();
-					rmsdT = (float) rotationGroup.getAverageTraceRmsd();
-
-					order = rotationGroup.getOrder();
-
-					Subunits subunits = results.getSubunits();
-					chainIds = results.getSubunits().getChainIds();
-					chainCount = subunits.getCenters().size();
-					AxisTransformation at = new AxisTransformation(results);
-					rx = (float) at.getDimension().x;
-					ry = (float) at.getDimension().y;
-					rz = (float) at.getDimension().z;
-					JmolSymmetryScriptGenerator g = JmolSymmetryScriptGenerator.getInstance(at,"g");
-					jmolTransform = g.getDefaultOrientation();
-				} catch (Exception e) {
-					e.printStackTrace();
-					error.println(pdbId + "------------------------------------");
-					error.println("Error during calculation: " + e.getMessage());
-					error.flush();
-					err++;
-					continue;
-				}
-				
-				
-                ProteinComplexSignature s100 = new ProteinComplexSignature(pdbId, chainIds, reader100);
-				String signature100 = s100.getComplexSignature();
-				String stoich100 = s100.getComplexStoichiometry();
-				
-				ProteinComplexSignature s95 = new ProteinComplexSignature(pdbId, chainIds, reader95);
-				String signature95 = s95.getComplexSignature();
-				String stoich95 = s95.getComplexStoichiometry();
-				
-				ProteinComplexSignature s30 = new ProteinComplexSignature(pdbId, chainIds, reader30);
-				String signature30 = s30.getComplexSignature();
-				String stoich30 = s30.getComplexStoichiometry();
-				
-				// TODO use chain signatures to label interactions of ligands
-				long tc2 = System.nanoTime();
-				long time = (tc2 - tc1)/1000000;
-				symTime += time;
-				
-				// write .csv summary file
-				if (groupComplete) {			
-					out.print(pdbId + "," + bioassemblyId + "," + formula + "," + 
-							signature100 + "," + stoich100 + "," + signature95 + "," + stoich95 + ","  + signature30 + "," + stoich30 + "," + 
-							pointGroup + "," + order + "," + caCount + "," + chainCount + "," + rmsd + "," + rmsdT + "," +
-							time + "," + rx + ","  + ry + "," + rz + "," + "\"" + jmolTransform + "\"");
-					out.println();
-					out.flush();
-					if (chainCount > 1) {
-						multimer++;
-					}
-				} else {
-					out1.print(pdbId + "," + bioassemblyId + "," + formula + "," + 
-							signature100 + "," + stoich100 + "," + signature95 + "," + stoich95 + "," + signature30 + "," + stoich30  + "," + 
-							pointGroup  + "," + order + "," + caCount + "," + chainCount  + "," + rmsd + "," + rmsdT + "," +
-							time + "," + rx + ","  + ry + "," + rz + "," +  "\"" + jmolTransform +  "\"");
-					out1.println();
-					out1.flush();
-					excluded++;
-				}
-
+	
+//				try {
+//					workflow = new QuatSymmetryDetector(structure, params);
+//					if (! workflow.hasProteinSubunits()) {
+//						continue;
+//					}
+//					QuatSymmetryResults results = workflow.getGlobalSymmetry().get(0);
+//
+//					RotationGroup rotationGroup = results.getRotationGroup();	
+//					pointGroup = rotationGroup.getPointGroup();
+//					System.out.println("Point group: " + pointGroup);
+//
+//					formula = results.getSubunits().getStoichiometry();
+//					System.out.println("Formula: " + formula);
+//
+//
+//					// get metrics
+//					caCount = results.getSubunits().getCalphaCount();
+//					groupComplete = rotationGroup.isComplete();
+//					rmsd = (float) rotationGroup.getAverageSubunitRmsd();
+//					rmsdT = (float) rotationGroup.getAverageTraceRmsd();
+//
+//					order = rotationGroup.getOrder();
+//
+//					Subunits subunits = results.getSubunits();
+//					chainIds = results.getSubunits().getChainIds();
+//					chainCount = subunits.getCenters().size();
+//					AxisTransformation at = new AxisTransformation(results);
+//					rx = (float) at.getDimension().x;
+//					ry = (float) at.getDimension().y;
+//					rz = (float) at.getDimension().z;
+//					JmolSymmetryScriptGenerator g = JmolSymmetryScriptGenerator.getInstance(at,"g");
+//					jmolTransform = g.getDefaultOrientation();
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//					error.println(pdbId + "------------------------------------");
+//					error.println("Error during calculation: " + e.getMessage());
+//					error.flush();
+//					err++;
+//					continue;
+//				}
+//				
+//				
+//                ProteinComplexSignature s100 = new ProteinComplexSignature(pdbId, chainIds, reader100);
+//				String signature100 = s100.getComplexSignature();
+//				String stoich100 = s100.getComplexStoichiometry();
+//				
+//				ProteinComplexSignature s95 = new ProteinComplexSignature(pdbId, chainIds, reader95);
+//				String signature95 = s95.getComplexSignature();
+//				String stoich95 = s95.getComplexStoichiometry();
+//				
+//				ProteinComplexSignature s30 = new ProteinComplexSignature(pdbId, chainIds, reader30);
+//				String signature30 = s30.getComplexSignature();
+//				String stoich30 = s30.getComplexStoichiometry();
+//				
+//				// TODO use chain signatures to label interactions of ligands
+//				long tc2 = System.nanoTime();
+//				long time = (tc2 - tc1)/1000000;
+//				symTime += time;
+//				
+//				// write .csv summary file
+//				if (groupComplete) {			
+//					out.print(pdbId + "," + bioassemblyId + "," + formula + "," + 
+//							signature100 + "," + stoich100 + "," + signature95 + "," + stoich95 + ","  + signature30 + "," + stoich30 + "," + 
+//							pointGroup + "," + order + "," + caCount + "," + chainCount + "," + rmsd + "," + rmsdT + "," +
+//							time + "," + rx + ","  + ry + "," + rz + "," + "\"" + jmolTransform + "\"");
+//					out.println();
+//					out.flush();
+//					if (chainCount > 1) {
+//						multimer++;
+//					}
+//				} else {
+//					out1.print(pdbId + "," + bioassemblyId + "," + formula + "," + 
+//							signature100 + "," + stoich100 + "," + signature95 + "," + stoich95 + "," + signature30 + "," + stoich30  + "," + 
+//							pointGroup  + "," + order + "," + caCount + "," + chainCount  + "," + rmsd + "," + rmsdT + "," +
+//							time + "," + rx + ","  + ry + "," + rz + "," +  "\"" + jmolTransform +  "\"");
+//					out1.println();
+//					out1.flush();
+//					excluded++;
+//				}
+//
 			}
 		}
 		long t2 = System.nanoTime();
 
 		System.out.println("Cpu time: " + (t2-t1)/1000000 + " ms.");
-		System.out.println("Calc. time: " + symTime);
-		System.out.println("Multimers: " + multimer + "out of " + total);
-		System.out.println("Excluded: " + excluded);
-		System.out.println("Errors: " + err);
-		System.out.println("Total structure: " + PdbEntryInfoParser.getPdbEntryInfo().size());
-		out.close();
-		out1.flush();
-		out1.close();
-		error.close();
+//		System.out.println("Calc. time: " + symTime);
+//		System.out.println("Multimers: " + multimer + "out of " + total);
+//		System.out.println("Excluded: " + excluded);
+//		System.out.println("Errors: " + err);
+//		System.out.println("Total structure: " + PdbEntryInfoParser.getPdbEntryInfo().size());
+//		out.close();
+//		out1.flush();
+//		out1.close();
+//		error.close();
+	}
+	
+	private void initializeCache() {
+		cache = new AtomCache();
+		FileParsingParameters params = cache.getFileParsingParams();
+		params.setStoreEmptySeqRes(true);
+		params.setAlignSeqRes(true);
+		params.setParseCAOnly(true);
+		params.setLoadChemCompInfo(true);
+	}
+	
+	private static Structure  readStructure(String pdbId, int bioAssemblyId) {
+		// initialize the PDB_DIR env variable
+		AtomCache cache = new AtomCache();
+
+		FileParsingParameters p = new FileParsingParameters();
+		p.setStoreEmptySeqRes(true);
+		p.setLoadChemCompInfo(true);
+		p.setParseCAOnly(true);
+		p.setAtomCaThreshold(Integer.MAX_VALUE);
+		p.setParseBioAssembly(true);
+
+
+		PDBFileReader pdbreader = new PDBFileReader();
+		pdbreader.setPath(cache.getPath());
+		pdbreader.setFileParsingParameters(p);
+		pdbreader.setAutoFetch(true);
+		pdbreader.setBioAssemblyId(bioAssemblyId);
+		pdbreader.setBioAssemblyFallback(false);
+		Structure structure = null;
+		try { 
+			structure = pdbreader.getStructureById(pdbId);
+			if ( bioAssemblyId > 0 )
+				structure.setBiologicalAssembly(true);
+			structure.setPDBCode(pdbId);
+		} catch (Exception e){
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		return structure;
 	}
 
 }

@@ -51,7 +51,7 @@ public class DemoOrientBioAssembly {
 
 		//String[] pdbIDs = new String[]{"4HHB","4AQ5","1LTI","1STP","4F88","2W6E","2LXC","3OE7","4INU","4D8s","4EAR","4IYQ","3ZKR"};
 		
-		String[] pdbIDs = new String[]{"4HHB"};
+		String[] pdbIDs = new String[]{"1LTI"};
 
 		int bioAssemblyNr = 1;
 		
@@ -130,12 +130,13 @@ public class DemoOrientBioAssembly {
 	private static void showResults(Structure s, String title,
 			List<QuatSymmetryResults> results) {
 		
-		String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
-				"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
-				"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
-
+		
 		int count = 0 ;
 		for (QuatSymmetryResults result: results) {
+			
+			String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
+					"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
+					"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
 			count++;
 			
 			if ( result.getSubunits().isPseudoSymmetric()) {
@@ -155,7 +156,7 @@ public class DemoOrientBioAssembly {
 			script += scriptGenerator.drawAxes();
 			script += scriptGenerator.colorBySymmetry();
 			
-			title += " count:"+ count + " [" + result.getSubunits().getStoichiometry() +"]";
+			String longTitle = title + " count:"+ count + " [" + result.getSubunits().getStoichiometry() +"]";
 			
 			script += "draw axes* on; draw poly* on;";
 			
@@ -165,10 +166,9 @@ public class DemoOrientBioAssembly {
 			StructureAlignmentJmol jmol = new StructureAlignmentJmol();
 			jmol.setStructure(s);
 			
-			jmol.setTitle(title);
+			jmol.setTitle(longTitle);
 			jmol.evalString(script);
 		}
-		
 		
 		
 	}

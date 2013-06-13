@@ -22,6 +22,7 @@
  */
 package org.biojava3.structure.quaternary.core;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -342,7 +343,7 @@ public class QuatSymmetryDetector {
 	      }
 	}
 	
-	private static List<List<Integer>> decomposeClusters(List<Point3d[]> caCoords, List<Integer> clusterIds) {
+	private List<List<Integer>> decomposeClusters(List<Point3d[]> caCoords, List<Integer> clusterIds) {
 		List<List<Integer>> subClusters = new ArrayList<List<Integer>>();
 
 		int last = getLastMultiSubunit(clusterIds);
@@ -361,6 +362,12 @@ public class QuatSymmetryDetector {
 			CombinationGenerator generator = new CombinationGenerator(last, i);
 			int[] indices = null;
 			Integer[] subCluster = new Integer[i];
+			
+			// avoid combinatorial explosion, i.e. for 1FNT
+			BigInteger maxCombinations = BigInteger.valueOf(parameters.getMaximumLocalCombinations());
+		    if (generator.getTotal().compareTo(maxCombinations) > 0) {
+		    	continue;
+		    }
 			
 			while (generator.hasNext()) {
 				indices = generator.getNext();	

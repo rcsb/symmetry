@@ -9,6 +9,7 @@ public class QuatSymmetryParameters {
 	private double alignmentFractionThreshold = 0.9;
 	private double rmsdThreshold = 7.0;
 	private double angleThreshold = 10.0;
+	private int maximumLocalCombinations = 100000;
 	private boolean localSymmetry = true;
 	private boolean verbose = false;
 	private static final String n = System.getProperty("line.separator");
@@ -83,6 +84,12 @@ public class QuatSymmetryParameters {
 		this.sequencePseudoSymmetryThreshold = sequencePseudoSymmetryThreshold;
 	}
 	
+	public int getMaximumLocalCombinations() {
+		return maximumLocalCombinations;
+	}
+	public void setMaximumLocalCombinations(int maximumLocalCombinations) {
+		this.maximumLocalCombinations = maximumLocalCombinations;
+	}
 	public boolean isLocalSymmetry() {
 		return localSymmetry;
 	}

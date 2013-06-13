@@ -1,7 +1,6 @@
 package org.biojava3.structure.quaternary.core;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.biojava.bio.structure.Atom;
@@ -69,9 +68,7 @@ public class ProteinChainExtractor  {
 
 				if (ca.length >= parameters.getMinimumSequenceLength()) {
 					if (parameters.isVerbose()) {
-						System.out.println("Number CA atoms: " + ca.length);
-						System.out.println(Arrays.toString(ca));
-				        System.out.println("Chain " + c.getChainID() + ": " + c.getSeqResSequence());
+				        System.out.println("Chain " + c.getChainID() + " Calpha atoms: " + ca.length + " seqres: " + c.getSeqResSequence());
 					}
 				  
 				   cAlphaTrace.add(ca);

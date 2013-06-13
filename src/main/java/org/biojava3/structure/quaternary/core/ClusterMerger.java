@@ -117,7 +117,7 @@ public class ClusterMerger {
 				Integer element = align2.get(j);
 				Integer index = oldAlign1.indexOf(element);
 				// map alignment to first reference alignment
-				if (index != null) {
+				if (index != null && index >= 0) {
 					newAlign1.add(align1.get(j));
 					newAlign2.add(oldAlign2.get(index));
 				}

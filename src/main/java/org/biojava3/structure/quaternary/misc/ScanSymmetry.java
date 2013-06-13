@@ -27,9 +27,10 @@ public class ScanSymmetry implements Runnable {
 //	private static String PDB_PATH = "C:/Users/Peter/Documents/PDB/";
 	private AtomCache cache = null;
 	private static String RESULT_DIR = "C:/Users/Peter/Documents/QuatStructureComparison/";
-	private static final double SEQUENCE_IDENTITY_THRESHOLD = 0.95;
+
 
 	public ScanSymmetry () {
+		initializeCache();
 	}
 
 	public static void main(String[] args) {
@@ -38,21 +39,6 @@ public class ScanSymmetry implements Runnable {
 
 	public void run() {
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-
-		AtomCache cache = new AtomCache();
-		cache.setAutoFetch(true);
-
-		FileParsingParameters p = new FileParsingParameters();
-		p.setStoreEmptySeqRes(true);
-		p.setLoadChemCompInfo(true);
-		p.setParseCAOnly(true);
-		//p.setMaxAtoms(50000000);
-
-		p.setAtomCaThreshold(Integer.MAX_VALUE);
-		//	System.out.println("PARSING ALL ATOMS!!!");
-		//	p.setAcceptedAtomNames(new String[]{" CA ", " CB "});
-		cache.setFileParsingParams(p);
-
 
 		System.out.println("Reading blastclust files");
 
@@ -76,11 +62,10 @@ public class ScanSymmetry implements Runnable {
 		PrintWriter out1 = null;
 		PrintWriter error = null;
 
-		int seqId = (int)(SEQUENCE_IDENTITY_THRESHOLD * 100);
 		try {
-			out = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_symm" + seqId + ".csv"));
-			out1 = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_error" + seqId + ".csv"));
-			error = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_error" + seqId + ".txt"));
+			out = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_symm.csv"));
+			out1 = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_error.csv"));
+			error = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_error.txt"));
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -97,12 +82,14 @@ public class ScanSymmetry implements Runnable {
 		String header = "pdbId,bioassembly,formula,signature100,stoichiometry100,signature95,stoichiometry95,signature30,stoichiometry30,pointgroup,symops,cacount,chains,rmsdS,rmsdT,time,rx,ry,rz,jmol";
 		out.println(header);
 		out1.println(header);
+		
+		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 
 		System.out.println("Getting PdbEntryInfo");
 
 		//		List<PdbEntryInfo> list = PdbEntryInfoParser.getPdbEntryInfo();
 
-		boolean skip = true;
+		boolean skip = false;
 		String restartId = "3K1P";
 		Set<String> set = GetRepresentatives.getAll();
 
@@ -128,28 +115,46 @@ public class ScanSymmetry implements Runnable {
 
 			StructureIO.setAtomCache(cache);
 			int bioAssemblyCount = StructureIO.getNrBiologicalAssemblies(pdbId);
+			int bioAssemblyId = 0;
 			System.out.println("Bioassemblies: " + bioAssemblyCount);
-			for (int i = 0; i < bioAssemblyCount; i++) {		
-	
-
+			if (bioAssemblyCount > 0) {
+				bioAssemblyId = 1;
+			}
+			
+			System.out.println("bioAssemblyId: " + bioAssemblyId);
+//			for (int i = 0; i < bioAssemblyCount; i++) {	
+			Structure structure = null;
 				try {
-					Structure structure = StructureIO.getBiologicalAssembly(pdbId, i);
+					structure = StructureIO.getBiologicalAssembly(pdbId, bioAssemblyId);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+					error.println(pdbId + "[" + bioAssemblyId + "]: " + e.getMessage());
 				} catch (StructureException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+					error.println(pdbId + "[" + bioAssemblyId + "]: " + e.getMessage());
 				}
+				error.flush();
 
 				long tc1 = System.nanoTime(); 	
+//
 
-				QuatSymmetryParameters params = new QuatSymmetryParameters();
-				//params.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
-
+				QuatSymmetryDetector detector = new QuatSymmetryDetector(structure, parameters);
+			
+				if (detector.hasProteinSubunits()) {				
+					for (QuatSymmetryResults results: detector.getGlobalSymmetry()) {
+						out.println(pdbId +"," + bioAssemblyId + "," + results.isLocal() + "," + results.getSubunits().getStoichiometry() + "," + results.getRotationGroup().getPointGroup());
+					}
+					for (List<QuatSymmetryResults> resultsList: detector.getLocalSymmetries()) {
+						for (QuatSymmetryResults results: resultsList) {
+							out.println(pdbId +"," + bioAssemblyId + "," + results.isLocal() + "," + results.getSubunits().getStoichiometry() + "," + results.getRotationGroup().getPointGroup());
+						}
+					}
+				}
+				out.flush();
 	
-//				try {
-//					workflow = new QuatSymmetryDetector(structure, params);
+				
 //					if (! workflow.hasProteinSubunits()) {
 //						continue;
 //					}
@@ -230,7 +235,7 @@ public class ScanSymmetry implements Runnable {
 //
 
 
-			}
+//			}
 		}
 		long t2 = System.nanoTime();
 
@@ -243,7 +248,7 @@ public class ScanSymmetry implements Runnable {
 //		out.close();
 //		out1.flush();
 //		out1.close();
-//		error.close();
+		error.close();
 	}
 	
 	private void initializeCache() {

@@ -14,7 +14,6 @@ import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
-import org.biojava.bio.structure.align.util.AFPChainScorer;
 
 public class SequenceAlignmentCluster implements Cloneable {
 	private QuatSymmetryParameters parameters = null;
@@ -222,17 +221,14 @@ public class SequenceAlignmentCluster implements Cloneable {
 	
 	private AFPChain alignPairByStructure(Atom[] ca1Seq, Atom[] ca2Seq) {
        CeParameters params = new CeParameters();
-		//params.setMaxGapSize(-1);
-		// should set this only when seq. id. is high
-		//params.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
-		//params.setSeqWeight(2.0);
-		
 
         AFPChain afp = null;
 		try {
 			StructureAlignment algorithm  = StructureAlignmentFactory.getAlgorithm(CeMain.algorithmName);
 			afp = algorithm.align(ca1Seq,ca2Seq,params);
-			//System.out.println(afp.toFatcat(ca1Seq, ca2Seq));
+			if (parameters.isVerbose()) {
+				System.out.println(afp.toFatcat(ca1Seq, ca2Seq));
+			}
 		} catch (StructureException e) {
 			e.printStackTrace();
 		}            
@@ -247,6 +243,12 @@ public class SequenceAlignmentCluster implements Cloneable {
 			return 0;
 		}
 		int len =  afp.getOptLength();
+		if (parameters.isVerbose()) {
+			System.out.println("SequenceAlignmentCluster: Smith-Waterman alignment: seq. identity:  " + afp.getIdentity());
+		}
+//		double identity = afp.getIdentity();
+//		setMinSequenceIdentity(Math.min(getMinSequenceIdentity(),  identity));
+//		setMaxSequenceIdentity(Math.max(getMaxSequenceIdentity(),  identity));
 
 		List<Integer> delta = new ArrayList<Integer>();
 		Set<Integer> unique = new HashSet<Integer>();

@@ -208,14 +208,14 @@ public class SymDResults extends Results {
 			try {
 				long startTime = System.currentTimeMillis();
 				result = runSymD(symDPath, file.getPath());
+				long endTime = System.currentTimeMillis();
+				timeTaken += (endTime - startTime);
 				try {
 					float tmScore = getTmScoreFromFastaFile(domain.getScopId(), structure);
 					result.getAlignment().setTmScore(tmScore);
 				} catch (SymDException e) {
 					logger.error("Couldn't set TM-score for " + domain.getScopId(), e);
 				}
-				long endTime = System.currentTimeMillis();
-				timeTaken += (endTime - startTime);
 				nSuccess++;
 			} catch (SymDException e) {
 				logger.error("SymD failed on " + domain.getScopId(), e);

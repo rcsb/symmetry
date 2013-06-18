@@ -38,8 +38,12 @@ public class AxisTransformation {
 	boolean modified = true;
 
 	public AxisTransformation(QuatSymmetryResults results) {
-		this.subunits = results.getSubunits();
-		this.rotationGroup = results.getRotationGroup();
+		this(results.getSubunits(),results.getRotationGroup());
+	}
+	
+	public AxisTransformation(Subunits subs, RotationGroup rotGrp) {
+			this.subunits = subs;
+			this.rotationGroup = rotGrp;
 		if (subunits == null) {
 			throw new IllegalArgumentException("AxisTransformation: Subunits are null");
 		} else if (rotationGroup == null) {

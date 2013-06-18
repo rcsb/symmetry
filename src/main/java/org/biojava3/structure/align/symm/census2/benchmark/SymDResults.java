@@ -32,6 +32,8 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,12 +51,18 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.io.FastaAFPChainConverter;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.core.sequence.ProteinSequence;
+import org.biojava3.core.sequence.compound.AminoAcidCompound;
+import org.biojava3.core.sequence.compound.AminoAcidCompoundSet;
+import org.biojava3.core.sequence.io.CasePreservingProteinSequenceCreator;
+import org.biojava3.core.sequence.io.FastaReader;
+import org.biojava3.core.sequence.io.GenericFastaHeaderParser;
+import org.biojava3.core.sequence.io.template.FastaHeaderParserInterface;
+import org.biojava3.core.sequence.io.template.SequenceCreatorInterface;
 import org.biojava3.structure.align.symm.census2.Alignment;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
@@ -95,7 +103,7 @@ public class SymDResults extends Results {
 	 * @param output
 	 * @return
 	 */
-	public static Result fromOutput(String output) {
+	public static Result fromOutputUpdated(String output) {
 		Result result = new Result();
 		try {
 			String[] lines = output.split("\n");
@@ -110,6 +118,38 @@ public class SymDResults extends Results {
 			alignment.setAlternateTm(Float.parseFloat(values[3]));
 			alignment.setTmpr(Float.parseFloat(values[4]));
 			alignment.setzScore(Float.parseFloat(values[5]));
+			result.setAlignment(alignment);
+		} catch (RuntimeException e) {
+			throw new IllegalArgumentException("SymD returned strange output \"" + output + "\"", e);
+		}
+		return result;
+	}
+
+	/**
+	 * Example output:
+	 * 
+	 * <pre>
+	 * Program symd version 1.5b
+	 * Number of residues read from the input file is 364.
+	 * d1t3xa_  130 a.a. : Best(initial shift,N-aligned,T-score,Z-score)=( 106,   39,  18.998,   3.091)
+	 * </pre>
+	 * 
+	 * @param output
+	 * @return
+	 */
+	public static Result fromOutput(String output) {
+		Result result = new Result();
+		try {
+			String[] lines = output.split("\n");
+			String line = lines[lines.length-1];
+			String x = line.substring(line.lastIndexOf("(") + 1, line.length() - 1).trim();
+			String[] values = x.split("[\\s,]+");
+			result.setScopId(line.substring(0, line.indexOf(" ")));
+			Alignment alignment = new Alignment();
+			alignment.setInitialShift(Integer.parseInt(values[0]));
+			alignment.setAlignLength(Integer.parseInt(values[1]));
+			alignment.setAlternateTm(Float.parseFloat(values[2])); // T-score here
+			alignment.setzScore(Float.parseFloat(values[3]));
 			result.setAlignment(alignment);
 		} catch (RuntimeException e) {
 			throw new IllegalArgumentException("SymD returned strange output \"" + output + "\"", e);
@@ -230,7 +270,21 @@ public class SymDResults extends Results {
 	public static float getTmScoreFromFastaFile(String scopId, Structure structure) throws SymDException {
 		File fastaFile = new File(scopId + "-best.fasta");
 		try {
-			AFPChain afpChain = FastaAFPChainConverter.fastaFileToAfpChain(fastaFile, structure, structure);
+			InputStream inStream = new FileInputStream(fastaFile);
+			SequenceCreatorInterface<AminoAcidCompound> creator = new CasePreservingProteinSequenceCreator(AminoAcidCompoundSet.getAminoAcidCompoundSet());
+			FastaHeaderParserInterface<ProteinSequence, AminoAcidCompound> headerParser = new GenericFastaHeaderParser<ProteinSequence, AminoAcidCompound>();
+			FastaReader<ProteinSequence, AminoAcidCompound> fastaReader = new FastaReader<ProteinSequence, AminoAcidCompound>(inStream, headerParser, creator);
+			LinkedHashMap<String, ProteinSequence> sequences = fastaReader.process();
+			inStream.close();
+			Iterator<ProteinSequence> seqIter = sequences.values().iterator();
+			ProteinSequence firstSeq = seqIter.next();
+			ProteinSequence secondSeq = seqIter.next();
+			Iterator<String> namesIter = sequences.keySet().iterator();
+			String firstName = namesIter.next();
+			String secondName = namesIter.next();
+			// second should be something like: 1W0P-permuted  is=-393 (best)
+			Integer cpSite = Integer.parseInt(secondName.split("\\s+")[1].substring(3));
+			AFPChain afpChain = FastaAFPChainConverter.cpFastaToAfpChain(firstSeq, secondSeq, structure, cpSite);
 			if (afpChain == null) throw new SymDException("AFPChain is null");
 			System.out.println(afpChain.getTMScore());
 			return (float) afpChain.getTMScore();

@@ -4,7 +4,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -21,7 +20,6 @@ import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.AFPAlignmentDisplay;
 import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
@@ -32,78 +30,6 @@ import org.biojava.bio.structure.align.util.RotationAxis;
  *
  */
 public class SymmRefiner {
-
-	/**
-	 * Takes an AFPChain and replaces the optimal alignment based on an alignment map
-	 * @param afpChain The alignment to be modified
-	 * @param alignment The new alignment, as a Map
-	 * @throws StructureException
-	 */
-	private static AFPChain replaceOptAln(AFPChain afpChain, Atom[] ca1, Atom[] ca2,
-			Map<Integer, Integer> alignment) throws StructureException {
-
-		// Determine block lengths
-		Integer[] res1 = alignment.keySet().toArray(new Integer[0]);
-		Arrays.sort(res1);
-		List<Integer> blockLens = new ArrayList<Integer>(2);
-		int optLength = 0;
-		Integer lastRes = alignment.get(res1[0]);
-		int blkLen = lastRes==null?0:1;
-		for(int i=1;i<res1.length;i++) {
-			Integer currRes = alignment.get(res1[i]);
-			assert(currRes != null);// could be converted to if statement if assertion doesn't hold; just modify below as well.
-			if(lastRes<currRes) {
-				blkLen++;
-			} else {
-				// CP!
-				blockLens.add(blkLen);
-				optLength+=blkLen;
-				blkLen = 1;
-			}
-			lastRes = currRes;
-		}
-		blockLens.add(blkLen);
-		optLength+=blkLen;
-
-		// Create array structure for alignment
-		int[][][] optAln = new int[blockLens.size()][][];
-		int pos1 = 0; //index into res1
-		for(int blk=0;blk<blockLens.size();blk++) {
-			optAln[blk] = new int[2][];
-			blkLen = blockLens.get(blk);
-			optAln[blk][0] = new int[blkLen];
-			optAln[blk][1] = new int[blkLen];
-			int pos = 0; //index into optAln
-			while(pos<blkLen) {
-				optAln[blk][0][pos]=res1[pos1];
-				Integer currRes = alignment.get(res1[pos1]);
-				optAln[blk][1][pos]=currRes;
-				pos++;
-				pos1++;
-			}
-		}
-		assert(pos1 == optLength);
-
-		// Create length array
-		int[] optLens = new int[blockLens.size()];
-		for(int i=0;i<blockLens.size();i++) {
-			optLens[i] = blockLens.get(i);
-		}
-
-		//set everything
-		AFPChain refinedAFP = (AFPChain) afpChain.clone();
-		refinedAFP.setOptLength(optLength);
-		refinedAFP.setOptLen(optLens);
-		refinedAFP.setOptAln(optAln);
-		refinedAFP.setBlockNum(blockLens.size());
-
-		//TODO recalculate properties: superposition, tm-score, etc
-		Atom[] ca2clone = StructureTools.cloneCAArray(ca2); // don't modify ca2 positions
-		AlignmentTools.updateSuperposition(refinedAFP, ca1, ca2clone);
-
-		AFPAlignmentDisplay.getAlign(refinedAFP, ca1, ca2clone);
-		return refinedAFP;
-	}
 
 	/**
 	 * Refines a CE-Symm alignment so that it is perfectly symmetric.
@@ -122,7 +48,7 @@ public class SymmRefiner {
 		// Do the alignment
 		Map<Integer, Integer> refined = refineSymmetry(alignment, k);
 
-		AFPChain refinedAFP = replaceOptAln(afpChain, ca1, ca2, refined);
+		AFPChain refinedAFP = AlignmentTools.replaceOptAln(afpChain, ca1, ca2, refined);
 		return refinedAFP;
 	}
 

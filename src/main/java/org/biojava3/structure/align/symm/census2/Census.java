@@ -41,9 +41,7 @@ import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.StructureAlignment;
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
@@ -99,13 +97,13 @@ public class Census {
 
 	private Map<String, Integer> total = new TreeMap<String, Integer>();
 
-	public static void buildDefault(String pdbDir, File censusFile) {
+	public static void buildDefault(File censusFile) {
 		try {
-			Census.setBerkeleyScop(pdbDir);
+			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			Census census = new Census(maxThreads);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache(pdbDir, false));
+			census.setCache(new AtomCache());
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -118,18 +116,12 @@ public class Census {
 	}
 
 	public static void main(String[] args) {
-		final String pdbDir = args[0];
-		final File censusFile = new File(args[1]);
-		buildDefault(pdbDir, censusFile);
-	}
-
-	public static ScopDatabase setBerkeleyScop(String pdbDir) {
-		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR, pdbDir);
-		ScopDatabase scop = ScopFactory.getSCOP();
-		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
+		if (args.length != 1) {
+			System.err.println("Usage: " + Census.class.getSimpleName() + " output-census-file");
+			return;
 		}
-		return ScopFactory.getSCOP();
+		final File censusFile = new File(args[0]);
+		buildDefault(censusFile);
 	}
 
 	public Census() {

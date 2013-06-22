@@ -47,13 +47,13 @@ public class RandomCensus extends Census {
 	private final int domainsPerSf;
 	private final boolean shuffle;
 
-	public static void buildDefault(String pdbDir, File censusFile, int domainsPerSf, boolean shuffle) {
+	public static void buildDefault(File censusFile, int domainsPerSf, boolean shuffle) {
 		try {
-			Census.setBerkeleyScop(pdbDir);
+			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			RandomCensus census = new RandomCensus(maxThreads, domainsPerSf, shuffle);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache(pdbDir, false));
+			census.setCache(new AtomCache());
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -62,14 +62,17 @@ public class RandomCensus extends Census {
 	}
 
 	public static void main(String[] args) {
-		final String pdbDir = args[0];
-		final File censusFile = new File(args[1]);
-		final int domainsPerSf = Integer.parseInt(args[2]);
-		boolean shuffle = false;
-		if (args.length > 3) {
-			if (args[3].toLowerCase().equals("shuffle") || args[3].toLowerCase().equals("true")) shuffle = true;
+		if (args.length < 2) {
+			System.err.println("Usage: " + RandomCensus.class.getSimpleName() + " output-census-file n-domains-per-superfamily [\"shuffle\"]");
+			return;
 		}
-		buildDefault(pdbDir, censusFile, domainsPerSf, shuffle);
+		final File censusFile = new File(args[0]);
+		final int domainsPerSf = Integer.parseInt(args[1]);
+		boolean shuffle = false;
+		if (args.length > 2) {
+			if (args[2].toLowerCase().equals("shuffle") || args[2].toLowerCase().equals("true")) shuffle = true;
+		}
+		buildDefault(censusFile, domainsPerSf, shuffle);
 	}
 
 	public RandomCensus(int maxThreads, int domainsPerSf, boolean shuffle) {

@@ -29,7 +29,6 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
@@ -47,13 +46,13 @@ public class ScopDescriptionCensus extends Census {
 
 	protected int[] sunIds;
 
-	public static void buildDefault(String pdbDir, File censusFile, int[] sunIds) {
+	public static void buildDefault(File censusFile, int[] sunIds) {
 		try {
-			Census.setBerkeleyScop(pdbDir);
+			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			ScopDescriptionCensus census = new ScopDescriptionCensus(maxThreads, sunIds);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache(pdbDir, false));
+			census.setCache(new AtomCache());
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -62,13 +61,16 @@ public class ScopDescriptionCensus extends Census {
 	}
 
 	public static void main(String[] args) {
-		final String pdbDir = args[0];
-		final File censusFile = new File(args[1]);
-		int[] sunIds = new int[args.length - 2];
-		for (int i = 2; i < args.length; i++) {
-			sunIds[i - 2] = Integer.parseInt(args[i]);
+		if (args.length < 2) {
+			System.err.println("Usage: " + ScopDescriptionCensus.class.getSimpleName() + " output-census-file sun-id-1 [sun-id-2 sun-id-3 ...]");
+			return;
 		}
-		buildDefault(pdbDir, censusFile, sunIds);
+		final File censusFile = new File(args[0]);
+		int[] sunIds = new int[args.length - 1];
+		for (int i = 1; i < args.length; i++) {
+			sunIds[i - 1] = Integer.parseInt(args[i]);
+		}
+		buildDefault(censusFile, sunIds);
 	}
 
 	public ScopDescriptionCensus(int maxThreads, int[] sunIds) {
@@ -79,7 +81,6 @@ public class ScopDescriptionCensus extends Census {
 	@Override
 	protected List<ScopDomain> getDomains() {
 		List<ScopDomain> domains = new ArrayList<ScopDomain>();
-		ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // TODO Why the hell do I have to do this again here?
 		ScopDatabase scop = ScopFactory.getSCOP();
 		for (int sunId : sunIds) {
 			domains.addAll(scop.getScopDomainsBySunid(sunId));

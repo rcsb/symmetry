@@ -33,8 +33,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
+import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 /**
@@ -47,9 +47,9 @@ public class NamesCensus extends Census {
 
 	private List<ScopDomain> domains;
 
-	public static void buildDefault(String pdbDir, File censusFile, File lineByLine) {
+	public static void buildDefault(File censusFile, File lineByLine) {
 		try {
-			ScopDatabase scop = Census.setBerkeleyScop(pdbDir);
+			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			NamesCensus census = new NamesCensus(maxThreads);
 			census.setOutputWriter(censusFile);
@@ -59,7 +59,7 @@ public class NamesCensus extends Census {
 				String line = "";
 				while ((line = br.readLine()) != null) {
 					if (line.trim().isEmpty()) continue;
-					ScopDomain domain = scop.getDomainByScopID(line);
+					ScopDomain domain = ScopFactory.getSCOP().getDomainByScopID(line);
 					if (domain == null) {
 						logger.error("No SCOP domain with id " + line + " was found");
 					} else {
@@ -70,7 +70,7 @@ public class NamesCensus extends Census {
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-			census.setCache(new AtomCache(pdbDir, false));
+			census.setCache(new AtomCache());
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -79,10 +79,13 @@ public class NamesCensus extends Census {
 	}
 
 	public static void main(String[] args) {
-		final String pdbDir = args[0];
-		final File censusFile = new File(args[1]);
-		final File lineByLine = new File(args[2]);
-		buildDefault(pdbDir, censusFile, lineByLine);
+		if (args.length != 3) {
+			System.err.println("Usage: " + NamesCensus.class.getSimpleName() + " output-census-file line-by-line-input-names-file");
+			return;
+		}
+		final File censusFile = new File(args[0]);
+		final File lineByLine = new File(args[1]);
+		buildDefault(censusFile, lineByLine);
 	}
 
 	public NamesCensus(int maxThreads) {

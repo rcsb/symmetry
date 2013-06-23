@@ -32,7 +32,7 @@ public class SuperfamilyRepresentativesTest {
 	@Test
 	public void testWithFamily() {
 		// b.1.1.3 and b.1.1.4
-		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives(3, new int[] {49159, 49142});
+		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives(3, new int[] {49159, 49142}, false);
 		List<ScopDomain> domains = reps.getDomains();
 		assertEquals(6, domains.size());
 		assertEquals("b.1.1.4", domains.get(0).getClassificationId());
@@ -45,14 +45,14 @@ public class SuperfamilyRepresentativesTest {
 
 	@Test
 	public void testWithDomain() {
-		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives(100, new int[] {69160, 49196});
+		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives(100, new int[] {69160, 49196}, false);
 		List<ScopDomain> domains = reps.getDomains();
 		assertEquals(2, domains.size()); // since we have only 2 domains, we can't find 100
 	}
 
 	@Test
 	public void testWithSpecies() {
-		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives(null, new int[] {49183});
+		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives(null, new int[] {49183}, false);
 		List<ScopDomain> domains = reps.getDomains();
 		assertEquals(1, domains.size());
 		// the first Px is 21752
@@ -61,7 +61,7 @@ public class SuperfamilyRepresentativesTest {
 
 	@Test
 	public void testWithPx() {
-		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives(null, new int[] {21752});
+		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives(null, new int[] {21752}, false);
 		List<ScopDomain> domains = reps.getDomains();
 		assertEquals(1, domains.size());
 		assertEquals(21752, domains.get(0).getSunid().intValue());

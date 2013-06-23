@@ -38,6 +38,7 @@ import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 
 /**
  * A census that takes a list of sun Ids and a sequence clustering.
@@ -140,9 +141,14 @@ public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 		final File censusFile = new File(args[0]);
 		final AstralSet astral = AstralSet.parse(args[1]);
 		int[] sunIds = new int[args.length - 2];
+		StringBuilder sb = new StringBuilder();
 		for (int i = 2; i < args.length; i++) {
-			sunIds[i - 2] = Integer.parseInt(args[i]);
+			Integer sunId = ScopSupport.getInstance().getSunId(args[i]);
+			if (sunId == null) throw new IllegalArgumentException("Couldn't find " + args[i]);
+			sb.append(sunId + ",");
+			sunIds[i - 2] = sunId;
 		}
+		logger.info("Running on " + sb.toString().substring(0, sb.toString().length()-1));
 		buildDefault(censusFile, astral, sunIds);
 	}
 

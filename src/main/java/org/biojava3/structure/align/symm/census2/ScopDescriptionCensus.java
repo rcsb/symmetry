@@ -35,6 +35,7 @@ import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.scop.ScopNode;
+import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 
 /**
  * A census that takes a list of sun Ids
@@ -67,9 +68,14 @@ public class ScopDescriptionCensus extends Census {
 		}
 		final File censusFile = new File(args[0]);
 		int[] sunIds = new int[args.length - 1];
+		StringBuilder sb = new StringBuilder();
 		for (int i = 1; i < args.length; i++) {
-			sunIds[i - 1] = Integer.parseInt(args[i]);
+			Integer sunId = ScopSupport.getInstance().getSunId(args[i]);
+			if (sunId == null) throw new IllegalArgumentException("Couldn't find " + args[i]);
+			sb.append(sunId + ",");
+			sunIds[i - 1] = sunId;
 		}
+		logger.info("Running on " + sb.toString().substring(0, sb.toString().length()-1));
 		buildDefault(censusFile, sunIds);
 	}
 
@@ -89,6 +95,11 @@ public class ScopDescriptionCensus extends Census {
 		return domains;
 	}
 
+	/**
+	 * @deprecated Use {@link ScopSupport} instead
+	 * TODO Swap out with ScopSupport, and verify that everything (particularly in CLI) still works.
+	 */
+	@Deprecated
 	public static void getDomainsUnder(int sunId, List<ScopDomain> domains) {
 		
 		final ScopDatabase scop = ScopFactory.getSCOP();

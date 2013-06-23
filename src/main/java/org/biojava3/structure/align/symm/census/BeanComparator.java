@@ -15,7 +15,9 @@ import java.util.*;
  *  a) ascending (default true)
  *  b) ignore case (default true)
  *  c) nulls last (default true)
+ * @deprecated Prefer using the identical copy in {@code symm.census2}
  */
+@Deprecated
 public class BeanComparator implements Comparator
 {
 	private static final Class[] EMPTY_CLASS_ARRAY = new Class[] {};

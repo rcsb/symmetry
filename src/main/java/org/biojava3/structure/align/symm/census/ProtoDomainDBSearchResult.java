@@ -7,6 +7,10 @@ import org.biojava.bio.structure.align.model.AfpChainWriter;
 
 
 
+/**
+ * @deprecated Refer to {@code symm.census2} instead
+ */
+@Deprecated
 public class ProtoDomainDBSearchResult implements Serializable{
 
 	

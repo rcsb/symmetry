@@ -70,7 +70,7 @@ public class SuperfamilyRepresentativesTest {
 	/**
 	 * <strong>Warning: this test takes a very long time</strong>.
 	 */
-	@Test
+//	@Test
 	public void verify1PerFamily() {
 		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives();
 		List<ScopDomain> domains = reps.getDomains();
@@ -84,7 +84,7 @@ public class SuperfamilyRepresentativesTest {
 	/**
 	 * <strong>Warning: this test takes a very long time</strong>.
 	 */
-	@Test
+//	@Test
 	public void verify1PerSf() {
 		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives(1);
 		List<ScopDomain> domains = reps.getDomains();
@@ -106,7 +106,7 @@ public class SuperfamilyRepresentativesTest {
 	/**
 	 * <strong>Warning: this test takes a very long time</strong>.
 	 */
-	@Test
+//	@Test
 	public void verify2PerSf() {
 		SuperfamilyRepresentatives reps = new SuperfamilyRepresentatives(2);
 		List<ScopDomain> domains = reps.getDomains();

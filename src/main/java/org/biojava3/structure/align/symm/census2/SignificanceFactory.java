@@ -35,7 +35,7 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  * <ul>
  * <li>{@link #forCensus()}, which can be used to determine very liberal significance for running the {@link Census}</li>
  * <li>{@link #generallySymmetric()}, which can be used to determine "general symmetry": both rotational and translational symmetry</li>
- * <li>{@link #symmetric()}, which can be used to determine only rotational symmetry by examining order and angle</li>
+ * <li>{@link #rotationallySymmetric()}, which can be used to determine only rotational symmetry by examining order and angle</li>
  * </ul>
  * These objects, particularly the latter two, may change frequently. Also helps running the {@link Census} with arbitrary Significance objects via {@link CLI}, using the methods:
  * <ul>
@@ -47,6 +47,62 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  * @author dmyerstu
  */
 public class SignificanceFactory {
+
+	public static Significance rotationallySymmetric() {
+		return rotationallySymmetric(0.38, Double.MAX_VALUE);
+	}
+
+	public static Significance generallySymmetric() {
+		return tmScore(0.43);
+	}
+
+	public static Significance forCensus() {
+		return SignificanceFactory.generallySymmetric();
+	}
+
+	public static Significance ultraLiberal() {
+		return tmScore(0.0);
+	}
+
+	public static Significance liberal() {
+		return rotationallySymmetric(0.3, Double.MAX_VALUE);
+	}
+
+	public static Significance conservative() {
+		return rotationallySymmetric(0.5, Math.PI);
+	}
+
+	public static Significance veryConservative() {
+		return rotationallySymmetric(0.6, Math.PI);
+	}
+
+	public static Significance superConservative() {
+		return rotationallySymmetric(0.7, Math.PI);
+	}
+
+	public static Significance liberalTmScore() {
+		return tmScore(0.3);
+	}
+
+	public static Significance mediumTmScore() {
+		return tmScore(0.4);
+	}
+
+	public static Significance asymmetric() {
+		return asymmetric(0.38);
+	}
+
+	public static Significance bin1() {
+		return binned(0.4, 0.5);
+	}
+
+	public static Significance bin2() {
+		return binned(0.5, 0.6);
+	}
+
+	public static Significance bin3() {
+		return binned(0.6, 1);
+	}
 
 	public static Significance and(final Significance a, final Significance b) {
 		return new Significance() {
@@ -66,10 +122,6 @@ public class SignificanceFactory {
 				return a.isSignificant(result) && b.isSignificant(result);
 			}
 		};
-	}
-
-	public static Significance asymmetric() {
-		return asymmetric(0.4);
 	}
 
 	public static Significance asymmetric(final double tmScore) {
@@ -95,18 +147,6 @@ public class SignificanceFactory {
 		};
 	}
 
-	public static Significance bin1() {
-		return binned(0.4, 0.5);
-	}
-
-	public static Significance bin2() {
-		return binned(0.5, 0.6);
-	}
-
-	public static Significance bin3() {
-		return binned(0.6, 1);
-	}
-
 	public static Significance binned(final double start, final double end) {
 		return new Significance() {
 			@Override
@@ -128,14 +168,6 @@ public class SignificanceFactory {
 				return result.getAlignment().getTmScore() >= start && result.getAlignment().getTmScore() < end;
 			}
 		};
-	}
-
-	public static Significance conservative() {
-		return rotationallySymmetric(0.5, Math.PI);
-	}
-
-	public static Significance forCensus() {
-		return tmScore(0.2);
 	}
 
 	public static Significance fromClass(String className) {
@@ -184,22 +216,6 @@ public class SignificanceFactory {
 			throw new IllegalArgumentException("Could not get a Significance object from the method " + methodName
 					+ " of " + className, e);
 		}
-	}
-
-	public static Significance generallySymmetric() {
-		return tmScore(0.4);
-	}
-
-	public static Significance liberal() {
-		return rotationallySymmetric(0.3, Math.PI);
-	}
-
-	public static Significance liberalTmScore() {
-		return tmScore(0.3);
-	}
-
-	public static Significance mediumTmScore() {
-		return tmScore(0.4);
 	}
 
 	public static Significance or(final Significance a, final Significance b) {
@@ -264,14 +280,6 @@ public class SignificanceFactory {
 		};
 	}
 
-	public static Significance superConservative() {
-		return rotationallySymmetric(0.7, Math.PI);
-	}
-
-	public static Significance symmetric() {
-		return rotationallySymmetric(0.4, Double.MAX_VALUE);
-	}
-
 	public static Significance tmScore(final Double cutoff) { // cannot use a primitive double
 		return new Significance() {
 			@Override
@@ -289,14 +297,6 @@ public class SignificanceFactory {
 				return result.getAlignment().getTmScore() >= cutoff;
 			}
 		};
-	}
-
-	public static Significance ultraLiberal() {
-		return tmScore(0.0);
-	}
-
-	public static Significance veryConservative() {
-		return rotationallySymmetric(0.6, Math.PI);
 	}
 
 	private static Class<?>[] params(Object[] args) {

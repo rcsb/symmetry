@@ -40,7 +40,7 @@ public class SmartStats {
 
 	private static final Logger logger = LogManager.getLogger(SmartStats.class.getPackage().getName());
 
-	private static double DEFAULT_TM_SCORE_THRESHOLD = 0.4;
+	private static double DEFAULT_TM_SCORE_THRESHOLD = 0.38;
 
 	private static double DEFAULT_ORDER_THRESHOLD = 0.5;
 

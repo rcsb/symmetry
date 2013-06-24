@@ -79,7 +79,7 @@ public class NamesCensus extends Census {
 	}
 
 	public static void main(String[] args) {
-		if (args.length != 3) {
+		if (args.length != 2) {
 			System.err.println("Usage: " + NamesCensus.class.getSimpleName() + " output-census-file line-by-line-input-names-file");
 			return;
 		}

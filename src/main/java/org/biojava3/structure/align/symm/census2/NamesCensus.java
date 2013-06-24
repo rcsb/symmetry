@@ -55,6 +55,9 @@ public class NamesCensus extends Census {
 			census.setOutputWriter(censusFile);
 			census.domains = new ArrayList<ScopDomain>();
 			census.setDoRefine(doRefine);
+			census.setPrintFrequency(10);
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
 			try {
 				BufferedReader br = new BufferedReader(new FileReader(lineByLine));
 				String line = "";
@@ -71,7 +74,7 @@ public class NamesCensus extends Census {
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-			census.setCache(new AtomCache());
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {

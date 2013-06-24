@@ -47,13 +47,14 @@ public class NamesCensus extends Census {
 
 	private List<ScopDomain> domains;
 
-	public static void buildDefault(File censusFile, File lineByLine) {
+	public static void buildDefault(File censusFile, File lineByLine, boolean doRefine) {
 		try {
 			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			NamesCensus census = new NamesCensus(maxThreads);
 			census.setOutputWriter(censusFile);
 			census.domains = new ArrayList<ScopDomain>();
+			census.setDoRefine(doRefine);
 			try {
 				BufferedReader br = new BufferedReader(new FileReader(lineByLine));
 				String line = "";
@@ -79,13 +80,19 @@ public class NamesCensus extends Census {
 	}
 
 	public static void main(String[] args) {
-		if (args.length != 2) {
-			System.err.println("Usage: " + NamesCensus.class.getSimpleName() + " output-census-file line-by-line-input-names-file");
+		if (args.length != 2 && args.length != 3) {
+			System.err.println("Usage: " + NamesCensus.class.getSimpleName() + " output-census-file line-by-line-input-names-file [do-refinement]");
 			return;
 		}
 		final File censusFile = new File(args[0]);
 		final File lineByLine = new File(args[1]);
-		buildDefault(censusFile, lineByLine);
+		boolean doRefine = false;
+		if (args.length > 2) {
+			if (args[2].toLowerCase().equals("true") || args[2].toLowerCase().equals("refine")) {
+				doRefine = true;
+			}
+		}
+		buildDefault(censusFile, lineByLine, doRefine);
 	}
 
 	public NamesCensus(int maxThreads) {

@@ -45,6 +45,7 @@ import org.biojava.bio.structure.secstruc.SecStruc;
 import org.biojava.bio.structure.secstruc.SecStrucGroup;
 import org.biojava.bio.structure.secstruc.SecStrucState;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.SymmRefiner;
 import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
@@ -64,11 +65,17 @@ public class CensusJob implements Callable<Result> {
 	private ScopDomain domain;
 	private Significance significance;
 	private ScopDescription superfamily;
-	
+
 	private String scopVersion = null;
 
 	AFPChain afpChain = null;
-	
+
+	private boolean doRefine;
+
+	public void setDoRefine(boolean doRefine) {
+		this.doRefine = doRefine;
+	}
+
 	public static Result runOn(ScopDomain domain, AtomCache cache, AlgorithmGiver algorithm, Significance sig, String scopVersion) {
 		ScopDescription superfamily = ScopFactory.getSCOP(scopVersion).getScopDescriptionBySunid(domain.getSuperfamilyId());
 		CensusJob job = new CensusJob(cache, algorithm, sig);
@@ -77,7 +84,7 @@ public class CensusJob implements Callable<Result> {
 		job.setSuperfamily(superfamily);
 		return job.call();
 	}
-	
+
 	private static boolean sanityCheckPreAlign(Atom[] ca1, Atom[] ca2) {
 		if (ca1 == ca2) return false;
 		if (ca1[0].getGroup().getChain().getParent() == ca2[0].getGroup().getChain().getParent()) return false;
@@ -91,7 +98,7 @@ public class CensusJob implements Callable<Result> {
 	}
 
 	private Long timeTaken;
-	
+
 	public Long getTimeTaken() {
 		return timeTaken;
 	}
@@ -108,20 +115,20 @@ public class CensusJob implements Callable<Result> {
 			ScopDatabase scop = ScopFactory.getSCOP(scopVersion);
 			ScopFactory.setScopDatabase(scop);
 		}
-		
+
 		// setting SCOP factory to latest BerkeleySCOP
 		if ( ScopFactory.getSCOP() instanceof RemoteScopInstallation) {
 			System.out.println("setting default scop to version " + ScopFactory.VERSION_1_75B);
 			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75B));
 		}
-		
+
 		// first, get the atoms
 		Atom[] ca1, ca2;
 		Structure structure;
 		logger.debug("Getting atoms for " + name + " (job #" + count + ")");
 		try {
 			structure = cache.getStructure(name);
-//			ca1 = cache.getAtoms(name);
+			//			ca1 = cache.getAtoms(name);
 			ca1 = StructureTools.getAtomCAArray(structure);
 			ca2 = StructureTools.cloneCAArray(ca1);
 		} catch (Exception e) {
@@ -143,7 +150,7 @@ public class CensusJob implements Callable<Result> {
 			logger.debug("CE-Symm returned null (job #" + count + ")");
 			return convertResult(null, null, superfamily, name, null, null, domain, null, null);
 		}
-		
+
 		// there are two cases in which we know there is no symmetry
 		if (afpChain.getBlockNum() != 2) {
 			logger.debug("CE-Symm returned a result with " + afpChain.getBlockNum() + " block(s) (job #" + count + ")");
@@ -198,16 +205,24 @@ public class CensusJob implements Callable<Result> {
 			} catch (RuntimeException e) {
 				logger.error("Failed to determine the signifcance of " + name + ": " + e.getMessage(), e);
 			}
-			
-			
+
+
 			// now find fraction helical
 			Float fractionHelical = null;
-//			try {
-//				fractionHelical = getFractionHelical(structure);
-//			} catch (Exception e) {
-//				logger.error("Could not assign secondary structure to " + name + " (job #" + count + ")", e);
-//			}
-			
+			//			try {
+			//				fractionHelical = getFractionHelical(structure);
+			//			} catch (Exception e) {
+			//				logger.error("Could not assign secondary structure to " + name + " (job #" + count + ")", e);
+			//			}
+
+			if (doRefine) {
+				try {
+					SymmRefiner.refineSymmetry(afpChain, ca1, ca2, order);
+				} catch (StructureException e) {
+					logger.error("Could not refine symmetry for " + name, e);
+				}
+			}
+
 			return convertResult(afpChain, isSignificant, superfamily, name, order, protodomain.toString(),
 					domain, angle, fractionHelical);
 
@@ -231,7 +246,7 @@ public class CensusJob implements Callable<Result> {
 		double fractionHelix = (double) nHelix / (double) ssgs.length;
 		return (float) fractionHelix;
 	}
-	
+
 	/**
 	 * Returns the <em>magnitude</em> of the angle between the first and second blocks of {@code afpChain}, measured in degrees. This is always a positive value (unsigned).
 	 * @param afpChain
@@ -255,8 +270,8 @@ public class CensusJob implements Callable<Result> {
 	public void setSuperfamily(ScopDescription superfamily) {
 		this.superfamily = superfamily;
 	}
-	
-	
+
+
 
 	public String getScopVersion() {
 		return scopVersion;
@@ -281,7 +296,7 @@ public class CensusJob implements Callable<Result> {
 
 		r.setAlignment(new Alignment(afpChain));
 		r.setIsSignificant(isSymmetric);
-//		r.setFractionHelical(fractionHelical);
+		//		r.setFractionHelical(fractionHelical);
 		try {
 			r.setAxis(new Axis(new RotationAxis(afpChain)));
 		} catch (RuntimeException e) {
@@ -312,10 +327,10 @@ public class CensusJob implements Callable<Result> {
 		afpChain.setTMScore(realTmScore);
 		return afpChain;
 	}
-	
+
 	public AFPChain getAFPChain(){
 		return afpChain;
-		
+
 	}
 
 }

@@ -61,6 +61,12 @@ public class Census {
 
 	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
 
+	/**
+	 * A class that creates a new {@link StructureAlignment StructureAlignments} for each {@link CensusJob}, to avoid
+	 * concurrency issues.
+	 * @author dmyersturnbull
+	 *
+	 */
 	public static abstract class AlgorithmGiver {
 		public static AlgorithmGiver getDefault() {
 			return new AlgorithmGiver() {
@@ -181,7 +187,6 @@ public class Census {
 			// submit jobs
 			for (ScopDomain domain : domains) {
 				if (count % 1000 == 0) logger.info("Working on " + count + " / " + domains.size());
-				// if (domain.getScopId().equals("ds046__")) continue;
 				if (domain.getRanges() == null || domain.getRanges().isEmpty()) {
 					logger.debug("Skipping " + domain.getScopId() + " because SCOP ranges for it are not defined");
 					continue;
@@ -190,8 +195,9 @@ public class Census {
 				logger.debug("Submitting new job for " + domain.getScopId() + " (job #" + count + ")");
 				CensusJob calc = new CensusJob(cache, getAlgorithm(), significance);
 				calc.setDomain(domain);
-				calc.setSuperfamily(scop.getScopDescriptionBySunid(domain.getSuperfamilyId())); // TODO is this correct?
+				calc.setSuperfamily(scop.getScopDescriptionBySunid(domain.getSuperfamilyId()));
 				calc.setCount(count);
+				initializeJob(calc);
 				submittedJobs.add(calc);
 				Future<Result> result = ConcurrencyTools.submit(calc);
 				futures.add(result);
@@ -247,6 +253,14 @@ public class Census {
 		}
 	}
 
+	/**
+	 * Do anything else to the {@link CensusJob} object before it is run.
+	 * @param calc
+	 */
+	protected void initializeJob(CensusJob job) {
+		job.setDoRefine(doRefine);
+	}
+
 	private double avgTimeTaken;
 	
 	public double getAvgTimeTaken() {
@@ -263,6 +277,16 @@ public class Census {
 
 	public void setPrintFrequency(int printFrequency) {
 		this.printFrequency = printFrequency;
+	}
+
+	private boolean doRefine;
+	
+	public boolean doRefine() {
+		return doRefine;
+	}
+
+	public void setDoRefine(boolean doRefine) {
+		this.doRefine = doRefine;
 	}
 
 	@Override
@@ -282,12 +306,12 @@ public class Census {
 	}
 
 	/**
-	 * Returns the names of the domains that we already analyzed
+	 * Returns the names of the domains that we already analyzed.
 	 * 
 	 * @param census
 	 * @return
 	 */
-	private List<String> getKnownResults(Results census) {
+	private final List<String> getKnownResults(Results census) {
 		List<String> names = new ArrayList<String>();
 		List<Result> results = census.getData();
 		int i = 0;

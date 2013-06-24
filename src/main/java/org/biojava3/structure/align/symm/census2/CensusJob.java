@@ -189,6 +189,16 @@ public class CensusJob implements Callable<Result> {
 				logger.error("Failed to determine the order of symmetry on " + name + ": " + e.getMessage(), e);
 			}
 
+			if (doRefine) {
+				try {
+					SymmRefiner.refineSymmetry(afpChain, ca1, ca2, order);
+					double realTmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
+					afpChain.setTMScore(realTmScore);
+				} catch (StructureException e) {
+					logger.error("Could not refine symmetry for " + name, e);
+				}
+			}
+
 			// now try to find the angle
 			logger.debug("Finding angle (job #" + count + ")");
 			try {
@@ -214,14 +224,6 @@ public class CensusJob implements Callable<Result> {
 			//			} catch (Exception e) {
 			//				logger.error("Could not assign secondary structure to " + name + " (job #" + count + ")", e);
 			//			}
-
-			if (doRefine) {
-				try {
-					SymmRefiner.refineSymmetry(afpChain, ca1, ca2, order);
-				} catch (StructureException e) {
-					logger.error("Could not refine symmetry for " + name, e);
-				}
-			}
 
 			return convertResult(afpChain, isSignificant, superfamily, name, order, protodomain.toString(),
 					domain, angle, fractionHelical);

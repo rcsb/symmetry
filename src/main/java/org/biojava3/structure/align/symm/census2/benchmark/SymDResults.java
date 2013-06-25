@@ -190,12 +190,15 @@ public class SymDResults extends Results {
 	}
 
 	public static void main(String[] args) {
-		final String pdbDir = args[0];
-		final String symDPath = args[1];
-		final File namesFile = new File(args[2]);
-		final File outputFile = new File(args[3]);
+		if (args.length != 3) {
+			System.err.println("Usage: " + SymDResults.class.getSimpleName() + " SymD-path names-file output-file");
+			return;
+		}
+		final String symDPath = args[0];
+		final File namesFile = new File(args[1]);
+		final File outputFile = new File(args[2]);
 		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
-		AtomCache cache = new AtomCache(pdbDir, false);
+		AtomCache cache = new AtomCache();
 		writeToFile(symDPath, namesFile, cache, outputFile);
 	}
 

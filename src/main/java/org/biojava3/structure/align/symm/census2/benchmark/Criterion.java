@@ -197,7 +197,7 @@ public abstract class Criterion {
 
 			@Override
 			public String getName() {
-				return "SymD-TM";
+				return "T-score";
 			}
 		};
 	}
@@ -211,7 +211,7 @@ public abstract class Criterion {
 
 			@Override
 			public String getName() {
-				return "SymD-Z-score";
+				return "Z-score(T-score)";
 			}
 		};
 	}
@@ -228,6 +228,20 @@ public abstract class Criterion {
 				return "TM-score";
 			}
 
+		};
+	}
+	public static Criterion tmpr() {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				if (result.getAlignment() == null || result.getAlignment().getTmpr() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getAlignment().getTmpr();
+			}
+
+			@Override
+			public String getName() {
+				return "Tmpr";
+			}
 		};
 	}
 	public static Criterion alignScore() {

@@ -77,29 +77,9 @@ public class AccuracyFinder {
 	private int tn = 0;
 
 	private static Significance sig;
-	private static Significance symDSig;
 	static {
-		sig = new Significance() {
-			private static final double cutoff = 0.4;
-			@Override
-			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return true; // whatever
-			}
-
-			@Override
-			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				return true; // whatever
-			}
-
-			@Override
-			public boolean isSignificant(Result result) {
-				if (result.getOrder() == null || result.getOrder() < 2) return false;
-				if (result.getAlignment() == null) return false;
-				return result.getAlignment().getTmScore() >= cutoff;
-			}
-		};
 //		sig = new Significance() {
-//			private static final double cutoff = 10;
+//			private static final double cutoff = 0.38;
 //			@Override
 //			public boolean isPossiblySignificant(AFPChain afpChain) {
 //				return true; // whatever
@@ -112,17 +92,36 @@ public class AccuracyFinder {
 //
 //			@Override
 //			public boolean isSignificant(Result result) {
+//				if (result.getOrder() == null || result.getOrder() < 2) return false;
 //				if (result.getAlignment() == null) return false;
-//				return result.getAlignment().getzScore() >= cutoff;
+//				return result.getAlignment().getTmScore() >= cutoff;
 //			}
 //		};
+		sig = new Significance() {
+			private static final double cutoff = 9.2;
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return true; // whatever
+			}
+
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				return true; // whatever
+			}
+
+			@Override
+			public boolean isSignificant(Result result) {
+				if (result.getAlignment() == null) return false;
+				return result.getAlignment().getzScore() >= cutoff;
+			}
+		};
 	}
 	
 	
 	public AccuracyFinder(Sample sample) {
 		for (Case c : sample.getData()) {
 			try {
-				if (c.hasKnownSymmetry()) {
+				if (c.getKnownInfo().hasRotationalSymmetry()) {
 					if (sig.isSignificant(c.getResult())) {
 						tp++;
 					} else {

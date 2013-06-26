@@ -148,16 +148,7 @@ public class ROCCurves {
 			symdCriteria.add(Criterion.symdZScore());
 			symdCriteria.add(Criterion.symdTm());
 			symdCriteria.add(Criterion.tmScore());
-			symdCriteria.add(new Criterion() {
-				@Override
-				public double get(Result result) throws NoncomputableCriterionException {
-					return result.getAlignment().getTmpr();
-				}
-				@Override
-				public String getName() {
-					return "Tmpr";
-				}
-			});
+//			symdCriteria.add(Criterion.tmpr());
 			ROCCurves symdRocs = new ROCCurves(input, symdCriteria);
 			symdRocs.graph(output);
 
@@ -188,7 +179,7 @@ public class ROCCurves {
 		List<Case> cases = new ArrayList<Case>(sample.size());
 		for (Case c : sample.getData()) {
 			try {
-				c.hasKnownSymmetry();
+				c.getKnownInfo().hasRotationalSymmetry();
 				cases.add(c); // only add if the known/benchmark result is known
 			} catch (RuntimeException e) {
 				logger.fatal("Encountered an error on " + c.getScopId(), e);
@@ -353,7 +344,7 @@ public class ROCCurves {
 			 */
 			int nSymm = 0, nAsymm = 0;
 			for (Case c: cases) {
-				if (c.hasKnownSymmetry()) {
+				if (c.getKnownInfo().hasRotationalSymmetry()) {
 					nSymm++;
 				} else {
 					nAsymm++;
@@ -364,7 +355,7 @@ public class ROCCurves {
 
 				// get the new x and y points
 				double x, y;
-				if (c.hasKnownSymmetry()) {
+				if (c.getKnownInfo().hasRotationalSymmetry()) {
 					tp++;
 				} else {
 					fp++;
@@ -375,7 +366,7 @@ public class ROCCurves {
 				// now just add the data point
 				NumberFormat nf = new DecimalFormat();
 				nf.setMaximumFractionDigits(3);
-				if (c.hasKnownSymmetry()) {
+				if (c.getKnownInfo().hasRotationalSymmetry()) {
 					logger.debug(c.getScopId() + " (" + c.getKnownInfo() + ")" + " is symmetric: (" + nf.format(x)
 							+ ", " + nf.format(y) + ")");
 				} else {

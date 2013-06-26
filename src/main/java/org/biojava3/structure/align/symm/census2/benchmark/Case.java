@@ -115,10 +115,4 @@ public class Case implements Serializable {
 	public Integer getSunId() {
 		return result.getSunId();
 	}
-	public boolean hasKnownSymmetry() {
-		return getKnownOrder() > 1;
-	}
-	public boolean hasDecidedSymmetry() {
-		return getOrder() > 1;
-	}
 }

@@ -43,16 +43,37 @@ public class AccuracyFinder {
 	private static final Logger logger = LogManager.getLogger(AccuracyFinder.class.getName());
 
 	public static void main(String[] args) throws IOException {
-		if (args.length != 1) {
-			System.err.println("Usage: " + AccuracyFinder.class.getSimpleName() + " input-file");
+		if (args.length != 1 && args.length != 2) {
+			System.err.println("Usage: " + AccuracyFinder.class.getSimpleName() + " input-file [cutoff]");
 			return;
 		}
-		AccuracyFinder finder = new AccuracyFinder(new File(args[0]));
+		File input = new File(args[0]);
+		double c = 10;
+		if (args.length > 1) {
+			c = Double.parseDouble(args[1]);
+		}
+		final double cutoff = c;
+		Significance sig = new Significance() {
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return true; // whatever
+			}
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				return true; // whatever
+			}
+			@Override
+			public boolean isSignificant(Result result) {
+				if (result.getAlignment() == null) return false;
+				return result.getAlignment().getzScore() >= cutoff;
+			}
+		};
+		AccuracyFinder finder = new AccuracyFinder(input, sig);
 		System.out.println(finder);
 	}
 
-	public AccuracyFinder(File input) throws IOException {
-		this(Sample.fromXML(input));
+	public AccuracyFinder(File input, Significance sig) throws IOException {
+		this(Sample.fromXML(input), sig);
 	}
 
 	public int getTp() {
@@ -75,50 +96,8 @@ public class AccuracyFinder {
 	private int fn = 0;
 	private int fp = 0;
 	private int tn = 0;
-
-	private static Significance sig;
-	static {
-//		sig = new Significance() {
-//			private static final double cutoff = 0.38;
-//			@Override
-//			public boolean isPossiblySignificant(AFPChain afpChain) {
-//				return true; // whatever
-//			}
-//
-//			@Override
-//			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-//				return true; // whatever
-//			}
-//
-//			@Override
-//			public boolean isSignificant(Result result) {
-//				if (result.getOrder() == null || result.getOrder() < 2) return false;
-//				if (result.getAlignment() == null) return false;
-//				return result.getAlignment().getTmScore() >= cutoff;
-//			}
-//		};
-		sig = new Significance() {
-			private static final double cutoff = 9.2;
-			@Override
-			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return true; // whatever
-			}
-
-			@Override
-			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				return true; // whatever
-			}
-
-			@Override
-			public boolean isSignificant(Result result) {
-				if (result.getAlignment() == null) return false;
-				return result.getAlignment().getzScore() >= cutoff;
-			}
-		};
-	}
 	
-	
-	public AccuracyFinder(Sample sample) {
+	public AccuracyFinder(Sample sample, Significance sig) {
 		for (Case c : sample.getData()) {
 			try {
 				if (c.getKnownInfo().hasRotationalSymmetry()) {

@@ -36,6 +36,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.census2.NamesCensus;
+import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * Run CE-Symm with different diagonal gradients, and benchmark the results.
@@ -102,7 +103,7 @@ public class GradientSampler {
 			}
 			try {
 				File accFile = new File(dir + i + "_acc.txt");
-				AccuracyFinder finder = new AccuracyFinder(benchmarkFile);
+				AccuracyFinder finder = new AccuracyFinder(benchmarkFile, SignificanceFactory.symmetric());
 				PrintWriter accPw = new PrintWriter(new BufferedWriter(new FileWriter(accFile)));
 				accPw.println(finder);
 				accPw.close();

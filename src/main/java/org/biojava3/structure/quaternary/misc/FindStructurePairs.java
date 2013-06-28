@@ -163,6 +163,7 @@ public class FindStructurePairs {
 			String bioassemblyId = tokens[BIOASSEMBLY];
 			csv.put(pdbId+bioassemblyId, tokens);
 		}
+		reader.close();
 	}
 	
 	private void createStructureGroups() {

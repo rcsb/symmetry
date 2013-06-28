@@ -416,6 +416,7 @@ public class AligQuaternaryStructure {
 			error.println(e.getMessage());
 			error.flush();
 		}
+		error.close();
 		return structure;
 	}
 }

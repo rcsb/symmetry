@@ -347,6 +347,8 @@ public class AlignQuaternaryStructureBySymmetry {
 			error.println(e.getMessage());
 			error.flush();
 		}
+		
+		error.close();
 		return structure;
 	}
 	
@@ -357,5 +359,6 @@ public class AlignQuaternaryStructureBySymmetry {
 			String[] tokens = line.split(",");
 			csv.add(tokens);
 		}
+		reader.close();
 	}
 }

@@ -304,7 +304,11 @@ public class CensusJob implements Callable<Result> {
 		} catch (RuntimeException e) {
 			logger.error("Could not get rotation axis for " + scopId  + "(job #" + count + ")", e);
 		} catch (Exception e) {
+			e.printStackTrace();
+			
+			
 			logger.error("Alignment for " + scopId + " is empty (job #" + count + ")", e);
+			
 			if (angle != null) { // if the axis can't be found, at least we do have the angle
 				Axis axis = new Axis();
 				axis.setTheta((float) angle);

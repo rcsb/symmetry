@@ -23,6 +23,7 @@
 package org.biojava3.structure.align.symm.census2.benchmark;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +52,10 @@ public class SampleBuilderTest {
 		Sample expected = Sample.fromXML(expectedOutputFile);
 		assertEquals(actual.size(), 93); // note that the size is here manually
 		for (int i = 0; i < actual.size(); i++) {
-			assertEquals(expected.getData().get(i), actual.getData().get(i));
+			if (!expected.getData().get(i).equals((actual).getData().get(i))) {
+				System.err.println(actual.getData().get(i));
+				fail();
+			}
 		}
 		outputFile.delete();
 	}

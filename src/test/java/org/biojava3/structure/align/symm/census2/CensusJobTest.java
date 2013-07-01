@@ -57,7 +57,7 @@ public class CensusJobTest extends TestCase{
 	public void setUp() throws Exception {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
 		
-		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);		
+		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 		ScopFactory.setScopDatabase(scop);
 		
 		final CeSymm ceSymm = mock(CeSymm.class);
@@ -94,7 +94,7 @@ public class CensusJobTest extends TestCase{
 	
 	@Test
 	public void test() {
-		 ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
+		 ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 		for (int i = 0; i < domains.length; i++) {
 			final ScopDomain domain = scop.getDomainByScopID(domains[i]);
 			job.setCount(i);

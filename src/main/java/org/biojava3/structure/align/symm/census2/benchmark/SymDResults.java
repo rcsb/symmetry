@@ -273,23 +273,8 @@ public class SymDResults extends Results {
 	public static float getTmScoreFromFastaFile(String scopId, Structure structure) throws SymDException {
 		File fastaFile = new File(scopId + "-best.fasta");
 		try {
-			InputStream inStream = new FileInputStream(fastaFile);
-			SequenceCreatorInterface<AminoAcidCompound> creator = new CasePreservingProteinSequenceCreator(AminoAcidCompoundSet.getAminoAcidCompoundSet());
-			FastaHeaderParserInterface<ProteinSequence, AminoAcidCompound> headerParser = new GenericFastaHeaderParser<ProteinSequence, AminoAcidCompound>();
-			FastaReader<ProteinSequence, AminoAcidCompound> fastaReader = new FastaReader<ProteinSequence, AminoAcidCompound>(inStream, headerParser, creator);
-			LinkedHashMap<String, ProteinSequence> sequences = fastaReader.process();
-			inStream.close();
-			Iterator<ProteinSequence> seqIter = sequences.values().iterator();
-			ProteinSequence firstSeq = seqIter.next();
-			ProteinSequence secondSeq = seqIter.next();
-			Iterator<String> namesIter = sequences.keySet().iterator();
-			String firstName = namesIter.next();
-			String secondName = namesIter.next();
-			// second should be something like: 1W0P-permuted  is=-393 (best)
-			Integer cpSite = Integer.parseInt(secondName.split("\\s+")[1].substring(3));
-			AFPChain afpChain = FastaAFPChainConverter.cpFastaToAfpChain(firstSeq, secondSeq, structure, cpSite);
+			AFPChain afpChain = SymDFasta.getAlignment(fastaFile);
 			if (afpChain == null) throw new SymDException("AFPChain is null");
-			System.out.println(afpChain.getTMScore());
 			return (float) afpChain.getTMScore();
 		} catch (Exception e) {
 			throw new SymDException("The FASTA file was wrong or could not be converted to an AFPChain", e);

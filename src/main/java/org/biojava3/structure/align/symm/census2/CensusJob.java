@@ -300,8 +300,8 @@ public class CensusJob implements Callable<Result> {
 		r.setIsSignificant(isSymmetric);
 		//		r.setFractionHelical(fractionHelical);
 		try {
-		
-			r.setAxis(new Axis(new RotationAxis(afpChain)));
+			if ( afpChain.getAlnLength() > 0 )
+				r.setAxis(new Axis(new RotationAxis(afpChain)));
 		
 		} catch (RuntimeException e) {
 			

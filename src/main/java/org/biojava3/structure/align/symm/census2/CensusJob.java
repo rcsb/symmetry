@@ -45,7 +45,6 @@ import org.biojava.bio.structure.secstruc.SecStruc;
 import org.biojava.bio.structure.secstruc.SecStrucGroup;
 import org.biojava.bio.structure.secstruc.SecStrucState;
 import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.SymmRefiner;
 import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
@@ -69,12 +68,6 @@ public class CensusJob implements Callable<Result> {
 	private String scopVersion = null;
 
 	AFPChain afpChain = null;
-
-	private boolean doRefine;
-
-	public void setDoRefine(boolean doRefine) {
-		this.doRefine = doRefine;
-	}
 
 	public static Result runOn(ScopDomain domain, AtomCache cache, AlgorithmGiver algorithm, Significance sig, String scopVersion) {
 		ScopDescription superfamily = ScopFactory.getSCOP(scopVersion).getScopDescriptionBySunid(domain.getSuperfamilyId());
@@ -189,16 +182,6 @@ public class CensusJob implements Callable<Result> {
 				logger.error("Failed to determine the order of symmetry on " + name + ": " + e.getMessage(), e);
 			}
 
-			if (doRefine) {
-				try {
-					SymmRefiner.refineSymmetry(afpChain, ca1, ca2, order);
-					double realTmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
-					afpChain.setTMScore(realTmScore);
-				} catch (StructureException e) {
-					logger.error("Could not refine symmetry for " + name, e);
-				}
-			}
-
 			// now try to find the angle
 			logger.debug("Finding angle (job #" + count + ")");
 			try {
@@ -302,17 +285,17 @@ public class CensusJob implements Callable<Result> {
 		try {
 			if ( afpChain.getAlnLength() > 0 )
 				r.setAxis(new Axis(new RotationAxis(afpChain)));
-		
+
 		} catch (RuntimeException e) {
-			
+
 			logger.error("Could not get rotation axis for " + scopId  + "(job #" + count + ")", e);
-		
+
 		} catch (Exception e) {
-			
+
 			e.printStackTrace();
-						
+
 			logger.error("Alignment for " + scopId + " is empty (job #" + count + ")", e);
-			
+
 			if (angle != null) { // if the axis can't be found, at least we do have the angle
 				Axis axis = new Axis();
 				axis.setTheta((float) angle);

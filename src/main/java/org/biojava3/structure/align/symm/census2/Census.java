@@ -260,7 +260,6 @@ public class Census {
 	 * @param calc
 	 */
 	protected void initializeJob(CensusJob job) {
-		job.setDoRefine(doRefine);
 	}
 
 	private double avgTimeTaken;
@@ -279,16 +278,6 @@ public class Census {
 
 	public void setPrintFrequency(int printFrequency) {
 		this.printFrequency = printFrequency;
-	}
-
-	private boolean doRefine;
-	
-	public boolean doRefine() {
-		return doRefine;
-	}
-
-	public void setDoRefine(boolean doRefine) {
-		this.doRefine = doRefine;
 	}
 
 	@Override

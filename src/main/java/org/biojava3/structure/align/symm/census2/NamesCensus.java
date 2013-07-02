@@ -49,13 +49,13 @@ public class NamesCensus extends Census {
 
 	private List<ScopDomain> domains;
 
-	public static void buildDefault(File censusFile, File lineByLine, boolean doRefine) {
+	public static void buildDefault(File censusFile, File lineByLine, final boolean doRefine) {
 		// Alignment algorithm to actually run
 		AlgorithmGiver algorithm = new AlgorithmGiver() {
 			@Override
 			public StructureAlignment getAlgorithm() {
 				CeSymm ce = new CeSymm();
-				//ce.setRefineResult(true);
+				ce.setRefineResult(doRefine);
 				return ce;
 			}
 		};
@@ -66,8 +66,8 @@ public class NamesCensus extends Census {
 			NamesCensus census = new NamesCensus(maxThreads);
 			census.setOutputWriter(censusFile);
 			census.domains = new ArrayList<ScopDomain>();
-			census.setDoRefine(doRefine);
 			census.setPrintFrequency(10);
+			census.setAlgorithm(algorithm);
 			AtomCache cache = new AtomCache();
 			cache.setFetchFileEvenIfObsolete(true);
 			try {

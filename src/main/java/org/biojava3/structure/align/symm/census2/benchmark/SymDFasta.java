@@ -34,9 +34,10 @@ public class SymDFasta {
 
 	public static void display(File fastaFile) throws IOException, StructureException {
 		AFPChain afpChain = getAlignment(fastaFile);
-		Structure structure = StructureTools.getStructure(afpChain.getName1());
-		Atom[] ca1 = StructureTools.getAtomCAArray(structure);
-		Atom[] ca2 = StructureTools.getAtomCAArray(structure);
+		Structure structure1 = StructureTools.getStructure(afpChain.getName1());
+		Structure structure2 = StructureTools.getStructure(afpChain.getName2());
+		Atom[] ca1 = StructureTools.getAtomCAArray(structure1);
+		Atom[] ca2 = StructureTools.getAtomCAArray(structure2);
 		String xml = AFPChainXMLConverter.toXML(afpChain);
 		System.out.println(xml);
 		StructureAlignmentDisplay.display(afpChain, ca1, ca2);

@@ -44,20 +44,22 @@ import org.biojava3.structure.align.symm.census2.Results;
  */
 public class SampleBuilder {
 
-	private static final Logger logger = LogManager.getLogger(ROCCurves.class.getName());
+	private static final Logger logger = LogManager.getLogger(SampleBuilder.class.getName());
 
 	public static void main(String[] args) throws IOException {
-		if (args.length != 3) {
-			System.err.println("Usage: " + SampleBuilder.class.getSimpleName() + " input-file output-file groups-file");
+		if (args.length < 2 || args.length > 3) {
+			System.err.println("Usage: " + SampleBuilder.class.getSimpleName() + " input-results-file output-sample-file [tab-seperated-groups-file]");
 			return;
 		}
 		File input = new File(args[0]);
 		File output = new File(args[1]);
-		File ordersFile = new File(args[2]);
+		File ordersFile = new File("src/main/resources/domain_symm_benchmark.tsv");
+		if (args.length > 2) {
+			ordersFile = new File(args[2]);
+		}
 		Map<String, KnownInfo> infos = getOrders(ordersFile);
 		buildSample(input, output, infos);
 	}
-	
 	
 	public static Map<String,KnownInfo> getOrders(File knownInfoFile) throws IOException {
 		Map<String,KnownInfo> map = new HashMap<String,KnownInfo>();
@@ -100,11 +102,9 @@ public class SampleBuilder {
 		br.close();
 	}
 
-
 	public static Map<String, KnownInfo> getOrders(String file) throws IOException {
 		return getOrders(new File(file));
 	}
-
 
 	public static void buildSample(File input, File output, File ordersFile) throws IOException {
 		buildSample(input, output, getOrders(ordersFile.getPath()));

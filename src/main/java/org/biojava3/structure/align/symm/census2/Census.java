@@ -54,7 +54,7 @@ import org.biojava3.structure.utils.FileUtils;
 /**
  * Runs the symmetry census on every domain. The work is done in order of superfamily (since we're using multiple cores,
  * this may not be the order in which they are output).
- * 
+ *
  * @author dmyerstu
  */
 public class Census {
@@ -88,7 +88,7 @@ public class Census {
 
 		public abstract StructureAlignment getAlgorithm();
 	}
-	
+
 	private AtomCache cache;
 
 	private boolean doPrefetch = false;
@@ -102,6 +102,8 @@ public class Census {
 	private Map<String, Integer> symm = new TreeMap<String, Integer>();
 
 	private Map<String, Integer> total = new TreeMap<String, Integer>();
+
+	private AlgorithmGiver algorithm = null;
 
 	public static void buildDefault(File censusFile) {
 		try {
@@ -125,10 +127,10 @@ public class Census {
 		if (args.length != 1) {
 			System.err.println("Usage: " + Census.class.getSimpleName() + " output-census-file");
 			return;
-		}
+	}
 		final File censusFile = new File(args[0]);
 		buildDefault(censusFile);
-	}
+		}
 
 	public Census() {
 		this(Runtime.getRuntime().availableProcessors() - 1);
@@ -160,7 +162,7 @@ public class Census {
 	}
 
 	public final void run() {
-		
+
 		try {
 
 			if (file == null) throw new IllegalStateException("Must set file first");
@@ -181,7 +183,7 @@ public class Census {
 				domains = getDomains();
 			}
 			logger.info("There are " + domains.size() + " domains");
-			
+
 			List<CensusJob> submittedJobs = new ArrayList<CensusJob>(domains.size()); // to get time taken
 
 			// submit jobs
@@ -247,7 +249,7 @@ public class Census {
 				}
 			}
 			avgTimeTaken = (double) timeTaken / (double) nSuccess;
-			
+
 		} finally {
 			ConcurrencyTools.shutdown();
 		}
@@ -262,7 +264,7 @@ public class Census {
 	}
 
 	private double avgTimeTaken;
-	
+
 	public double getAvgTimeTaken() {
 		return avgTimeTaken;
 	}
@@ -307,7 +309,7 @@ public class Census {
 
 	/**
 	 * Returns the names of the domains that we already analyzed.
-	 * 
+	 *
 	 * @param census
 	 * @return
 	 */
@@ -343,8 +345,14 @@ public class Census {
 		return filtered;
 	}
 
-	protected AlgorithmGiver getAlgorithm() {
-		return AlgorithmGiver.getDefault();
+	public AlgorithmGiver getAlgorithm() {
+		if( this.algorithm == null) {
+			this.algorithm = AlgorithmGiver.getDefault();
+		}
+		return this.algorithm;
+	}
+	public void setAlgorithm(AlgorithmGiver alg) {
+		this.algorithm = alg;
 	}
 
 	protected List<ScopDomain> getDomains() {

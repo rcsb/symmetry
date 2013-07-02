@@ -31,10 +31,12 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 /**
@@ -48,6 +50,16 @@ public class NamesCensus extends Census {
 	private List<ScopDomain> domains;
 
 	public static void buildDefault(File censusFile, File lineByLine, boolean doRefine) {
+		// Alignment algorithm to actually run
+		AlgorithmGiver algorithm = new AlgorithmGiver() {
+			@Override
+			public StructureAlignment getAlgorithm() {
+				CeSymm ce = new CeSymm();
+				//ce.setRefineResult(true);
+				return ce;
+			}
+		};
+
 		try {
 			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
@@ -75,6 +87,7 @@ public class NamesCensus extends Census {
 				throw new RuntimeException(e);
 			}
 			census.setCache(cache);
+			census.setAlgorithm(algorithm);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -86,7 +99,7 @@ public class NamesCensus extends Census {
 		if (args.length != 2 && args.length != 3) {
 			System.err.println("Usage: " + NamesCensus.class.getSimpleName() + " output-census-file line-by-line-input-names-file [do-refinement]");
 			return;
-		}
+	}
 		final File censusFile = new File(args[0]);
 		final File lineByLine = new File(args[1]);
 		boolean doRefine = false;
@@ -124,7 +137,7 @@ public class NamesCensus extends Census {
 			}
 		};
 	}
-	
+
 	@Override
 	protected List<ScopDomain> getDomains() {
 		return domains;

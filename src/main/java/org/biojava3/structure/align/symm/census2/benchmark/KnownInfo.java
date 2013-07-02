@@ -76,15 +76,19 @@ public class KnownInfo implements Serializable, Comparable<KnownInfo> {
 		return group;
 	}
 
-	public int getOrder() {
+	public static int getOrderFromGroup(String string) {
 		int order = 1;
 		Pattern pattern = Pattern.compile("([\\d])$");
-		Matcher matcher = pattern.matcher(group);
+		Matcher matcher = pattern.matcher(string);
 		boolean found = matcher.find();
 		if (found && matcher.groupCount() == 1) {
 			order = Integer.parseInt(matcher.group(1));
 		}
 		return order;
+	}
+	
+	public int getOrder() {
+		return getOrderFromGroup(group);
 	}
 
 	/**

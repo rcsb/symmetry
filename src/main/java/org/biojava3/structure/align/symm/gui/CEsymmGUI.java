@@ -36,6 +36,7 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
+import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.CeSymm;
 
 /**
@@ -51,6 +52,9 @@ public class CEsymmGUI {
 	private static final long serialVersionUID = -1124973530190871875L;
 
 	public static void main(String[] args) {
+		
+		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75B);
+		
 		//Add CeSymm to the top of the algorithm list
 		StructureAlignment[] algorithms = StructureAlignmentFactory.getAllAlgorithms();
 		StructureAlignmentFactory.clearAlgorithms();

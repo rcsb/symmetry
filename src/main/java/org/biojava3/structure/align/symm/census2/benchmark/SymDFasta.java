@@ -12,7 +12,9 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.io.FastaAFPChainConverter;
 import org.biojava3.core.sequence.ProteinSequence;
@@ -40,7 +42,10 @@ public class SymDFasta {
 		Atom[] ca2 = StructureTools.getAtomCAArray(structure2);
 		String xml = AFPChainXMLConverter.toXML(afpChain);
 		System.out.println(xml);
-		StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+		RotationAxis axis = new RotationAxis(afpChain);
+		StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+		String cmd = axis.getJmolScript(ca1);
+		jmolPanel.evalString(cmd);
 	}
 
 	public static AFPChain getAlignment(File fastaFile) throws IOException, StructureException {

@@ -16,7 +16,6 @@ import org.biojava.bio.structure.scop.ScopFactory;
 /**
  * Searches SCOP descriptions for particular words.
  * @author dmyerstu
- * TODO: Make work with the longer descriptions on the SCOP website
  */
 public class ScopNameMiner {
 
@@ -31,7 +30,7 @@ public class ScopNameMiner {
 			System.err.println("Usage: " + ScopNameMiner.class.getSimpleName() + " orders-file-name word-1 [word-2 ...]");
 			return;
 		}
-		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
+		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75B);
 		File file = new File(args[0]);
 		String[] words = new String[args.length-1];
 		for (int i = 0; i < args.length-1; i++) {
@@ -40,9 +39,9 @@ public class ScopNameMiner {
 		ScopNameMiner miner = new ScopNameMiner(file, words);
 		System.out.println(miner.printList());
 	}
-	
+
 	private static String NEWLINE = "\n";
-	
+
 	private String[] words;
 	private List<ScopCategory> categories = new ArrayList<ScopCategory>();
 	private List<String> descriptions = new ArrayList<String>();
@@ -51,20 +50,23 @@ public class ScopNameMiner {
 	public ScopNameMiner(File sampleFile, String... words) throws IOException {
 		this(SampleBuilder.getNames(sampleFile), words);
 	}
-	
+
 	public ScopNameMiner(List<String> scopIds, String... words) {
 		this.scopIds = scopIds;
 		this.words = words;
 		main: for (String scopId : scopIds) {
-			ScopCategory[] categories = new ScopCategory[] {ScopCategory.Fold};
+			ScopCategory[] categories = new ScopCategory[] {ScopCategory.Fold, ScopCategory.Superfamily, ScopCategory.Family};
 			for (ScopCategory category : categories) {
-				String description = getDescription(scopId, category).getDescription();
-				logger.debug("Checking " + description + " of category " + category);
-				for (String word : words) {
-					if (description.contains(word)) {
-						this.categories.add(category);
-						this.descriptions.add(description);
-						continue main;
+				List<String> comments = getComments(scopId, category);
+				if (comments == null) continue;
+				logger.debug("Checking comments of category " + category + " for " + scopId);
+				for (String comment : comments) {
+					for (String word : words) {
+						if (comment.contains(word)) {
+							this.categories.add(category);
+							this.descriptions.add(comment);
+							continue main;
+						}
 					}
 				}
 			}
@@ -72,7 +74,7 @@ public class ScopNameMiner {
 			this.descriptions.add(null);
 		}
 	}
-	
+
 	public String printList() {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < scopIds.size(); i++) {
@@ -83,10 +85,10 @@ public class ScopNameMiner {
 	}
 
 	@SuppressWarnings("incomplete-switch")
-	private static ScopDescription getDescription(String scopId, ScopCategory category) {
+	private static List<String> getComments(String scopId, ScopCategory category) {
 		ScopDatabase scop = ScopFactory.getSCOP();
 		ScopDomain domain = scop.getDomainByScopID(scopId);
-		if (category == ScopCategory.Domain) return scop.getScopDescriptionBySunid(domain.getSunid());
+		if (category == ScopCategory.Domain) return scop.getComments(domain.getSunid());
 		Integer x = null;
 		switch (category) {
 		case Class:
@@ -98,8 +100,8 @@ public class ScopNameMiner {
 		case Family:
 			x = domain.getFamilyId();
 		}
-		if (x == null) return null;
-		return scop.getScopDescriptionBySunid(x);
+		if (x == null) return new ArrayList<String>();
+		return scop.getComments(x);
 	}
 
 }

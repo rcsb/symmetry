@@ -67,8 +67,6 @@ public class CensusJob implements Callable<Result> {
 
 	private String scopVersion = null;
 
-	AFPChain afpChain = null;
-
 	public static Result runOn(ScopDomain domain, AtomCache cache, AlgorithmGiver algorithm, Significance sig, String scopVersion) {
 		ScopDescription superfamily = ScopFactory.getSCOP(scopVersion).getScopDescriptionBySunid(domain.getSuperfamilyId());
 		CensusJob job = new CensusJob(cache, algorithm, sig);
@@ -131,7 +129,7 @@ public class CensusJob implements Callable<Result> {
 		logger.debug("Got " + ca1.length + " atoms (job #" + count + ")");
 
 		// run the alignment
-		afpChain = null;
+		AFPChain afpChain = null;
 		logger.debug("Running CE-Symm (job #" + count + ")");
 		try {
 			afpChain = findSymmetry(name, ca1, ca2);
@@ -319,11 +317,6 @@ public class CensusJob implements Callable<Result> {
 		double realTmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 		afpChain.setTMScore(realTmScore);
 		return afpChain;
-	}
-
-	public AFPChain getAFPChain(){
-		return afpChain;
-
 	}
 
 }

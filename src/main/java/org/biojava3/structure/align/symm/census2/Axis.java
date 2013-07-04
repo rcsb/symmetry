@@ -170,5 +170,24 @@ public class Axis implements Serializable {
 		return "Axis [angle=" + theta + ", x=" + x + ", y=" + y + ", z=" + z + ", screw=" + screw
 				+ ", orthogonal=" + orthogonal + "]";
 	}
+
+	/**
+	 * Guesses an order from {@link #getTheta() theta}.
+	 * TODO: This is probably not a good way, and this probably doesn't belong here
+	 */
+	public int guessOrder() {
+		final int maxOrder = 8;
+		final double threshold = Math.PI / 40.0;
+		double minDelta = Double.MAX_VALUE;
+		int bestOrder = 1;
+		for (int i = 2; i < maxOrder; i++) {
+			double delta = 2 * Math.PI / i - theta;
+			if (delta < minDelta && delta < threshold) {
+				bestOrder = i;
+				minDelta = delta;
+			}
+		}
+		return bestOrder;
+	}
 	
 }

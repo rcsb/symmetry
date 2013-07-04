@@ -172,19 +172,18 @@ public class Axis implements Serializable {
 	}
 
 	/**
-	 * Guesses an order from {@link #getTheta() theta}.
-	 * TODO: This is probably not a good way, and this probably doesn't belong here
+	 * Guesses an order of rotational symmetry from {@link #getTheta() theta}.
 	 */
 	public int guessOrder() {
 		final int maxOrder = 8;
-		final double threshold = Math.PI / 40.0;
-		double minDelta = Double.MAX_VALUE;
+		double bestDelta = 5 * Math.PI/180; // 5 degrees difference
 		int bestOrder = 1;
-		for (int i = 2; i < maxOrder; i++) {
-			double delta = 2 * Math.PI / i - theta;
-			if (delta < minDelta && delta < threshold) {
-				bestOrder = i;
-				minDelta = delta;
+		for (int order = 2; order < maxOrder; order++) {
+			double delta = Math.abs(2 * Math.PI / order - theta);
+			System.out.println(delta);
+			if (delta < bestDelta) {
+				bestOrder = order;
+				bestDelta = delta;
 			}
 		}
 		return bestOrder;

@@ -37,6 +37,9 @@ import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.census2.NamesCensus;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
+import org.biojava3.structure.align.symm.census2.benchmark.comparison.AccuracyFinder;
+import org.biojava3.structure.align.symm.census2.benchmark.comparison.Criterion;
+import org.biojava3.structure.align.symm.census2.benchmark.comparison.ROCCurves;
 
 /**
  * Run CE-Symm with different diagonal gradients, and benchmark the results.
@@ -86,10 +89,7 @@ public class GradientSampler {
 		this.tp = new double[n];
 		this.fp = new double[n];
 		List<Criterion> criteria = new ArrayList<Criterion>();
-		criteria.add(Criterion.tmScore());
-		criteria.add(Criterion.zScore());
-		criteria.add(Criterion.epsilon());
-		criteria.add(Criterion.screw().inverse());
+		criteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1), 1, 1));
 		for (int i = 0; i < n; i++) {
 			System.out.println("SAMPING: " + i);
 			CeSymm.GRADIENT_POLY_COEFF = gradients[i]; // TODO this isn't pretty

@@ -24,11 +24,10 @@ package org.biojava3.structure.align.symm.benchmark.comparison;
 
 import java.util.Random;
 
-import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.census2.Result;
 
 /**
- * A classifier for the quality of CE-Symm results. Has a method {@link #get(Case)} that determines the quality of a {@link Result}. Can also {@link #hasSymmetry(Result) decide} whether a result is symmetric.
+ * A metric that scores symmetry predictions. Has a single method {@link #get(Result)} that determines the quality of a {@link Result}.
  * @author dmyerstu
  *
  */

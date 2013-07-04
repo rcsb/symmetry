@@ -42,7 +42,7 @@ import org.biojava3.structure.align.symm.census2.NamesCensus;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
- * Run CE-Symm with different diagonal gradients, and benchmark the results.
+ * Runs CE-Symm with different gradient penalties on the main diagonal, and benchmark the results.
  * @author dmyerstu
  */
 public class GradientSampler {

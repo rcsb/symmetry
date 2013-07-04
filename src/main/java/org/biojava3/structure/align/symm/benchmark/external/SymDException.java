@@ -23,7 +23,7 @@
 package org.biojava3.structure.align.symm.benchmark.external;
 
 /**
- * 
+ * An inability to parse or interpret results from an external symmetry prediction program.
  * @author dmyerstu
  */
 public class SymDException extends Exception {

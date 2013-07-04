@@ -1,24 +1,19 @@
 /*
- *                    BioJava development code
- *
- * This code may be freely distributed and modified under the
- * terms of the GNU Lesser General Public Licence.  This should
- * be distributed with the code.  If you do not have a copy,
- * see:
- *
- *      http://www.gnu.org/copyleft/lesser.html
- *
- * Copyright for this code is held jointly by the individual
- * authors.  These should be listed in @author doc comments.
- *
- * For more information on the BioJava project and its aims,
- * or to join the biojava-l mailing list, visit the home page
+ * BioJava development code
+ * 
+ * This code may be freely distributed and modified under the terms of the GNU Lesser General Public Licence. This
+ * should be distributed with the code. If you do not have a copy, see:
+ * 
+ * http://www.gnu.org/copyleft/lesser.html
+ * 
+ * Copyright for this code is held jointly by the individual authors. These should be listed in @author doc comments.
+ * 
+ * For more information on the BioJava project and its aims, or to join the biojava-l mailing list, visit the home page
  * at:
- *
- *      http://www.biojava.org/
- *
+ * 
+ * http://www.biojava.org/
+ * 
  * Created on 2013-02-22
- *
  */
 package org.biojava3.structure.align.symm.benchmark;
 
@@ -43,8 +38,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * A collection of benchmark {@link Case Cases}.
+ * A collection of benchmark {@link Case Cases}, which contain both the expected result as a {@link KnownInfo}, and the
+ * actual result from an algorithm, which is stored as a Results object (see symmetry project). This is a serialization
+ * of benchmark XML files.
+ * 
  * @author dmyerstu
+ * @see SampleBuilder generates benchmark XML files (corresponding to this class) from census (Results) XML files and a
+ *      table of Ids and their known space groups
+ * @see Case
  */
 @XmlRootElement(name = "CensusResults", namespace = "http://source.rcsb.org")
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
@@ -95,11 +96,11 @@ public class Sample implements Serializable {
 	}
 
 	public Sample() {
-		this.data = new ArrayList<Case>();
+		data = new ArrayList<Case>();
 	}
 
 	public Sample(List<Case> cases) {
-		this.data = cases;
+		data = cases;
 	}
 
 	public boolean add(Case e) {
@@ -151,7 +152,7 @@ public class Sample implements Serializable {
 	}
 
 	public void setData(List<Case> cases) {
-		this.data = cases;
+		data = cases;
 	}
 
 	public int size() {

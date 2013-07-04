@@ -39,7 +39,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.Result;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -48,7 +47,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 /**
- * Generates and plots ROC curves for {@link Criterion Criteria} on benchmark {@link Case Cases}.
+ * Generates and plots ROC curves for {@link Criterion Criteria} on a benchmark {@link Sample}.
  * 
  * @author dmyerstu
  */

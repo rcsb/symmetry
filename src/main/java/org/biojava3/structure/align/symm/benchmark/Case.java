@@ -29,9 +29,9 @@ import org.biojava3.structure.align.symm.census2.Axis;
 import org.biojava3.structure.align.symm.census2.Result;
 
 /**
- * A single case (result) to benchmark. Contains a {@link Result} and a known {@link #getKnownOrder() order} and {@link #getKnownGroup() group}.
+ * A single case (result) to benchmark. Contains a {@link Result} (see symmetry project) and a known space group as {@link KnownInfo}.
  * @author dmyerstu
- *
+ * @see Sample, which contains many Cases
  */
 public class Case implements Serializable {
 

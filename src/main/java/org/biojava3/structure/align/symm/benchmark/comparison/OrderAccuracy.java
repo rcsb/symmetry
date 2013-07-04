@@ -15,6 +15,7 @@ import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 /**
  * A class to determine the accuracy of CE-Symm for determining order of rotational symmetry.
  * @author dmyerstu
+ * @see AccuracyFinder, which considers only the binary choice of symmetric/asymmetric
  */
 public class OrderAccuracy {
 

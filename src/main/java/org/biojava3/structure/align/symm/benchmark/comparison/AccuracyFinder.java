@@ -1,24 +1,19 @@
 /*
- *                    BioJava development code
- *
- * This code may be freely distributed and modified under the
- * terms of the GNU Lesser General Public Licence.  This should
- * be distributed with the code.  If you do not have a copy,
- * see:
- *
- *      http://www.gnu.org/copyleft/lesser.html
- *
- * Copyright for this code is held jointly by the individual
- * authors.  These should be listed in @author doc comments.
- *
- * For more information on the BioJava project and its aims,
- * or to join the biojava-l mailing list, visit the home page
+ * BioJava development code
+ * 
+ * This code may be freely distributed and modified under the terms of the GNU Lesser General Public Licence. This
+ * should be distributed with the code. If you do not have a copy, see:
+ * 
+ * http://www.gnu.org/copyleft/lesser.html
+ * 
+ * Copyright for this code is held jointly by the individual authors. These should be listed in @author doc comments.
+ * 
+ * For more information on the BioJava project and its aims, or to join the biojava-l mailing list, visit the home page
  * at:
- *
- *      http://www.biojava.org/
- *
+ * 
+ * http://www.biojava.org/
+ * 
  * Created on 2013-02-22
- *
  */
 package org.biojava3.structure.align.symm.benchmark.comparison;
 
@@ -37,8 +32,11 @@ import org.biojava3.structure.align.symm.census2.Significance;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 /**
- * 
+ * Determines the false-positive, true-positive, false-negative, and true-negative frequencies of a benchmark
+ * {@link Sample} using a particular Significance object (see symmetry project).
+ * Considers only the binary choice of symmetric versus asymmetric.
  * @author dmyerstu
+ * @see OrderAccuracy, which determines the accuracy of determining order rather than just symmetric/asymmetric
  */
 public class AccuracyFinder {
 
@@ -60,10 +58,12 @@ public class AccuracyFinder {
 			public boolean isPossiblySignificant(AFPChain afpChain) {
 				return true; // whatever
 			}
+
 			@Override
 			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
 				return true; // whatever
 			}
+
 			@Override
 			public boolean isSignificant(Result result) {
 				if (result.getAlignment() == null) return false;
@@ -98,7 +98,7 @@ public class AccuracyFinder {
 	private int fn = 0;
 	private int fp = 0;
 	private int tn = 0;
-	
+
 	public AccuracyFinder(Sample sample, Significance sig) {
 		for (Case c : sample.getData()) {
 			try {
@@ -126,10 +126,10 @@ public class AccuracyFinder {
 		StringBuilder sb = new StringBuilder();
 		NumberFormat nf = new DecimalFormat();
 		nf.setMaximumFractionDigits(2);
-		String tps = nf.format((double) tp / (double) (tp+tn+fp+fn) * 100.0) + "%";
-		String fps = nf.format((double) fp / (double) (tp+tn+fp+fn) * 100.0) + "%";
-		String tns = nf.format((double) tn / (double) (tp+tn+fp+fn) * 100.0) + "%";
-		String fns = nf.format((double) fn / (double) (tp+tn+fp+fn) * 100.0) + "%";
+		String tps = nf.format((double) tp / (double) (tp + tn + fp + fn) * 100.0) + "%";
+		String fps = nf.format((double) fp / (double) (tp + tn + fp + fn) * 100.0) + "%";
+		String tns = nf.format((double) tn / (double) (tp + tn + fp + fn) * 100.0) + "%";
+		String fns = nf.format((double) fn / (double) (tp + tn + fp + fn) * 100.0) + "%";
 		sb.append("True positives: \t" + tp + "\t(" + tps + ")\n");
 		sb.append("True negatives: \t" + tn + "\t(" + tns + ")\n");
 		sb.append("False positives: \t" + fp + "\t(" + fps + ")\n");

@@ -17,24 +17,36 @@ import org.biojava3.structure.align.symm.census2.Significance;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
+/**
+ * Finds cases where one algorithm correctly identifies rotational symmetry and another doesn't.
+ * @author dmyerstu
+ */
 public class SymDWins {
 
-	public static List<String> findWins(Sample ceSymm, Sample symD, Significance ceSymmSig, Significance symDSig) {
+	/**
+	 * Finds cases in which {@code didFind} correctly identifies symmetry, but {@link didNotFind} does not.
+	 * @param didNotFind
+	 * @param didFind
+	 * @param didNotFindSig
+	 * @param didFindSig
+	 * @return
+	 */
+	public static List<String> findWins(Sample didNotFind, Sample didFind, Significance didNotFindSig, Significance didFindSig) {
 		List<String> scopIds = new ArrayList<String>();
 		HashSet<String> all = new HashSet<String>();
 		HashSet<String> a = new HashSet<String>();
 		HashSet<String> b = new HashSet<String>();
-		for (Case c : ceSymm.getData()) {
-			boolean sig = ceSymmSig.isSignificant(c.getResult());
+		for (Case c : didNotFind.getData()) {
+			boolean sig = didNotFindSig.isSignificant(c.getResult());
 			if (sig) a.add(c.getScopId());
 			all.add(c.getScopId());
 		}
-		for (Case c : symD.getData()) {
-			boolean sig = symDSig.isSignificant(c.getResult());
+		for (Case c : didFind.getData()) {
+			boolean sig = didFindSig.isSignificant(c.getResult());
 			if (!sig) b.add(c.getScopId());
 			if (!all.contains(c.getScopId())) throw new IllegalArgumentException("SCOP Id " + c.getScopId() + " is missing");
 		}
-		for (Case c : ceSymm.getData()) {
+		for (Case c : didNotFind.getData()) {
 			if (!c.getKnownInfo().hasRotationalSymmetry()) continue;
 			String s = c.getScopId();
 			if (b.contains(s) && a.contains(s)) {

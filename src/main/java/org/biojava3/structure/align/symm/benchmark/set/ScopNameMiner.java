@@ -9,13 +9,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.benchmark.SampleBuilder;
 
 /**
- * Searches SCOP descriptions for particular words.
+ * Takes a list of SCOP Ids and searches their SCOP comments (in dir.com files) for particular words.
  * @author dmyerstu
  */
 public class ScopNameMiner {

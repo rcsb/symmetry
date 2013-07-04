@@ -27,8 +27,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A known (true) group and order of symmetry.
- * 
+ * A known (true) space group and corresponding order of symmetry.
+ * Can differentiate between different types of symmetry.
  * @author dmyerstu
  */
 public class KnownInfo implements Serializable, Comparable<KnownInfo> {
@@ -75,7 +75,7 @@ public class KnownInfo implements Serializable, Comparable<KnownInfo> {
 	public String getGroup() {
 		return group;
 	}
-
+	
 	public static int getOrderFromGroup(String string) {
 		int order = 1;
 		Pattern pattern = Pattern.compile("([\\d])$");

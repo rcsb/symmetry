@@ -35,6 +35,10 @@ import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 
+/**
+ * Finds duplicates in a benchmark set (list of SCOP Ids).
+ * @author dmyerstu
+ */
 public class DuplicateFinder {
 
 	/**

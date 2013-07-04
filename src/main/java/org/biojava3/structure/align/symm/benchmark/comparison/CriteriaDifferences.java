@@ -20,13 +20,15 @@
  * Created on 2013-05-25
  *
  */
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark.comparison;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.biojava3.structure.align.symm.benchmark.Case;
+import org.biojava3.structure.align.symm.benchmark.Sample;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 

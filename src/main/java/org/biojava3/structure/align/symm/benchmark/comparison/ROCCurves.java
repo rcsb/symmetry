@@ -20,7 +20,7 @@
  * Created on 2013-02-22
  *
  */
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark.comparison;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +37,8 @@ import java.util.TreeSet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.biojava3.structure.align.symm.benchmark.Case;
+import org.biojava3.structure.align.symm.benchmark.Sample;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
@@ -101,7 +103,7 @@ public class ROCCurves {
 
 			// ROC curves
 			List<Criterion> ceSymmCriteria = new ArrayList<Criterion>();
-			ceSymmCriteria.add(Criterion.tmScore().noFail(-10000000f));
+//			ceSymmCriteria.add(Criterion.tmScore().noFail(-10000000f));
 //			ceSymmCriteria.add(Criterion.zScore().noFail(-10000000f));
 //			ceSymmCriteria.add(Criterion.alignLength().noFail(-10000000f));
 //			ceSymmCriteria.add(Criterion.epsilon().noFail(-10000000f));
@@ -116,7 +118,9 @@ public class ROCCurves {
 //			ceSymmCriteria.add(Criterion.hasOrder(0.1f));
 //			ceSymmCriteria.add(Criterion.hasOrder(0.2f));
 //			ceSymmCriteria.add(Criterion.hasOrder(0.3f));
-			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1000));
+			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
+//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
+//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderByAngle(0.5f, 5 * Math.PI/180), 1, 1000));
 //			ceSymmCriteria.add(Criterion.random());
 //			ceSymmCriteria.add(Criterion.thetaIsCorrect());
 			ROCCurves ceSymmRocs = new ROCCurves(input, ceSymmCriteria);

@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark.external;
 
 import java.io.File;
 import java.io.FileInputStream;

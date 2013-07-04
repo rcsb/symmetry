@@ -20,7 +20,7 @@
  * Created on 2013-03-13
  *
  */
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark.external;
 
 import static org.junit.Assert.assertEquals;
 
@@ -35,6 +35,8 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.benchmark.external.SymDException;
+import org.biojava3.structure.align.symm.benchmark.external.SymDResults;
 import org.biojava3.structure.align.symm.census2.Alignment;
 import org.biojava3.structure.align.symm.census2.Result;
 

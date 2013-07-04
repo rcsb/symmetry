@@ -20,7 +20,7 @@
  * Created on 2013-03-08
  *
  */
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -29,6 +29,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import org.biojava3.structure.align.symm.benchmark.KnownInfo;
+import org.biojava3.structure.align.symm.benchmark.Sample;
+import org.biojava3.structure.align.symm.benchmark.SampleBuilder;
 import org.junit.Test;
 
 

@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark.set;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +12,7 @@ import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.benchmark.SampleBuilder;
 
 /**
  * Searches SCOP descriptions for particular words.

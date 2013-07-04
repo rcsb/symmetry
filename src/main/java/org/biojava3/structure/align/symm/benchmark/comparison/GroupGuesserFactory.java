@@ -1,4 +1,6 @@
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark.comparison;
+
+import org.biojava3.structure.align.symm.benchmark.KnownInfo;
 
 /**
  * A factory for {@link GroupGuesser GroupGuessers}.

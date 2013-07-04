@@ -20,7 +20,7 @@
  * Created on 2013-03-08
  *
  */
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark.external;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -63,6 +63,8 @@ import org.biojava3.core.sequence.io.FastaReader;
 import org.biojava3.core.sequence.io.GenericFastaHeaderParser;
 import org.biojava3.core.sequence.io.template.FastaHeaderParserInterface;
 import org.biojava3.core.sequence.io.template.SequenceCreatorInterface;
+import org.biojava3.structure.align.symm.benchmark.KnownInfo;
+import org.biojava3.structure.align.symm.benchmark.SampleBuilder;
 import org.biojava3.structure.align.symm.census2.Alignment;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;

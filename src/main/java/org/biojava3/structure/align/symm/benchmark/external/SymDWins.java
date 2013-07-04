@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark.external;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +10,8 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.benchmark.Case;
+import org.biojava3.structure.align.symm.benchmark.Sample;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Significance;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
@@ -29,13 +31,13 @@ public class SymDWins {
 		}
 		for (Case c : symD.getData()) {
 			boolean sig = symDSig.isSignificant(c.getResult());
-			if (sig) b.add(c.getScopId());
+			if (!sig) b.add(c.getScopId());
 			if (!all.contains(c.getScopId())) throw new IllegalArgumentException("SCOP Id " + c.getScopId() + " is missing");
 		}
 		for (Case c : ceSymm.getData()) {
 			if (!c.getKnownInfo().hasRotationalSymmetry()) continue;
 			String s = c.getScopId();
-			if (b.contains(s) && !a.contains(s)) {
+			if (b.contains(s) && a.contains(s)) {
 				scopIds.add(s);
 			}
 		}

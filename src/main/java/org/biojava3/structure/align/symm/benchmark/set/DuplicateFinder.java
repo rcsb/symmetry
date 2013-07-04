@@ -20,7 +20,7 @@
  * Created on 2013-03-03
  *
  */
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark.set;
 
 import java.io.BufferedReader;
 import java.io.File;

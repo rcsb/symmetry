@@ -20,7 +20,7 @@
  * Created on 2013-03-28
  *
  */
-package org.biojava3.structure.align.symm.census2.benchmark;
+package org.biojava3.structure.align.symm.benchmark;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,11 +35,11 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.benchmark.comparison.AccuracyFinder;
+import org.biojava3.structure.align.symm.benchmark.comparison.Criterion;
+import org.biojava3.structure.align.symm.benchmark.comparison.ROCCurves;
 import org.biojava3.structure.align.symm.census2.NamesCensus;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
-import org.biojava3.structure.align.symm.census2.benchmark.comparison.AccuracyFinder;
-import org.biojava3.structure.align.symm.census2.benchmark.comparison.Criterion;
-import org.biojava3.structure.align.symm.census2.benchmark.comparison.ROCCurves;
 
 /**
  * Run CE-Symm with different diagonal gradients, and benchmark the results.

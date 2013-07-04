@@ -38,10 +38,58 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	public static final String version = "1.0";
 
 	/**
-	 * The penalty x residues from the main diagonal is: (standard score) - GRADIENT_EXP_COEFF*e^(-x) - GRADIENT_POLY_COEFF[n]*x^(-n) - GRADIENT_POLY_COEFF[n-1]*x^(-n+1) - GRADIENT_POLY_COEFF[n-2]*x^(-n+2) - ... - GRADIENT_POLY_COEFF[0]*x^0
+	 * Percentage change in RSSE required to improve score.
+	 * Avoids reporting slight improvements in favor of lower order.
 	 */
-	public static double[] GRADIENT_POLY_COEFF = {Integer.MIN_VALUE}; // from left to right: ..., quintic, quartic, cubic, quadratic, linear, constant; can be any length
-	public static double GRADIENT_EXP_COEFF = 0; // the corresponding radix is e
+	private float minimumMetricChange = 0.40f;
+	
+	/**
+	 * Maximum degree of rotational symmetry to consider.
+	 */
+	private int maxSymmetryOrder = 8;
+	
+	/**
+	 * The penalty x residues from the main diagonal is: (standard score) - GRADIENT_EXP_COEFF*e^(-x) - GRADIENT_POLY_COEFF[n]*x^(-n) - GRADIENT_POLY_COEFF[n-1]*x^(-n+1) - GRADIENT_POLY_COEFF[n-2]*x^(-n+2) - ... - GRADIENT_POLY_COEFF[0]*x^0
+	 * That is, from left to right: ..., quintic, quartic, cubic, quadratic, linear, constant. The array can be of any length.
+	 */
+	private double[] gradientPolyCoeff = {Integer.MIN_VALUE};
+
+	/**
+	 * An penalty that is exp(e, x), where x is the number of residues from the main diagonal.
+	 */
+	private double gradientExpCoeff = 0;
+
+	public float getMinimumMetricChange() {
+		return minimumMetricChange;
+	}
+
+	public void setMinimumMetricChange(float minimumMetricChange) {
+		this.minimumMetricChange = minimumMetricChange;
+	}
+
+	public int getMaxSymmetryOrder() {
+		return maxSymmetryOrder;
+	}
+
+	public void setMaxSymmetryOrder(int maxSymmetryOrder) {
+		this.maxSymmetryOrder = maxSymmetryOrder;
+	}
+
+	public double[] getGradientPolyCoeff() {
+		return gradientPolyCoeff;
+	}
+
+	public void setGradientPolyCoeff(double[] gradientPolyCoeff) {
+		this.gradientPolyCoeff = gradientPolyCoeff;
+	}
+
+	public double getGradientExpCoeff() {
+		return gradientExpCoeff;
+	}
+
+	public void setGradientExpCoeff(double gradientExpCoeff) {
+		this.gradientExpCoeff = gradientExpCoeff;
+	}
 
 	AFPChain afpChain;
 
@@ -222,7 +270,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 
 	private static Matrix align(AFPChain afpChain,  Atom[] ca1, Atom[] ca2,
-			CeParameters params, Matrix origM, CECalculator calculator, int counter) throws StructureException{
+			CeParameters params, Matrix origM, CECalculator calculator, int counter, double[] GRADIENT_POLY_COEFF, double GRADIENT_EXP_COEFF) throws StructureException{
 
 		int fragmentLength = params.getWinSize();
 		//if ( ca1.length > 200 && ca2.length > 200 )
@@ -383,7 +431,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 				if ( origM != null) {
 					myAFP.setDistanceMatrix((Matrix)origM.clone());
 				}
-				origM = align(myAFP, ca1,ca2, params, origM, calculator, i);
+				origM = align(myAFP, ca1, ca2, params, origM, calculator, i, gradientPolyCoeff, gradientExpCoeff);
 
 
 
@@ -477,11 +525,9 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	 * @throws StructureException If afpChain is not one-to-one
 	 */
 	public static int getSymmetryOrder(AFPChain afpChain) throws StructureException {
-		//maximum degree of rotational symmetry to consider
+		
 		final int maxSymmetry = 8;
 
-		// Percentage change in RSSE required to improve score
-		// Avoids reporting slight improvements in favor of lower order
 		final float minimumMetricChange = 0.40f;
 
 		Map<Integer,Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
@@ -490,7 +536,6 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 				new AlignmentTools.IdentityMap<Integer>(),
 				maxSymmetry, minimumMetricChange);
 	}
-
 
 	/**
 	 * @return the refineResult

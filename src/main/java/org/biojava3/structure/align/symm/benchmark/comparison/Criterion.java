@@ -146,30 +146,31 @@ public abstract class Criterion {
 		};
 	}
 
-	/**
-	 * Guesses an order from {@link #getTheta() theta}.
-	 * TODO: This is probably not a good way, and this probably doesn't belong here
-	 */
-	public int guessOrderFromAngle(double theta, double threshold) {
-		final int maxOrder = 8;
-		double bestDelta = threshold;
-		int bestOrder = 1;
-		for (int order = 2; order < maxOrder; order++) {
-			double delta = Math.abs(2 * Math.PI / order - theta);
-			System.out.println(delta);
-			if (delta < bestDelta) {
-				bestOrder = order;
-				bestDelta = delta;
-			}
-		}
-		return bestOrder;
-	}
-	
-	public static Criterion hasOrderByAngle(final float penalty, final double threshold) {
+	public static Criterion hasOrderLiberal(final float penalty) {
 		return new Criterion() {
 			@Override
 			public double get(Result result) throws NoncomputableCriterionException {
-				int order = guessOrderFromAngle(result.getAxis().getTheta(), threshold);
+				if (result.getOrder() == null || result.getOrder() < 2) {
+					if (result.getAxis() == null) return -penalty;
+					if (result.getAxis().guessOrder() == 1) {
+						return -penalty;
+					}
+				}
+				return 0;
+			}
+
+			@Override
+			public String getName() {
+				return "hasorderliberal(" + penalty + ")";
+			}
+		};
+	}
+
+	public static Criterion hasOrderByAngle(final float penalty, final double threshold, final int maxOrder) {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				int order = result.getAxis().guessOrder(threshold, maxOrder);
 				if (order > 1) return 0;
 				return -penalty;
 			}

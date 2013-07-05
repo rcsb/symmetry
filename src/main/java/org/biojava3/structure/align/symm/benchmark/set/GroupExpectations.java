@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.biojava.bio.structure.scop.ScopDatabase;
@@ -23,8 +23,8 @@ public class GroupExpectations {
 	private static final String NEWLINE = "\n";
 
 	private Map<String, KnownInfo> actual;
-	private Map<String, String> expected;
-	private Map<String, String> wrong = new HashMap<String, String>();
+	private LinkedHashMap<String, String> expected;
+	private LinkedHashMap<String, String> wrong = new LinkedHashMap<String, String>();
 
 	/**
 	 * @param args
@@ -36,14 +36,18 @@ public class GroupExpectations {
 		}
 		File actual = new File("src/main/resources/domain_symm_benchmark.tsv");
 		File expected = new File("src/main/resources/expected_groups.tsv");
+		if (args.length > 0) actual = new File(args[0]);
+		if (args.length > 1) expected = new File(args[1]);
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
 		GroupExpectations expectations = new GroupExpectations(actual, expected);
 		System.out.println(expectations);
+		System.out.println("=======");
+		System.out.println(expectations.toLongList());
 	}
 
 	public GroupExpectations(File actual, File expected) throws IOException {
 		this.actual = SampleBuilder.getOrders(actual);
-		this.expected = new HashMap<String, String>();
+		this.expected = new LinkedHashMap<String, String>();
 		BufferedReader br = new BufferedReader(new FileReader(expected));
 		String line = "";
 		while ((line = br.readLine()) != null) {
@@ -54,7 +58,7 @@ public class GroupExpectations {
 		init();
 	}
 
-	public GroupExpectations(Map<String, KnownInfo> actual, Map<String, String> expected) {
+	public GroupExpectations(LinkedHashMap<String, KnownInfo> actual, LinkedHashMap<String, String> expected) {
 		this.actual = actual;
 		this.expected = expected;
 		init();
@@ -71,6 +75,17 @@ public class GroupExpectations {
 		return sb.toString();
 	}
 
+	public String toLongList() {
+		StringBuilder sb = new StringBuilder();
+		for (Map.Entry<String, KnownInfo> entry : actual.entrySet()) {
+			if (wrong.containsKey(entry.getKey())) {
+				sb.append("\tsuspect");
+			}
+			sb.append(NEWLINE);
+		}
+		return sb.toString();
+	}
+	
 	private void init() {
 		ScopDatabase scop = ScopFactory.getSCOP();
 		for (Map.Entry<String, KnownInfo> entry : actual.entrySet()) {

@@ -24,7 +24,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -81,8 +81,8 @@ public class SampleBuilder {
 		return list;
 	}
 
-	public static Map<String, KnownInfo> getOrders(File knownInfoFile) throws IOException {
-		Map<String, KnownInfo> map = new HashMap<String, KnownInfo>();
+	public static LinkedHashMap<String, KnownInfo> getOrders(File knownInfoFile) throws IOException {
+		LinkedHashMap<String, KnownInfo> map = new LinkedHashMap<String, KnownInfo>();
 		BufferedReader br = new BufferedReader(new FileReader(knownInfoFile));
 		String line = "";
 		while ((line = br.readLine()) != null) {
@@ -94,7 +94,7 @@ public class SampleBuilder {
 		return map;
 	}
 
-	public static Map<String, KnownInfo> getOrders(String file) throws IOException {
+	public static LinkedHashMap<String, KnownInfo> getOrders(String file) throws IOException {
 		return getOrders(new File(file));
 	}
 

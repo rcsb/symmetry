@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
@@ -41,6 +43,8 @@ import org.biojava.bio.structure.scop.ScopFactory;
  */
 public class DuplicateFinder {
 
+	private static final Logger logger = LogManager.getLogger(DuplicateFinder.class.getName());
+
 	/**
 	 * @param args
 	 * @throws IOException
@@ -50,6 +54,7 @@ public class DuplicateFinder {
 			System.err.println("Usage: DuplicateFinder input-file scop-category");
 			return;
 		}
+		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
 		final File file = new File(args[0]);
 		DuplicateFinder finder = new DuplicateFinder(ScopCategory.fromString(args[1]));
 		List<String> duplicates = finder.findDuplicates(file);
@@ -91,13 +96,13 @@ public class DuplicateFinder {
 		for (int i = 0; i < all.size(); i++) {
 			ScopDomain a = scop.getDomainByScopID(all.get(i));
 			if (a == null) {
-				System.err.println("Couldn't find " + all.get(i));
+				logger.warn("Couldn't find " + all.get(i));
 				continue;
 			}
 			for (int j = 0; j < i; j++) {
 				ScopDomain b = scop.getDomainByScopID(all.get(j));
 				if (b == null) {
-					System.err.println("Couldn't find " + all.get(j));
+					logger.warn("Couldn't find " + all.get(j));
 					continue;
 				}
 				if (sunIdOfCategory(a) == sunIdOfCategory(b)) {
@@ -110,7 +115,7 @@ public class DuplicateFinder {
 	}
 
 	private List<String> findFilteredSet(List<String> all) {
-		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
+		ScopDatabase scop = ScopFactory.getSCOP();
 		List<String> filtered = new ArrayList<String>(all.size());
 		for (int i = 0; i < all.size(); i++) {
 			ScopDomain a = scop.getDomainByScopID(all.get(i));

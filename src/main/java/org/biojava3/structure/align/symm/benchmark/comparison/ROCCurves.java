@@ -118,6 +118,7 @@ public class ROCCurves {
 //			ceSymmCriteria.add(Criterion.hasOrder(0.2f));
 //			ceSymmCriteria.add(Criterion.hasOrder(0.3f));
 			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
+			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderLiberal(1f), 1, 1));
 //			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
 //			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderByAngle(0.5f, 5 * Math.PI/180), 1, 1000));
 //			ceSymmCriteria.add(Criterion.random());
@@ -148,10 +149,11 @@ public class ROCCurves {
 
 			// ROC curves
 			List<Criterion> symdCriteria = new ArrayList<Criterion>();
-			symdCriteria.add(Criterion.symdZScore());
-			symdCriteria.add(Criterion.symdTm());
+//			symdCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
+//			symdCriteria.add(Criterion.symdZScore());
+//			symdCriteria.add(Criterion.symdTm());
 			symdCriteria.add(Criterion.tmScore());
-//			symdCriteria.add(Criterion.tmpr());
+			symdCriteria.add(Criterion.tmpr());
 			ROCCurves symdRocs = new ROCCurves(input, symdCriteria);
 			symdRocs.graph(output);
 

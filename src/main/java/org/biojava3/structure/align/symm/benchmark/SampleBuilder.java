@@ -56,7 +56,12 @@ public class SampleBuilder {
 			if (result == null) continue;
 			Case c = new Case();
 			c.setResult(result);
-			c.setKnownInfo(knownInfos.get(result.getScopId()));
+			KnownInfo knownInfo = knownInfos.get(result.getScopId());
+			if (knownInfo == null) {
+				logger.warn("No info known for " + c.getScopId());
+				continue;
+			}
+			c.setKnownInfo(knownInfo);
 			sample.add(c);
 		}
 		BufferedWriter br = new BufferedWriter(new FileWriter(output));

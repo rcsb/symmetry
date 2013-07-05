@@ -29,9 +29,7 @@ import java.util.Random;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
@@ -60,16 +58,12 @@ public class RandomDomains {
 	 *            </ol>
 	 */
 	public static void main(String[] args) {
-		if (args.length != 2) {
-			System.err.println("Usage: RandomDomains pdb-dir number-of-domains");
+		if (args.length != 1) {
+			System.err.println("Usage: RandomDomains number-of-domains");
 			return;
 		}
-		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR, args[0]);
-		ScopDatabase scop = ScopFactory.getSCOP();
-		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
-		}
-		System.out.println(printRandomNames(Integer.parseInt(args[1])));
+		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
+		System.out.println(printRandomNames(Integer.parseInt(args[0])));
 	}
 
 	/**

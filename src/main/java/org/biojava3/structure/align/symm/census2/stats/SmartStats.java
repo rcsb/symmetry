@@ -1,24 +1,19 @@
 /*
- *                    BioJava development code
- *
- * This code may be freely distributed and modified under the
- * terms of the GNU Lesser General Public Licence.  This should
- * be distributed with the code.  If you do not have a copy,
- * see:
- *
- *      http://www.gnu.org/copyleft/lesser.html
- *
- * Copyright for this code is held jointly by the individual
- * authors.  These should be listed in @author doc comments.
- *
- * For more information on the BioJava project and its aims,
- * or to join the biojava-l mailing list, visit the home page
+ * BioJava development code
+ * 
+ * This code may be freely distributed and modified under the terms of the GNU Lesser General Public Licence. This
+ * should be distributed with the code. If you do not have a copy, see:
+ * 
+ * http://www.gnu.org/copyleft/lesser.html
+ * 
+ * Copyright for this code is held jointly by the individual authors. These should be listed in @author doc comments.
+ * 
+ * For more information on the BioJava project and its aims, or to join the biojava-l mailing list, visit the home page
  * at:
- *
- *      http://www.biojava.org/
- *
+ * 
+ * http://www.biojava.org/
+ * 
  * Created on 2013-03-10
- *
  */
 package org.biojava3.structure.align.symm.census2.stats;
 
@@ -33,16 +28,29 @@ import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 
 /**
+ * Calculates statistics. To decide whether, say, a family is symmetric, it requires that the mean TM-score over each
+ * domain in the family is at least the TM-score threshold, and that the mean order is at least the order threshold. To
+ * decide whether a superfamily is symmetric, it requires that the mean TM-score over every <em>family</em> in that
+ * superfamily is at least the TM-score threshold, and that the mean order is at least the order threshold. Similarly,
+ * the symmetry of a fold is decided on the basis of mean values of its constituent superfamilies.
  * 
  * @author dmyerstu
+ * @see {@link BasicStats}, which uses majority voting instead
  */
 public class SmartStats {
 
+	private static double DEFAULT_ORDER_THRESHOLD = 0.5;
+
+	private static double DEFAULT_TM_SCORE_THRESHOLD = 0.4;
+
 	private static final Logger logger = LogManager.getLogger(SmartStats.class.getPackage().getName());
 
-	private static double DEFAULT_TM_SCORE_THRESHOLD = 0.38;
+	private Property property;
 
-	private static double DEFAULT_ORDER_THRESHOLD = 0.5;
+	Map<String, Integer> nDomainsInFolds = new TreeMap<String, Integer>();
+
+	Map<String, Integer> nInFoldsTotal = new TreeMap<String, Integer>();
+	Map<String, Integer> nSymmInFolds = new TreeMap<String, Integer>();
 
 	public static void main(String[] args) throws IOException {
 		if (args.length < 1 || args.length > 3) {
@@ -57,24 +65,20 @@ public class SmartStats {
 		SmartStats stats = new SmartStats(census, tmScoreTreshold, orderTreshold);
 		System.out.println(stats);
 	}
-	
-	private Property property;
 
-	public Property getProperty() {
-		return property;
-	}
 	public SmartStats(File census, double tmScoreTreshold, double orderTreshold) throws IOException {
 		this(Property.tmScore(), Results.fromXML(census), tmScoreTreshold, orderTreshold);
 	}
+
 	public SmartStats(Property property, Results census, double tmScoreTreshold, double orderTreshold) {
-		
+
 		this.property = property;
-		
+
 		final Grouping sfGrouping = Grouping.superfamily();
-		Map<String,Double> tmInSfs = new TreeMap<String,Double>();
-		Map<String,Integer> nInSfs = new TreeMap<String,Integer>();
-		Map<String,Integer> nWithOrderInSfs = new TreeMap<String,Integer>();
-		
+		Map<String, Double> tmInSfs = new TreeMap<String, Double>();
+		Map<String, Integer> nInSfs = new TreeMap<String, Integer>();
+		Map<String, Integer> nWithOrderInSfs = new TreeMap<String, Integer>();
+
 		for (Result result : census.getData()) {
 			final String sf = sfGrouping.group(result);
 			double tmScore = 0;
@@ -106,8 +110,7 @@ public class SmartStats {
 			StatUtils.plusD(tmInSfs, sf, tmScore);
 			StatUtils.plus(nWithOrderInSfs, sf, order);
 		}
-		
-		
+
 		for (Map.Entry<String, Integer> entry : nInSfs.entrySet()) {
 			final String sf = entry.getKey();
 
@@ -122,8 +125,8 @@ public class SmartStats {
 				continue;
 			}
 			final int nInSf = entry.getValue();
-			final double fracWithOrder = nWithOrderInSfs.get(sf).doubleValue() / (double) nInSf;
-			final double meanTmScore = tmInSfs.get(sf) / (double) nInSf;
+			final double fracWithOrder = nWithOrderInSfs.get(sf).doubleValue() / nInSf;
+			final double meanTmScore = tmInSfs.get(sf) / nInSf;
 			if (fracWithOrder >= orderTreshold && meanTmScore >= tmScoreTreshold) {
 				StatUtils.plus(nSymmInFolds, fold);
 				StatUtils.plus(nSymmInFolds, clas);
@@ -136,10 +139,10 @@ public class SmartStats {
 
 	}
 
-	Map<String,Integer> nDomainsInFolds = new TreeMap<String,Integer>();
-	Map<String,Integer> nInFoldsTotal = new TreeMap<String,Integer>();
-	Map<String,Integer> nSymmInFolds = new TreeMap<String,Integer>();
-	
+	public Property getProperty() {
+		return property;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -153,10 +156,11 @@ public class SmartStats {
 				fractionSymm = 0;
 			}
 			if (nDomainsInFolds.get(fold) >= 10 && fractionSymm >= 0.3 || fold.length() < 3 || fold.equals("overall")) {
-				sb.append(fold + "\t" + nInFoldsTotal.get(fold) + "\t" + nDomainsInFolds.get(fold) + "\t" + StatUtils.formatP(fractionSymm) + StatUtils.NEWLINE);
+				sb.append(fold + "\t" + nInFoldsTotal.get(fold) + "\t" + nDomainsInFolds.get(fold) + "\t"
+						+ StatUtils.formatP(fractionSymm) + StatUtils.NEWLINE);
 			}
 		}
 		return sb.toString();
 	}
-	
+
 }

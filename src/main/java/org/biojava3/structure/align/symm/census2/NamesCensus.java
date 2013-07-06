@@ -59,35 +59,21 @@ public class NamesCensus extends Census {
 				return ce;
 			}
 		};
+		buildDefault(censusFile, lineByLine, algorithm);
+	}
 
+	public static void buildDefault(File censusFile, File lineByLine, AlgorithmGiver algorithm) {
 		try {
 			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			NamesCensus census = new NamesCensus(maxThreads);
 			census.setOutputWriter(censusFile);
-			census.domains = new ArrayList<ScopDomain>();
+			census.domains = readNames(lineByLine);
 			census.setPrintFrequency(10);
 			census.setAlgorithm(algorithm);
 			AtomCache cache = new AtomCache();
 			cache.setFetchFileEvenIfObsolete(true);
-			try {
-				BufferedReader br = new BufferedReader(new FileReader(lineByLine));
-				String line = "";
-				while ((line = br.readLine()) != null) {
-					if (line.trim().isEmpty()) continue;
-					ScopDomain domain = ScopFactory.getSCOP().getDomainByScopID(line);
-					if (domain == null) {
-						logger.error("No SCOP domain with id " + line + " was found");
-					} else {
-						census.domains.add(domain);
-					}
-				}
-				br.close();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
 			census.setCache(cache);
-			census.setAlgorithm(algorithm);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -95,11 +81,32 @@ public class NamesCensus extends Census {
 		}
 	}
 
+	private static List<ScopDomain> readNames(File lineByLine) {
+		List<ScopDomain> domains = new ArrayList<ScopDomain>();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(lineByLine));
+			String line = "";
+			while ((line = br.readLine()) != null) {
+				if (line.trim().isEmpty()) continue;
+				ScopDomain domain = ScopFactory.getSCOP().getDomainByScopID(line);
+				if (domain == null) {
+					logger.error("No SCOP domain with id " + line + " was found");
+				} else {
+					domains.add(domain);
+				}
+			}
+			br.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return domains;
+	}
+
 	public static void main(String[] args) {
 		if (args.length != 2 && args.length != 3) {
 			System.err.println("Usage: " + NamesCensus.class.getSimpleName() + " output-census-file line-by-line-input-names-file [do-refinement]");
 			return;
-	}
+		}
 		final File censusFile = new File(args[0]);
 		final File lineByLine = new File(args[1]);
 		boolean doRefine = false;

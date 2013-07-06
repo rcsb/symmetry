@@ -82,9 +82,6 @@ public class SignificanceFactory {
 					return false;
 				if (result.getAlignment() == null)
 					return false;
-				final int order = result.getOrder();
-				if (order < 2)
-					return false;
 				int theOrder = result.getAxis().guessOrder(deviationThreshold, maxOrder);
 				return result.getAlignment().getTmScore() >= threshold && theOrder > 1;
 			}

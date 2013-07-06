@@ -30,7 +30,7 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 
 /**
- * 
+ * Representatives from a simple list of SCOP Ids.
  * @author dmyerstu
  */
 public class NamesRepresentatives extends Representatives {

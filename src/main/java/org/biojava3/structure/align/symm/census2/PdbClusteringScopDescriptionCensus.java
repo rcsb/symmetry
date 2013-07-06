@@ -39,7 +39,7 @@ import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 
 /**
- * A census that takes a list of sun Ids and a sequence clustering.
+ * A census that takes a list of sun Ids and a sequence clustering. Uses the sequence-clusteirng provided by RCSB.
  * 
  * @author dmyerstu
  */

@@ -42,7 +42,7 @@ import org.biojava3.structure.align.symm.census2.Significance;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
- * 
+ * Prints out the values of a certain {@link Property} in a {@link Results}.
  * @author dmyerstu
  */
 public class PropertyDistribution {

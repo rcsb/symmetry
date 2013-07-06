@@ -27,7 +27,7 @@ import java.text.NumberFormat;
 import java.util.Map;
 
 /**
- * 
+ * Static utilities for statistics.
  * @author dmyerstu
  */
 public class StatUtils {

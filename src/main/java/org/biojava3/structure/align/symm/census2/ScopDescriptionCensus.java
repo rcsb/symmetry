@@ -38,7 +38,7 @@ import org.biojava.bio.structure.scop.ScopNode;
 import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 
 /**
- * A census that takes a list of sun Ids
+ * A census that takes a list of sun Ids.
  * @author dmyerstu
  */
 public class ScopDescriptionCensus extends Census {

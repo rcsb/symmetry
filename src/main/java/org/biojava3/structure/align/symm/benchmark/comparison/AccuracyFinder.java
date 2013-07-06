@@ -24,12 +24,10 @@ import java.text.NumberFormat;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.protodomain.Protodomain;
+import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * Determines the false-positive, true-positive, false-negative, and true-negative frequencies of a benchmark
@@ -44,32 +42,14 @@ public class AccuracyFinder {
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 1 && args.length != 2) {
-			System.err.println("Usage: " + AccuracyFinder.class.getSimpleName() + " input-file [cutoff]");
+			System.err.println("Usage: " + AccuracyFinder.class.getSimpleName() + " input-file [significance-class] [significance-method]");
 			return;
 		}
 		File input = new File(args[0]);
-		double c = 10;
-		if (args.length > 1) {
-			c = Double.parseDouble(args[1]);
+		Significance sig = SignificanceFactory.rotationallySymmetricSmart();
+		if (args.length > 2) {
+			sig = SignificanceFactory.fromMethod(args[1], args[2]);
 		}
-		final double cutoff = c;
-		Significance sig = new Significance() {
-			@Override
-			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return true; // whatever
-			}
-
-			@Override
-			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				return true; // whatever
-			}
-
-			@Override
-			public boolean isSignificant(Result result) {
-				if (result.getAlignment() == null) return false;
-				return result.getAlignment().getzScore() >= cutoff;
-			}
-		};
 		AccuracyFinder finder = new AccuracyFinder(input, sig);
 		System.out.println(finder);
 	}

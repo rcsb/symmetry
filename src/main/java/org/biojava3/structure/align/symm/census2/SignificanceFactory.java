@@ -52,6 +52,49 @@ public class SignificanceFactory {
 		return rotationallySymmetric(0.4, Double.MAX_VALUE);
 	}
 
+	public static Significance rotationallySymmetricWithAngle() {
+		return rotationallySymmetricWithAngle(0.4, 8, 1.0 * Math.PI/180);
+	}
+	
+	public static Significance rotationallySymmetricWithAngle(final double threshold, final int maxOrder, final double deviationThreshold) {
+		return new Significance() {
+
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return afpChain.getTMScore() >= threshold;
+			}
+
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				Axis axis;
+				try {
+					axis = new Axis(new RotationAxis(afpChain));
+				} catch (Exception e) {
+					return false;
+				}
+				int theOrder = axis.guessOrder(deviationThreshold, maxOrder);
+				return afpChain.getTMScore() >= threshold && theOrder > 1;
+			}
+
+			@Override
+			public boolean isSignificant(Result result) {
+				if (result.getAxis() == null)
+					return false;
+				if (result.getAlignment() == null)
+					return false;
+				final int order = result.getOrder();
+				if (order < 2)
+					return false;
+				int theOrder = result.getAxis().guessOrder(deviationThreshold, maxOrder);
+				return result.getAlignment().getTmScore() >= threshold && theOrder > 1;
+			}
+		};
+	}
+	
+	public static Significance rotationallySymmetricSmart() {
+		return or(rotationallySymmetric(), rotationallySymmetricWithAngle());
+	}
+
 	public static Significance generallySymmetric() {
 		return tmScore(0.4);
 	}

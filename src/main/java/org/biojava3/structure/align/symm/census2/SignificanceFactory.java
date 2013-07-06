@@ -49,11 +49,11 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
 public class SignificanceFactory {
 
 	public static Significance rotationallySymmetric() {
-		return rotationallySymmetric(0.38, Double.MAX_VALUE);
+		return rotationallySymmetric(0.4, Double.MAX_VALUE);
 	}
 
 	public static Significance generallySymmetric() {
-		return tmScore(0.43);
+		return tmScore(0.4);
 	}
 
 	public static Significance forCensus() {
@@ -89,7 +89,7 @@ public class SignificanceFactory {
 	}
 
 	public static Significance asymmetric() {
-		return asymmetric(0.38);
+		return asymmetric(0.4);
 	}
 
 	public static Significance bin1() {

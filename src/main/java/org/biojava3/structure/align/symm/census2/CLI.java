@@ -35,6 +35,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.scop.Astral;
+import org.biojava.bio.structure.scop.Astral.AstralSet;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
@@ -42,7 +44,6 @@ import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.scop.ScopInstallation;
-import org.biojava3.structure.align.symm.census2.AstralScopDescriptionCensus.AstralSet;
 
 /**
  * Decent command-line interface to Census. Combines aspects of many of the other census subclasses.
@@ -213,7 +214,7 @@ public class CLI {
 				// get sequence clusters
 				Set<String> clusterRepresentatives = null;
 				if (clustering != null) {
-					clusterRepresentatives = AstralScopDescriptionCensus.getClusterRepresentatives(clustering);
+					clusterRepresentatives = Astral.getRepresentatives(clustering);
 					logger.info("Using sequence clustering at " + clustering.getId());
 					logger.info("Number of clusters: " + clusterRepresentatives.size());
 				}

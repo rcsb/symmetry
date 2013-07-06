@@ -88,7 +88,7 @@ public class SymDWins {
 //			if (c.getAlignment().getTmScore() >= 0.38 && c.getAlignment().getTmScore() <= 0.4) System.out.println(c.getScopId());
 //		}
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
-		List<String> wins = findWins(ceSymm, Sample.fromXML(new File(args[1])), SignificanceFactory.symmetric(), symDSig);
+		List<String> wins = findWins(ceSymm, Sample.fromXML(new File(args[1])), SignificanceFactory.rotationallySymmetric(), symDSig);
 		for (String s : wins) {
 			ScopDomain d = scop.getDomainByScopID(s);
 			int sf = d.getFoldId();

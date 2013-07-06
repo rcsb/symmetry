@@ -34,10 +34,12 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.benchmark.comparison.AccuracyFinder;
 import org.biojava3.structure.align.symm.benchmark.comparison.Criterion;
 import org.biojava3.structure.align.symm.benchmark.comparison.ROCCurves;
+import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.census2.NamesCensus;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
@@ -92,9 +94,17 @@ public class GradientSampler {
 		criteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1), 1, 1));
 		for (int i = 0; i < n; i++) {
 			System.out.println("SAMPING: " + i);
-			CeSymm.GRADIENT_POLY_COEFF = gradients[i]; // TODO this isn't pretty
+			final int j = i;
+			AlgorithmGiver algorithm = new AlgorithmGiver() {
+				@Override
+				public StructureAlignment getAlgorithm() {
+					CeSymm ce = new CeSymm();
+					ce.setGradientPolyCoeff(gradients[j]);
+					return ce;
+				}
+			};
 			File censusFile = new File(dir + gradToString(i) + "_benchmark_stub.xml");
-			NamesCensus.buildDefault(pdbDir, censusFile, lineByLine);
+			NamesCensus.buildDefault(censusFile, lineByLine, algorithm);
 			File benchmarkFile = new File(dir + i + "_benchmark.xml");
 			try {
 				SampleBuilder.buildSample(censusFile, benchmarkFile, ordersFile);
@@ -103,7 +113,7 @@ public class GradientSampler {
 			}
 			try {
 				File accFile = new File(dir + i + "_acc.txt");
-				AccuracyFinder finder = new AccuracyFinder(benchmarkFile, SignificanceFactory.symmetric());
+				AccuracyFinder finder = new AccuracyFinder(benchmarkFile, SignificanceFactory.rotationallySymmetric());
 				PrintWriter accPw = new PrintWriter(new BufferedWriter(new FileWriter(accFile)));
 				accPw.println(finder);
 				accPw.close();

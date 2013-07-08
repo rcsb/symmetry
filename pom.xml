@@ -57,11 +57,16 @@
 		</repository>
 	        
 	</repositories>
+	
 	<scm>
-		<connection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/trunk</connection>
-		<developerConnection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/trunk</developerConnection>
-		<url>http://source.rcsb.org/javadoc/</url>
+		<developerConnection>https://github.com/rcsb/symmetry</developerConnection>
+		<connection>git://github.com/rcsb/symmetry.git</connection>
+		<url>https://github.com/rcsb/symmetry</url>
 	</scm>
+	<issueManagement>
+		<url>https://github.com/rcsb/symmetry/issues</url>
+		<system>Github</system>
+	</issueManagement>
 
 	  	<!-- where Maven deploy will deploy project jars/wars -->
 	<distributionManagement>
@@ -140,7 +145,7 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.0-beta6</version>
+			<version>2.0-beta7</version>
 		</dependency>
 		
 		<dependency>

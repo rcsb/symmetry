@@ -26,7 +26,7 @@ public class GuerlerFolds {
 	
 	public static void main(String[] args) throws IOException {
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
-		Significance sig = SignificanceFactory.rotationallySymmetricSmart();
+		Significance sig = SignificanceFactory.generallySymmetric();
 		new File(DIR).mkdirs();
 		String[] folds = new String[] {"a.24", "b.1", "b.11", "b.42", "b.69", "c.1", "d.131", "d.58"};
 		for (String fold : folds) {

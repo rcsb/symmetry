@@ -57,11 +57,16 @@
 		</repository>
 	        
 	</repositories>
+	
 	<scm>
-		<connection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/trunk</connection>
-		<developerConnection>scm:svn:svn+ssh://pdbcvs.rcsb.org/misc/pdb/svn/StructCompPlayground/trunk</developerConnection>
-		<url>http://source.rcsb.org/javadoc/</url>
+		<developerConnection>https://github.com/rcsb/symmetry-benchmark</developerConnection>
+		<connection>git://github.com/rcsb/symmetry-benchmark.git</connection>
+		<url>https://github.com/rcsb/symmetry-benchmark</url>
 	</scm>
+	<issueManagement>
+		<url>https://github.com/rcsb/symmetry-benchmark/issues</url>
+		<system>Github</system>
+	</issueManagement>
 
 	  	<!-- where Maven deploy will deploy project jars/wars -->
 	<distributionManagement>
@@ -70,7 +75,6 @@
 			<id>releases</id>
 			<name>RCSB PDB Maven Repository</name>			
 			<url>http://nexus.rcsb.org/nexus/content/repositories/releases</url>
-
 		</repository>
 		 <snapshotRepository>
     		<id>snapshots</id>

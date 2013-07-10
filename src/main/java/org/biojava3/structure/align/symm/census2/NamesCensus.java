@@ -64,7 +64,6 @@ public class NamesCensus extends Census {
 
 	public static void buildDefault(File censusFile, File lineByLine, AlgorithmGiver algorithm) {
 		try {
-			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			NamesCensus census = new NamesCensus(maxThreads);
 			census.setOutputWriter(censusFile);
@@ -115,6 +114,7 @@ public class NamesCensus extends Census {
 				doRefine = true;
 			}
 		}
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 		buildDefault(censusFile, lineByLine, doRefine);
 	}
 

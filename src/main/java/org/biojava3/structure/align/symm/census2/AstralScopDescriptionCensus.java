@@ -47,7 +47,6 @@ public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 
 	public static void buildDefault(File censusFile, AstralSet astral, int[] sunIds) {
 		try {
-			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			AstralScopDescriptionCensus census = new AstralScopDescriptionCensus(maxThreads, astral, sunIds);
 			census.setOutputWriter(censusFile);
@@ -64,6 +63,7 @@ public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 			System.err.println("Usage: " + AstralScopDescriptionCensus.class.getSimpleName() + " output-census-file astral-version-id sun-id-1 [sun-id-2 sun-id-3 ...]");
 			return;
 		}
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 		final File censusFile = new File(args[0]);
 		final AstralSet astral = AstralSet.parse(args[1]);
 		int[] sunIds = new int[args.length - 2];

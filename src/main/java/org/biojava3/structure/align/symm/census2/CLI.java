@@ -279,6 +279,7 @@ public class CLI {
 		};
 
 		// set final options
+		// TODO should take a SCOP version instead
 		if (!oldScop) {
 			ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
 		} else {

@@ -75,6 +75,8 @@ public class ScanSCOPForSymmetry implements Runnable {
 		try {
 			ScanSCOPForSymmetry me = new ScanSCOPForSymmetry();
 
+			ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75B);
+			
 			me.run();
 
 		} catch (Exception e){
@@ -90,8 +92,6 @@ public class ScanSCOPForSymmetry implements Runnable {
 	@Override
 	public void run() {
 		AtomCache cache = new AtomCache();
-		
-		ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
 		
 		ScopDatabase scop = ScopFactory.getSCOP();
 

@@ -73,14 +73,14 @@ public class Census {
 				@Override
 				public StructureAlignment getAlgorithm() {
 					CeSymm ceSymm = new CeSymm();
-//					ConfigStrucAligParams params = ceSymm.getParameters();
-//					if (params instanceof CeParameters) {
-//						CeParameters ceparams = (CeParameters) params;
-//						ceparams.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
-//						ceparams.setSeqWeight(2);
-//						ceparams.setScoringStrategy(CeParameters.SIDE_CHAIN_SCORING);
-//						ceSymm.setParameters(ceparams);
-//					}
+					//					ConfigStrucAligParams params = ceSymm.getParameters();
+					//					if (params instanceof CeParameters) {
+					//						CeParameters ceparams = (CeParameters) params;
+					//						ceparams.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
+					//						ceparams.setSeqWeight(2);
+					//						ceparams.setScoringStrategy(CeParameters.SIDE_CHAIN_SCORING);
+					//						ceSymm.setParameters(ceparams);
+					//					}
 					return ceSymm;
 				}
 			};
@@ -107,7 +107,6 @@ public class Census {
 
 	public static void buildDefault(File censusFile) {
 		try {
-			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			Census census = new Census(maxThreads);
 			census.setOutputWriter(censusFile);
@@ -127,10 +126,11 @@ public class Census {
 		if (args.length != 1) {
 			System.err.println("Usage: " + Census.class.getSimpleName() + " output-census-file");
 			return;
-	}
+		}
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 		final File censusFile = new File(args[0]);
 		buildDefault(censusFile);
-		}
+	}
 
 	public Census() {
 		this(Runtime.getRuntime().availableProcessors() - 1);

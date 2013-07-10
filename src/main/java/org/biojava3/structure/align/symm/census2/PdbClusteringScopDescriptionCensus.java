@@ -53,7 +53,6 @@ public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 
 	public static void buildDefault(File censusFile, int identityCutoff, int[] sunIds) {
 		try {
-			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			PdbClusteringScopDescriptionCensus census = new PdbClusteringScopDescriptionCensus(maxThreads, identityCutoff, sunIds);
 			census.setOutputWriter(censusFile);
@@ -73,6 +72,11 @@ public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 	}
 
 	public static void main(String[] args) {
+		if (args.length < 2) {
+			System.err.println("Usage: " + PdbClusteringScopDescriptionCensus.class.getSimpleName() + " census-file identity-cutoff sun-id-1 [sun-id-2 ...]");
+			return;
+		}
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 		final File censusFile = new File(args[0]);
 		final int identityCutoff = Integer.parseInt(args[1]);
 		int[] sunIds = new int[args.length - 2];

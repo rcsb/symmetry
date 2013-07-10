@@ -92,6 +92,10 @@ public class SignificanceFactory {
 		return or(rotationallySymmetric(), rotationallySymmetricWithAngle());
 	}
 
+	public static Significance notRotationallySymmetricSmart() {
+		return SignificanceFactory.not(or(rotationallySymmetric(), rotationallySymmetricWithAngle()));
+	}
+
 	public static Significance generallySymmetric() {
 		return tmScore(0.4);
 	}
@@ -142,6 +146,25 @@ public class SignificanceFactory {
 
 	public static Significance bin3() {
 		return binned(0.6, 1);
+	}
+
+	public static Significance not(final Significance a) {
+		return new Significance() {
+			@Override
+			public boolean isPossiblySignificant(AFPChain afpChain) {
+				return !a.isPossiblySignificant(afpChain);
+			}
+
+			@Override
+			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
+				return !a.isSignificant(protodomain, order, angle, afpChain);
+			}
+
+			@Override
+			public boolean isSignificant(Result result) {
+				return !a.isSignificant(result);
+			}
+		};
 	}
 
 	public static Significance and(final Significance a, final Significance b) {

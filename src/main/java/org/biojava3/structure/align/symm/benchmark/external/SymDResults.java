@@ -154,7 +154,7 @@ public class SymDResults extends Results {
 
 			Unmarshaller un = jaxbContext.createUnmarshaller();
 			FileInputStream fis = new FileInputStream(file);
-			SymDResults results = (SymDResults) un.unmarshal(fis);
+			Results results = (Results) un.unmarshal(fis);
 
 			// due to a side effect by JAXB
 			List<Result> newData = new ArrayList<Result>(results.getData().size());
@@ -164,7 +164,10 @@ public class SymDResults extends Results {
 			}
 			results.setData(newData);
 
-			return results;
+			SymDResults symd = new SymDResults();
+			for (Result result : results.getData()) symd.add(result);
+			
+			return symd;
 
 		} catch (JAXBException e) {
 			throw new IOException(e);

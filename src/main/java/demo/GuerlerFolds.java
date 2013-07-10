@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.bio.structure.scop.ScopInstallation;
 import org.biojava3.structure.align.symm.census2.NamesCensus;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
@@ -20,12 +21,14 @@ import org.biojava3.structure.align.symm.census2.SignificanceFactory;
  */
 public class GuerlerFolds {
 
-	private static String DIR = "/home/dmyersturnbull/desktop/folds/";
-	private static String RESOURCE_DIR = "/home/dmyersturnbull/work/Bourne Lab/symmetry/code/workspace/symmetry-benchmark/src/main/resources/Guerler_folds/";
-	private static File STATS_FILE = new File("/home/dmyersturnbull/desktop/folds/stats.txt");
+	private static String DIR = "/Users/dmyerstu/Desktop/cesymm_folds/";
+	private static String RESOURCE_DIR = "/Users/dmyerstu/Documents/workspace/symmetry-benchmark/src/main/resources/Guerler_folds/";
+	private static File STATS_FILE = new File("/Users/dmyerstu/Desktop/cesymm_folds/stats.txt");
 	
 	public static void main(String[] args) throws IOException {
-		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
+		ScopInstallation scop = new ScopInstallation();
+		scop.setScopVersion("1.73");
+		ScopFactory.setScopDatabase(scop);
 		Significance sig = SignificanceFactory.generallySymmetric();
 		new File(DIR).mkdirs();
 		String[] folds = new String[] {"a.24", "b.1", "b.11", "b.42", "b.69", "c.1", "d.131", "d.58"};

@@ -498,32 +498,12 @@ public class Protodomain {
 		RangeBuilder rangeBuilder = new RangeBuilder();
 		for (String domainRange : domainRanges) {
 
-			final String chainId = domainRange.substring(0, 1);
-
 			// a range is of the form: A:05-117 (chain:start-end) OR just A:
-			// 
-			ResidueNumber domainStartR, domainEndR;
+			ResidueRange rr = ResidueRange.parse(domainRange, map);
+			ResidueNumber domainStartR = rr.getStart();
+			ResidueNumber domainEndR = rr.getEnd();
 			int domainStart, domainEnd;
-			if (domainRange.length() > 2) {
-				// chain:start-end
-				Pattern pattern = Pattern.compile("^([-]?[\\d]+[\\w]?)-([-]?[\\d]+[\\w]?)$");
-				Matcher matcher = pattern.matcher(domainRange.substring(2));
-				matcher.find();
-				try {
-					domainStartR = ResidueNumber.fromString(matcher.group(1));
-					domainEndR = ResidueNumber.fromString(matcher.group(2));
-				} catch (IllegalStateException e) {
-					throw new ProtodomainCreationException("Failed to match range " + domainRange.substring(2), scopId, e);
-				}
-				// set the chains because ResidueNumber doesn't
-				domainStartR.setChainId(chainId);
-				domainEndR.setChainId(chainId);
-			} else {
-				// no actual numbers; just the chain plus a colon
-				domainStartR = map.getFirst(chainId);
-				domainEndR = map.getLast(chainId);
-			}
-		
+			
 			// these are the insertion-code-independent positions
 			Integer domainStartO = map.getPosition(domainStartR);
 			if (domainStartO == null) throw new ProtodomainCreationException("unknown", scopId,

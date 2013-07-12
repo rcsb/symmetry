@@ -156,7 +156,7 @@ public class ProtodomainTest {
 		assertEquals("The protodomain's structure differs from the stored one", storedStructure.toString(), protodomain.getStructure().toString());
 
 		// now we make a protodomain from the string (rather than the alignment)
-		Protodomain protodomainFromString = Protodomain.fromString(string, name2, false, 1, cache);
+		Protodomain protodomainFromString = Protodomain.fromString(string, name2, cache);
 
 		// check its string and structure
 		assertEquals("The protodomain created from the string has the wrong string", string, protodomainFromString.toString());
@@ -197,7 +197,7 @@ public class ProtodomainTest {
 		assertEquals("The protodomain's structure differs from the stored one", protodomain.getStructure().toString(), storedStructure.toString());
 
 		// now we make a protodomain from the string (rather than the alignment)
-		Protodomain protodomainFromString = Protodomain.fromString(string, scopId, false, 1, cache);
+		Protodomain protodomainFromString = Protodomain.fromString(string, scopId, cache);
 
 		// check its string and structure
 		assertEquals("The protodomain created from the string has the wrong string", string, protodomainFromString.toString());

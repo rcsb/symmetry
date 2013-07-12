@@ -278,15 +278,10 @@ public class Protodomain {
 	 * @param string
 	 *            A string of the form: pdbId.chain_start-end,chain_start-end, ..., chain_start-end.
 	 * @param scopDomain
-	 * @param keepStructure
-	 *            If set to true, the structure will be recreated.
-	 * @param order
-	 *            What the whole Protodomain will be "cut" by. For example, if it is set to 1, it the whole Protodomain
-	 *            will be returned. This should ordinarily be set to the symmetry order.
 	 * @return
 	 * @throws ProtodomainCreationException
 	 */
-	public static Protodomain fromString(String string, ScopDomain scopDomain, boolean keepStructure, int order,
+	public static Protodomain fromString(String string, ScopDomain scopDomain,
 			AtomCache cache) throws ProtodomainCreationException {
 
 		final String pdbId = scopDomain.getPdbId();
@@ -297,30 +292,7 @@ public class Protodomain {
 		int length = ResidueRange.calcLength(list);
 
 		Protodomain protodomain = new Protodomain(pdbId, scopDomain.getScopId(), list, length, cache);
-		if (keepStructure) {
-			try {
-				protodomain.buildStructure();
-			} catch (IOException e) {
-				throw new ProtodomainCreationException(protodomain.toString(), pdbId, e);
-			} catch (StructureException e) {
-				throw new ProtodomainCreationException(protodomain.toString(), pdbId, e);
-			}
-		}
-
-		return protodomain.createSubstruct(order);
-
-	}
-
-	/**
-	 * Calls {@link #fromString(String, ScopDomain, boolean, int, AtomCache)} without creating a {@link Structure}.
-	 * Ranges for this Protodomain will <em>not</em> be spliced; if this is desired, call
-	 * {@link #spliceApproxConsecutive()} or {@link #spliceApproxConsecutive(int)}.
-	 * 
-	 * @see #fromString(String, ScopDomain, boolean, int, AtomCache)
-	 */
-	public static Protodomain fromString(String string, ScopDomain domain, int order, AtomCache cache)
-			throws ProtodomainCreationException {
-		return fromString(string, domain, false, order, cache);
+		return protodomain;
 	}
 
 	/**
@@ -330,17 +302,12 @@ public class Protodomain {
 	 * @param string
 	 *            A string of the form: pdbId.chain_start-end,chain_start-end, ..., chain_start-end.
 	 * @param scopId
-	 * @param keepStructure
-	 *            If set to true, the structure will be recreated.
-	 * @param order
-	 *            What the whole Protodomain will be "cut" by. For example, if it is set to 1, it the whole Protodomain
-	 *            will be returned. This should ordinarily be set to the symmetry order.
 	 * @return
 	 * @throws ProtodomainCreationException
 	 */
-	public static Protodomain fromString(String string, String scopId, boolean keepStructure, int order, AtomCache cache)
+	public static Protodomain fromString(String string, String scopId, AtomCache cache)
 			throws ProtodomainCreationException, IllegalArgumentException {
-		return fromString(string, ScopFactory.getSCOP().getDomainByScopID(scopId), keepStructure, order, cache);
+		return fromString(string, ScopFactory.getSCOP().getDomainByScopID(scopId), cache);
 	}
 
 	/**

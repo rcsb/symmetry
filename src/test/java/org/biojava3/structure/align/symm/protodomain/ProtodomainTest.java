@@ -97,7 +97,7 @@ public class ProtodomainTest {
 	@Test
 	public void testSubstructure() throws Exception {
 		AFPChainAndAtoms storedAcaa = ResourceList.get().loadSim("1qdm.A_3S-37S,A_65S-99S", "d2biba2");
-		Protodomain protodomain = Protodomain.fromReferral(storedAcaa.getAfpChain(), storedAcaa.getCa2(), 1, cache);
+		Protodomain protodomain = Protodomain.fromReferral(storedAcaa.getAfpChain(), storedAcaa.getCa2(), cache);
 		checkSubstruct("2bib.A_56-79", protodomain, 2); // note that the protodomain is rounded down in all of these
 		checkSubstruct("2bib.A_56-71", protodomain, 3);
 		checkSubstruct("2bib.A_56-67", protodomain, 4);
@@ -140,7 +140,7 @@ public class ProtodomainTest {
 
 		// first we build the protodomain from a stored alignment
 		AFPChainAndAtoms storedAcaa = ResourceList.get().loadSim(name1, name2);
-		Protodomain protodomain = Protodomain.fromReferral(storedAcaa.getAfpChain(), storedAcaa.getCa2(), 1, cache);
+		Protodomain protodomain = Protodomain.fromReferral(storedAcaa.getAfpChain(), storedAcaa.getCa2(), cache);
 
 		// first, check that the protodomain's string is correct
 		assertEquals("The protodomain created has the wrong string", string, protodomain.toString());

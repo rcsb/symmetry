@@ -47,10 +47,7 @@ public class SampleTest {
 	
 	@Before
 	public void setUp() throws Exception {
-		ScopDatabase scop = ScopFactory.getSCOP();
-		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // ScopDatabase is too hard to mock well
-		}
+		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
 	}
 
 	@Test

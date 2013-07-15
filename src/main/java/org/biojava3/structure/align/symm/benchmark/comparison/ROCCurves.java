@@ -117,6 +117,7 @@ public class ROCCurves {
 //			ceSymmCriteria.add(Criterion.hasOrder(0.1f));
 //			ceSymmCriteria.add(Criterion.hasOrder(0.2f));
 //			ceSymmCriteria.add(Criterion.hasOrder(0.3f));
+			ceSymmCriteria.add(Criterion.tmScore());
 			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
 			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderLiberal(1f), 1, 1));
 //			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));

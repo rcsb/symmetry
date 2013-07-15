@@ -48,7 +48,11 @@ public class AccuracyFinder {
 		File input = new File(args[0]);
 		Significance sig = SignificanceFactory.rotationallySymmetricSmart();
 		if (args.length > 2) {
+			logger.info("Using alternate Significance "  + args[1] + "." + args[2]);
 			sig = SignificanceFactory.fromMethod(args[1], args[2]);
+		} else if (args.length > 1) {
+			logger.info("Using alternate Significance "  + args[1]);
+			sig = SignificanceFactory.fromMethod(SignificanceFactory.class.getName(), args[1]);
 		}
 		AccuracyFinder finder = new AccuracyFinder(input, sig);
 		System.out.println(finder);

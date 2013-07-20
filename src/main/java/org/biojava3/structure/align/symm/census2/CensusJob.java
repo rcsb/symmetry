@@ -49,11 +49,11 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  */
 public class CensusJob implements Callable<Result> {
 
-	public static class WebInfo {
+	public static class FullInfo {
 		private AFPChain afpChain;
-		private SimpleResult result;
+		private Result result;
 
-		public WebInfo(AFPChain afpChain, SimpleResult result) {
+		public FullInfo(AFPChain afpChain, Result result) {
 			super();
 			this.afpChain = afpChain;
 			this.result = result;
@@ -63,7 +63,7 @@ public class CensusJob implements Callable<Result> {
 			return afpChain;
 		}
 
-		public SimpleResult getResult() {
+		public Result getResult() {
 			return result;
 		}
 
@@ -71,43 +71,52 @@ public class CensusJob implements Callable<Result> {
 			this.afpChain = afpChain;
 		}
 
-		public void setResult(SimpleResult result) {
+		public void setResult(Result result) {
 			this.result = result;
 		}
 	}
 
 	private static final Logger logger = LogManager.getLogger(CensusJob.class.getPackage().getName());
 
-	private AFPChain afpChain;
 	private AlgorithmGiver algorithm;
-
-	private AtomCache cache;
-	private Integer count;
-	private ScopDomain domain;
-
-	private ScopDatabase scop;
-
 	private Significance significance;
 
-	private boolean storeAfpChain;
+	private String name;
+	private Integer count;
+	private boolean isScopDomain;
+	
+	private AtomCache cache;
+	private ScopDatabase scop;
 
-	private ScopDescription superfamily;
+	private boolean calcFractionHelical;
+	private boolean storeAfpChain;
+	private AFPChain afpChain;
 
 	private Long timeTaken;
+
+	public static CensusJob forScopId(AlgorithmGiver algorithm, Significance significance, String name, int count,
+			AtomCache cache, ScopDatabase scop) {
+		CensusJob job = new CensusJob(algorithm, significance);
+		job.setCache(cache);
+		job.setScop(scop);
+		job.setName(name);
+		job.setIsScopDomain(true);
+		return job;
+	}
 
 	/**
 	 * Preferred method for web-based calls.
 	 */
-	public static WebInfo runOn(ScopDomain domain, AtomCache cache, AlgorithmGiver algorithm, Significance sig,
+	public static FullInfo runOn(String name, AlgorithmGiver algorithm, Significance sig, AtomCache cache,
 			ScopDatabase scop) {
-		ScopDescription superfamily = scop.getScopDescriptionBySunid(domain.getSuperfamilyId());
-		CensusJob job = new CensusJob(cache, algorithm, sig, scop);
+		CensusJob job = new CensusJob(algorithm, sig);
+		job.setScop(scop);
+		job.setCache(cache);
 		job.setStoreAfpChain(true);
+		job.setName(name);
 		job.setCount(0);
-		job.setDomain(domain);
-		job.setSuperfamily(superfamily);
 		Result r = job.call();
-		return new WebInfo(job.getAfpChain(), new SimpleResult(r));
+		return new FullInfo(job.getAfpChain(), r);
 	}
 
 	private static boolean sanityCheckPreAlign(Atom[] ca1, Atom[] ca2) {
@@ -116,30 +125,28 @@ public class CensusJob implements Callable<Result> {
 		return true;
 	}
 
-	public CensusJob(AtomCache cache, AlgorithmGiver algorithm, Significance significance) {
-		this(cache, algorithm, significance, ScopFactory.getSCOP());
-	}
-
-	public CensusJob(AtomCache cache, AlgorithmGiver algorithm, Significance significance, ScopDatabase scop) {
-		this.scop = scop;
+	public CensusJob(AlgorithmGiver algorithm, Significance significance) {
 		this.algorithm = algorithm;
-		this.cache = cache;
 		this.significance = significance;
 	}
 
 	@Override
 	public Result call() {
 
-		if (domain == null || superfamily == null || count == null) throw new IllegalStateException(
-				"Must set domain, superfamily, and count first.");
-		String name = domain.getScopId();
+		if (name == null || count == null) throw new IllegalStateException("Must set name and count first.");
 
 		// first, get the atoms
 		Atom[] ca1, ca2;
 		Structure structure;
 		logger.debug("Getting atoms for " + name + " (job #" + count + ")");
 		try {
-			structure = cache.getStructureForDomain(name, scop);
+			if (cache == null) cache = new AtomCache();
+			if (isScopDomain) {
+				if (scop == null) scop = ScopFactory.getSCOP();
+				structure = cache.getStructureForDomain(name, scop);
+			} else {
+				structure = cache.getStructure(name);
+			}
 			// ca1 = cache.getAtoms(name);
 			ca1 = StructureTools.getAtomCAArray(structure);
 			ca2 = StructureTools.cloneCAArray(ca1);
@@ -156,21 +163,21 @@ public class CensusJob implements Callable<Result> {
 			afpChain = findSymmetry(name, ca1, ca2);
 		} catch (Exception e) {
 			logger.error("Failed running CE-Symm on " + name + ": " + e.getMessage(), e);
-			return convertResult(null, null, superfamily, name, null, null, domain, null, null);
+			return convertResult(null, null, null, null, name, null, null);
 		}
 		if (afpChain == null || afpChain.getOptAln() == null) {
 			logger.debug("CE-Symm returned null (job #" + count + ")");
-			return convertResult(null, null, superfamily, name, null, null, domain, null, null);
+			return convertResult(null, null, null, null, name, null, null);
 		}
 
 		// there are two cases in which we know there is no symmetry
 		if (afpChain.getBlockNum() != 2) {
 			logger.debug("CE-Symm returned a result with " + afpChain.getBlockNum() + " block(s) (job #" + count + ")");
-			return convertResult(afpChain, false, superfamily, name, null, null, domain, null, null);
+			return convertResult(afpChain, false, null, null, name, null, null);
 		}
 		if (afpChain.getAlnLength() < 1) {
 			logger.debug("CE-Symm returned an empty alignment (job #" + count + ")");
-			return convertResult(afpChain, false, superfamily, name, null, null, domain, null, null);
+			return convertResult(afpChain, false, null, null, name, null, null);
 		}
 
 		if (significance.isPossiblySignificant(afpChain)) {
@@ -220,18 +227,19 @@ public class CensusJob implements Callable<Result> {
 
 			// now find fraction helical
 			Float fractionHelical = null;
-			// try {
-			// fractionHelical = getFractionHelical(structure);
-			// } catch (Exception e) {
-			// logger.error("Could not assign secondary structure to " + name + " (job #" + count + ")", e);
-			// }
+			if (calcFractionHelical) {
+				try {
+					fractionHelical = getFractionHelical(structure);
+				} catch (Exception e) {
+					logger.error("Could not assign secondary structure to " + name + " (job #" + count + ")", e);
+				}
+			}
 
-			return convertResult(afpChain, isSignificant, superfamily, name, order, protodomain.toString(), domain,
-					angle, fractionHelical);
+			return convertResult(afpChain, isSignificant, order, protodomain.toString(), name, angle, fractionHelical);
 
 		} else { // trying this would take too long
 			logger.debug("Result is not significant (job #" + count + ")");
-			return convertResult(afpChain, false, superfamily, name, null, null, domain, null, null);
+			return convertResult(afpChain, false, null, null, name, null, null);
 		}
 	}
 
@@ -250,12 +258,24 @@ public class CensusJob implements Callable<Result> {
 		afpChain = null;
 	}
 
+	public void setCache(AtomCache cache) {
+		this.cache = cache;
+	}
+
+	public void setCalcFractionHelical(boolean calcFractionHelical) {
+		this.calcFractionHelical = calcFractionHelical;
+	}
+
 	public void setCount(int count) {
 		this.count = count;
 	}
 
-	public void setDomain(ScopDomain domain) {
-		this.domain = domain;
+	public void setIsScopDomain(boolean isScopDomain) {
+		this.isScopDomain = isScopDomain;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public void setScop(ScopDatabase scop) {
@@ -271,41 +291,40 @@ public class CensusJob implements Callable<Result> {
 		this.storeAfpChain = storeAfpChain;
 	}
 
-	public void setSuperfamily(ScopDescription superfamily) {
-		this.superfamily = superfamily;
-	}
-
-	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, ScopDescription superfamily, String scopId,
-			Integer order, String protodomain, ScopDomain domain, Float angle, Float fractionHelical) {
+	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, Integer order, String protodomain,
+			String name, Float angle, Float fractionHelical) {
 
 		if (storeAfpChain) this.afpChain = afpChain;
-
-		final String description = superfamily.getDescription();
 
 		Result r = new Result();
 
 		r.setRank(count);
-		r.setScopId(scopId);
-		r.setClassification(superfamily.getClassificationId());
-		r.setDescription(description);
+		r.setScopId(name);
+		if (isScopDomain) {
+			ScopDomain domain = scop.getDomainByScopID(name);
+			ScopDescription superfamily = scop.getScopDescriptionBySunid(domain.getSuperfamilyId());
+			r.setClassification(superfamily.getClassificationId());
+			r.setSunId(domain.getSunid());
+			final String description = superfamily.getDescription();
+			r.setDescription(description);
+		}
 		r.setProtodomain(protodomain);
-		r.setSunId(domain.getSunid());
 
 		r.setAlignment(new Alignment(afpChain));
 		r.setIsSignificant(isSymmetric);
-		// r.setFractionHelical(fractionHelical);
+		r.setFractionHelical(fractionHelical);
 		try {
 			if (afpChain.getAlnLength() > 0) r.setAxis(new Axis(new RotationAxis(afpChain)));
 
 		} catch (RuntimeException e) {
 
-			logger.error("Could not get rotation axis for " + scopId + "(job #" + count + ")", e);
+			logger.error("Could not get rotation axis for " + name + "(job #" + count + ")", e);
 
 		} catch (Exception e) {
 
 			e.printStackTrace();
 
-			logger.error("Alignment for " + scopId + " is empty (job #" + count + ")", e);
+			logger.error("Alignment for " + name + " is empty (job #" + count + ")", e);
 
 			if (angle != null) { // if the axis can't be found, at least we do have the angle
 				Axis axis = new Axis();

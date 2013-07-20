@@ -53,6 +53,9 @@ public class CensusJobTest extends TestCase{
 
 	private final double zScore = 6.0;
 	
+	private AlgorithmGiver giver;
+	private Significance sig;
+	
 	@Before
 	public void setUp() throws Exception {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
@@ -66,7 +69,7 @@ public class CensusJobTest extends TestCase{
 		afpChain.setBlockNum(2);
 		afpChain.setOptAln(new int[1][][]);
 		when(ceSymm.align(any(Atom[].class), any(Atom[].class))).thenReturn(afpChain);
-		Significance sig = new Significance() {
+		sig = new Significance() {
 			@Override
 			public boolean isPossiblySignificant(AFPChain afpChain) {
 				return false;
@@ -80,26 +83,42 @@ public class CensusJobTest extends TestCase{
 				return false;
 			}
 		};
-		AlgorithmGiver giver = new AlgorithmGiver() {
+		giver = new AlgorithmGiver() {
 			@Override
 			public StructureAlignment getAlgorithm() {
 				return ceSymm;
 			}
 		};
-		job = new CensusJob(ResourceList.get().getCache(), giver, sig);
 	}
 	
-	private CensusJob job;
+	@Test
+	public void testChain() {
+		CensusJob job = new CensusJob(giver, sig);
+		job.setCount(0);
+		job.setName("4JNO.A");
+		Result result = job.call();
+		assertEquals(zScore, result.getAlignment().getzScore().doubleValue(), 0);
+	}
 
+	@Test
+	public void testWholeProtein() {
+		CensusJob job = new CensusJob(giver, sig);
+		job.setCount(0);
+		job.setName("4JNO");
+		Result result = job.call();
+		assertEquals(zScore, result.getAlignment().getzScore().doubleValue(), 0);
+	}
 	
 	@Test
 	public void test() {
-		 ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
+		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 		for (int i = 0; i < domains.length; i++) {
 			final ScopDomain domain = scop.getDomainByScopID(domains[i]);
+			CensusJob job = new CensusJob(giver, sig);
+			job.setCache(ResourceList.get().getCache());;
 			job.setCount(i);
-			job.setDomain(domain);
-			job.setSuperfamily(scop.getScopDescriptionBySunid(domain.getSuperfamilyId()));
+			job.setName(domain.getScopId());
+			job.setIsScopDomain(true);
 			Result result = job.call();
 			assertNotNull(domains[i]);
 			assertNotNull(result);

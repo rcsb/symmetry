@@ -195,10 +195,7 @@ public class Census {
 				}
 				if (knownResults.contains(domain.getScopId())) continue;
 				logger.debug("Submitting new job for " + domain.getScopId() + " (job #" + count + ")");
-				CensusJob calc = new CensusJob(cache, getAlgorithm(), significance);
-				calc.setDomain(domain);
-				calc.setSuperfamily(scop.getScopDescriptionBySunid(domain.getSuperfamilyId()));
-				calc.setCount(count);
+				CensusJob calc = CensusJob.forScopId(getAlgorithm(), significance, domain.getScopId(), count, cache, scop);
 				initializeJob(calc);
 				submittedJobs.add(calc);
 				Future<Result> result = ConcurrencyTools.submit(calc);

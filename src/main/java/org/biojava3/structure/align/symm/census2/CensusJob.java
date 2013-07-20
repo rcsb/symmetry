@@ -100,6 +100,7 @@ public class CensusJob implements Callable<Result> {
 		job.setCache(cache);
 		job.setScop(scop);
 		job.setName(name);
+		job.setCount(count);
 		job.setIsScopDomain(true);
 		return job;
 	}

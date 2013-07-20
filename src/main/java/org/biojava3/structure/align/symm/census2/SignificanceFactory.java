@@ -138,7 +138,7 @@ public class SignificanceFactory {
 	}
 
 	public static Significance forCeSymmTm() {
-		return rotationallySymmetricSmart();
+		return generallySymmetric();
 	}
 
 	public static Significance forPublishedSymD10() {

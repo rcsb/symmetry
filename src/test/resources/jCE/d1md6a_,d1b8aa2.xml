@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
-<AFPChain name1="d1md6a_" name2="d1b8aa2" method="jCE" version="1.1" alnLength="170" blockNum="1" gapLen="98" optLength="72" totalLenIni="154" alignScore="388.67" chainRmsd="7.19" identity="0.0972" normAlignScore="0.00" probability="1.64e+00" similarity="0.2639" similarity1="47" similarity2="21" totalRmsdIni="8.82" totalRmsdOpt="7.19" ca1Length="154" ca2Length="335" afpNum="7" alignScoreUpdate="0.00" time="1132">
+<AFPChain name1="d1md6a_" name2="d1b8aa2" method="jCE" version="1.1" alnLength="170" blockNum="1" gapLen="98" optLength="72" totalLenIni="154" alignScore="388.67" chainRmsd="7.19" identity="0.0412" normAlignScore="0.00" probability="1.64e+00" similarity="0.1118" similarity1="47" similarity2="21" totalRmsdIni="8.82" totalRmsdOpt="7.19" ca1Length="154" ca2Length="335" afpNum="7" alignScoreUpdate="0.00" time="1080">
   <block blockNr="0" blockSize="0" blockScore="0.00" blockRmsd="7.19" blockGap="0">
     <eqr eqrNr="0" pdbres1="46" chain1="A" pdbres2="247" chain2="A" />
     <eqr eqrNr="1" pdbres1="47" chain1="A" pdbres2="248" chain2="A" />

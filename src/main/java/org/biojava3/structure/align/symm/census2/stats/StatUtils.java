@@ -33,7 +33,7 @@ import java.util.Map;
 public class StatUtils {
 
 	public static final String NEWLINE;
-	private static final int MAX_FRACTION_DIGITS = 2;
+	private static final int MAX_FRACTION_DIGITS = 3;
 
 	private static NumberFormat nf = new DecimalFormat();
 

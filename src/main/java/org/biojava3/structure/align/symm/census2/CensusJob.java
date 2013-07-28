@@ -26,6 +26,7 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
@@ -83,7 +84,6 @@ public class CensusJob implements Callable<Result> {
 
 	private String name;
 	private Integer count;
-	private boolean isScopDomain;
 	
 	private AtomCache cache;
 	private ScopDatabase scop;
@@ -101,7 +101,6 @@ public class CensusJob implements Callable<Result> {
 		job.setScop(scop);
 		job.setName(name);
 		job.setCount(count);
-		job.setIsScopDomain(true);
 		return job;
 	}
 
@@ -142,7 +141,8 @@ public class CensusJob implements Callable<Result> {
 		logger.debug("Getting atoms for " + name + " (job #" + count + ")");
 		try {
 			if (cache == null) cache = new AtomCache();
-			if (isScopDomain) {
+			StructureName theName = new StructureName(name);
+			if (theName.isScopName()) {
 				if (scop == null) scop = ScopFactory.getSCOP();
 				structure = cache.getStructureForDomain(name, scop);
 			} else {
@@ -271,10 +271,6 @@ public class CensusJob implements Callable<Result> {
 		this.count = count;
 	}
 
-	public void setIsScopDomain(boolean isScopDomain) {
-		this.isScopDomain = isScopDomain;
-	}
-
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -301,7 +297,8 @@ public class CensusJob implements Callable<Result> {
 
 		r.setRank(count);
 		r.setScopId(name);
-		if (isScopDomain) {
+		StructureName theName = new StructureName(name);
+		if (theName.isScopName()) {
 			ScopDomain domain = scop.getDomainByScopID(name);
 			ScopDescription superfamily = scop.getScopDescriptionBySunid(domain.getSuperfamilyId());
 			r.setClassification(superfamily.getClassificationId());

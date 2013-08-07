@@ -8,8 +8,10 @@ public class QuatSymmetryParameters {
 	private double sequencePseudoSymmetryThreshold = 0.95;
 	private double alignmentFractionThreshold = 0.9;
 	private double rmsdThreshold = 7.0;
-	private double angleThreshold = 10.0;
-	private int maximumLocalCombinations = 100000;
+	private double angleThreshold = 10.0; // max angle deviation for C2 solver
+	private double minimumHelixRise = 1.0;
+	private double minimumHelixAngle = 5.0; // min helix angle to differentiate it from a translational repeat
+	private int maximumLocalCombinations = 50000; // max number of combinations to try for local symmetry calculation
 	private boolean localSymmetry = true;
 	private boolean verbose = false;
 	private static final String n = System.getProperty("line.separator");
@@ -75,6 +77,18 @@ public class QuatSymmetryParameters {
 		this.angleThreshold = angleThreshold;
 	}
 	
+	public double getMinimumHelixRise() {
+		return minimumHelixRise;
+	}
+	public void setMinimumHelixRise(double minimumHelixRise) {
+		this.minimumHelixRise = minimumHelixRise;
+	}
+	public double getMinimumHelixAngle() {
+		return minimumHelixAngle;
+	}
+	public void setMinimumHelixAngle(double minimumHelixAngle) {
+		this.minimumHelixAngle = minimumHelixAngle;
+	}
 	public double getSequencePseudoSymmetryThreshold() {
 		return sequencePseudoSymmetryThreshold;
 	}

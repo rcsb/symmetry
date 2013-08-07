@@ -165,9 +165,6 @@ public class SequenceAlignmentCluster implements Cloneable {
 		}
 			
     	alignmentLengthFraction = (double)afp.getOptLength()/Math.max(referenceAtoms1.length, referenceAtoms2.length);
-    	if (parameters.isVerbose()) {
-    			System.out.println("SequenceAlignmentCluster: alignmentLengthFraction: " + alignmentLengthFraction);
-    	}
     	alignment.setAlignmentLengthFraction(alignmentLengthFraction);
     	alignment.setRmsd(afp.getChainRmsd());
     	alignment.setSequenceIdentity(afp.getIdentity());
@@ -243,12 +240,6 @@ public class SequenceAlignmentCluster implements Cloneable {
 			return 0;
 		}
 		int len =  afp.getOptLength();
-		if (parameters.isVerbose()) {
-			System.out.println("SequenceAlignmentCluster: Smith-Waterman alignment: seq. identity:  " + afp.getIdentity());
-		}
-//		double identity = afp.getIdentity();
-//		setMinSequenceIdentity(Math.min(getMinSequenceIdentity(),  identity));
-//		setMaxSequenceIdentity(Math.max(getMaxSequenceIdentity(),  identity));
 
 		List<Integer> delta = new ArrayList<Integer>();
 		Set<Integer> unique = new HashSet<Integer>();

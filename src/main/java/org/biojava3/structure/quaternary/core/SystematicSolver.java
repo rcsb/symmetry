@@ -41,6 +41,7 @@ public class SystematicSolver implements QuatSymmetrySolver {
     public RotationGroup getSymmetryOperations() {
         if (rotations.getOrder() == 0) {
             solve();
+            rotations.complete();
         }
         return rotations;
     }

@@ -34,11 +34,12 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
-import org.biojava3.structure.quaternary.core.AxisTransformation;
+import org.biojava3.structure.quaternary.core.RotationAxisAligner;
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
+import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 
 public class Demo3ZDY {
 
@@ -173,10 +174,10 @@ public class Demo3ZDY {
 					System.out.println("Symmetry RMSD       : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
 				}
 
-				AxisTransformation axisTransformation = new AxisTransformation(globalSymmetry);
+				RotationAxisAligner axisTransformation = new RotationAxisAligner(globalSymmetry);
 
 				// use factory method to get point group specific instance of script generator
-				JmolSymmetryScriptGenerator scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation, "g");
+				JmolSymmetryScriptGenerator scriptGenerator = JmolSymmetryScriptGeneratorPointGroup.getInstance(axisTransformation, "g");
 
 				script += scriptGenerator.getOrientationWithZoom(0);
 				script += scriptGenerator.drawPolyhedron();
@@ -196,7 +197,7 @@ public class Demo3ZDY {
 		for (List<QuatSymmetryResults> localSymmetries: detector.getLocalSymmetries()) {
 			System.out.println("result nr XXX ");
 			for ( QuatSymmetryResults localSymmetry : localSymmetries) {
-				AxisTransformation at = new AxisTransformation(localSymmetry);
+				RotationAxisAligner at = new RotationAxisAligner(localSymmetry);
 				System.out.println();
 				//System.out.println("Results for " + Math.round(parameters.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
 				System.out.println("Stoichiometry       : " + localSymmetry.getSubunits().getStoichiometry());
@@ -204,7 +205,7 @@ public class Demo3ZDY {
 				System.out.println("Point group         : " + localSymmetry.getRotationGroup().getPointGroup());				
 				System.out.println("Symmetry RMSD       : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
 				System.out.println();
-				JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGenerator.getInstance(at, "l"+count);
+				JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGeneratorPointGroup.getInstance(at, "l"+count);
 				if (count == 0) {
 					script +=  gen.getOrientationWithZoom(0);
 

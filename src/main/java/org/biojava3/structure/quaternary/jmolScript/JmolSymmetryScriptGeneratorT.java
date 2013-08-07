@@ -3,7 +3,7 @@
  */
 package org.biojava3.structure.quaternary.jmolScript;
 
-import org.biojava3.structure.quaternary.core.AxisTransformation;
+import org.biojava3.structure.quaternary.core.RotationAxisAligner;
 import org.biojava3.structure.quaternary.geometry.Tetrahedron;
 
 
@@ -11,9 +11,9 @@ import org.biojava3.structure.quaternary.geometry.Tetrahedron;
  * @author Peter
  *
  */
-public class JmolSymmetryScriptGeneratorT extends JmolSymmetryScriptGenerator {
+public class JmolSymmetryScriptGeneratorT extends JmolSymmetryScriptGeneratorPointGroup {
 
-	public JmolSymmetryScriptGeneratorT(AxisTransformation axisTransformation, String name) {
+	public JmolSymmetryScriptGeneratorT(RotationAxisAligner axisTransformation, String name) {
 		super(axisTransformation, name);
 		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getXYRadius());
 		Tetrahedron t = new Tetrahedron();

@@ -16,7 +16,7 @@ import javax.vecmath.Vector3d;
 import org.biojava3.structure.quaternary.geometry.MomentsOfInertia;
 import org.biojava3.structure.quaternary.geometry.SuperPosition;
 
-public class AxisTransformation {
+public class RotationAxisAligner extends AxisAligner{
 	private static final Vector3d X_AXIS = new Vector3d(1,0,0);
 	private static final Vector3d Y_AXIS = new Vector3d(0,1,0);
 	private static final Vector3d Z_AXIS = new Vector3d(0,0,1);
@@ -37,7 +37,7 @@ public class AxisTransformation {
 
 	boolean modified = true;
 
-	public AxisTransformation(QuatSymmetryResults results) {
+	public RotationAxisAligner(QuatSymmetryResults results) {
 		this.subunits = results.getSubunits();
 		this.rotationGroup = results.getRotationGroup();
 		if (subunits == null) {
@@ -51,6 +51,15 @@ public class AxisTransformation {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.biojava3.structure.quaternary.core.AxisAligner#getTransformation()
+	 */
+	@Override
+	public String getSymmetry() {
+		run();   
+		return rotationGroup.getPointGroup();
+	}
+	
 	public Matrix4d getTransformation() {
 		run();   
 		return transformationMatrix;
@@ -179,7 +188,9 @@ public class AxisTransformation {
 			}
 			calcReverseTransformation();
 			calcBoundaries();
-			calcAlignedOrbits();
+			if (! rotationGroup.getPointGroup().equals("Helical")) {
+				calcAlignedOrbits();
+			}
 			modified = false;
 		}
 	}
@@ -634,7 +645,10 @@ public class AxisTransformation {
 			referenceVector = getReferenceAxisOctahedral();
 		} else if (rotationGroup.getPointGroup().equals("I")) {
 			referenceVector = getReferenceAxisIcosahedral();		
-		} 
+		} else if (rotationGroup.getPointGroup().equals("Helical")) {
+			// TODO what should the reference vector be??
+			referenceVector = getReferenceAxisCylic();
+		}
 		
 		if (referenceVector == null) {
 			System.err.println("Warning: no reference vector found. Using y-axis.");

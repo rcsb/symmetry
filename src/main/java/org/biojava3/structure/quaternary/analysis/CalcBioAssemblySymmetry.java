@@ -29,11 +29,10 @@ import java.util.List;
 
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.ResourceManager;
-
-import org.biojava3.structure.quaternary.core.AxisTransformation;
+import org.biojava3.structure.quaternary.core.AxisAligner;
+import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
-import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.RotationGroup;
 import org.biojava3.structure.quaternary.core.Subunits;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
@@ -42,7 +41,6 @@ public class CalcBioAssemblySymmetry {
 	private Structure bioAssembly;
 	private QuatSymmetryParameters parameters;
 	private QuatSymmetryResults results;
-	private AxisTransformation axisTransformation;
 
 	private JmolSymmetryScriptGenerator scriptGenerator;
 	
@@ -65,70 +63,78 @@ public class CalcBioAssemblySymmetry {
 		this.parameters = parameters;
 	}
 	
-	
-
 	public QuatSymmetryParameters getParameters(){
 		return parameters;
 	}
 
 	public QuatSymmetryDetector orient(){
 		QuatSymmetryDetector detector = new QuatSymmetryDetector(bioAssembly, parameters);
+		String defaultColoring = "";
 
 		if (detector.hasProteinSubunits()) {	
 			for (QuatSymmetryResults globalSymmetry: detector.getGlobalSymmetry()) {
 
-				if (parameters.isVerbose()) {
-					System.out.println();
-					System.out.println();
-					System.out.println("Global symmetry:");
-					System.out.println("Stoichiometry         : " + globalSymmetry.getSubunits().getStoichiometry());
-					System.out.println("Pseudostoichiometry   : " + globalSymmetry.getSubunits().isPseudoStoichiometric());
-					System.out.println("Pseudosymmetry        : " + globalSymmetry.getSubunits().isPseudoSymmetric());
-					System.out.println("Min sequence identity : " + Math.round(globalSymmetry.getSubunits().getMinSequenceIdentity()*100));
-					System.out.println("Max sequence identity : " + Math.round(globalSymmetry.getSubunits().getMaxSequenceIdentity()*100));
-					System.out.println("Point group           : " + globalSymmetry.getRotationGroup().getPointGroup());				
-					System.out.println("Symmetry RMSD         : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
-					System.out.println("Prefered result       : " + globalSymmetry.isPreferredResult());
-				}
-
+				String postFix = "g";
+				AxisAligner aligner = AxisAligner.getInstance(globalSymmetry);
+				JmolSymmetryScriptGenerator generator = JmolSymmetryScriptGenerator.getInstance(aligner, postFix);
+				// save the preferred result
 				if (globalSymmetry.isPreferredResult()) {
 					this.results = globalSymmetry;
-					this.axisTransformation = new AxisTransformation(globalSymmetry);
-
-					// use factory method to get point group specific instance of script generator
-					this.scriptGenerator = JmolSymmetryScriptGenerator.getInstance(this.axisTransformation, "g");
+					this.scriptGenerator = generator;
 				}
-			}
-			
-			for (List<QuatSymmetryResults> localSymmetries: detector.getLocalSymmetries()) {	
-
+					
+				// get default color by symmetry for all subunits (for asymmetric cases only)
+				if (globalSymmetry.getSymmetry().equals("C1") && ! globalSymmetry.getSubunits().isPseudoStoichiometric()) {
+					defaultColoring = generator.colorBySymmetry();
+				}
+				
 				if (parameters.isVerbose()) {
-					System.out.println();
-					System.out.println("Local symmetry: ");
-					int count = 0;
+					System.out.println("Global symmetry: ");
+					System.out.println(globalSymmetry);
+					
+//					System.out.println();
+//					System.out.println(generator.getDefaultOrientation());
+//					System.out.println(generator.getZoom());
+//					System.out.println(generator.drawPolyhedron());
+//					System.out.println(generator.drawAxes());
+//					System.out.println(generator.colorBySubunit());
+//					System.out.println(generator.colorBySequenceCluster());
+//					System.out.println(generator.colorBySymmetry());
+				}
+				
+			}
 
-					for (QuatSymmetryResults localSymmetry: localSymmetries) {
-						AxisTransformation at = new AxisTransformation(localSymmetry);
-						System.out.println("Stoichiometry         : " + localSymmetry.getSubunits().getStoichiometry());
-						System.out.println("Pseudostoichiometry   : " + localSymmetry.getSubunits().isPseudoStoichiometric());
-						System.out.println("Pseudosymmetry        : " + localSymmetry.getSubunits().isPseudoSymmetric());
-						System.out.println("Min sequence identity : " + Math.round(localSymmetry.getSubunits().getMinSequenceIdentity()*100));
-						System.out.println("Max sequence identity : " + Math.round(localSymmetry.getSubunits().getMaxSequenceIdentity()*100));
-						System.out.println("Point group           : " + localSymmetry.getRotationGroup().getPointGroup());				
-						System.out.println("Symmetry RMSD         : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
-						System.out.println("Prefered result       : " + localSymmetry.isPreferredResult());
-						System.out.println();
-						JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGenerator.getInstance(at, "l"+count);
-						if (count == 0) {
-							System.out.println(gen.getDefaultOrientation());
-						}
-						System.out.println(gen.drawPolyhedron());
-						System.out.println(gen.drawAxes());
-						System.out.println(gen.colorBySymmetry());
+			for (List<QuatSymmetryResults> localSymmetries: detector.getLocalSymmetries()) {	
+				int count = 0;
 
-						count++;
+				for (QuatSymmetryResults localSymmetry: localSymmetries) {
+					// create a unique postFix for each local symmetry to be used in the Jmol script
+					// to avoid naming conflicts when more than one symmetry is displayed at one time.
+					String postFix = "l" + count;
+					AxisAligner aligner = AxisAligner.getInstance(localSymmetry);
+					JmolSymmetryScriptGenerator generator = JmolSymmetryScriptGenerator.getInstance(aligner, postFix);			
+					// sets color by symmetry for all subunits. This is
+					// required for local symmetry, to ensure all subunits are colored.
+					generator.setDefaultColoring(defaultColoring);
+					// save preferred result
+					if (localSymmetry.isPreferredResult()) {
+						this.results = localSymmetry;
+						this.scriptGenerator = generator;
 					}
-					System.out.println("draw poly* on; draw axes* on;");
+
+					if (parameters.isVerbose()) {
+						System.out.println("Local symmetry: ");
+						System.out.println(localSymmetry);
+						
+//						System.out.println();
+//						System.out.println(generator.getDefaultOrientation());
+//						System.out.println(generator.getZoom());
+//						System.out.println(generator.drawPolyhedron());
+//						System.out.println(generator.drawAxes());
+//						System.out.println(generator.colorBySubunit());
+//						System.out.println(generator.colorBySequenceCluster());
+//						System.out.println(generator.colorBySymmetry());
+					}
 				}
 			}
 		} else {
@@ -136,7 +142,6 @@ public class CalcBioAssemblySymmetry {
 		}
 		return detector;
 	}
-	
 
 	public RotationGroup getRotationGroup() {
 		return results.getRotationGroup();
@@ -146,8 +151,8 @@ public class CalcBioAssemblySymmetry {
 		return results.getSubunits();
 	}
 	
-	public AxisTransformation getAxisTransformation() {
-		return axisTransformation;
+	public String getSymmetry() {
+		return results.getSymmetry();
 	}
 
 	public JmolSymmetryScriptGenerator getScriptGenerator() {

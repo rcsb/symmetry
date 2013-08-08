@@ -6,10 +6,10 @@
 		</Console>
 	</appenders>
 	<loggers>
-		<root level="trace">
+		<root level="debug">
 			<appender-ref ref="Console"/>
 		</root>
-		<logger name="org.structnetalign" level="trace">
+		<logger name="org.biojava3" level="debug">
 			<appender-ref ref="Console"/>
 		</logger>
 	</loggers>

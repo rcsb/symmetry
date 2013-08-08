@@ -54,7 +54,7 @@ import org.biojava3.structure.utils.FileUtils;
 /**
  * Runs the symmetry census on every domain. The work is done in order of superfamily (since we're using multiple cores,
  * this may not be the order in which they are output).
- * 
+ *
  * @author dmyerstu
  */
 public class Census {
@@ -73,14 +73,14 @@ public class Census {
 				@Override
 				public StructureAlignment getAlgorithm() {
 					CeSymm ceSymm = new CeSymm();
-//					ConfigStrucAligParams params = ceSymm.getParameters();
-//					if (params instanceof CeParameters) {
-//						CeParameters ceparams = (CeParameters) params;
-//						ceparams.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
-//						ceparams.setSeqWeight(2);
-//						ceparams.setScoringStrategy(CeParameters.SIDE_CHAIN_SCORING);
-//						ceSymm.setParameters(ceparams);
-//					}
+					//					ConfigStrucAligParams params = ceSymm.getParameters();
+					//					if (params instanceof CeParameters) {
+					//						CeParameters ceparams = (CeParameters) params;
+					//						ceparams.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
+					//						ceparams.setSeqWeight(2);
+					//						ceparams.setScoringStrategy(CeParameters.SIDE_CHAIN_SCORING);
+					//						ceSymm.setParameters(ceparams);
+					//					}
 					return ceSymm;
 				}
 			};
@@ -88,7 +88,7 @@ public class Census {
 
 		public abstract StructureAlignment getAlgorithm();
 	}
-	
+
 	private AtomCache cache;
 
 	private boolean doPrefetch = false;
@@ -103,9 +103,10 @@ public class Census {
 
 	private Map<String, Integer> total = new TreeMap<String, Integer>();
 
+	private AlgorithmGiver algorithm = null;
+
 	public static void buildDefault(File censusFile) {
 		try {
-			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			Census census = new Census(maxThreads);
 			census.setOutputWriter(censusFile);
@@ -126,6 +127,7 @@ public class Census {
 			System.err.println("Usage: " + Census.class.getSimpleName() + " output-census-file");
 			return;
 		}
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 		final File censusFile = new File(args[0]);
 		buildDefault(censusFile);
 	}
@@ -160,7 +162,7 @@ public class Census {
 	}
 
 	public final void run() {
-		
+
 		try {
 
 			if (file == null) throw new IllegalStateException("Must set file first");
@@ -181,7 +183,7 @@ public class Census {
 				domains = getDomains();
 			}
 			logger.info("There are " + domains.size() + " domains");
-			
+
 			List<CensusJob> submittedJobs = new ArrayList<CensusJob>(domains.size()); // to get time taken
 
 			// submit jobs
@@ -247,7 +249,7 @@ public class Census {
 				}
 			}
 			avgTimeTaken = (double) timeTaken / (double) nSuccess;
-			
+
 		} finally {
 			ConcurrencyTools.shutdown();
 		}
@@ -258,11 +260,10 @@ public class Census {
 	 * @param calc
 	 */
 	protected void initializeJob(CensusJob job) {
-		job.setDoRefine(doRefine);
 	}
 
 	private double avgTimeTaken;
-	
+
 	public double getAvgTimeTaken() {
 		return avgTimeTaken;
 	}
@@ -277,16 +278,6 @@ public class Census {
 
 	public void setPrintFrequency(int printFrequency) {
 		this.printFrequency = printFrequency;
-	}
-
-	private boolean doRefine;
-	
-	public boolean doRefine() {
-		return doRefine;
-	}
-
-	public void setDoRefine(boolean doRefine) {
-		this.doRefine = doRefine;
 	}
 
 	@Override
@@ -307,7 +298,7 @@ public class Census {
 
 	/**
 	 * Returns the names of the domains that we already analyzed.
-	 * 
+	 *
 	 * @param census
 	 * @return
 	 */
@@ -343,8 +334,14 @@ public class Census {
 		return filtered;
 	}
 
-	protected AlgorithmGiver getAlgorithm() {
-		return AlgorithmGiver.getDefault();
+	public AlgorithmGiver getAlgorithm() {
+		if( this.algorithm == null) {
+			this.algorithm = AlgorithmGiver.getDefault();
+		}
+		return this.algorithm;
+	}
+	public void setAlgorithm(AlgorithmGiver alg) {
+		this.algorithm = alg;
 	}
 
 	protected List<ScopDomain> getDomains() {

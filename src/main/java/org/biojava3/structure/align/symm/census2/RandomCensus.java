@@ -49,7 +49,6 @@ public class RandomCensus extends Census {
 
 	public static void buildDefault(File censusFile, int domainsPerSf, boolean shuffle) {
 		try {
-			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			RandomCensus census = new RandomCensus(maxThreads, domainsPerSf, shuffle);
 			census.setOutputWriter(censusFile);
@@ -66,6 +65,7 @@ public class RandomCensus extends Census {
 			System.err.println("Usage: " + RandomCensus.class.getSimpleName() + " output-census-file n-domains-per-superfamily [\"shuffle\"]");
 			return;
 		}
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 		final File censusFile = new File(args[0]);
 		final int domainsPerSf = Integer.parseInt(args[1]);
 		boolean shuffle = false;

@@ -25,9 +25,8 @@ package org.biojava3.structure.align.symm.census2.stats;
 import org.biojava3.structure.align.symm.census2.Result;
 
 /**
- * A unit by which to report statistics.
+ * A unit by which to report statistics. Particularly: family, superfamily, or fold.
  * @author dmyerstu
- *
  */
 public abstract class Grouping {
 

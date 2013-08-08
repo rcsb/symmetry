@@ -86,7 +86,7 @@ public class CensusRescorer {
 	 */
 	public static void main(String[] args) throws IOException {
 		if (args.length > 4 || args.length < 2) {
-			System.out.println("Usage: CensusRescorer intput-file output-file [significance-method] [remove-insignificant (if \"true\")]");
+			System.err.println("Usage: CensusRescorer intput-file output-file [significance-method] [remove-insignificant (if \"true\")]");
 			return;
 		}
 		File input = new File(args[0]);

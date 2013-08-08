@@ -32,6 +32,10 @@ import java.io.StringWriter;
 
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
 
+/**
+ * Converts {@link Results} XML serializations to HTML files.
+ * @author dmyerstu
+ */
 public class ResultConverter {
 
 	public static String NEWLINE = System.getProperty("line.separator");

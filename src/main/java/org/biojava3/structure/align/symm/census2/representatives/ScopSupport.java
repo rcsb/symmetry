@@ -40,6 +40,8 @@ import org.biojava.bio.structure.scop.ScopNode;
  */
 public class ScopSupport {
 
+	public static final int[] TRUE_SCOP_CLASSES = new int[] { 46456, 48724, 51349, 53931, 56572, 56835 };
+	
 	private static ScopSupport instance;
 
 	private static final Logger logger = LogManager.getLogger(ScopSupport.class.getPackage().getName());

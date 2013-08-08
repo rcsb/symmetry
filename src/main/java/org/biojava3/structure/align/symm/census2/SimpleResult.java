@@ -25,8 +25,36 @@
 package org.biojava3.structure.align.symm.census2;
 
 public class SimpleResult {
-	
-	
+
+	public SimpleResult(Result r) {
+		classification = r.getClassification();
+		description = r.getDescription();
+		isSignificant = r.getIsSignificant();
+		order = r.getOrder();
+		protodomain = r.getProtodomain();
+		rank = r.getRank();
+		scopId = r.getScopId();
+		sunId = r.getSunId();
+		if (r.getAxis() != null) {
+			theta = r.getAxis().getTheta();
+		}
+		if (r.getAlignment() != null) {
+			tmScore = r.getAlignment().getTmScore();
+			zScore = r.getAlignment().getzScore();
+			alignScore = r.getAlignment().getAlignScore();
+			gapLength = r.getAlignment().getGapLength();
+			identity = r.getAlignment().getIdentity();
+			similarity = r.getAlignment().getSimilarity();
+			alignLength = r.getAlignment().getAlignLength();
+			rmsd = r.getAlignment().getRmsd();
+			length1 = gapLength + alignLength;
+		}
+	}
+
+	public SimpleResult() {
+		super();
+	}
+
 	private String classification;
 	private String description;
 	private Boolean isSignificant;
@@ -45,7 +73,7 @@ public class SimpleResult {
 	private Integer alignLength;
 	private Float rmsd;
 	private Integer length1;
-	
+
 	public String getClassification() {
 		return classification;
 	}
@@ -154,5 +182,5 @@ public class SimpleResult {
 	public void setLength1(Integer length1) {
 		this.length1 = length1;
 	}
-	
+
 }

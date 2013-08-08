@@ -38,7 +38,7 @@ import org.biojava.bio.structure.scop.ScopNode;
 import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 
 /**
- * A census that takes a list of sun Ids
+ * A census that takes a list of sun Ids.
  * @author dmyerstu
  */
 public class ScopDescriptionCensus extends Census {
@@ -49,7 +49,6 @@ public class ScopDescriptionCensus extends Census {
 
 	public static void buildDefault(File censusFile, int[] sunIds) {
 		try {
-			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			ScopDescriptionCensus census = new ScopDescriptionCensus(maxThreads, sunIds);
 			census.setOutputWriter(censusFile);
@@ -66,6 +65,7 @@ public class ScopDescriptionCensus extends Census {
 			System.err.println("Usage: " + ScopDescriptionCensus.class.getSimpleName() + " output-census-file sun-id-1 [sun-id-2 sun-id-3 ...]");
 			return;
 		}
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 		final File censusFile = new File(args[0]);
 		int[] sunIds = new int[args.length - 1];
 		StringBuilder sb = new StringBuilder();

@@ -37,6 +37,10 @@ import org.biojava3.changeux.IdentifyAllSymmetries;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.utils.SymmetryTools;
 
+/**
+ * @deprecated Replaced by {@link CensusJob}
+ */
+@Deprecated
 public class ScopSymmetryCalculation implements Callable<CensusResult>{
 
 	ScopDomain domain;

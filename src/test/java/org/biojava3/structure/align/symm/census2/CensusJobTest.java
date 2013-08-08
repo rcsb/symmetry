@@ -27,11 +27,11 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import junit.framework.TestCase;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
@@ -47,7 +47,7 @@ import org.junit.Test;
  * A unit test for {@link CensusJob}.
  * @author dmyerstu
  */
-public class CensusJobTest {
+public class CensusJobTest extends TestCase{
 
 	private String[] domains = new String[] { "d2c35e1" };
 
@@ -57,7 +57,7 @@ public class CensusJobTest {
 	public void setUp() throws Exception {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
 		
-		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);		
+		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 		ScopFactory.setScopDatabase(scop);
 		
 		final CeSymm ceSymm = mock(CeSymm.class);
@@ -94,13 +94,16 @@ public class CensusJobTest {
 	
 	@Test
 	public void test() {
-		 ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
+		 ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 		for (int i = 0; i < domains.length; i++) {
 			final ScopDomain domain = scop.getDomainByScopID(domains[i]);
 			job.setCount(i);
 			job.setDomain(domain);
 			job.setSuperfamily(scop.getScopDescriptionBySunid(domain.getSuperfamilyId()));
 			Result result = job.call();
+			assertNotNull(domains[i]);
+			assertNotNull(result);
+			assertNotNull(result.getScopId());
 			assertEquals(domains[i], result.getScopId());
 			assertEquals(zScore, result.getAlignment().getzScore().doubleValue(), 0);
 		}

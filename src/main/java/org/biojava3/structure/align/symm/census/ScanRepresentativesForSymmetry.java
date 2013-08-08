@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.Future;
 
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
 import org.biojava.bio.structure.domain.DomainProvider;
@@ -20,9 +19,16 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.scop.ScopInstallation;
 import org.biojava3.core.util.ConcurrencyTools;
+import org.biojava3.structure.align.symm.census2.AstralScopDescriptionCensus;
+import org.biojava3.structure.align.symm.census2.PdbClusteringScopDescriptionCensus;
+import org.biojava3.structure.align.symm.census2.ScopDescriptionCensus;
 import org.biojava3.structure.utils.FileUtils;
 import org.rcsb.fatcat.server.PdbChainKey;
 
+/**
+ * @deprecated See {@link ScopDescriptionCensus}, {@link PdbClusteringScopDescriptionCensus}, or {@link AstralScopDescriptionCensus} instead
+ */
+@Deprecated
 public class ScanRepresentativesForSymmetry {
 
 	public static String newline = System.getProperty("line.separator");

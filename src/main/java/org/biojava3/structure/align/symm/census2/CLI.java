@@ -83,10 +83,7 @@ public class CLI {
 				return;
 			}
 
-			ScopDatabase scop = ScopFactory.getSCOP();
-			if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
-				ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
-			}
+			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 
 			final String pdbDir = cmd.getOptionValue("pdb");
 			final String censusFile = cmd.getOptionValue("file");

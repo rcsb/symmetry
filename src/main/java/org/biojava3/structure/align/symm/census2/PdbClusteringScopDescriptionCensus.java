@@ -35,6 +35,8 @@ import org.biojava.bio.structure.align.client.JFatCatClient;
 import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDomain;
+import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 
 /**
  * A census that takes a list of sun Ids and a sequence clustering.
@@ -49,13 +51,13 @@ public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 
 	private int identityCutoff;
 
-	public static void buildDefault(String pdbDir, File censusFile, int identityCutoff, int[] sunIds) {
+	public static void buildDefault(File censusFile, int identityCutoff, int[] sunIds) {
 		try {
-			Census.setBerkeleyScop(pdbDir);
+			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			PdbClusteringScopDescriptionCensus census = new PdbClusteringScopDescriptionCensus(maxThreads, identityCutoff, sunIds);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache(pdbDir, false));
+			census.setCache(new AtomCache());
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -71,14 +73,18 @@ public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 	}
 
 	public static void main(String[] args) {
-		final String pdbDir = args[0];
-		final File censusFile = new File(args[1]);
-		final int identityCutoff = Integer.parseInt(args[2]);
-		int[] sunIds = new int[args.length - 3];
-		for (int i = 3; i < args.length; i++) {
-			sunIds[i - 3] = Integer.parseInt(args[i]);
+		final File censusFile = new File(args[0]);
+		final int identityCutoff = Integer.parseInt(args[1]);
+		int[] sunIds = new int[args.length - 2];
+		StringBuilder sb = new StringBuilder();
+		for (int i = 2; i < args.length; i++) {
+			Integer sunId = ScopSupport.getInstance().getSunId(args[i]);
+			if (sunId == null) throw new IllegalArgumentException("Couldn't find " + args[i]);
+			sb.append(sunId + ",");
+			sunIds[i - 2] = sunId;
 		}
-		buildDefault(pdbDir, censusFile, identityCutoff, sunIds);
+		logger.info("Running on " + sb.toString().substring(0, sb.toString().length()-1));
+		buildDefault(censusFile, identityCutoff, sunIds);
 	}
 
 	/**

@@ -33,29 +33,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.ce.CeParameters;
-
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
-
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.alignment.SubstitutionMatrixHelper;
-import org.biojava3.alignment.template.SubstitutionMatrix;
-
-import org.biojava3.core.sequence.compound.AminoAcidCompound;
 import org.biojava3.core.util.ConcurrencyTools;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.census2.Census;
 import org.biojava3.structure.utils.FileUtils;
 
+
+/**
+ * @deprecated See {@link Census} instead
+ */
+@Deprecated
 public class ScanSCOPForSymmetry {
 
 	public static String newline = System.getProperty("line.separator");

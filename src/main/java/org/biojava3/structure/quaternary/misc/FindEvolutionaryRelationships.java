@@ -316,5 +316,6 @@ public class FindEvolutionaryRelationships {
 			String pdbId = tokens[0];
 			csv.put(pdbId, tokens);
 		}
+		reader.close();
 	}
 }

@@ -3,17 +3,20 @@ package org.biojava3.structure.align.symm.census;
 import java.util.concurrent.Callable;
 
 import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava3.changeux.IdentifyAllSymmetries;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.census2.CensusJob;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 import org.biojava3.structure.utils.SymmetryTools;
-import org.rcsb.fatcat.server.PdbChainKey;
 
+/**
+ * @deprecated Replaced by {@link CensusJob}
+ */
+@Deprecated
 public class SymmetryCalculationJob implements Callable<CensusResult> {
 
 

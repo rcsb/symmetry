@@ -30,6 +30,10 @@ import java.io.StringWriter;
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
 
 
+/**
+ * @deprecated Use {@link org.biojava3.structure.align.symm.census2.ResultConverter} instead
+ */
+@Deprecated
 public class ResultConverter {
 
 	public static String newline = System.getProperty("line.separator");

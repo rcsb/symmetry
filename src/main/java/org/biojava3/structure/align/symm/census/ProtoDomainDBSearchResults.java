@@ -21,6 +21,10 @@ import org.biojava3.structure.utils.FileUtils;
 
 
 
+/**
+ * @deprecated Refer to {@code symm.census2} instead
+ */
+@Deprecated
 @XmlRootElement(name = "ProtoDomainDBSearchResults", namespace ="http://source.rcsb.org")
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public class ProtoDomainDBSearchResults implements Serializable {

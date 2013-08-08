@@ -34,14 +34,13 @@ import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
-import org.biojava3.structure.StructureIO;
+
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
 import org.biojava3.structure.quaternary.core.RotationAxisAligner;
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 
-import org.biojava3.structure.quaternary.core.SymmetryType;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 
@@ -52,7 +51,7 @@ public class DemoOrientBioAssembly {
 
 		//String[] pdbIDs = new String[]{"4HHB","4AQ5","1LTI","1STP","4F88","2W6E","2LXC","3OE7","4INU","4D8s","4EAR","4IYQ","3ZKR"};
 		
-		String[] pdbIDs = new String[]{"1LTI"};
+		String[] pdbIDs = new String[]{"1gav"};
 
 		int bioAssemblyNr = 1;
 		
@@ -106,6 +105,7 @@ public class DemoOrientBioAssembly {
 		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
 		
 		QuatSymmetryDetector detector = calc.orient();
+				
 		
 		List<QuatSymmetryResults> globalResults = detector.getGlobalSymmetry();
 		
@@ -124,6 +124,37 @@ public class DemoOrientBioAssembly {
 			showResults(s,pdbID + "[" + bioAssemblyNr + "] Local #" + (counter+1) , localResultsL);
 		}
 		
+		//determine default view:
+		boolean defaultFound = false;
+		QuatSymmetryResults defaultResult = null;
+		for ( QuatSymmetryResults r : globalResults) {
+			System.out.println(r.getRotationGroup().getPointGroup());
+//			if (! r.getRotationGroup().getPointGroup().equals("C1")) {
+//				defaultResult = r;
+//				defaultFound = true;
+//			} else if ( r.getSubunits().isPseudoSymmetric()) {
+//				defaultResult = r;
+//				defaultFound  = true;
+//			}
+			if (r.isPreferredResult()) {
+				defaultResult = r;
+				defaultFound = true;
+				System.out.println("!!!");
+			}
+			
+		}
+		if ( ! defaultFound) {
+			for (List<QuatSymmetryResults> localResultSet : localResults) {
+				for ( QuatSymmetryResults r : localResultSet) {
+					System.out.println(r.getRotationGroup().getPointGroup());
+					if ( r.isPreferredResult()) {
+						defaultResult = r;
+						defaultFound = true;
+						System.out.println("!!!");
+					}
+				}
+			}
+		}
 		
 		
 	}
@@ -135,19 +166,27 @@ public class DemoOrientBioAssembly {
 		int count = 0 ;
 		for (QuatSymmetryResults result: results) {
 			
+			String longTitle = title + " count:"+ count + " [" + result.getSubunits().getStoichiometry() +"]";
+			
 			String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
 					"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
 					"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
 			count++;
 			
 			if ( result.getSubunits().isPseudoSymmetric()) {
-				System.out.println("pseudosymmetric!");
+				longTitle += " pseudosymmetric!";
 			} else {
 				System.out.println(" not pseudosymmetric!");
 				
 			}
 			
+
 			RotationAxisAligner axisTransformation = new RotationAxisAligner(result);
+
+			longTitle += " M:" + result.getMethod();
+			
+			longTitle += String.format(" SEQ: %.2f - %.2f", result.getSubunits().getMinSequenceIdentity() ,result.getSubunits().getMaxSequenceIdentity());
+			
 
 			// use factory method to get point group specific instance of script generator
 			JmolSymmetryScriptGenerator scriptGenerator = JmolSymmetryScriptGeneratorPointGroup.getInstance(axisTransformation, "g");
@@ -157,7 +196,7 @@ public class DemoOrientBioAssembly {
 			script += scriptGenerator.drawAxes();
 			script += scriptGenerator.colorBySymmetry();
 			
-			String longTitle = title + " count:"+ count + " [" + result.getSubunits().getStoichiometry() +"]";
+			
 			
 			script += "draw axes* on; draw poly* on;";
 			

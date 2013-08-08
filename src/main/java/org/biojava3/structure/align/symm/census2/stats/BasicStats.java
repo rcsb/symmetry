@@ -75,7 +75,7 @@ public class BasicStats {
 
 	private String text;
 
-	protected Significance rotationallySymmetric = SignificanceFactory.symmetric();
+	protected Significance rotationallySymmetric = SignificanceFactory.rotationallySymmetric();
 	protected Significance sig = SignificanceFactory.generallySymmetric();
 	static {
 		NEWLINE = System.getProperty("line.separator");

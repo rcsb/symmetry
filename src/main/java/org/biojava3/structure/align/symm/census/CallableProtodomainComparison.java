@@ -11,6 +11,10 @@ import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 
+/**
+ * @deprecated Refer to {@code symm.census2} instead
+ */
+@Deprecated
 public class CallableProtodomainComparison implements Callable<ProtoDomainDBSearchResults>{
 
 	AtomCache cache ;

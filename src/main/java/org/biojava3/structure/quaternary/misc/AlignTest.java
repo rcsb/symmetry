@@ -186,6 +186,7 @@ public class AlignTest {
 			String pdbId = tokens[0];
 			csv.put(pdbId, tokens);
 		}
+		reader.close();
 	}
 	
 	private void createStructureGroups() {
@@ -242,6 +243,7 @@ public class AlignTest {
 			error.println(e.getMessage());
 			error.flush();
 		}
+		error.close();
 		return structure;
 	}
 }

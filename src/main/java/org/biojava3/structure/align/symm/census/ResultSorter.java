@@ -7,6 +7,10 @@ import java.util.List;
 import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.util.AtomCache;
 
+/**
+ * @deprecated Refer to {@code symm.census2} instead
+ */
+@Deprecated
 public class ResultSorter {
 	public static void main(String[] args){
 

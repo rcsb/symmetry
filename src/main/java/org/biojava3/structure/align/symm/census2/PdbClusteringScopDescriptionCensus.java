@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.MissingResourceException;
 import java.util.Set;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.client.FarmJobParameters;
 import org.biojava.bio.structure.align.client.JFatCatClient;
 import org.biojava.bio.structure.align.client.StructureName;
@@ -43,14 +43,11 @@ import org.biojava.bio.structure.scop.ScopDomain;
  */
 public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 
+	private static final Logger logger = LogManager.getLogger(PdbClusteringScopDescriptionCensus.class.getPackage().getName());
+
 	private static final String SERVER_LOCATION = FarmJobParameters.DEFAULT_SERVER_URL;
 
-	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
 	private int identityCutoff;
-
-	static {
-		BasicConfigurator.configure();
-	}
 
 	public static void buildDefault(String pdbDir, File censusFile, int identityCutoff, int[] sunIds) {
 		try {

@@ -11,10 +11,10 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
-import org.biojava.bio.structure.io.mmcif.AllChemCompProvider;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
-
-import org.biojava3.structure.quaternary.core.AxisTransformation;
+import org.biojava.bio.structure.io.mmcif.ChemCompProvider;
+import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
+import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 
 
@@ -33,7 +33,9 @@ public class OrientBiologicalAssembly {
 		System.out.println("OrientBiologicalAssembly V " + CalcBioAssemblySymmetry.version + " - "  +  CalcBioAssemblySymmetry.build + " : Calculates 4x4 transformation matrix to align structure along highest symmetry axis");
 		System.out.println();
 		
-		AllChemCompProvider all = new AllChemCompProvider();
+		
+//		AllChemCompProvider all = new AllChemCompProvider();
+		ChemCompProvider all = new DownloadChemCompProvider();
 		
 		ChemCompGroupFactory.setChemCompProvider(all);
 		
@@ -77,8 +79,8 @@ public class OrientBiologicalAssembly {
 		FileParsingParameters p = new FileParsingParameters();
 		p.setStoreEmptySeqRes(true);
 		p.setLoadChemCompInfo(true);
+		p.setParseCAOnly(true);
 		p.setAtomCaThreshold(Integer.MAX_VALUE);
-		p.setAcceptedAtomNames(new String[]{" CA "});
 
 		PDBFileReader pdbreader = new PDBFileReader();
 		pdbreader.setFileParsingParameters(p);
@@ -98,16 +100,13 @@ public class OrientBiologicalAssembly {
 		
 		// initialize with default parameters
 		QuatSymmetryParameters params = new QuatSymmetryParameters();
-		params.setSequenceIdentityThreshold(0.3);
 		params.setVerbose(verbose);
 
 		System.out.println("Default parameters:");
 		System.out.println(params);
 
-
-		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
-		calc.setBioAssembly(structure);
-		calc.setParams(params);
+		long t1 = System.nanoTime();
+		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(structure, params);
 
 		String prefix = getBaseFileName();
 		String bioassemblyId = getBioassemblyId();
@@ -115,21 +114,19 @@ public class OrientBiologicalAssembly {
 			prefix += "_" + bioassemblyId;
 		}
 
-		boolean hasProtein = calc.orient();
+		QuatSymmetryDetector detector = calc.orient();
+		
+		boolean hasProtein = detector.hasProteinSubunits();
+		
+		long t2 = System.nanoTime();
 
-		if (hasProtein) {
-			AxisTransformation at = calc.getAxisTransformation();	
+		if (hasProtein) {		
+			
 			System.out.println("Bioassembly id: " + getBioassemblyId());
-
-			String outName = prefix + "_4x4transformation.txt";
-			System.out.println("Writing 4x4 transformation to: " + outName);
-			writeFile(outName, at.getTransformation().toString());
-
-			outName = prefix + "_JmolAnimation.txt";
-			System.out.println("Writing Jmol animation to: " + outName);
-			writeFile(outName, calc.getScriptGenerator().playOrientations());
-
-			System.out.println("Subunit count            : " + calc.getFinder().getChainCount());
+			
+			System.out.println("Point group:             : " + calc.getSymmetry());
+			System.out.println("Subunit count            : " + calc.getSubunits().getSubunitCount());
+			System.out.println("Stoichiometry            : " + calc.getSubunits().getStoichiometry());
 			System.out.println("Color by subunit         : " + calc.getScriptGenerator().colorBySubunit());
 			System.out.println("Color by sequence cluster: " + calc.getScriptGenerator().colorBySequenceCluster());
 			System.out.println("Color by symmetry        : " + calc.getScriptGenerator().colorBySymmetry());
@@ -139,12 +136,24 @@ public class OrientBiologicalAssembly {
 
 			System.out.println("Zoom                     : " + calc.getScriptGenerator().getZoom());
 			System.out.println("Default orientation      : " + calc.getScriptGenerator().getDefaultOrientation());
+			
 			System.out.println("Orientation count        : " + calc.getScriptGenerator().getOrientationCount());
+			
 			for (int i = 0; i <  calc.getScriptGenerator().getOrientationCount(); i++) {
 				System.out.println("Orientation name " + i + "       : " + calc.getScriptGenerator().getOrientationName(i));
 				System.out.println("Orientation " + i + "            : " + calc.getScriptGenerator().getOrientation(i));
 				System.out.println("Orientation with zoom " + i + "  : " + calc.getScriptGenerator().getOrientationWithZoom(i));
 			}
+
+			String outName = prefix + "_4x4transformation.txt";
+			System.out.println("Writing 4x4 transformation to: " + outName);	
+			writeFile(outName, calc.getScriptGenerator().getTransformation().toString());
+
+			outName = prefix + "_JmolAnimation.txt";
+			System.out.println("Writing Jmol animation to: " + outName);
+			String script = calc.getScriptGenerator().colorBySymmetry() + calc.getScriptGenerator().playOrientations();
+			writeFile(outName, script);
+			
 		} else { 
 			System.out.println("Bioassembly id: " + getBioassemblyId());	
 			System.out.println("No protein chain found: returning identity matrix");
@@ -154,9 +163,8 @@ public class OrientBiologicalAssembly {
 			m.setIdentity();
 			writeFile(outName, m.toString());
 		}
-
-		// avoid memory leaks
-		calc.destroy();
+		
+		System.out.println("CalcBioAssemblySymmetry: " + (t2-t1)*0.000001 + " ms");
 	}
 
 	private String getBioassemblyId() {

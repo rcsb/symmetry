@@ -1,26 +1,20 @@
 package org.biojava3.structure.align.symm.census2;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertTrue;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.protodomain.ResourceList;
+import org.biojava3.structure.align.symm.protodomain.ResourceList.ElementTextIgnoringDifferenceListener;
 import org.biojava3.structure.align.symm.protodomain.ResourceList.NameProvider;
+import org.custommonkey.xmlunit.DifferenceListener;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,15 +26,18 @@ public class CensusTest {
 
 	class TinyCensus extends Census {
 
-		public TinyCensus() {
+		private String[] domains;
+		
+		public TinyCensus(String... domains) {
 			super(1); // 1 core only to ensure the results return in the expected order
+			this.domains = domains;
 		}
 
 		@Override
 		protected List<ScopDomain> getDomains() {
 			List<ScopDomain> domains = new ArrayList<ScopDomain>();
 			ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
-			for (String domain : CensusTest.domains) {
+			for (String domain : this.domains) {
 				domains.add(scop.getDomainByScopID(domain));
 			}
 			return domains;
@@ -48,59 +45,39 @@ public class CensusTest {
 
 	}
 
-	private static String[] domains = new String[] { "d2c35e1" };
-
-	private static String expectedResult;
-
 	@Before
 	public void setUp() throws StructureException {
 		ResourceList.set(NameProvider.defaultNameProvider(), ResourceList.DEFAULT_PDB_DIR);
-		expectedResult = ResourceList.get().openFileAsString("census2/expected1.xml");
-		
-		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);		
+		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
 		ScopFactory.setScopDatabase(scop); 
-		
-		CeSymm ceSymm = mock(CeSymm.class);
-		for (String domain : domains) {
-			AFPChain afpChain = new AFPChain();
-			afpChain.setProbability(5.7);
-			Atom[] ca1 = ResourceList.get().getAtoms(domain);
-			Atom[] ca2 = StructureTools.cloneCAArray(ca1);
-			when(ceSymm.align(ca1, ca2)).thenReturn(afpChain);
-		}
 	}
 
+	/**
+	 * Test on live data.
+	 * @throws IOException
+	 */
 	@Test
 	public void testBasic() throws IOException {
-		final String actual = "census2/actualresult1.xml";
-		Census census = new TinyCensus();
-		File file = ResourceList.get().openFile(actual);
+		File actualFile = File.createTempFile("actualresult1", "xml");
+		Census census = new TinyCensus("d2c35e1");
 		census.setCache(ResourceList.get().getCache());
-		census.setOutputWriter(file);
+		census.setOutputWriter(actualFile);
 		census.run();
 		// unfortunately, the timestamp will be different
-		String[] expectedLines = expectedResult.split("\n");
-		BufferedReader br = ResourceList.get().openReader("census2/actualresult1.xml");
-		String line = "";
-		int i = 0;
-		while ((line = br.readLine()) != null) {
-			if (!line.contains("<timestamp>")) {
-				assertEquals(expectedLines[i], line);
-			}
-			i++;
-		}
-		br.close();
-		new File(actual).delete();
+		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp");
+		File expectedFile = ResourceList.get().openFile("census2/expected1.xml");
+		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
+		assertTrue(similar);
 	}
 
 	@Test
 	public void testWithPartialResult() {
-		
+		// TODO
 	}
 	
 	@Test
 	public void testHard() {
-		
+		// TODO
 	}
-	
+
 }

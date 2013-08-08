@@ -45,6 +45,14 @@ public final class SuperPositionQCP {
         transformationCalculated = false;
     }
     
+    public void set(Point3d[] x, Point3d[] y, double[] weight) {
+    	this.x = x;
+    	this.y = y;
+    	this.weight = weight;
+        rmsdCalculated = false;
+        transformationCalculated = false;
+    }
+    
     public void setCentered(boolean centered) {
     	this.centered = centered;
     }

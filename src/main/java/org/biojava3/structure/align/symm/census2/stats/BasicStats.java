@@ -31,8 +31,8 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
@@ -41,16 +41,15 @@ import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 /**
  * 
  * @author dmyerstu
- * 
  */
 public class BasicStats {
+
+	private static final Logger logger = LogManager.getLogger(BasicStats.class.getPackage().getName());
 
 	public static final String NEWLINE;
 	private static final int MAX_FRACTION_DIGITS = 2;
 
 	private static NumberFormat nf = new DecimalFormat();
-
-	static final Logger logger = Logger.getLogger(BasicStats.class.getPackage().getName());
 
 	private final Grouping grouping;
 
@@ -76,15 +75,12 @@ public class BasicStats {
 
 	private String text;
 
-	protected Significance rotationallySymmetric = SignificanceFactory.getRotationallySymmetric();
-	protected Significance sig = SignificanceFactory.getGenerallySymmetric();
+	protected Significance rotationallySymmetric = SignificanceFactory.symmetric();
+	protected Significance sig = SignificanceFactory.generallySymmetric();
 	static {
 		NEWLINE = System.getProperty("line.separator");
 	}
-	static {
-		BasicConfigurator.configure();
-	}
-
+	
 	static {
 		nf.setMaximumFractionDigits(MAX_FRACTION_DIGITS);
 		nf.setMinimumFractionDigits(1);
@@ -115,20 +111,6 @@ public class BasicStats {
 			throw new RuntimeException("Could not load census file", e);
 		}
 		ps.println(stats.toString());
-	}
-
-	static void plus(Map<String, Double> map, String key, double value) {
-		if (!map.containsKey(key)) map.put(key, 0.0);
-		map.put(key, map.get(key) + value);
-	}
-
-	static void plus(Map<String, Integer> map, String key) {
-		plus(map, key, 1);
-	}
-
-	static void plus(Map<String, Integer> map, String key, int value) {
-		if (!map.containsKey(key)) map.put(key, 0);
-		map.put(key, map.get(key) + value);
 	}
 
 	public BasicStats(Grouping grouping, File censusFile) throws IOException {
@@ -177,11 +159,11 @@ public class BasicStats {
 			}
 
 			// record stats per group
-			plus(nTotalGroup, group);
-			if (isSymm) plus(nSymmGroup, group);
-			if (isRot) plus(nRotGroup, group);
-			if (isUnknown) plus(nUnknownGroup, group);
-			if (isRotUnknown) plus(nRotUnknownGroup, group);
+			StatUtils.plus(nTotalGroup, group);
+			if (isSymm) StatUtils.plus(nSymmGroup, group);
+			if (isRot) StatUtils.plus(nRotGroup, group);
+			if (isUnknown) StatUtils.plus(nUnknownGroup, group);
+			if (isRotUnknown) StatUtils.plus(nRotUnknownGroup, group);
 
 			getAdditionalStats(result);
 
@@ -206,14 +188,14 @@ public class BasicStats {
 
 			// N total
 			final int nTotalG = entry.getValue();
-			plus(nTotalFold, fold);
+			StatUtils.plus(nTotalFold, fold);
 
 			// % symmetric
 			Integer nSymmG = nSymmGroup.get(group);
 			if (nSymmG == null) nSymmG = 0;
 			double fractionSymmG = (double) nSymmG / (double) nTotalG;
 			if (fractionSymmG >= 0.5) {
-				plus(nSymmFold, fold);
+				StatUtils.plus(nSymmFold, fold);
 			}
 
 			// % rotational
@@ -221,7 +203,7 @@ public class BasicStats {
 			if (nRotG == null) nRotG = 0;
 			double fractionRotG = (double) nRotG / (double) nTotalG;
 			if (fractionRotG >= 0.5) {
-				plus(nRotFold, fold);
+				StatUtils.plus(nRotFold, fold);
 			}
 
 		}
@@ -245,16 +227,16 @@ public class BasicStats {
 
 			// N total
 			final int nTotalG = entry.getValue();
-			plus(nTotalClass, clas);
-			plus(nTotalClass, "overall");
+			StatUtils.plus(nTotalClass, clas);
+			StatUtils.plus(nTotalClass, "overall");
 
 			// % symmetric
 			Integer nSymmG = nSymmFold.get(fold);
 			if (nSymmG == null) nSymmG = 0;
 			double fractionSymmG = (double) nSymmG / (double) nTotalG;
 			if (fractionSymmG >= 0.5) {
-				plus(nSymmClass, clas);
-				plus(nSymmClass, "overall");
+				StatUtils.plus(nSymmClass, clas);
+				StatUtils.plus(nSymmClass, "overall");
 			}
 
 			// % rotational
@@ -262,8 +244,8 @@ public class BasicStats {
 			if (nRotG == null) nRotG = 0;
 			double fractionRotG = (double) nRotG / (double) nTotalG;
 			if (fractionRotG >= 0.5) {
-				plus(nRotClass, clas);
-				plus(nRotClass, "overall");
+				StatUtils.plus(nRotClass, clas);
+				StatUtils.plus(nRotClass, "overall");
 			}
 
 		}

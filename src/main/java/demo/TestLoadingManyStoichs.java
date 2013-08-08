@@ -41,6 +41,8 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
+import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
+import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 
 public class TestLoadingManyStoichs {
 	public static final String SERVICELOCATION="http://www.rcsb.org/pdb/rest";
@@ -119,14 +121,12 @@ public class TestLoadingManyStoichs {
 	}
 
 	private static String analyzeSymmetry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
+        QuatSymmetryParameters parameters = new QuatSymmetryParameters();
+	    parameters.setVerbose(false);
 
-		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
-		calc.getParams().setVerbose(false);
-		calc.setBioAssembly(s);
-
-		calc.getParams().setSequenceIdentityThreshold(threshold);
-
-		boolean hasProtein = calc.orient();
+		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
+		QuatSymmetryDetector detector = calc.orient();
+		boolean hasProtein = detector.hasProteinSubunits();
 
 		String symmetry = null;
 		if ( hasProtein) {

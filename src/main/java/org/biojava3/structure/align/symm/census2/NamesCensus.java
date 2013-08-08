@@ -29,6 +29,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDatabase;
@@ -40,6 +42,8 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  * @author dmyerstu
  */
 public class NamesCensus extends Census {
+
+	private static final Logger logger = LogManager.getLogger(NamesCensus.class.getPackage().getName());
 
 	private List<ScopDomain> domains;
 
@@ -63,7 +67,6 @@ public class NamesCensus extends Census {
 					}
 				}
 				br.close();
-				System.err.println("AVG TIME TAKEN: " + census.getAvgTimeTaken());
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -71,7 +74,7 @@ public class NamesCensus extends Census {
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
-			logger.warn(e.getMessage(), e);
+			logger.fatal(e.getMessage(), e);
 		}
 	}
 

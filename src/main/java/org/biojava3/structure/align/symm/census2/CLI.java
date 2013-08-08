@@ -1,24 +1,19 @@
 /*
- *                    BioJava development code
- *
- * This code may be freely distributed and modified under the
- * terms of the GNU Lesser General Public Licence.  This should
- * be distributed with the code.  If you do not have a copy,
- * see:
- *
- *      http://www.gnu.org/copyleft/lesser.html
- *
- * Copyright for this code is held jointly by the individual
- * authors.  These should be listed in @author doc comments.
- *
- * For more information on the BioJava project and its aims,
- * or to join the biojava-l mailing list, visit the home page
+ * BioJava development code
+ * 
+ * This code may be freely distributed and modified under the terms of the GNU Lesser General Public Licence. This
+ * should be distributed with the code. If you do not have a copy, see:
+ * 
+ * http://www.gnu.org/copyleft/lesser.html
+ * 
+ * Copyright for this code is held jointly by the individual authors. These should be listed in @author doc comments.
+ * 
+ * For more information on the BioJava project and its aims, or to join the biojava-l mailing list, visit the home page
  * at:
- *
- *      http://www.biojava.org/
- *
+ * 
+ * http://www.biojava.org/
+ * 
  * Created on 2013-02-20
- *
  */
 package org.biojava3.structure.align.symm.census2;
 
@@ -37,8 +32,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
@@ -56,9 +51,9 @@ import org.biojava3.structure.align.symm.census2.AstralScopDescriptionCensus.Ast
  */
 public class CLI {
 
-	private static final String NEWLINE = "\n";
+	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
 
-	static final Logger logger = Logger.getLogger(CensusJob.class.getPackage().getName());
+	private static final String NEWLINE = "\n";
 
 	public static int foldByIndex(int index) {
 		ScopDatabase scop = ScopFactory.getSCOP();
@@ -101,8 +96,10 @@ public class CLI {
 					.getOptionValue("every"));
 			final Integer number = cmd.getOptionValue("number") == null ? null : Integer.parseInt(cmd
 					.getOptionValue("number"));
-			//final Integer clustering = cmd.getOptionValue("clustering") == null ? null : Integer.parseInt(cmd.getOptionValue("clustering"));
-			final AstralSet clustering = cmd.getOptionValue("clustering") == null ? null : AstralSet.parse(cmd.getOptionValue("clustering"));
+			// final Integer clustering = cmd.getOptionValue("clustering") == null ? null :
+			// Integer.parseInt(cmd.getOptionValue("clustering"));
+			final AstralSet clustering = cmd.getOptionValue("clustering") == null ? null : AstralSet.parse(cmd
+					.getOptionValue("clustering"));
 
 			int[] sunIds = null;
 			if (cmd.getOptionValue("sfindex") != null) {
@@ -127,8 +124,6 @@ public class CLI {
 				}
 			}
 
-			if (cmd.getOptionValue("verbosity") != null) Logger.getRootLogger().setLevel(
-					Level.toLevel(cmd.getOptionValue("verbosity")));
 			final String[] superfamilies = cmd.getOptionValue("superfamilies") == null ? null : cmd.getOptionValue(
 					"superfamilies").split(" ");
 			final String[] folds = cmd.getOptionValue("folds") == null ? null : cmd.getOptionValue("folds").split(" ");
@@ -175,10 +170,10 @@ public class CLI {
 			if (sigMethod != null) {
 				sig = SignificanceFactory.fromMethod(SignificanceFactory.class.getName(), sigMethod);
 			} else {
-				sig = SignificanceFactory.getForCensus();
+				sig = SignificanceFactory.forCensus();
 			}
 		}
-		
+
 		// set the number of threads
 		final int nThreads;
 		if (pNThreads == null) {
@@ -191,10 +186,6 @@ public class CLI {
 		logger.info("Using " + nThreads + " threads");
 
 		Census census = new Census(nThreads) {
-			@Override
-			protected Significance getSignificance() {
-				return sig;
-			}
 			@Override
 			protected List<ScopDomain> getDomains() {
 
@@ -258,9 +249,10 @@ public class CLI {
 						if (!contains) {
 							contains = clusterRepresentatives.contains(domain.getScopId());
 						}
-//						if (!contains) {
-//							contains = PdbClusteringScopDescriptionCensus.isDomainOverChain(domain, clusterRepresentatives);
-//						}
+						// if (!contains) {
+						// contains = PdbClusteringScopDescriptionCensus.isDomainOverChain(domain,
+						// clusterRepresentatives);
+						// }
 						// logger.debug("Contains " + domain.getScopId());
 
 						if (contains) { // if we want to include the domain
@@ -274,6 +266,11 @@ public class CLI {
 				logger.info("Found " + domains.size() + " domains");
 				return domains;
 
+			}
+
+			@Override
+			protected Significance getSignificance() {
+				return sig;
 			}
 
 			@Override
@@ -351,16 +348,13 @@ public class CLI {
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
-						"Use only the specified number of entities from the sun ids or superfamilies selected. A value of -1 (default) means all.")
+						"Use only the specified number of entities from the sun ids or superfamilies selected. A value of -1 (default) means all. This option does not attempt to select diverse domains from the sets (will fix). Use with -randomize.")
 				.isRequired(false).create("number"));
 		options.addOption(OptionBuilder
 				.hasArg(false)
 				.withDescription(
 						"Randomize the order in which the entities are chosen (from sun ids or superfamilies).")
 				.isRequired(false).create("randomize"));
-		options.addOption(OptionBuilder.hasArg(true)
-				.withDescription("The verbosity of debug statements printed to stdout.").isRequired(false)
-				.create("verbosity"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(

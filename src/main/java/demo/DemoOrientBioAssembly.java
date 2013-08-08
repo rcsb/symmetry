@@ -25,139 +25,156 @@
 package demo;
 
 
+import java.io.IOException;
+import java.util.List;
+
 import org.biojava.bio.structure.Structure;
+import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
+import org.biojava3.structure.quaternary.core.RotationAxisAligner;
+import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
+import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
+import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
+
+import org.biojava3.structure.quaternary.core.SymmetryType;
+import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
+import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 
 public class DemoOrientBioAssembly {
-	
+
 	public static void main(String[] args){
 
-		//String[] pdbIDs = new String[]{"4INU", "4D8s","4EAR","4IYQ","3ZKR",};
-		String[] pdbIDs = new String[]{"1a0s",};
-		for ( String pdbID : pdbIDs){
-			runPDB(pdbID);
+
+		//String[] pdbIDs = new String[]{"4HHB","4AQ5","1LTI","1STP","4F88","2W6E","2LXC","3OE7","4INU","4D8s","4EAR","4IYQ","3ZKR"};
+		
+		String[] pdbIDs = new String[]{"1LTI"};
+
+		int bioAssemblyNr = 1;
+		
+		/*		  
+		    Local symmetry
+		    
+			2WPD has 2 local symmetries. 
+
+			Other examples with a single local symmetry are:
+			4F88 – local C8
+			1LTI – local C5
+			2W6E – local C3
+			2LXC – local C2
+			3OE7 – local C3
+			
+			Local Pseudosymmetry, structure only
+			
+			3ZDY
+
+		 */
+
+		for ( String pdbID : pdbIDs)
+		{
+			try {
+			
+				runPDB(pdbID,bioAssemblyNr);
+			
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
 		}
 
 	}
 
-	public static void runPDB(String pdbID){
-
+	public static void runPDB(String pdbID, int bioAssemblyNr) throws IOException, StructureException{
+		
+		
+		
 		pdbID = pdbID.toLowerCase();
 		
-		int  biolAssemblyNr =1;
-
-		Structure s;
-		try {
-
-			//			
-			AtomCache cache = new AtomCache();
-			FileParsingParameters params = cache.getFileParsingParams();
-			params.setAlignSeqRes(true);
-			params.setParseCAOnly(false);
-
-			StructureIO.setAtomCache(cache);
-			
-			s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
-
-			// Alternative access to structure:			
-			//
-			//s = readStructure(pdbID, biolAssemblyNr);
-			
-			System.out.println("MODELS:" + s.nrModels());
-			
-			boolean pseudosymmetric = analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.30);
-
-			if (pseudosymmetric) {
-				analyzeSymmetry(s,pdbID, biolAssemblyNr, 0.95);
-			}
-			
 		
+		//Structure s = StructureIO.getBiologicalAssembly(pdbID, bioAssemblyNr);
+		Structure s = readStructure(pdbID, bioAssemblyNr);
+		
+		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
+
+		parameters.setVerbose(true);
+
+
+		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry(s, parameters);
+		
+		QuatSymmetryDetector detector = calc.orient();
+		
+		List<QuatSymmetryResults> globalResults = detector.getGlobalSymmetry();
+		
+		System.out.println("# of global results: " + globalResults.size());
+		
+		List<List<QuatSymmetryResults>> localResults = detector.getLocalSymmetries();
+		
+		
+		
+		showResults(s, pdbID + "[" + bioAssemblyNr + "] Global", globalResults);
+		
+		
+		for (int counter = 0;counter < localResults.size() ; counter++){
+			List<QuatSymmetryResults> localResultsL = localResults.get(counter);
 			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
+			showResults(s,pdbID + "[" + bioAssemblyNr + "] Local #" + (counter+1) , localResultsL);
+		}
+		
+		
+		
 	}
-	
-	private static boolean analyzeSymmetry(Structure s,String pdbID, int biolAssemblyNr, double threshold) {
 
-		CalcBioAssemblySymmetry calc = new CalcBioAssemblySymmetry();
-		calc.getParams().setVerbose(false);
-		calc.setBioAssembly(s);
-
-		calc.getParams().setSequenceIdentityThreshold(threshold);
-
-		boolean hasProtein = calc.orient();
-
-		if (hasProtein) {
-			String jmolScript = calc.getScriptGenerator().playOrientations();
-
+	private static void showResults(Structure s, String title,
+			List<QuatSymmetryResults> results) {
+		
+		
+		int count = 0 ;
+		for (QuatSymmetryResults result: results) {
+			
 			String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
 					"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
 					"color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;" ;
+			count++;
+			
+			if ( result.getSubunits().isPseudoSymmetric()) {
+				System.out.println("pseudosymmetric!");
+			} else {
+				System.out.println(" not pseudosymmetric!");
+				
+			}
+			
+			RotationAxisAligner axisTransformation = new RotationAxisAligner(result);
 
+			// use factory method to get point group specific instance of script generator
+			JmolSymmetryScriptGenerator scriptGenerator = JmolSymmetryScriptGeneratorPointGroup.getInstance(axisTransformation, "g");
+
+			script += scriptGenerator.getOrientationWithZoom(0);
+			script += scriptGenerator.drawPolyhedron();
+			script += scriptGenerator.drawAxes();
+			script += scriptGenerator.colorBySymmetry();
+			
+			String longTitle = title + " count:"+ count + " [" + result.getSubunits().getStoichiometry() +"]";
+			
+			script += "draw axes* on; draw poly* on;";
+			
+			
+			// show in Jmol...
 
 			StructureAlignmentJmol jmol = new StructureAlignmentJmol();
 			jmol.setStructure(s);
-
-			String title = "Symmetry results for " + pdbID + " bio assembly: " + biolAssemblyNr + " seq cutoff:" + calc.getParams().getSequenceIdentityThreshold();
-			jmol.setTitle(title);
-
-
+			
+			jmol.setTitle(longTitle);
 			jmol.evalString(script);
-
-
-			jmol.evalString(jmolScript);
-
-
-			// items for database:
-
-			System.out.println("=================");
-			System.out.println(title );
-			System.out.println("=================");
-			System.out.println("Sequence ID   : " + calc.getParams().getSequenceIdentityThreshold() );
-			System.out.println("Stoichiometry : " + calc.getFinder().getCompositionFormula());
-			System.out.println("Point Group   : " + calc.getRotationGroup().getPointGroup()	);
-			System.out.println("Pseudosymmetry: " + calc.getFinder().isPseudoSymmetric());
-			System.out.println("Symmetry RMSD : " + String.format("%.2f",calc.getRotationGroup().getAverageTraceRmsd()));
-
-			System.out.println("Transf. matrix: " + calc.getAxisTransformation().getTransformation());
-			System.out.println("Geomet. tansf : " + calc.getAxisTransformation().getGeometicCenterTransformation());
-			System.out.println("Dimension                : " + calc.getAxisTransformation().getDimension());
-			System.out.println("Subunit count            : " + calc.getFinder().getChainCount());
-
-			System.out.println("Color by subunit         : " + calc.getScriptGenerator().colorBySubunit());
-			System.out.println("Color by subunit length  : " + calc.getScriptGenerator().colorBySubunit().length());
-			System.out.println("Color by sequence cluster: " + calc.getScriptGenerator().colorBySequenceCluster());
-			System.out.println("Color by seq. clst. len  : " + calc.getScriptGenerator().colorBySequenceCluster().length());
-			System.out.println("Color by symmetry        : " + calc.getScriptGenerator().colorBySymmetry());
-			System.out.println("Color by symmetry length : " + calc.getScriptGenerator().colorBySymmetry().length());
-
-			System.out.println("Draw axes                : " + calc.getScriptGenerator().drawAxes());
-			System.out.println("Draw axes length         : " + calc.getScriptGenerator().drawAxes().length());
-			System.out.println("Draw polyhedron          : " + calc.getScriptGenerator().drawPolyhedron());
-			System.out.println("Draw polyhedron length   : " + calc.getScriptGenerator().drawPolyhedron().length());
-
-			System.out.println("Zoom                     : " + calc.getScriptGenerator().getZoom());
-			System.out.println("Default orientation      : " + calc.getScriptGenerator().getDefaultOrientation());
-			System.out.println("Orientation count        : " + calc.getScriptGenerator().getOrientationCount());
-			for (int i = 0; i <  calc.getScriptGenerator().getOrientationCount(); i++) {
-				System.out.println("Orientation name " + i + "       : " + calc.getScriptGenerator().getOrientationName(i));
-				System.out.println("Orientation " + i + "            : " + calc.getScriptGenerator().getOrientation(i));
-			}
-
-			System.out.println("=================");
-			return calc.getFinder().isPseudoSymmetric();
-		} else {
-			System.out.println("No protein chains found");
-			return false;
 		}
+		
+		
 	}
+
+
 	
 	private static Structure  readStructure(String pdbId, int bioAssemblyId) {
 		// initialize the PDB_DIR env variable
@@ -190,5 +207,8 @@ public class DemoOrientBioAssembly {
 		}
 		return structure;
 	}
-	
+
 }
+
+
+

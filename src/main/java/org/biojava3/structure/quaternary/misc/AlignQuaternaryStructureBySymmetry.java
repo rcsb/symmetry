@@ -27,7 +27,6 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
 import org.biojava3.structure.quaternary.core.ChainClusterer;
-import org.biojava3.structure.quaternary.core.ChainClustererNew;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryWriter;
 import org.biojava3.structure.quaternary.core.SequenceAlignmentCluster;
@@ -107,7 +106,7 @@ public class AlignQuaternaryStructureBySymmetry {
 	//	align.run();
     }
     public void run() throws IOException {
-    	parameters.setSequenceIdentityThreshold(SEQUENCE_IDENTITY_THRESHOLD);
+
     	String outfile = FILENAME;
 		outfile = outfile.substring(0, outfile.length()-4);
 		String errfile = outfile;
@@ -168,23 +167,23 @@ public class AlignQuaternaryStructureBySymmetry {
 		double[] bestRmsd = {Double.MAX_VALUE, Double.MAX_VALUE};
 		
 		CalcBioAssemblySymmetry calc1 = orient(s1);	
-	    List<List<Integer>> orbits1 = calc1.getAxisTransformation().getOrbits();	
-	
-		System.out.println("Subunits 1: ");
-		for (List<Integer> orbit: orbits1) {
-			System.out.println(orbit);
-		}
-		System.out.println("Orient1: " + calc1.getScriptGenerator().getDefaultOrientation());
-	
-		CalcBioAssemblySymmetry calc2 = orient(s2);
-		
-		List<List<Integer>> orbits2 = calc2.getAxisTransformation().getOrbits();	
-		System.out.println("Subunits 2: ");
-		for (List<Integer> orbit: orbits2) {
-			System.out.println(orbit);
-		}
-		System.out.println("Orient2: " + calc2.getScriptGenerator().getDefaultOrientation());
-		
+//	    List<List<Integer>> orbits1 = calc1.getAxisTransformation().getOrbits();	
+//	
+//		System.out.println("Subunits 1: ");
+//		for (List<Integer> orbit: orbits1) {
+//			System.out.println(orbit);
+//		}
+//		System.out.println("Orient1: " + calc1.getScriptGenerator().getDefaultOrientation());
+//	
+//		CalcBioAssemblySymmetry calc2 = orient(s2);
+//		
+//		List<List<Integer>> orbits2 = calc2.getAxisTransformation().getOrbits();	
+//		System.out.println("Subunits 2: ");
+//		for (List<Integer> orbit: orbits2) {
+//			System.out.println(orbit);
+//		}
+//		System.out.println("Orient2: " + calc2.getScriptGenerator().getDefaultOrientation());
+//		
 		ChainClustererNew grouper1 = new ChainClustererNew(s1, parameters);
 		grouper1.addStructure(s2);
 		System.out.println("Clusters:         " + grouper1.toString());
@@ -196,76 +195,77 @@ public class AlignQuaternaryStructureBySymmetry {
 		System.out.println("Struct ids:       " + grouper1.getStructureIdsInClusterOrder());
 		System.out.println("Struct ids:       " + grouper1.getStructureIds());
 		
-		for (List<Integer> orbit: orbits1) {
-			System.out.println(orbit);
-			boolean check = checkOrbit(orbit, 0, grouper1.getSequenceClusterIds());
-			if (! check) {
-				System.out.println("Orbit belongs to multiple sequence clusters");
-				return bestRmsd;
-			}
-		};
-		
-		int offset = calc1.getFinder().getChainCount();
-		for (List<Integer> orbit: orbits2) {
-			System.out.println(orbit);
-			boolean check = checkOrbit(orbit, offset, grouper1.getSequenceClusterIds());
-			if (! check) {
-				System.out.println("Orbit belongs to multiple sequence clusters");
-				return bestRmsd;
-			}
-		};
+//		for (List<Integer> orbit: orbits1) {
+//			System.out.println(orbit);
+//			boolean check = checkOrbit(orbit, 0, grouper1.getSequenceClusterIds());
+//			if (! check) {
+//				System.out.println("Orbit belongs to multiple sequence clusters");
+//				return bestRmsd;
+//			}
+//		};
+//		
+//
+//		int offset = calc1.getSubunits().getSubunitCount();
+//		for (List<Integer> orbit: orbits2) {
+//			System.out.println(orbit);
+//			boolean check = checkOrbit(orbit, offset, grouper1.getSequenceClusterIds());
+//			if (! check) {
+//				System.out.println("Orbit belongs to multiple sequence clusters");
+//				return bestRmsd;
+//			}
+//		};
 
-		List<Integer> clusterIds = grouper1.getSequenceClusterIds();
-		// calculate subunit RMSD
-		double aveRmsd = 0;
-		int count = 0;
-		List<Point3d[]> cas = grouper1.getCalphaCoordinates();
-		List<Point3d> xAll = new ArrayList<Point3d>();
-		List<Point3d> yAll = new ArrayList<Point3d>();
-		for (int i = 0; i < orbits1.size(); i++) {
-			System.out.println("Orbit: " + i);
-			List<Integer> orbit1 = orbits1.get(i);
-			List<Integer> orbit2 = orbits2.get(i);
-			if (orbit1.size() != orbit2.size()) {
-				System.out.println("Size of orbits doesn't match");
-				return bestRmsd;
-			}
-			for (int j = 0; j < orbit1.size(); j++) {
-				System.out.println("Subunit: " + j);
-				int index1 = orbit1.get(j);
-				int index2 = orbit2.get(j) + offset;
-				if (clusterIds.get(index1) != clusterIds.get(index2)) {
-					System.out.println("Cluster index mismatch");
-					return bestRmsd;
-				}
-				System.out.println(("indices: " + index1 + " - " + index2));
-				Point3d[] x = SuperPosition.clonePoint3dArray(cas.get(index1));
-				Point3d[] y = SuperPosition.clonePoint3dArray(cas.get(index2));
-		        xAll.addAll(Arrays.asList(cas.get(index1)));
-		        System.out.println("x.len: " + x.length);
-		        System.out.println("y.len: " + y.length);
-		        yAll.addAll(Arrays.asList(cas.get(index2)));
-		        
-			    Matrix4d m = SuperPosition.superposeWithTranslation(x, y);
-			    double rmsd = SuperPosition.rmsd(x, y);
-			    aveRmsd += rmsd*rmsd*x.length;
-			    count += x.length;
-			    System.out.println("RMSD: " + rmsd);
-			}
-		}
-	    bestRmsd[0] = Math.sqrt(aveRmsd/count);
-	    
-	    // calculate overall RMSD
-		Point3d[] x = xAll.toArray(new Point3d[0]);
-		x = SuperPosition.clonePoint3dArray(x);
-		 System.out.println(Arrays.toString(x));
-		Point3d[] y = yAll.toArray(new Point3d[0]);
-		y = SuperPosition.clonePoint3dArray(y);
-        
-	    Matrix4d m = SuperPosition.superposeWithTranslation(x, y);
-	    double totalRmsd = SuperPosition.rmsd(x, y);
-	    bestRmsd[1] = totalRmsd;
-		System.out.println("RESULT: rmsd: " + Arrays.toString(bestRmsd));
+//		List<Integer> clusterIds = grouper1.getSequenceClusterIds();
+//		// calculate subunit RMSD
+//		double aveRmsd = 0;
+//		int count = 0;
+//		List<Point3d[]> cas = grouper1.getCalphaCoordinates();
+//		List<Point3d> xAll = new ArrayList<Point3d>();
+//		List<Point3d> yAll = new ArrayList<Point3d>();
+//		for (int i = 0; i < orbits1.size(); i++) {
+//			System.out.println("Orbit: " + i);
+//			List<Integer> orbit1 = orbits1.get(i);
+//			List<Integer> orbit2 = orbits2.get(i);
+//			if (orbit1.size() != orbit2.size()) {
+//				System.out.println("Size of orbits doesn't match");
+//				return bestRmsd;
+//			}
+//			for (int j = 0; j < orbit1.size(); j++) {
+//				System.out.println("Subunit: " + j);
+//				int index1 = orbit1.get(j);
+//				int index2 = orbit2.get(j) + offset;
+//				if (clusterIds.get(index1) != clusterIds.get(index2)) {
+//					System.out.println("Cluster index mismatch");
+//					return bestRmsd;
+//				}
+//				System.out.println(("indices: " + index1 + " - " + index2));
+//				Point3d[] x = SuperPosition.clonePoint3dArray(cas.get(index1));
+//				Point3d[] y = SuperPosition.clonePoint3dArray(cas.get(index2));
+//		        xAll.addAll(Arrays.asList(cas.get(index1)));
+//		        System.out.println("x.len: " + x.length);
+//		        System.out.println("y.len: " + y.length);
+//		        yAll.addAll(Arrays.asList(cas.get(index2)));
+//		        
+//			    Matrix4d m = SuperPosition.superposeWithTranslation(x, y);
+//			    double rmsd = SuperPosition.rmsd(x, y);
+//			    aveRmsd += rmsd*rmsd*x.length;
+//			    count += x.length;
+//			    System.out.println("RMSD: " + rmsd);
+//			}
+//		}
+//	    bestRmsd[0] = Math.sqrt(aveRmsd/count);
+//	    
+//	    // calculate overall RMSD
+//		Point3d[] x = xAll.toArray(new Point3d[0]);
+//		x = SuperPosition.clonePoint3dArray(x);
+//		 System.out.println(Arrays.toString(x));
+//		Point3d[] y = yAll.toArray(new Point3d[0]);
+//		y = SuperPosition.clonePoint3dArray(y);
+//        
+//	    Matrix4d m = SuperPosition.superposeWithTranslation(x, y);
+//	    double totalRmsd = SuperPosition.rmsd(x, y);
+//	    bestRmsd[1] = totalRmsd;
+//		System.out.println("RESULT: rmsd: " + Arrays.toString(bestRmsd));
 		return bestRmsd;
 	}
 	
@@ -281,11 +281,10 @@ public class AlignQuaternaryStructureBySymmetry {
 	}
 
 	private CalcBioAssemblySymmetry orient(Structure structure) {
-		CalcBioAssemblySymmetry calc1 = new CalcBioAssemblySymmetry();
-		calc1.setBioAssembly(structure);
+		CalcBioAssemblySymmetry calc1 = new CalcBioAssemblySymmetry(structure, new QuatSymmetryParameters());
 		calc1.orient();
-		Matrix4d transformation = calc1.getAxisTransformation().getTransformation();
-		transformStructure (structure, transformation);
+//		Matrix4d transformation = calc1.getAxisTransformation().getTransformation();
+//		transformStructure (structure, transformation);
 		return calc1;
 	}
 	

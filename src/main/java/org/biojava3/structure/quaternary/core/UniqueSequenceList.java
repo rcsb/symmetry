@@ -1,33 +1,35 @@
 package org.biojava3.structure.quaternary.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Group;
 
-public class UniqueSequenceList {
+public class UniqueSequenceList implements Cloneable {
 	private String sequenceString = "";
 	private String seqResSequence = "";
     private List<Integer> alignment1 = null;
     private List<Integer> alignment2 = null;
-    private List<Atom[]> caAtoms = new ArrayList<Atom[]>();
-    private List<String> chainIds = new ArrayList<String>();
-    private List<Integer> modelNumbers = new ArrayList<Integer>();
-    private List<Integer> structureIds = new ArrayList<Integer>();
+    private Atom[] caAtoms = null;
+    private String chainId = null;
+    private int modelNumber = -1;
+    private int structureId = -1;
     
     public UniqueSequenceList(Atom[] cAlphaAtoms, String chainId, int modelNumber, int structureId, String seqResSequence) {
-    	this.caAtoms.add(cAlphaAtoms);
-    	this.chainIds.add(chainId);
-    	this.modelNumbers.add(modelNumber);
-    	this.structureIds.add(structureId);
+    	this.caAtoms = cAlphaAtoms;
+    	this.chainId = chainId;
+    	this.modelNumber = modelNumber;
+    	this.structureId = structureId;
     	this.seqResSequence = seqResSequence;
     	this.sequenceString =  getSequenceString(cAlphaAtoms);
     	this.alignment1 = new ArrayList<Integer>(cAlphaAtoms.length);
+    	this.alignment2 = new ArrayList<Integer>(cAlphaAtoms.length);
     	for (int i = 0; i < cAlphaAtoms.length; i++) {
     		this.alignment1.add(i);
+    		this.alignment2.add(i);
     	}
-    	this.alignment2 = alignment1;
     }
     
     /**
@@ -41,43 +43,21 @@ public class UniqueSequenceList {
     	return sequenceString.equals(getSequenceString(caAlphaAtoms));
     }
     
-    public void addChain(Atom[] cAlphaAtoms, String chainId, int modelNumber, int structureId) {
-    	this.caAtoms.add(cAlphaAtoms);
-    	this.chainIds.add(chainId); 
-    	this.modelNumbers.add(modelNumber);
-    	this.structureIds.add(structureId);
+    public String getChainId() {
+    	return chainId;
     }
     
-    public int getChainCount() {
-    	return caAtoms.size();
-    }
-    
-    public Atom[] getChain(int index) {
-    	return caAtoms.get(index);
-    }
-    
-    public String getChainId(int index) {
-    	return chainIds.get(index);
-    }
-    
-    public int getModelNumber(int index) {
-    	return modelNumbers.get(index);
+    public int getModelNumber() {
+    	return modelNumber;
     }
      
-    public int getStructureId(int index) {
-    	return structureIds.get(index);
+    public int getStructureId() {
+    	return structureId;
     }
     
-    public Atom[] getReferenceChain() {
-    	return caAtoms.get(0);
+    public Atom[] getCalphaAtoms() {
+    	return caAtoms;
     }
-    
-     /**
-	 * @return the sequenceString
-	 */
-	public String getSequenceString() {
-		return sequenceString;
-	}
 	
 	public String getSeqResSequence() {
 		return seqResSequence;
@@ -114,11 +94,27 @@ public class UniqueSequenceList {
 		this.alignment2 = alignment2;
 	}
 	
+	public Object clone() {
+		UniqueSequenceList copy = null;
+		try {
+			copy = (UniqueSequenceList) super.clone();
+		} catch (CloneNotSupportedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// deep copy lists and arrays
+		copy.alignment1 = new ArrayList<Integer>(this.alignment1);
+		copy.alignment2 = new ArrayList<Integer>(this.alignment2);
+		copy.caAtoms = Arrays.copyOf(this.caAtoms, this.caAtoms.length); // note, that atoms in this array will be identical (this is intended)
+		return copy;
+	}
+	
 	public static String getSequenceString(Atom[] caAlphaAtoms) {
 		StringBuilder builder = new StringBuilder();
 
 		for (Atom a:  caAlphaAtoms) {
 			Group g = a.getGroup();
+			// TODO is the check for UNK required? UNK should have been filtered already in ChainClusterer?
 			if (! g.getPDBName().equals("UNK")) {
 				builder.append(g.getResidueNumber());
 				builder.append(g.getPDBName());
@@ -131,8 +127,8 @@ public class UniqueSequenceList {
      
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("#: ");
-		builder.append(caAtoms.size());
+		builder.append("length: ");
+		builder.append(caAtoms.length);
 		builder.append(" seq: ");
 		builder.append(sequenceString);
 		builder.append("\n");

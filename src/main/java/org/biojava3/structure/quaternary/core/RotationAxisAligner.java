@@ -3,10 +3,8 @@ package org.biojava3.structure.quaternary.core;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 import javax.vecmath.AxisAngle4d;
@@ -18,7 +16,7 @@ import javax.vecmath.Vector3d;
 import org.biojava3.structure.quaternary.geometry.MomentsOfInertia;
 import org.biojava3.structure.quaternary.geometry.SuperPosition;
 
-public class AxisTransformation {
+public class RotationAxisAligner extends AxisAligner{
 	private static final Vector3d X_AXIS = new Vector3d(1,0,0);
 	private static final Vector3d Y_AXIS = new Vector3d(0,1,0);
 	private static final Vector3d Z_AXIS = new Vector3d(0,0,1);
@@ -39,9 +37,9 @@ public class AxisTransformation {
 
 	boolean modified = true;
 
-	public AxisTransformation(Subunits subunits, RotationGroup rotationGroup) {
-		this.subunits = subunits;
-		this.rotationGroup = rotationGroup;
+	public RotationAxisAligner(QuatSymmetryResults results) {
+		this.subunits = results.getSubunits();
+		this.rotationGroup = results.getRotationGroup();
 		if (subunits == null) {
 			throw new IllegalArgumentException("AxisTransformation: Subunits are null");
 		} else if (rotationGroup == null) {
@@ -53,6 +51,15 @@ public class AxisTransformation {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.biojava3.structure.quaternary.core.AxisAligner#getTransformation()
+	 */
+	@Override
+	public String getSymmetry() {
+		run();   
+		return rotationGroup.getPointGroup();
+	}
+	
 	public Matrix4d getTransformation() {
 		run();   
 		return transformationMatrix;
@@ -181,7 +188,9 @@ public class AxisTransformation {
 			}
 			calcReverseTransformation();
 			calcBoundaries();
-			calcAlignedOrbits();
+			if (! rotationGroup.getPointGroup().equals("Helical")) {
+				calcAlignedOrbits();
+			}
 			modified = false;
 		}
 	}
@@ -287,7 +296,7 @@ public class AxisTransformation {
 		}
 		Collections.reverse(orbit.subList(1,  orbit.size()));
 		if (orbit.get(1) != index2) {
-			System.err.println("Waring: alignWithReferenceAxis failed");
+			System.err.println("Warning: alignWithReferenceAxis failed");
 		}
 //		System.out.println("Orbit2: " + orbit);
 		return orbit;
@@ -425,7 +434,7 @@ public class AxisTransformation {
 		Point3d[] ref = new Point3d[2];
 		ref[0] = new Point3d(referenceVectors[0]);
 		ref[1] = new Point3d(referenceVectors[1]);
-		if (SuperPosition.rmsd(axes, ref) > 0.01) {
+		if (SuperPosition.rmsd(axes, ref) > 0.1) {
 			System.out.println("Warning: AxisTransformation: axes alignment is off. RMSD: " + SuperPosition.rmsd(axes, ref));
 		}
 		
@@ -636,7 +645,10 @@ public class AxisTransformation {
 			referenceVector = getReferenceAxisOctahedral();
 		} else if (rotationGroup.getPointGroup().equals("I")) {
 			referenceVector = getReferenceAxisIcosahedral();		
-		} 
+		} else if (rotationGroup.getPointGroup().equals("Helical")) {
+			// TODO what should the reference vector be??
+			referenceVector = getReferenceAxisCylic();
+		}
 		
 		if (referenceVector == null) {
 			System.err.println("Warning: no reference vector found. Using y-axis.");

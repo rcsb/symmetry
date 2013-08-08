@@ -1,6 +1,8 @@
 package org.biojava3.structure.quaternary.misc;
 import java.util.List;
 
+import org.biojava3.structure.quaternary.utils.SimpleGraph;
+
 /**
  *
  * @author Peter

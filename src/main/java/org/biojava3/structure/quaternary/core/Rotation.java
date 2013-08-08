@@ -115,6 +115,19 @@ public class Rotation {
     public void setAxisAngle(AxisAngle4d axisAngle) {
         this.axisAngle = axisAngle;
     }
+    
+    /**
+     * Returns the number of starts if this rotation represents a helical rotation
+     */
+    public int getNStart() {
+    	int nStart = 0;
+    	for (int i: permutation) {
+    		if (i == -1) {
+    			nStart++;
+    		}
+    	}
+        return nStart;
+    }
 
     public String toString() {
         StringBuilder sb = new StringBuilder();

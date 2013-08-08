@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.biojava3.structure.quaternary.utils.BlastClustReader;
+
 public class ProteinComplexSignature {
 	private BlastClustReader blastClust = null;
 	private String pdbId = "";

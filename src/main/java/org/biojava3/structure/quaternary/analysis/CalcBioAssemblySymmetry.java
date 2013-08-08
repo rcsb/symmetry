@@ -24,145 +24,145 @@
  */
 package org.biojava3.structure.quaternary.analysis;
 
+
+import java.util.List;
+
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.ResourceManager;
-
-import org.biojava3.structure.quaternary.core.AxisTransformation;
-import org.biojava3.structure.quaternary.core.FindQuarternarySymmetry;
+import org.biojava3.structure.quaternary.core.AxisAligner;
+import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
+import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 import org.biojava3.structure.quaternary.core.RotationGroup;
+import org.biojava3.structure.quaternary.core.Subunits;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 
 public class CalcBioAssemblySymmetry {
-	Structure bioAssembly;
-	QuatSymmetryParameters params = new QuatSymmetryParameters();
-	
-	FindQuarternarySymmetry finder;
-	RotationGroup rotationGroup;
-	AxisTransformation axisTransformation;
+	private Structure bioAssembly;
+	private QuatSymmetryParameters parameters;
+	private QuatSymmetryResults results;
+
 	private JmolSymmetryScriptGenerator scriptGenerator;
 	
-	
-	//public static String version = "0.1.21";
-	
-	public CalcBioAssemblySymmetry(){
-	}
 	static public String version;
 	static public String build; 
-	
 	static {
 		try {
 			ResourceManager about = ResourceManager.getResourceManager("aboutplayground");
 
-			 version = about.getString("project_version");
-			 build   = about.getString("build");
-			
+			version = about.getString("project_version");
+			build   = about.getString("build");
+
 		} catch (Exception e){
 			e.printStackTrace();
 		}
-
-
 	}
 	
+	public CalcBioAssemblySymmetry(Structure bioAssembly, QuatSymmetryParameters parameters){
+		this.bioAssembly = bioAssembly;
+		this.parameters = parameters;
+	}
 	
-	public boolean orient(){
-		boolean hasProtein = false;
-		finder = new FindQuarternarySymmetry(bioAssembly, params);	
+	public QuatSymmetryParameters getParameters(){
+		return parameters;
+	}
 
-		rotationGroup = new RotationGroup();
-		if (finder.getChainCount() > 0) {
-			
-			rotationGroup = finder.getRotationGroup();
-			
-			if (params.isVerbose()) {
-				System.out.println("Results for " + Math.round(params.getSequenceIdentityThreshold()*100) + "% sequence identity threshold:");
-				System.out.println("Stoichiometry  : " + finder.getCompositionFormula());
-				System.out.println("Point group    : " + rotationGroup.getPointGroup());	
-				System.out.println("Pseudosymmetric: " + finder.isPseudoSymmetric());	
-				System.out.println("Symmetry RMSD  : " + (float) rotationGroup.getAverageTraceRmsd());
+	public QuatSymmetryDetector orient(){
+		QuatSymmetryDetector detector = new QuatSymmetryDetector(bioAssembly, parameters);
+		String defaultColoring = "";
+
+		if (detector.hasProteinSubunits()) {	
+			for (QuatSymmetryResults globalSymmetry: detector.getGlobalSymmetry()) {
+
+				String postFix = "g";
+				AxisAligner aligner = AxisAligner.getInstance(globalSymmetry);
+				JmolSymmetryScriptGenerator generator = JmolSymmetryScriptGenerator.getInstance(aligner, postFix);
+				// save the preferred result
+				if (globalSymmetry.isPreferredResult()) {
+					this.results = globalSymmetry;
+					this.scriptGenerator = generator;
+				}
+					
+				// get default color by symmetry for all subunits (for asymmetric cases only)
+				if (globalSymmetry.getSymmetry().equals("C1") && ! globalSymmetry.getSubunits().isPseudoStoichiometric()) {
+					defaultColoring = generator.colorBySymmetry();
+				}
+				
+				if (parameters.isVerbose()) {
+					System.out.println("Global symmetry: ");
+					System.out.println(globalSymmetry);
+					
+//					System.out.println();
+//					System.out.println(generator.getDefaultOrientation());
+//					System.out.println(generator.getZoom());
+//					System.out.println(generator.drawPolyhedron());
+//					System.out.println(generator.drawAxes());
+//					System.out.println(generator.colorBySubunit());
+//					System.out.println(generator.colorBySequenceCluster());
+//					System.out.println(generator.colorBySymmetry());
+				}
+				
 			}
 
-			axisTransformation = new AxisTransformation(finder.getSubunits(), rotationGroup);
+			for (List<QuatSymmetryResults> localSymmetries: detector.getLocalSymmetries()) {	
+				int count = 0;
 
-			// use factory method to get point group specific instance of script generator
-			scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation);
-			hasProtein = true;
-			
+				for (QuatSymmetryResults localSymmetry: localSymmetries) {
+					// create a unique postFix for each local symmetry to be used in the Jmol script
+					// to avoid naming conflicts when more than one symmetry is displayed at one time.
+					String postFix = "l" + count;
+					AxisAligner aligner = AxisAligner.getInstance(localSymmetry);
+					JmolSymmetryScriptGenerator generator = JmolSymmetryScriptGenerator.getInstance(aligner, postFix);			
+					// sets color by symmetry for all subunits. This is
+					// required for local symmetry, to ensure all subunits are colored.
+					generator.setDefaultColoring(defaultColoring);
+					// save preferred result
+					if (localSymmetry.isPreferredResult()) {
+						this.results = localSymmetry;
+						this.scriptGenerator = generator;
+					}
+
+					if (parameters.isVerbose()) {
+						System.out.println("Local symmetry: ");
+						System.out.println(localSymmetry);
+						
+//						System.out.println();
+//						System.out.println(generator.getDefaultOrientation());
+//						System.out.println(generator.getZoom());
+//						System.out.println(generator.drawPolyhedron());
+//						System.out.println(generator.drawAxes());
+//						System.out.println(generator.colorBySubunit());
+//						System.out.println(generator.colorBySequenceCluster());
+//						System.out.println(generator.colorBySymmetry());
+					}
+				}
+			}
 		} else {
-			System.out.println("No chains found for " + bioAssembly.getPDBCode() );
+			System.out.println("No protein chains found for " + bioAssembly.getPDBCode() );
 		}
-		return hasProtein;
+		return detector;
+	}
+
+	/** Only works if this is not helical symmetry. Deprecated, use getSymmetry instead */
+	@Deprecated
+	public RotationGroup getRotationGroup() {
+		return results.getRotationGroup();
+	}
+
+	
+	public Subunits getSubunits() {
+		return results.getSubunits();
 	}
 	
-	public Structure getBioAssembly() {
-		return bioAssembly;
+	/** String representation of Symmetry, e.g. C1, C2, H 
+	 * 
+	 * @return
+	 */
+	public String getSymmetry() {
+		return results.getSymmetry();
 	}
-
-
-	public void setBioAssembly(Structure bioAssembly) {
-		this.bioAssembly = bioAssembly;
-	}
-
-
-	public QuatSymmetryParameters getParams() {
-		return params;
-	}
-
-
-	public void setParams(QuatSymmetryParameters params) {
-		this.params = params;
-	}
-
-
-	public FindQuarternarySymmetry getFinder() {
-		return finder;
-	}
-
-
-	public void setFinder(FindQuarternarySymmetry finder) {
-		this.finder = finder;
-	}
-
-
-	public RotationGroup getRotationGroup() {
-		return rotationGroup;
-	}
-
-
-	public void setRotationGroup(RotationGroup rotationGroup) {
-		this.rotationGroup = rotationGroup;
-	}
-
-
-	public AxisTransformation getAxisTransformation() {
-		return axisTransformation;
-	}
-
-
-	public void setAxisTransformation(AxisTransformation axistTransformation) {
-		this.axisTransformation = axistTransformation;
-	}
-
 
 	public JmolSymmetryScriptGenerator getScriptGenerator() {
 		return scriptGenerator;
 	}
-
-
-	public void setScriptGenerator(JmolSymmetryScriptGenerator scriptGenerator) {
-		this.scriptGenerator = scriptGenerator;
-	}
-
-
-	public void destroy() {
-		// clean up all references so this can get garbage collected
-		bioAssembly = null;
-		finder = null;
-		rotationGroup = null;
-		axisTransformation = null;
-		
-	}
-	
-	
-	
 }

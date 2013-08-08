@@ -25,7 +25,8 @@ package org.biojava3.structure.align.symm.census2;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
@@ -35,8 +36,11 @@ import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
+import org.biojava.bio.structure.scop.RemoteScopInstallation;
+import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
+import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.secstruc.SecStruc;
 import org.biojava.bio.structure.secstruc.SecStrucGroup;
 import org.biojava.bio.structure.secstruc.SecStrucState;
@@ -50,7 +54,7 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  */
 public class CensusJob implements Callable<Result> {
 
-	static final Logger logger = Census.logger;
+	private static final Logger logger = LogManager.getLogger(CensusJob.class.getPackage().getName());
 
 	private AlgorithmGiver algorithm;
 
@@ -60,7 +64,20 @@ public class CensusJob implements Callable<Result> {
 	private ScopDomain domain;
 	private Significance significance;
 	private ScopDescription superfamily;
+	
+	private String scopVersion = null;
 
+	AFPChain afpChain = null;
+	
+	public static Result runOn(ScopDomain domain, AtomCache cache, AlgorithmGiver algorithm, Significance sig, String scopVersion) {
+		ScopDescription superfamily = ScopFactory.getSCOP(scopVersion).getScopDescriptionBySunid(domain.getSuperfamilyId());
+		CensusJob job = new CensusJob(cache, algorithm, sig);
+		job.setCount(0);
+		job.setDomain(domain);
+		job.setSuperfamily(superfamily);
+		return job.call();
+	}
+	
 	private static boolean sanityCheckPreAlign(Atom[] ca1, Atom[] ca2) {
 		if (ca1 == ca2) return false;
 		if (ca1[0].getGroup().getChain().getParent() == ca2[0].getGroup().getChain().getParent()) return false;
@@ -86,6 +103,18 @@ public class CensusJob implements Callable<Result> {
 				"Must set domain, superfamily, and count first.");
 		String name = domain.getScopId();
 
+		if ( scopVersion != null ) {
+			System.out.println("censusJob setting SCOP version to: " + scopVersion);
+			ScopDatabase scop = ScopFactory.getSCOP(scopVersion);
+			ScopFactory.setScopDatabase(scop);
+		}
+		
+		// setting SCOP factory to latest BerkeleySCOP
+		if ( ScopFactory.getSCOP() instanceof RemoteScopInstallation) {
+			System.out.println("setting default scop to version " + ScopFactory.VERSION_1_75B);
+			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75B));
+		}
+		
 		// first, get the atoms
 		Atom[] ca1, ca2;
 		Structure structure;
@@ -102,7 +131,7 @@ public class CensusJob implements Callable<Result> {
 		logger.debug("Got " + ca1.length + " atoms (job #" + count + ")");
 
 		// run the alignment
-		AFPChain afpChain = null;
+		afpChain = null;
 		logger.debug("Running CE-Symm (job #" + count + ")");
 		try {
 			afpChain = findSymmetry(name, ca1, ca2);
@@ -226,6 +255,16 @@ public class CensusJob implements Callable<Result> {
 	public void setSuperfamily(ScopDescription superfamily) {
 		this.superfamily = superfamily;
 	}
+	
+	
+
+	public String getScopVersion() {
+		return scopVersion;
+	}
+
+	public void setScopVersion(String scopVersion) {
+		this.scopVersion = scopVersion;
+	}
 
 	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, ScopDescription superfamily, String scopId, Integer order, String protodomain, ScopDomain domain, Float angle, Float fractionHelical) {
 
@@ -272,6 +311,11 @@ public class CensusJob implements Callable<Result> {
 		double realTmScore = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 		afpChain.setTMScore(realTmScore);
 		return afpChain;
+	}
+	
+	public AFPChain getAFPChain(){
+		return afpChain;
+		
 	}
 
 }

@@ -92,84 +92,84 @@ public class AligQuaternaryStructure {
 	
 	public double[] align(String pdbId1, String pdbId2) {
 		double[] bestRmsd = {Double.MAX_VALUE, Double.MAX_VALUE};
-		Structure s1 = getStructure(pdbId1);
-		if (s1 == null) {
-			return bestRmsd;
-		}
-		ChainClusterer grouper1 = new ChainClusterer(s1, parameters);
-
-		Structure s2 = getStructure(pdbId2);
-		if (s2 == null) {
-			return bestRmsd;
-		}
-		ChainClusterer grouper2 = new ChainClusterer(s2, parameters);
-
-		ClusterAlignment alignment = alignUniqueSequences(grouper1, grouper2);
-
-		Matrix4d bestTransformation = new Matrix4d();
-		SubunitMapper mapper = new SubunitMapper(s1, s2);
-		List<List<Integer>> mappings = mapper.getMappings();
-		//		List<List<Integer>> mappings = mapper.getAllMappings();
-
-		for (List<Integer> mapping: mappings) {
-			Matrix4d transformation = new Matrix4d();
-			double[] rmsds = quaternaryStructureAlignment(mapping, alignment,grouper1, grouper2, transformation);
-			System.out.println("Mapping: " + mapping + " RMSD: " + rmsds[0]);
-			if (rmsds[0] < bestRmsd[0]) {
-				bestRmsd[0] = rmsds[0];
-				bestRmsd[1] = rmsds[1];
-				bestTransformation.set(transformation);
-			}
-		}
-
-		System.out.println("RESULT: rmsd: " + bestRmsd);
-		QuatSymmetryWriter writer = new QuatSymmetryWriter(s1);
-		String fileName = PDB_PATH + "transformed/" + pdbId1 + ".pdb";
-
-		writer.writeTransformedStructure(bestTransformation, fileName);
-		//				writer.writeTransformedStructureNotCentered(m, fileName);
-//		//				
-		fileName = PDB_PATH + "transformed/" + pdbId2 + ".pdb";
-		Matrix4d identity = new Matrix4d();
-		identity.setIdentity();
-		writer = new QuatSymmetryWriter(s2);
-		writer.writeTransformedStructure(identity, fileName);
-
-
+//		Structure s1 = getStructure(pdbId1);
+//		if (s1 == null) {
+//			return bestRmsd;
+//		}
+//		ChainClusterer grouper1 = new ChainClusterer(s1, parameters);
+//
+//		Structure s2 = getStructure(pdbId2);
+//		if (s2 == null) {
+//			return bestRmsd;
+//		}
+//		ChainClusterer grouper2 = new ChainClusterer(s2, parameters);
+//
+//		ClusterAlignment alignment = alignUniqueSequences(grouper1, grouper2);
+//
+//		Matrix4d bestTransformation = new Matrix4d();
+//		SubunitMapper mapper = new SubunitMapper(s1, s2);
+//		List<List<Integer>> mappings = mapper.getMappings();
+//		//		List<List<Integer>> mappings = mapper.getAllMappings();
+//
+//		for (List<Integer> mapping: mappings) {
+//			Matrix4d transformation = new Matrix4d();
+//			double[] rmsds = quaternaryStructureAlignment(mapping, alignment,grouper1, grouper2, transformation);
+//			System.out.println("Mapping: " + mapping + " RMSD: " + rmsds[0]);
+//			if (rmsds[0] < bestRmsd[0]) {
+//				bestRmsd[0] = rmsds[0];
+//				bestRmsd[1] = rmsds[1];
+//				bestTransformation.set(transformation);
+//			}
+//		}
+//
+//		System.out.println("RESULT: rmsd: " + bestRmsd);
+//		QuatSymmetryWriter writer = new QuatSymmetryWriter(s1);
+//		String fileName = PDB_PATH + "transformed/" + pdbId1 + ".pdb";
+//
+//		writer.writeTransformedStructure(bestTransformation, fileName);
+//		//				writer.writeTransformedStructureNotCentered(m, fileName);
+////		//				
+//		fileName = PDB_PATH + "transformed/" + pdbId2 + ".pdb";
+//		Matrix4d identity = new Matrix4d();
+//		identity.setIdentity();
+//		writer = new QuatSymmetryWriter(s2);
+//		writer.writeTransformedStructure(identity, fileName);
+//
+//
 		return bestRmsd;
 	}
 	
 	public double[] align(Structure s1, Structure s2) {
 		double[] bestRmsd = {Double.MAX_VALUE, Double.MAX_VALUE};
-		if (s1 == null) {
-			return bestRmsd;
-		}
-		ChainClusterer grouper1 = new ChainClusterer(s1, parameters);
-
-		if (s2 == null) {
-			return bestRmsd;
-		}
-		ChainClusterer grouper2 = new ChainClusterer(s2, parameters);
-
-		ClusterAlignment alignment = alignUniqueSequences(grouper1, grouper2);
-
-		Matrix4d bestTransformation = new Matrix4d();
-		SubunitMapper mapper = new SubunitMapper(s1, s2);
-		List<List<Integer>> mappings = mapper.getMappings();
-		//		List<List<Integer>> mappings = mapper.getAllMappings();
-
-		for (List<Integer> mapping: mappings) {
-			Matrix4d transformation = new Matrix4d();
-			double[] rmsds = quaternaryStructureAlignment(mapping, alignment,grouper1, grouper2, transformation);
-			System.out.println("Mapping: " + mapping + " RMSD: " + rmsds[0]);
-			if (rmsds[0] < bestRmsd[0]) {
-				bestRmsd[0] = rmsds[0];
-				bestRmsd[1] = rmsds[1];
-				bestTransformation.set(transformation);
-			}
-		}
-
-		System.out.println("RESULT: rmsd: " + bestRmsd);
+//		if (s1 == null) {
+//			return bestRmsd;
+//		}
+//		ChainClusterer grouper1 = new ChainClusterer(s1, parameters);
+//
+//		if (s2 == null) {
+//			return bestRmsd;
+//		}
+//		ChainClusterer grouper2 = new ChainClusterer(s2, parameters);
+//
+//		ClusterAlignment alignment = alignUniqueSequences(grouper1, grouper2);
+//
+//		Matrix4d bestTransformation = new Matrix4d();
+//		SubunitMapper mapper = new SubunitMapper(s1, s2);
+//		List<List<Integer>> mappings = mapper.getMappings();
+//		//		List<List<Integer>> mappings = mapper.getAllMappings();
+//
+//		for (List<Integer> mapping: mappings) {
+//			Matrix4d transformation = new Matrix4d();
+//			double[] rmsds = quaternaryStructureAlignment(mapping, alignment,grouper1, grouper2, transformation);
+//			System.out.println("Mapping: " + mapping + " RMSD: " + rmsds[0]);
+//			if (rmsds[0] < bestRmsd[0]) {
+//				bestRmsd[0] = rmsds[0];
+//				bestRmsd[1] = rmsds[1];
+//				bestTransformation.set(transformation);
+//			}
+//		}
+//
+//		System.out.println("RESULT: rmsd: " + bestRmsd);
 //		QuatSymmetryWriter writer = new QuatSymmetryWriter(s1);
 //		String fileName = PDB_PATH + "transformed/" + pdbId1 + ".pdb";
 //

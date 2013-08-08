@@ -1,9 +1,6 @@
 package org.biojava3.structure.quaternary.core;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -12,29 +9,18 @@ import java.util.TreeSet;
 import javax.vecmath.Point3d;
 
 import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Structure;
 
-public class ChainClusterer  {
-	private Structure structure = null;
-	private QuatSymmetryParameters parameters = null;
-	
-	private List<Atom[]> caUnaligned = new ArrayList<Atom[]>();
-	private List<String> chainIds = new ArrayList<String>();
-	private List<Integer> modelNumbers = new ArrayList<Integer>();
-	private List<String> sequences = new ArrayList<String>();
+public class ChainClusterer  {	
+	private List<SequenceAlignmentCluster> seqClusters = new ArrayList<SequenceAlignmentCluster>();	
+	private boolean modified = true;
+
 	private List<Atom[]> caAligned = new ArrayList<Atom[]>();
 	private List<Point3d[]> caCoords = new ArrayList<Point3d[]>();
-
-	List<SequenceAlignmentCluster> seqClusters = new ArrayList<SequenceAlignmentCluster>();
 	
-	private boolean modified = true;
-	private boolean pseudoSymmetric = false;
-
-	public ChainClusterer(Structure structure, QuatSymmetryParameters parameters) {
-		this.structure = structure;
-		this.parameters = parameters;
-		modified = true;
-	}	
+	public ChainClusterer(List<SequenceAlignmentCluster> seqClusters) {
+		this.seqClusters = seqClusters;
+		this.modified = true;
+	}
 	
 	public List<Point3d[]> getCalphaCoordinates() {
         run();
@@ -46,22 +32,7 @@ public class ChainClusterer  {
 		return caAligned;
 	}
 	
-	public boolean isHomomeric() {
-		run();
-		return seqClusters.size() == 1;
-	}
-	
-	public boolean isPseudoSymmetric() {
-		run();
-		return pseudoSymmetric;
-	}
-
-	public int getMultiplicity() {
-		run();
-		return seqClusters.get(seqClusters.size()-1).getSequenceCount();
-	}
-	
-	public List<String> getChainIdsInClusterOrder() {
+	public List<String> getChainIds() {
 		run();
 		List<String> chainIdList = new ArrayList<String>();
 
@@ -75,7 +46,7 @@ public class ChainClusterer  {
 	}
 	
 	
-	public List<Integer> getModelNumbersInClusterOrder() {
+	public List<Integer> getModelNumbers() {
 		run();
 		List<Integer> modNumbers = new ArrayList<Integer>();
 
@@ -88,15 +59,7 @@ public class ChainClusterer  {
 		return modNumbers;
 	}
 	
-	public List<String> getChainIds() {
-		return chainIds;
-	}
-	
-	public List<Integer> getModelNumbers() {
-		return modelNumbers;
-	}
-	
-	public String getCompositionFormula() {
+	public String getStoichiometry() {
 		run();
 		StringBuilder formula = new StringBuilder();
 		String alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -128,6 +91,7 @@ public class ChainClusterer  {
 		
 		// find common denominators
 		for (int d = 1; d <= nChains; d++) {
+
 			int count = 0;
 			for (Iterator<Integer> iter = nominators.iterator(); iter.hasNext();) {
 				if (iter.next() % d == 0) {
@@ -155,88 +119,78 @@ public class ChainClusterer  {
 		return list;
 	}
 	
-	public List<SequenceAlignmentCluster> getSequenceClusters() {
-		return seqClusters;
+	
+	public int getSequenceClusterCount() {
+		run();
+		return seqClusters.size();
+	}
+	
+	public List<Boolean> getPseudoStoichiometry() {
+		run();
+		List<Boolean> list = new ArrayList<Boolean>();
+		
+		for (int id = 0; id < seqClusters.size(); id++) {
+			int seqCount = seqClusters.get(id).getSequenceCount();
+			Boolean pseudo = seqClusters.get(id).isPseudoStoichiometric();
+			for (int i = 0; i < seqCount; i++) {
+				list.add(pseudo);
+			}
+		}
+		return list;
+	}
+	
+	public List<Double> getMinSequenceIdentity() {
+		run();
+		List<Double> list = new ArrayList<Double>();
+		
+		for (int id = 0; id < seqClusters.size(); id++) {
+			int seqCount = seqClusters.get(id).getSequenceCount();
+			double minSequenceIdentity = seqClusters.get(id).getMinSequenceIdentity();
+			for (int i = 0; i < seqCount; i++) {
+				list.add(minSequenceIdentity);
+			}
+		}
+		return list;
+	}
+	
+	public List<Double> getMaxSequenceIdentity() {
+		run();
+		List<Double> list = new ArrayList<Double>();
+		
+		for (int id = 0; id < seqClusters.size(); id++) {
+			int seqCount = seqClusters.get(id).getSequenceCount();
+			double maxSequenceIdentity = seqClusters.get(id).getMaxSequenceIdentity();
+			for (int i = 0; i < seqCount; i++) {
+				list.add(maxSequenceIdentity);
+			}
+		}
+		return list;
+	}
+	
+	public String toString() {
+		run();
+		StringBuilder builder = new StringBuilder();
+		builder.append("Sequence alignment clusters: " + seqClusters.size());
+		builder.append("\n");
+		for (SequenceAlignmentCluster s: seqClusters) {
+			builder.append("# seq: ");
+			builder.append(s.getSequenceCount());
+			builder.append(" alignment length: ");
+			builder.append(s.getSequenceAlignmentLength());
+			builder.append("\n");
+		}
+		return builder.toString();
 	}
 	
 	private void run() {
 		if (modified) {
-			extractProteinChains();
-			if (caUnaligned.size() == 0) {
-				
-				System.err.println("caUnaligned.size() == 0");
-				
-				modified = false;
-				return;
-			}
-			
-			if ( parameters.isVerbose() ) {
-				System.out.println("ChainClusterer: caUnaligned.size() = " + caUnaligned.size());
-			}
-			
-			
-			
-			calcSequenceClusters();
-			if ( parameters.isVerbose() ) {
-				System.out.println("ChainClusterer: seqClusters.size() = " + seqClusters.size());				
-			}
-			
-			calcAlignedSequences();
-			
-			if ( parameters.isVerbose() ) {
-				System.out.println("ChainClusterer: caAligned.size() = " + caAligned.size());				
-			}
-			
-			createCalphaTraces();
 			modified = false;
+			calcAlignedSequences();
+			createCalphaTraces();
 		}
 	}
 	
-	private void extractProteinChains() {
-		ProteinChainExtractor extractor = new ProteinChainExtractor(structure,  parameters);
-		caUnaligned = extractor.getCalphaTraces();
-		chainIds  = extractor.getChainIds();
-		sequences = extractor.getSequences();
-		modelNumbers = extractor.getModelNumbers();
-	}
-	
-	private void calcSequenceClusters() {
-		boolean[] processed = new boolean[caUnaligned.size()];
-		Arrays.fill(processed, false);
-	
-		for (int i = 0; i < caUnaligned.size(); i++) {
-			if (processed[i]) {
-				continue;
-			}
-			processed[i] = true;
-			// create new sequence cluster
-            UniqueSequenceList seqList = new UniqueSequenceList(caUnaligned.get(i), chainIds.get(i), modelNumbers.get(i), 0, sequences.get(i));
-            SequenceAlignmentCluster seqCluster = new SequenceAlignmentCluster(parameters);
-            seqCluster.addUniqueSequenceList(seqList);	
-            seqClusters.add(seqCluster);
-			
-            for (int j = i + 1; j < caUnaligned.size(); j++) {
-            	if (processed[j]) {
-            		continue;
-            	}
-            	for (SequenceAlignmentCluster c: seqClusters) {
-            		// add to existing sequence cluster if there is a match
-            		if (c.isSequenceMatch(sequences.get(j)) || parameters.isStructuralAlignmentOnly()) {
-            			if (c.addChain(caUnaligned.get(j), chainIds.get(j), modelNumbers.get(j), 0, sequences.get(j))) {
-            				processed[j] = true;
-            				if (c.isPseudoSymmetric()) {	
-            					pseudoSymmetric = true;
-            				}
-            				break;
-            			}
-            		}
-            	} 
-            }
 
-		}
-		sortSequenceClustersBySize(seqClusters);
-	}
-	
 	private void calcAlignedSequences() {
 		caAligned = new ArrayList<Atom[]>();
 		for (SequenceAlignmentCluster cluster: seqClusters) {
@@ -252,31 +206,5 @@ public class ChainClusterer  {
 			}
 			caCoords.add(trace);
 		}
-	}
-
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("Sequence alignment clusters: " + seqClusters.size());
-		builder.append("\n");
-		for (SequenceAlignmentCluster s: seqClusters) {
-			builder.append("# seq: ");
-			builder.append(s.getSequenceCount());
-			builder.append(" alignment length: ");
-			builder.append(s.getSequenceAlignmentLength());
-			builder.append("\n");
-		}
-		return builder.toString();
-	}
-	
-	public void sortSequenceClustersBySize(List<SequenceAlignmentCluster> clusters) {
-		Collections.sort(clusters, new Comparator<SequenceAlignmentCluster>() {
-			public int compare(SequenceAlignmentCluster c1, SequenceAlignmentCluster c2) {
-				int sign = Math.round(Math.signum(c2.getSequenceCount() - c1.getSequenceCount()));
-				if (sign != 0) {
-					return sign;
-				}
-				return Math.round(Math.signum(c2.getSequenceAlignmentLength() - c1.getSequenceAlignmentLength()));
-			}
-		});
 	}
 }

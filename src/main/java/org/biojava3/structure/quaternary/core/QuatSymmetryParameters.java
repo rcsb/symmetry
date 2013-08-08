@@ -1,12 +1,18 @@
 package org.biojava3.structure.quaternary.core;
 
+import java.util.Arrays;
+
 public class QuatSymmetryParameters {
-	private int minimumSequenceLength = 24;
-	private boolean structuralAlignmentOnly = false;
-	private double sequenceIdentityThreshold = 0.30;
+	private int minimumSequenceLength = 20;
+	private double[] sequenceIdentityThresholds = {0.0, 0.95};
 	private double sequencePseudoSymmetryThreshold = 0.95;
 	private double alignmentFractionThreshold = 0.9;
-	private double rmsdThreshold = 5.0;
+	private double rmsdThreshold = 7.0;
+	private double angleThreshold = 10.0; // max angle deviation for C2 solver
+	private double minimumHelixRise = 1.0;
+	private double minimumHelixAngle = 5.0; // min helix angle to differentiate it from a translational repeat
+	private int maximumLocalCombinations = 50000; // max number of combinations to try for local symmetry calculation
+	private boolean localSymmetry = true;
 	private boolean verbose = false;
 	private static final String n = System.getProperty("line.separator");
 	
@@ -25,15 +31,21 @@ public class QuatSymmetryParameters {
 	/**
 	 * @return the sequenceIdentityThreshold
 	 */
-	public double getSequenceIdentityThreshold() {
-		return sequenceIdentityThreshold;
-	}
+	
 	/**
-	 * @param sequenceIdentityThreshold the sequenceIdentityThreshold to set
+	 * @return the sequenceIdentityThreshold
 	 */
-	public void setSequenceIdentityThreshold(double sequenceIdentityThreshold) {
-		this.sequenceIdentityThreshold = sequenceIdentityThreshold;
+	public double[] getSequenceIdentityThresholds() {
+		return sequenceIdentityThresholds;
 	}
+	
+	/**
+	 * @param sequenceIdentityThresholds the sequenceIdentityThresholds to set
+	 */
+	public void setSequenceIdentityThresholds(double[] sequenceIdentityThresholds) {
+		this.sequenceIdentityThresholds = sequenceIdentityThresholds;
+	}
+	
 	/**
 	 * @return the alignmentFractionThreshold
 	 */
@@ -58,21 +70,25 @@ public class QuatSymmetryParameters {
 	public void setRmsdThreshold(double rmsdThreshold) {
 		this.rmsdThreshold = rmsdThreshold;
 	}
-	/**
-	 * @return the structuralAlignmentOnly
-	 */
-	public boolean isStructuralAlignmentOnly() {
-		return structuralAlignmentOnly;
+	public double getAngleThreshold() {
+		return angleThreshold;
+	}
+	public void setAngleThreshold(double angleThreshold) {
+		this.angleThreshold = angleThreshold;
 	}
 	
-// Reserved for the future. This feature is currently not supported
-//	/**
-//	 * @param structuralAlignmentOnly the structuralAlignmentOnly to set
-//	 */
-//	public void setStructuralAlignmentOnly(boolean structuralAlignmentOnly) {
-//		this.structuralAlignmentOnly = structuralAlignmentOnly;
-//	}
-	
+	public double getMinimumHelixRise() {
+		return minimumHelixRise;
+	}
+	public void setMinimumHelixRise(double minimumHelixRise) {
+		this.minimumHelixRise = minimumHelixRise;
+	}
+	public double getMinimumHelixAngle() {
+		return minimumHelixAngle;
+	}
+	public void setMinimumHelixAngle(double minimumHelixAngle) {
+		this.minimumHelixAngle = minimumHelixAngle;
+	}
 	public double getSequencePseudoSymmetryThreshold() {
 		return sequencePseudoSymmetryThreshold;
 	}
@@ -82,6 +98,18 @@ public class QuatSymmetryParameters {
 		this.sequencePseudoSymmetryThreshold = sequencePseudoSymmetryThreshold;
 	}
 	
+	public int getMaximumLocalCombinations() {
+		return maximumLocalCombinations;
+	}
+	public void setMaximumLocalCombinations(int maximumLocalCombinations) {
+		this.maximumLocalCombinations = maximumLocalCombinations;
+	}
+	public boolean isLocalSymmetry() {
+		return localSymmetry;
+	}
+	public void setLocalSymmetry(boolean localSymmetry) {
+		this.localSymmetry = localSymmetry;
+	}
 	public boolean isVerbose() {
 		return verbose;
 	}
@@ -91,22 +119,28 @@ public class QuatSymmetryParameters {
 	
 	public String toString() {
 		StringBuilder s = new StringBuilder();
-		s.append("Minimum protein sequence length  : ");
+		s.append("Minimum protein sequence length   : ");
 		s.append(minimumSequenceLength);
 		s.append(n);
-		s.append("Sequence identity threshold      : ");
-		s.append(sequenceIdentityThreshold);
+		s.append("Sequence identity thresholds      : ");
+		s.append(Arrays.toString(sequenceIdentityThresholds));
 		s.append(n);
-		s.append("Sequence pseudosymmetry threshold: ");
+		s.append("Sequence pseudosymmetry threshold : ");
 		s.append(sequencePseudoSymmetryThreshold);
 		s.append(n);
-		s.append("Alignment fraction threshold     : ");
+		s.append("Alignment fraction threshold      : ");
 		s.append(alignmentFractionThreshold);
 		s.append(n);
-		s.append("Symmetry RMSD threshold          : ");
+		s.append("Angle threshold                   : ");
+		s.append(angleThreshold);
+		s.append(n);	
+		s.append("Symmetry RMSD threshold           : ");
 		s.append(rmsdThreshold);
 		s.append(n);
-		s.append("Verbose                          : ");
+		s.append("Local symmetry                    : ");
+		s.append(localSymmetry);
+		s.append(n);
+		s.append("Verbose                           : ");
 		s.append(verbose);
 		s.append(n);
 		return s.toString();

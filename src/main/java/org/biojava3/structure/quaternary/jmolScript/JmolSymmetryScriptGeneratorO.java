@@ -3,7 +3,7 @@
  */
 package org.biojava3.structure.quaternary.jmolScript;
 
-import org.biojava3.structure.quaternary.core.AxisTransformation;
+import org.biojava3.structure.quaternary.core.RotationAxisAligner;
 import org.biojava3.structure.quaternary.geometry.Octahedron;
 
 
@@ -11,10 +11,10 @@ import org.biojava3.structure.quaternary.geometry.Octahedron;
  * @author Peter
  *
  */
-public class JmolSymmetryScriptGeneratorO extends JmolSymmetryScriptGenerator {
+public class JmolSymmetryScriptGeneratorO extends JmolSymmetryScriptGeneratorPointGroup {
 
-	public JmolSymmetryScriptGeneratorO(AxisTransformation axisTransformation) {
-		super(axisTransformation);
+	public JmolSymmetryScriptGeneratorO(RotationAxisAligner axisTransformation, String name) {
+		super(axisTransformation, name);
 		Octahedron o = new Octahedron();
 		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getXYRadius());
 		o.setMidRadius(radius);

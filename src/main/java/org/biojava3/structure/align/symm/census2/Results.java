@@ -76,6 +76,7 @@ public class Results implements Serializable {
 
 			// due to a side effect by JAXB
 			List<Result> newData = new ArrayList<Result>(results.getData().size());
+			
 			for (Result result : results.getData()) {
 				if (result != null) newData.add(result);
 			}
@@ -87,6 +88,37 @@ public class Results implements Serializable {
 			throw new IOException(e);
 		}
 
+	}
+	
+	public static List<SimpleResult> convertResults(List<Result> data){
+		List<SimpleResult> results = new ArrayList<SimpleResult>();
+		
+		for ( Result r : data){
+			SimpleResult s = new SimpleResult();
+			results.add(s);
+			
+			s.setAlignScore(r.getAlignment().getAlignScore());
+			s.setClassification(r.getClassification());
+			s.setDescription(r.getDescription());
+			s.setGapLength(r.getAlignment().getGapLength());
+			s.setIdentity(r.getAlignment().getIdentity());
+			s.setIsSignificant(r.getIsSignificant());
+			s.setOrder(r.getOrder());
+			s.setProtodomain(r.getProtodomain());
+			s.setRank(r.getRank());
+			s.setScopId(r.getScopId());
+			s.setSimilarity(r.getAlignment().getSimilarity());
+			s.setSunId(r.getSunId());
+			if ( r.getAxis() != null)
+				s.setTheta(r.getAxis().getTheta());
+			s.setTmScore(r.getAlignment().getTmScore());
+			s.setzScore(r.getAlignment().getzScore());
+			s.setRmsd(r.getAlignment().getRmsd());
+			s.setAlignLength(r.getAlignment().getAlignLength());
+			s.setLength1(r.getAlignment().getGapLength() + r.getAlignment().getAlignLength());
+		}
+		
+		return results;
 	}
 
 	public static Results fromXML(File[] files) throws IOException {
@@ -175,6 +207,10 @@ public class Results implements Serializable {
 
 		return baos.toString();
 
+	}
+
+	public static Results fromXML(String queryFile) throws IOException {
+		return fromXML(new File(queryFile));
 	}
 
 }

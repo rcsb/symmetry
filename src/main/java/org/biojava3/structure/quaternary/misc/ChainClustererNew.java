@@ -1,4 +1,4 @@
-package org.biojava3.structure.quaternary.core;
+package org.biojava3.structure.quaternary.misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,14 +13,19 @@ import javax.vecmath.Point3d;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
+import org.biojava3.structure.quaternary.core.ProteinChainExtractor;
+import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
+import org.biojava3.structure.quaternary.core.SequenceAlignmentCluster;
+import org.biojava3.structure.quaternary.core.UniqueSequenceList;
 
-public class ChainClusterer  {
-	private Structure structure = null;
+public class ChainClustererNew  {
+	private List<Structure> structures = new ArrayList<Structure>();
 	private QuatSymmetryParameters parameters = null;
 	
 	private List<Atom[]> caUnaligned = new ArrayList<Atom[]>();
 	private List<String> chainIds = new ArrayList<String>();
 	private List<Integer> modelNumbers = new ArrayList<Integer>();
+	private List<Integer> structureIds = new ArrayList<Integer>();
 	private List<String> sequences = new ArrayList<String>();
 	private List<Atom[]> caAligned = new ArrayList<Atom[]>();
 	private List<Point3d[]> caCoords = new ArrayList<Point3d[]>();
@@ -30,11 +35,16 @@ public class ChainClusterer  {
 	private boolean modified = true;
 	private boolean pseudoSymmetric = false;
 
-	public ChainClusterer(Structure structure, QuatSymmetryParameters parameters) {
-		this.structure = structure;
+	public ChainClustererNew(Structure structure, QuatSymmetryParameters parameters) {
+		this.structures.add(structure);
 		this.parameters = parameters;
 		modified = true;
-	}	
+	}
+	
+	public void addStructure(Structure structure) {
+		this.structures.add(structure);
+		modified = true;
+	}
 	
 	public List<Point3d[]> getCalphaCoordinates() {
         run();
@@ -88,12 +98,29 @@ public class ChainClusterer  {
 		return modNumbers;
 	}
 	
+	public List<Integer> getStructureIdsInClusterOrder() {
+		run();
+		List<Integer> structIds = new ArrayList<Integer>();
+
+		for (int i = 0; i < seqClusters.size(); i++) {
+	        SequenceAlignmentCluster cluster = seqClusters.get(i);
+	        for (Integer number: cluster.getStructureIds()) {
+	        	structIds.add(number);
+	        }
+		}
+		return structIds;
+	}
+	
 	public List<String> getChainIds() {
 		return chainIds;
 	}
 	
 	public List<Integer> getModelNumbers() {
 		return modelNumbers;
+	}
+	
+	public List<Integer> getStructureIds() {
+		return structureIds;
 	}
 	
 	public String getCompositionFormula() {
@@ -163,50 +190,28 @@ public class ChainClusterer  {
 		if (modified) {
 			extractProteinChains();
 			if (caUnaligned.size() == 0) {
-				
-				System.err.println("caUnaligned.size() == 0");
-				
 				modified = false;
 				return;
 			}
-			
-			if ( parameters.isVerbose() ) {
-				System.out.println("ChainClusterer: caUnaligned.size() = " + caUnaligned.size());
-			}
-			
-			
-			
 			calcSequenceClusters();
-			if ( parameters.isVerbose() ) {
-				System.out.println("ChainClusterer: seqClusters.size() = " + seqClusters.size());				
-			}
-			
 			calcAlignedSequences();
-			
-			if ( parameters.isVerbose() ) {
-				System.out.println("ChainClusterer: caAligned.size() = " + caAligned.size());				
-			}
-			
 			createCalphaTraces();
-<<<<<<< .mine
-=======
-			if ( parameters.isVerbose() ) {
-				System.out.println("ChainClusterer: caCoords.size() = " + caCoords.size());				
-			}
-			
-			
-//			createCbetaTraces();
->>>>>>> .r18978
 			modified = false;
 		}
 	}
 	
 	private void extractProteinChains() {
-		ProteinChainExtractor extractor = new ProteinChainExtractor(structure,  parameters);
-		caUnaligned = extractor.getCalphaTraces();
-		chainIds  = extractor.getChainIds();
-		sequences = extractor.getSequences();
-		modelNumbers = extractor.getModelNumbers();
+		for (int i = 0; i < structures.size(); i++) {
+			Structure structure = structures.get(i);
+			ProteinChainExtractor extractor = new ProteinChainExtractor(structure,  parameters);
+			caUnaligned.addAll(extractor.getCalphaTraces());
+			chainIds.addAll(extractor.getChainIds());
+			sequences.addAll(extractor.getSequences());
+			modelNumbers.addAll(extractor.getModelNumbers());
+			for (int j = 0; j < extractor.getChainIds().size(); j++) {
+				structureIds.add(i);
+			}
+		}
 	}
 	
 	private void calcSequenceClusters() {
@@ -219,7 +224,7 @@ public class ChainClusterer  {
 			}
 			processed[i] = true;
 			// create new sequence cluster
-            UniqueSequenceList seqList = new UniqueSequenceList(caUnaligned.get(i), chainIds.get(i), modelNumbers.get(i), 0, sequences.get(i));
+            UniqueSequenceList seqList = new UniqueSequenceList(caUnaligned.get(i), chainIds.get(i), modelNumbers.get(i), structureIds.get(i), sequences.get(i));
             SequenceAlignmentCluster seqCluster = new SequenceAlignmentCluster(parameters);
             seqCluster.addUniqueSequenceList(seqList);	
             seqClusters.add(seqCluster);
@@ -230,20 +235,17 @@ public class ChainClusterer  {
             	}
             	for (SequenceAlignmentCluster c: seqClusters) {
             		// add to existing sequence cluster if there is a match
-            		if (c.isSequenceMatch(sequences.get(j)) || parameters.isStructuralAlignmentOnly()) {
-            			if (c.addChain(caUnaligned.get(j), chainIds.get(j), modelNumbers.get(j), 0, sequences.get(j))) {
-            				processed[j] = true;
-            				if (c.isPseudoSymmetric()) {	
-            					pseudoSymmetric = true;
-            				}
-            				break;
-            			}
-            		}
+//            		if (c.isSeqResSequenceMatch(sequences.get(j)) || parameters.isStructuralAlignmentOnly()) {
+//            			if (c.addChain(caUnaligned.get(j), chainIds.get(j), modelNumbers.get(j), structureIds.get(j), sequences.get(j))) {
+//            				processed[j] = true;
+//            				break;
+//            			}
+//            		}
             	} 
             }
 
 		}
-		sortSequenceClustersBySize(seqClusters);
+//		sortSequenceClustersBySize(seqClusters);
 	}
 	
 	private void calcAlignedSequences() {
@@ -264,6 +266,7 @@ public class ChainClusterer  {
 	}
 
 	public String toString() {
+		run();
 		StringBuilder builder = new StringBuilder();
 		builder.append("Sequence alignment clusters: " + seqClusters.size());
 		builder.append("\n");

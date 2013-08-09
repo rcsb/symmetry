@@ -48,6 +48,7 @@ public class RotationSolver implements QuatSymmetrySolver {
 		if (rotations.getOrder() == 0) {
             solve();
             completeRotationGroup();
+            rotations.complete();
         }
                
         return rotations;
@@ -123,8 +124,7 @@ public class RotationSolver implements QuatSymmetrySolver {
     	if (g.getOrder() == rotations.getOrder()) {
     		return;
     	}
-    	
- //   	
+    	   	
     	// try to complete the group
     	for (int i = 0; i < g.getOrder(); i++) {
     		List<Integer> permutation = g.getPermutation(i);

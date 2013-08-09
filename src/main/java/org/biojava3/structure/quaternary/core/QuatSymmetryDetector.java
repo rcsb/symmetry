@@ -105,8 +105,6 @@ public class QuatSymmetryDetector {
 			chainClusterer = new ChainClusterer(clusterer.getSequenceAlignmentClusters(thresholds[index]));
 
 			int chainCount = chainClusterer.getChainIds().size();
-			int clusterCount = chainClusterer.getSequenceClusterCount();
-
 			if (chainCount == 0) {
 				return;
 			}
@@ -114,8 +112,9 @@ public class QuatSymmetryDetector {
 			// determine global symmetry
 			Subunits globalSubunits = createGlobalSubunits();
 			QuatSymmetryResults gSymmetry = calcQuatSymmetry(globalSubunits);
-			gSymmetry.setSequenceIdentityThreshold(thresholds[index]);
+			gSymmetry.setSequenceIdentityThreshold(thresholds[index]);		
 			globalSymmetry.add(gSymmetry);
+	
 
 			// determine local symmetry if global structure is 
 			// (1) asymmetric (C1)
@@ -125,8 +124,9 @@ public class QuatSymmetryDetector {
 			// TODO example 2PT7: global C2, but local C6 symm., should that be included here ...?
 			// i.e., include all heteromers here, for example if higher symmetry is possible by stoichiometry? A6B2 -> local A6  can have higher symmetry
 			if (parameters.isLocalSymmetry()) {
-				if (gSymmetry.getRotationGroup().getPointGroup().equals("C1") &&
-						clusterCount > 1 && chainCount > 2) {
+				if (gSymmetry.getRotationGroup() != null && gSymmetry.getRotationGroup().getPointGroup().equals("C1") &&
+						chainCount > 2) {
+//						clusterCount > 1 && chainCount > 2) {
 
 					List<Subunits> localSubunits = createLocalSubunits();
 					List<QuatSymmetryResults> lSymmetry = new ArrayList<QuatSymmetryResults>();
@@ -144,8 +144,44 @@ public class QuatSymmetryDetector {
 			}
 		}
 		
-		setPreferredResults();
 		setPseudoSymmetry();
+		setPreferredResults();
+	}
+	
+	/**
+	 * Sets pseudosymmetry flag for results that have pseudosymmetry
+	 * @param thresholds sequence identity thresholds
+	 */
+	private void setPseudoSymmetry() {
+		setPseudoSymmetry(globalSymmetry);
+		for (List<QuatSymmetryResults> localSymmetry: localSymmetries) {
+			setPseudoSymmetry(localSymmetry);
+		}
+	}
+	
+	/**
+	 * Sets pseudosymmetry based on the analysis of all symmetry results
+	 */
+	private void setPseudoSymmetry(List<QuatSymmetryResults> results) {
+		// find maximum symmetry order for cases of non-pseudostoichiometry
+		int maxOrder = 0;
+		for (QuatSymmetryResults result: results) {
+			if (result.getRotationGroup() != null && !result.getSubunits().isPseudoStoichiometric()) {
+				if (result.getRotationGroup().getOrder() > maxOrder) {
+					maxOrder = result.getRotationGroup().getOrder();
+				}
+			} 
+		}
+
+		// if the order of symmetry for a pseudstoichiometric case is higher 
+		// than the order for a non-pseudostoichiometry, set the pseudoSymmetry flag to true (i.e. 4HHB)
+		for (QuatSymmetryResults result: results) {
+			if (result.getRotationGroup() != null) {
+				if (result.getRotationGroup().getOrder() > maxOrder) {
+					result.getSubunits().setPseudoSymmetric(true);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -158,7 +194,7 @@ public class QuatSymmetryDetector {
 		// check global symmetry
 		for (int i = 0; i < globalSymmetry.size(); i++) {
 			QuatSymmetryResults result = globalSymmetry.get(i);
-			if (! result.getRotationGroup().getPointGroup().equals("C1")) {
+			if (! result.getSymmetry().equals("C1")) {
 				score[i] += 2;
 			}
 			if (! result.getSubunits().isPseudoStoichiometric()) {
@@ -186,7 +222,7 @@ public class QuatSymmetryDetector {
 		for (int i = 0; i < localSymmetries.size(); i++) {
 			List<QuatSymmetryResults> results = localSymmetries.get(i);
 			for (QuatSymmetryResults result: results) {
-				if (! result.getRotationGroup().getPointGroup().equals("C1")) {
+				if (! result.getSymmetry().equals("C1")) {
 					score[i] += 2;
 				}
 				if (! result.getSubunits().isPseudoStoichiometric()) {
@@ -214,58 +250,14 @@ public class QuatSymmetryDetector {
 		}
 	}
 	
-	/**
-	 * Sets pseudosymmetry flag for results that have pseudosymmetry
-	 * @param thresholds sequence identity thresholds
-	 */
-	private void setPseudoSymmetry() {
-		String symmPointGroup = "";
-		String pseudoPointGroup = "";
-		QuatSymmetryResults pseudoGlobal = null;
-		for (QuatSymmetryResults result: getGlobalSymmetry()) {
-			if (result.getSubunits().isPseudoStoichiometric()) {
-				pseudoPointGroup = result.getRotationGroup().getPointGroup();
-				pseudoGlobal = result;
-			} else {
-				symmPointGroup = result.getRotationGroup().getPointGroup();
-			}
-		}
-
-		if (pseudoGlobal != null && ! pseudoPointGroup.equals(symmPointGroup)) {
-			pseudoGlobal.getSubunits().setPseudoSymmetric(true);
-		}
-
-		// check for local pseudosymmetry
-		List<QuatSymmetryResults> pseudoLocal = null;
-		for (List<QuatSymmetryResults> results: getLocalSymmetries()) {
-			for (QuatSymmetryResults result: results) {
-				if (result.getSubunits().isPseudoStoichiometric()) {
-					pseudoPointGroup = result.getRotationGroup().getPointGroup();
-					pseudoLocal = results;
-				} else {
-					symmPointGroup = result.getRotationGroup().getPointGroup();
-				}
-			}
-		}
-		if (pseudoLocal != null && ! pseudoPointGroup.equals(symmPointGroup)) {
-			for (QuatSymmetryResults result: pseudoLocal) {
-				result.getSubunits().setPseudoSymmetric(true);
-			}
-		}
-	}
-
 	private void addToLocalSymmetry(QuatSymmetryResults testResults, List<QuatSymmetryResults> localSymmetry) {
-		if (testResults.getRotationGroup().getPointGroup().equals("C1")) {
+		if (testResults.getSymmetry().equals("C1")) {
 			return;
 		}
 
 		for (QuatSymmetryResults results: localSymmetry) {
 			if (results.getSubunits().overlaps(testResults.getSubunits())) {
-//				System.out.println("Subunit overlaps large subunit");
-				if (testResults.getRotationGroup().getOrder() <= results.getRotationGroup().getOrder()) {
-//					System.out.println("Subunit has equal or lower symmetry order");
-					return;
-				}
+				return;
 			}
 		}
 		testResults.setLocal(true);
@@ -460,16 +452,35 @@ public class QuatSymmetryDetector {
 			QuatSymmetrySolver solver = new RotationSolver(subunits, parameters);
 			rotationGroup = solver.getSymmetryOperations();
 		}
-
-		rotationGroup.complete();
 		
-//		String pointGroup = rotationGroup.getPointGroup();
-//		if (pointGroup.startsWith("C")) {
-//			HelixCheck hc = new HelixCheck(subunits, rotationGroup, this.parameters);
-//			System.out.println("Helical: " + hc.isHelical());
-//		}
-	//	System.exit(-1);
 		QuatSymmetryResults results = new QuatSymmetryResults(subunits, rotationGroup, method);
+		
+		String pointGroup = rotationGroup.getPointGroup();
+		double cRmsd = rotationGroup.getAverageTraceRmsd();
+		
+		// asymmetric structures cannot be pseudosymmetric
+		if (pointGroup.startsWith("C1")) {
+			subunits.setPseudoSymmetric(false);
+		}
+		
+		// For helical symmetry check cases with:
+		// a) no symmetry, or
+		// b) Cn symmetry with low rmsd (could be candidates for n-start helixes, i.e., 1IFD)
+		if (pointGroup.startsWith("C1") || (pointGroup.startsWith("C") && cRmsd < 0.05)) {			
+			HelixSolver hc = new HelixSolver(subunits, rotationGroup.getOrder(), parameters);
+			HelixLayers helixLayers = hc.getSymmetryOperations();
+
+			if (helixLayers.size() > 0) {		
+				double hRmsd = helixLayers.getAverageTraceRmsd();
+//				System.out.println("RMSD: cyclic vs helical: " + cRmsd + " - " + hRmsd);
+				if (pointGroup.equals("C1") || (!pointGroup.equals("C1") && hRmsd < 0.05)) {
+//					System.out.println("Assigning helical point group");
+					method = "rottranslation";
+					results = new QuatSymmetryResults(subunits, helixLayers, method);
+				}
+			}
+		}
+
 		return results;
 	}
 }

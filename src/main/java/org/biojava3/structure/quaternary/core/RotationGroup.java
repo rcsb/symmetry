@@ -65,16 +65,23 @@ public class RotationGroup {
 
 	public void complete() {
 		if (modified) {
-
-
 			if (rotations.size() > 0) {
-				findHighestOrderAxis();
-				setEAxis();
-				calcAxesDirections();
-				findHigherOrderAxes();
-				findTwoFoldsPerpendicular();
-				calcPointGroup();
-				sortByFoldDecending();
+				for (Rotation rotation: rotations) {
+					if (rotation.getNStart() > 0) {
+						pointGroup = "H";
+						break;
+					}
+				}
+
+				if (! pointGroup.equals("H")) {
+					findHighestOrderAxis();
+					setEAxis();
+					calcAxesDirections();
+					findHigherOrderAxes();
+					findTwoFoldsPerpendicular();
+					calcPointGroup();
+					sortByFoldDecending();
+				}
 			}
 			modified = false;
 		}
@@ -116,11 +123,30 @@ public class RotationGroup {
 			if (r < 0.0) {
 				return r;
 			}
-			rmsd += rotations.get(i).getTraceRmsd();
+			rmsd += r;
 		}
 		return rmsd/(rotations.size()-1);
 	}
-
+	
+	/**
+	 * Returns the RMSD including all operation. Use this method only for helical symmetry.
+	 * @return
+	 */
+	public double getAllAverageTraceRmsd() {
+		double rmsd = 0;
+		// note, this loop starts at 1, because we don't take into account 
+		// RMSD of first operation (E)
+		for (int i = 0; i < rotations.size(); i++) {
+			double r = rotations.get(i).getTraceRmsd();
+			// if any invalid rmsd is found, stop
+			if (r < 0.0) {
+				return r;
+			}
+			rmsd += r;
+		}
+		return rmsd/(rotations.size());
+	}
+	
 	public boolean isComplete() {
 		return complete;
 	}

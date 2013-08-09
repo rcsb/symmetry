@@ -3,7 +3,7 @@
  */
 package org.biojava3.structure.quaternary.jmolScript;
 
-import org.biojava3.structure.quaternary.core.AxisTransformation;
+import org.biojava3.structure.quaternary.core.RotationAxisAligner;
 import org.biojava3.structure.quaternary.geometry.Icosahedron;
 
 
@@ -11,9 +11,9 @@ import org.biojava3.structure.quaternary.geometry.Icosahedron;
  * @author Peter
  *
  */
-public class JmolSymmetryScriptGeneratorI extends JmolSymmetryScriptGenerator {
+public class JmolSymmetryScriptGeneratorI extends JmolSymmetryScriptGeneratorPointGroup {
 
-	public JmolSymmetryScriptGeneratorI(AxisTransformation axisTransformation, String name) {
+	public JmolSymmetryScriptGeneratorI(RotationAxisAligner axisTransformation, String name) {
 		super(axisTransformation, name);
 		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getXYRadius());
 		Icosahedron i = new Icosahedron();

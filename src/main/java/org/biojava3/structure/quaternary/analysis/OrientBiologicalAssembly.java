@@ -14,8 +14,6 @@ import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.ChemCompProvider;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
-import org.biojava3.structure.quaternary.core.AxisTransformation;
-
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 
@@ -81,8 +79,8 @@ public class OrientBiologicalAssembly {
 		FileParsingParameters p = new FileParsingParameters();
 		p.setStoreEmptySeqRes(true);
 		p.setLoadChemCompInfo(true);
+		p.setParseCAOnly(true);
 		p.setAtomCaThreshold(Integer.MAX_VALUE);
-		p.setAcceptedAtomNames(new String[]{" CA "});
 
 		PDBFileReader pdbreader = new PDBFileReader();
 		pdbreader.setFileParsingParameters(p);
@@ -102,7 +100,6 @@ public class OrientBiologicalAssembly {
 		
 		// initialize with default parameters
 		QuatSymmetryParameters params = new QuatSymmetryParameters();
-//		params.setLocalSymmetry(false);
 		params.setVerbose(verbose);
 
 		System.out.println("Default parameters:");
@@ -122,14 +119,12 @@ public class OrientBiologicalAssembly {
 		boolean hasProtein = detector.hasProteinSubunits();
 		
 		long t2 = System.nanoTime();
-		
-		System.out.println("CalcBioAssemblySymmetry: " + (t2-t1)*0.000001 + " ms");
 
 		if (hasProtein) {		
 			
 			System.out.println("Bioassembly id: " + getBioassemblyId());
 			
-			System.out.println("Point group:             : " + calc.getRotationGroup().getPointGroup());
+			System.out.println("Point group:             : " + calc.getSymmetry());
 			System.out.println("Subunit count            : " + calc.getSubunits().getSubunitCount());
 			System.out.println("Stoichiometry            : " + calc.getSubunits().getStoichiometry());
 			System.out.println("Color by subunit         : " + calc.getScriptGenerator().colorBySubunit());
@@ -151,13 +146,13 @@ public class OrientBiologicalAssembly {
 			}
 
 			String outName = prefix + "_4x4transformation.txt";
-			System.out.println("Writing 4x4 transformation to: " + outName);
-			AxisTransformation at = calc.getAxisTransformation();	
-			writeFile(outName, at.getTransformation().toString());
+			System.out.println("Writing 4x4 transformation to: " + outName);	
+			writeFile(outName, calc.getScriptGenerator().getTransformation().toString());
 
 			outName = prefix + "_JmolAnimation.txt";
 			System.out.println("Writing Jmol animation to: " + outName);
-			writeFile(outName, calc.getScriptGenerator().playOrientations());
+			String script = calc.getScriptGenerator().colorBySymmetry() + calc.getScriptGenerator().playOrientations();
+			writeFile(outName, script);
 			
 		} else { 
 			System.out.println("Bioassembly id: " + getBioassemblyId());	
@@ -168,7 +163,8 @@ public class OrientBiologicalAssembly {
 			m.setIdentity();
 			writeFile(outName, m.toString());
 		}
-
+		
+		System.out.println("CalcBioAssemblySymmetry: " + (t2-t1)*0.000001 + " ms");
 	}
 
 	private String getBioassemblyId() {

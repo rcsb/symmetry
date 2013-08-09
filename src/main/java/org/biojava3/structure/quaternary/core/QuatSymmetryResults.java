@@ -31,6 +31,7 @@ package org.biojava3.structure.quaternary.core;
 public class QuatSymmetryResults {
 	private Subunits subunits = null;
 	private RotationGroup rotationGroup = null;
+	private HelixLayers helixLayers = null;
 	private String method = null;
 	private double sequenceIdentityThreshold = 0;
 	private boolean local = false;
@@ -39,6 +40,12 @@ public class QuatSymmetryResults {
 	public QuatSymmetryResults(Subunits subunits, RotationGroup rotationGroup, String method) {
 		this.subunits = subunits;
 		this.rotationGroup = rotationGroup;
+		this.method = method;
+	}
+	
+	public QuatSymmetryResults(Subunits subunits, HelixLayers helixLayers, String method) {
+		this.subunits = subunits;
+		this.helixLayers = helixLayers;
 		this.method = method;
 	}
 	
@@ -61,6 +68,13 @@ public class QuatSymmetryResults {
 		return rotationGroup;
 	}
 
+	/*
+	 * Returns helix layers (layer lines) as a list of helices that describe a helical structure
+	 */
+	public HelixLayers getHelixLayers() {
+		return helixLayers;
+	}
+
 	/**
 	 * Returns name of method used for symmetry perception.
 	 * 
@@ -70,6 +84,34 @@ public class QuatSymmetryResults {
 		return method;
 	}
 
+	
+    /**
+     * Returns the symmetry group. For point groups return the point group symbol
+     * and for helical symmetry returns "H".
+     * @return symmetry symbol
+     */
+	public String getSymmetry() {
+		if (helixLayers != null && helixLayers.size() > 0) {
+			return "H";
+		} else if (rotationGroup != null && rotationGroup.getOrder() > 0) {
+			return rotationGroup.getPointGroup();
+		}
+		return "";
+	}
+	
+	/**
+	 * Returns the average Calpha trace RMSD for all symmetry operations
+	 * @return
+	 */
+	public double getAverageTraceRmsd() {
+		if (helixLayers != null && helixLayers.size() > 0) {
+			return helixLayers.getAverageTraceRmsd();
+		} else if (rotationGroup != null && rotationGroup.getOrder() > 0) {
+			return rotationGroup.getAllAverageTraceRmsd();
+		}
+		return 0;
+	}
+	
 	public double getSequenceIdentityThreshold() {
 		return sequenceIdentityThreshold;
 	}
@@ -78,6 +120,37 @@ public class QuatSymmetryResults {
 		this.sequenceIdentityThreshold = sequenceIdentityThreshold;
 	}
 
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		
+	    sb.append("Stoichiometry         : ");
+	    sb.append(getSubunits().getStoichiometry());
+	    sb.append("\n");
+	    sb.append("Pseudostoichiometry   : ");
+	    sb.append(getSubunits().isPseudoStoichiometric());
+	    sb.append("\n");
+	    sb.append("Pseudosymmetry        : ");
+	    sb.append(getSubunits().isPseudoSymmetric());
+	    sb.append("\n");
+	    sb.append("Min sequence identity : ");
+	    sb.append(Math.round(getSubunits().getMinSequenceIdentity()*100));
+	    sb.append("\n");
+	    sb.append("Max sequence identity : ");
+	    sb.append(Math.round(getSubunits().getMaxSequenceIdentity()*100));
+	    sb.append("\n");
+	    sb.append("Symmetry              : ");
+	    sb.append(getSymmetry());				
+	    sb.append("\n");
+	    sb.append("Symmetry RMSD         : ");
+	    sb.append((float) getAverageTraceRmsd());
+	    sb.append("\n");
+	    sb.append("Prefered result       : ");
+	    sb.append(isPreferredResult());
+	    sb.append("\n");
+	    
+	    return sb.toString();
+	}
+	
 	/**
 	 * Return true 
 	 * @return

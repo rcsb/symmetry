@@ -2,6 +2,7 @@
 package org.biojava3.structure.quaternary.core;
 
 import java.util.List;
+
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix4d;
 
@@ -9,14 +10,16 @@ import javax.vecmath.Matrix4d;
  *
  * @author Peter
  */
-public class Rotation {
+public class Helix {
     private double subunitRmsd = Double.MAX_VALUE;
     private double traceRmsd = Double.MAX_VALUE;
     private List<Integer> permutation;
+    private List<List<Integer>> repeatUnits;
     private Matrix4d transformation;
-    private AxisAngle4d axisAngle;
-    private int direction;
+    private double rise;
+    private int nStart;
     private int fold;
+    private int contacts;
 
     /**
      * @return the subunitRmsd
@@ -60,7 +63,15 @@ public class Rotation {
         this.permutation = permutation;
     }
 
-    /**
+    public List<List<Integer>> getRepeatUnits() {
+		return repeatUnits;
+	}
+
+	public void setRepeatUnits(List<List<Integer>> repeatUnits) {
+		this.repeatUnits = repeatUnits;
+	}
+
+	/**
      * @return the transformation
      */
     public Matrix4d getTransformation() {
@@ -74,7 +85,43 @@ public class Rotation {
         this.transformation = transformation;
     }
 
-    /**
+    public double getRise() {
+		return rise;
+	}
+
+	public void setRise(double rise) {
+		this.rise = rise;
+	}
+	
+	/**
+	 * Returns the pitch angle of the helix
+	 * @param transformation helix transformation
+	 * @return
+	 */
+	public double getAngle() {
+		return getAxisAngle().angle;
+	}
+	
+	/**
+	 * Returns the AxisAngle of the helix transformation
+	 * @param transformation helix transformation
+	 * @return
+	 */
+	public AxisAngle4d getAxisAngle() {
+		AxisAngle4d axis = new AxisAngle4d();
+		axis.set(this.transformation);
+		return axis;
+	}
+
+	public int getnStart() {
+		return nStart;
+	}
+
+	public void setnStart(int nStart) {
+		this.nStart = nStart;
+	}
+
+	/**
      * @return the fold
      */
     public int getFold() {
@@ -87,55 +134,24 @@ public class Rotation {
     public void setFold(int fold) {
         this.fold = fold;
     }
-
-    /**
-     * @return the direction
-     */
-    public int getDirection() {
-        return direction;
-    }
-
-    /**
-     * @param direction the direction to set
-     */
-    public void setDirection(int axis) {
-        this.direction = axis;
-    }
-
-    /**
-     * @return the axisAngle
-     */
-    public AxisAngle4d getAxisAngle() {
-        return axisAngle;
-    }
-
-    /**
-     * @param axisAngle the axisAngle to set
-     */
-    public void setAxisAngle(AxisAngle4d axisAngle) {
-        this.axisAngle = axisAngle;
-    }
     
-    /**
-     * Returns the number of starts if this rotation represents a helical rotation
-     */
-    public int getNStart() {
-    	int nStart = 0;
-    	for (int i: permutation) {
-    		if (i == -1) {
-    			nStart++;
-    		}
-    	}
-        return nStart;
-    }
+    public int getContacts() {
+		return contacts;
+	}
+
+	public void setContacts(int contacts) {
+		this.contacts = contacts;
+	}
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(" fold       : " + fold);
-        sb.append(" orientation: " + direction);
-        sb.append(" axisAngle  : " + axisAngle);
-        sb.append(" RMSD       : " + subunitRmsd);
-        sb.append(" permutation: " + permutation);
+        sb.append("Subunit RMSD  : " + getSubunitRmsd() + "\n");
+        sb.append("CA RMSD       : " + getTraceRmsd() + "\n");
+        sb.append("Permutation   : " + getPermutation() + "\n");
+        sb.append("Repeat units  : " + getRepeatUnits() + "\n");
+        sb.append("Rise          : " + getRise() + "\n");
+        sb.append("Angle         : " + Math.toDegrees(getAngle()) +"\n");
+        sb.append("Fold          : " + getFold() + "\n");
         return sb.toString();
     }
 }

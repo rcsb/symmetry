@@ -36,12 +36,13 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
 
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
-import org.biojava3.structure.quaternary.core.AxisTransformation;
+import org.biojava3.structure.quaternary.core.RotationAxisAligner;
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
+import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 
 public class DemoOrientBioAssembly {
 
@@ -179,14 +180,16 @@ public class DemoOrientBioAssembly {
 				
 			}
 			
+
+			RotationAxisAligner axisTransformation = new RotationAxisAligner(result);
+
 			longTitle += " M:" + result.getMethod();
 			
 			longTitle += String.format(" SEQ: %.2f - %.2f", result.getSubunits().getMinSequenceIdentity() ,result.getSubunits().getMaxSequenceIdentity());
 			
-			AxisTransformation axisTransformation = new AxisTransformation(result);
 
 			// use factory method to get point group specific instance of script generator
-			JmolSymmetryScriptGenerator scriptGenerator = JmolSymmetryScriptGenerator.getInstance(axisTransformation, "g");
+			JmolSymmetryScriptGenerator scriptGenerator = JmolSymmetryScriptGeneratorPointGroup.getInstance(axisTransformation, "g");
 
 			script += scriptGenerator.getOrientationWithZoom(0);
 			script += scriptGenerator.drawPolyhedron();

@@ -46,10 +46,15 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 		trans.negate();
 		List<Point3d[]> traces = subunits.getTraces();
 
+//		Point3d[] x = SuperPosition.clonePoint3dArray(traces.get(0));
+//		SuperPosition.center(x);
+//		Point3d[] y = SuperPosition.clonePoint3dArray(traces.get(1));
+//		SuperPosition.center(y);
+		
 		Point3d[] x = SuperPosition.clonePoint3dArray(traces.get(0));
-		SuperPosition.center(x);
+		SuperPosition.translate(new Point3d(trans), x);
 		Point3d[] y = SuperPosition.clonePoint3dArray(traces.get(1));
-		SuperPosition.center(y);
+		SuperPosition.translate(new Point3d(trans), y);
 
 		AxisAngle4d axisAngle = new AxisAngle4d();
 

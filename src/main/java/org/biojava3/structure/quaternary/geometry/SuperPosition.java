@@ -125,7 +125,7 @@ public final class SuperPosition {
     
     
     public static double rmsd(Point3d[] x, Point3d[] y) {
-        double sum = 0.0f;
+        double sum = 0.0;
         for (int i = 0; i < x.length; i++) {
             sum += x[i].distanceSquared(y[i]);
         }
@@ -133,7 +133,7 @@ public final class SuperPosition {
     }
 
     public static double rmsdMin(Point3d[] x, Point3d[] y) {
-        double sum = 0.0f;
+        double sum = 0.0;
         for (int i = 0; i < x.length; i++) {
             double minDist = Double.MAX_VALUE;
             for (int j = 0; j < y.length; j++) {
@@ -144,6 +144,26 @@ public final class SuperPosition {
         return (double)Math.sqrt(sum/x.length);
     }
 
+    /**
+     * Returns the TM-Score for two superimposed sets of coordinates
+     * Yang Zhang and Jeffrey Skolnick, PROTEINS: Structure, Function, and Bioinformatics 57:702–710 (2004)
+     * @param x coordinate set 1
+     * @param y coordinate set 2
+     * @param lengthNative total length of native sequence
+     * @return
+     */
+    public static double TMScore(Point3d[] x, Point3d[] y, int lengthNative) {   
+        double d0 = 1.24 * Math.cbrt(x.length - 15.0) - 1.8;
+        double d0Sq = d0*d0;
+        
+        double sum = 0;
+        for(int i = 0; i < x.length; i++) {
+        	sum += 1.0/(1.0 + x[i].distanceSquared(y[i])/d0Sq);
+        }
+        
+        return sum/lengthNative;
+    }
+    
     public static double GTSlikeScore(Point3d[] x, Point3d[] y) {
         int contacts = 0;
 

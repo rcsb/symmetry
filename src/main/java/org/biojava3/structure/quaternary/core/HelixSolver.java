@@ -193,6 +193,9 @@ public class HelixSolver {
 			transformation = SuperPosition.superposeWithTranslation(h1, h2);
 
 			double traceRmsd = SuperPosition.rmsd(h1, h2);
+			
+			// TM score should be calcualted separately for each subunit!
+			double traceTmScore = SuperPosition.TMScore(h1, h2, h1.length);
 			rise = getRise(transformation, repeatUnitCenters.get(pair[0]), repeatUnitCenters.get(pair[1]));
 			angle = getAngle(transformation);
 
@@ -223,6 +226,7 @@ public class HelixSolver {
 			helix.setRise(rise);
 			helix.setSubunitRmsd(subunitRmsd);
 			helix.setTraceRmsd(traceRmsd);
+			helix.setTraceTmScoreMin(traceTmScore);
 			helix.setFold(fold);
 			helix.setContacts(contacts);
 			helix.setRepeatUnits(unit.getRepeatUnitIndices());

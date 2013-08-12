@@ -14,11 +14,13 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
+import org.biojava3.structure.quaternary.core.AxisAligner;
 import org.biojava3.structure.quaternary.core.HelixAxisAligner;
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 import org.biojava3.structure.quaternary.core.Subunits;
+import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGeneratorH;
 import org.biojava3.structure.quaternary.misc.ProteinComplexSignature;
 import org.biojava3.structure.quaternary.utils.BlastClustReader;
@@ -47,12 +49,10 @@ public class ScanSymmetry implements Runnable {
 
 
 		PrintWriter out = null;
-//		PrintWriter out1 = null;
 		PrintWriter error = null;
 
 		try {
 			out = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_symm.csv"));
-//			out1 = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_error.csv"));
 			error = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp + "_error.txt"));
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -67,9 +67,8 @@ public class ScanSymmetry implements Runnable {
 		int failure = 0;
 
 		String header = "pdbId,bioassembly,local,pseudostoichiometric,stoichiometry,pseudosymmetric,pointgroup,order," +
-				"lowSymmetry,minidentity,maxidentity,rmsd,subunits,time,signature95,stoich95,signature30,stoich30,spacegroup";
+				"lowSymmetry,minidentity,maxidentity,rmsd,tmscoremin,subunits,time,signature95,stoich95,signature30,stoich30,spacegroup";
 		out.println(header);
-//		out1.println(header);
 		
 		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 
@@ -171,18 +170,6 @@ public class ScanSymmetry implements Runnable {
 			BlastClustReader reader30, PrintWriter out, String pdbId,
 			int bioAssemblyId, int time, List<QuatSymmetryResults> resultsList, String spaceGroup) {
 		for (QuatSymmetryResults results: resultsList) {
-			StringBuilder sb = new StringBuilder();
-			if (results.getSymmetry().equals("H")) {
-				HelixAxisAligner helixAxisTransformation = new HelixAxisAligner(results);
-				System.out.println("Helix dimensions: " + helixAxisTransformation.getDimension());
-				JmolSymmetryScriptGeneratorH gen = new JmolSymmetryScriptGeneratorH(helixAxisTransformation, "g");
-				sb.append(gen.getDefaultOrientation());
-				sb.append(gen.drawPolyhedron());
-				sb.append("draw line* on;");
-				sb.append(gen.drawAxes());
-				sb.append("draw axes* on;");
-				sb.append(gen.colorBySymmetry());
-			}
 			ProteinComplexSignature s95 = new ProteinComplexSignature(pdbId, results.getSubunits().getChainIds(), reader95);
 			String signature95 = s95.getComplexSignature();
 			String stoich95 = s95.getComplexStoichiometry();
@@ -204,14 +191,14 @@ public class ScanSymmetry implements Runnable {
 					"," + Math.round(results.getSubunits().getMinSequenceIdentity()*100.0) +
 					"," + Math.round(results.getSubunits().getMaxSequenceIdentity()*100.0) +
 					"," + (float) results.getAverageTraceRmsd() +
+					"," + (float) results.getAverageTraceTmScoreMin() +
 					"," + results.getSubunits().getSubunitCount() +
 					"," + time +
 					"," + signature95 +
 					"," + stoich95 +
 					"," + signature30 +
 					"," + stoich30 +
-					"," + spaceGroup +
-					",\"" + sb + "\""
+					"," + spaceGroup
 					);
 		}
 	}

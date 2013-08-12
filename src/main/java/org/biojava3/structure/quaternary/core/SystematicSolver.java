@@ -85,13 +85,14 @@ public class SystematicSolver implements QuatSymmetrySolver {
         rotation.mul(rotation, centroidInverse);
     }
 
-    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double rmsd, double gts, double caRmsd, int fold) {
+    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double rmsd, double caRmsd, double caTmScoreMin, int fold) {
         Rotation s = new Rotation();
         s.setPermutation(new ArrayList<Integer>(permutation));
         s.setTransformation(new Matrix4d(transformation));
         s.setAxisAngle(new AxisAngle4d(axisAngle));
         s.setSubunitRmsd(rmsd);
         s.setTraceRmsd(caRmsd);
+        s.setTraceTmScoreMin(caTmScoreMin);
         s.setFold(fold);
         return s;
     }
@@ -182,11 +183,6 @@ public class SystematicSolver implements QuatSymmetrySolver {
 		if (rmsd <parameters.getRmsdThreshold()) {
 			// transform to original coordinate system
 		    combineWithTranslation(transformation);
-		    // evaluate superposition of CA traces with GTS score
-//		    double gts = scorer.calcGtsMinScore(transformation, permutation);
-		    double gts = 0;
-//                    System.out.println("Complete: " + permutation + " gts: " + gts);
-//		    if (gts > gtsThreshold) {
 		    	double caRmsd = scorer.calcCalphaRMSD(transformation, permutation);
 		    	if (caRmsd < 0.0) {
 		    		return false;
@@ -194,7 +190,8 @@ public class SystematicSolver implements QuatSymmetrySolver {
 		    	if (caRmsd > parameters.getRmsdThreshold()) {
 		            return false;
 		    	}
-		        Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, gts, caRmsd, fold);
+				double caTmScoreMin = scorer.calcCalphaMinTMScore(transformation, permutation);
+		        Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, caRmsd, caTmScoreMin, fold);
 		        rotations.addRotation(symmetryOperation);
 		        return true;
 //		    }

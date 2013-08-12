@@ -53,6 +53,7 @@ public class RotationGroup {
 		r.setAxisAngle(new AxisAngle4d());
 		r.setSubunitRmsd(0.0);
 		r.setTraceRmsd(0.0);
+		r.setTraceTmScoreMin(1.0);
 		r.setFold(1);
 		rotations.add(r);
 		pointGroup = "C1";
@@ -128,23 +129,22 @@ public class RotationGroup {
 		return rmsd/(rotations.size()-1);
 	}
 	
-	/**
-	 * Returns the RMSD including all operation. Use this method only for helical symmetry.
-	 * @return
-	 */
-	public double getAllAverageTraceRmsd() {
-		double rmsd = 0;
+	public double getAverageTraceTmScoreMin() {
+		if (rotations.size() < 2) {
+			return 1.0;
+		}
+		double sum = 0;
 		// note, this loop starts at 1, because we don't take into account 
 		// RMSD of first operation (E)
-		for (int i = 0; i < rotations.size(); i++) {
-			double r = rotations.get(i).getTraceRmsd();
-			// if any invalid rmsd is found, stop
-			if (r < 0.0) {
-				return r;
+		for (int i = 1; i < rotations.size(); i++) {
+			double t = rotations.get(i).getTraceTmScoreMin();
+			// if any invalid value is found, stop
+			if (t < 0.0) {
+				return t;
 			}
-			rmsd += r;
+			sum += t;
 		}
-		return rmsd/(rotations.size());
+		return sum/(rotations.size()-1);
 	}
 	
 	public boolean isComplete() {

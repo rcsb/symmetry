@@ -118,7 +118,6 @@ public class CensusJobTest extends TestCase{
 			job.setCache(ResourceList.get().getCache());;
 			job.setCount(i);
 			job.setName(domain.getScopId());
-			job.setIsScopDomain(true);
 			Result result = job.call();
 			assertNotNull(domains[i]);
 			assertNotNull(result);

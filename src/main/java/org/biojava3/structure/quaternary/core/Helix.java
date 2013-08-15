@@ -13,6 +13,7 @@ import javax.vecmath.Matrix4d;
 public class Helix {
     private double subunitRmsd = Double.MAX_VALUE;
     private double traceRmsd = Double.MAX_VALUE;
+    private double traceTmScoreMin = Double.MAX_VALUE;
     private List<Integer> permutation;
     private List<List<Integer>> repeatUnits;
     private Matrix4d transformation;
@@ -47,6 +48,20 @@ public class Helix {
      */
     public void setTraceRmsd(double traceRmsd) {
         this.traceRmsd = traceRmsd;
+    }
+    
+    /**
+     * @param traceRmsd the traceRmsd to set
+     */
+    public void setTraceTmScoreMin(double traceTmScoreMin) {
+        this.traceTmScoreMin = traceTmScoreMin;
+    }
+    
+    /**
+     * @return the traceRmsd
+     */
+    public double getTraceTmScoreMin() {
+        return traceTmScoreMin;
     }
 
     /**

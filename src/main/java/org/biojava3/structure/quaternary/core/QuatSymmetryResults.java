@@ -86,7 +86,7 @@ public class QuatSymmetryResults {
 
 	
     /**
-     * Returns the symmetry group. For point groups return the point group symbol
+     * Returns the symmetry group. For point groups returns the point group symbol
      * and for helical symmetry returns "H".
      * @return symmetry symbol
      */
@@ -107,7 +107,16 @@ public class QuatSymmetryResults {
 		if (helixLayers != null && helixLayers.size() > 0) {
 			return helixLayers.getAverageTraceRmsd();
 		} else if (rotationGroup != null && rotationGroup.getOrder() > 0) {
-			return rotationGroup.getAllAverageTraceRmsd();
+			return rotationGroup.getAverageTraceRmsd();
+		}
+		return 0;
+	}
+	
+	public double getAverageTraceTmScoreMin() {
+		if (helixLayers != null && helixLayers.size() > 0) {
+			return helixLayers.getAverageTraceTmScoreMin();
+		} else if (rotationGroup != null && rotationGroup.getOrder() > 0) {
+			return rotationGroup.getAverageTraceTmScoreMin();
 		}
 		return 0;
 	}
@@ -143,6 +152,9 @@ public class QuatSymmetryResults {
 	    sb.append("\n");
 	    sb.append("Symmetry RMSD         : ");
 	    sb.append((float) getAverageTraceRmsd());
+	    sb.append("\n");
+	    sb.append("Symmetry TmScoreMin   : ");
+	    sb.append((float) getAverageTraceTmScoreMin());
 	    sb.append("\n");
 	    sb.append("Prefered result       : ");
 	    sb.append(isPreferredResult());

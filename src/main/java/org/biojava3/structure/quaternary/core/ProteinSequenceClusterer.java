@@ -11,6 +11,7 @@ import org.biojava.bio.structure.Structure;
 
 public class ProteinSequenceClusterer {
 	private Structure structure = null;
+	private Structure structure2 = null;
 	private QuatSymmetryParameters parameters = null;
 	
 	private List<Atom[]> caUnaligned = new ArrayList<Atom[]>();
@@ -23,6 +24,12 @@ public class ProteinSequenceClusterer {
 
 	public ProteinSequenceClusterer(Structure structure, QuatSymmetryParameters parameters) {
 		this.structure = structure;
+		this.parameters = parameters;
+	}
+	
+	public ProteinSequenceClusterer(Structure structure1, Structure structure2,  QuatSymmetryParameters parameters) {
+		this.structure = structure1;
+		this.structure2 = structure2;
 		this.parameters = parameters;
 	}
 	
@@ -57,6 +64,13 @@ public class ProteinSequenceClusterer {
 		chainIds  = extractor.getChainIds();
 		sequences = extractor.getSequences();
 		modelNumbers = extractor.getModelNumbers();
+		if (structure2 != null) {
+			extractor = new ProteinChainExtractor(structure2,  parameters);
+			caUnaligned.addAll(extractor.getCalphaTraces());
+			chainIds.addAll(extractor.getChainIds());
+			sequences.addAll(extractor.getSequences());
+			modelNumbers.addAll(extractor.getModelNumbers());
+		}
 	}
 	
 	private void clusterChains() {

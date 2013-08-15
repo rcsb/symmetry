@@ -21,6 +21,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
     private QuatSymmetryParameters parameters = null;
     private Vector3d centroid = new Vector3d();
     private Matrix4d centroidInverse = new Matrix4d();
+    private QuatSuperpositionScorer scorer = null;
 
     private RotationGroup rotations = new RotationGroup();
 
@@ -31,6 +32,7 @@ public class C2RotationSolver implements QuatSymmetrySolver {
     	}
         this.subunits = subunits;
         this.parameters = parameters;
+        this.scorer = new QuatSuperpositionScorer(subunits);
     }
    
     public RotationGroup getSymmetryOperations() {
@@ -61,6 +63,10 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 		Matrix4d transformation = SuperPosition.superposeAtOrigin(x, y, axisAngle);
 		double caRmsd = SuperPosition.rmsd(x,  y);
 		
+		// TODO this is not the proper way to calculate the TM score. Each subunit should be treated
+		// separately!
+		double caTmScoreMin = SuperPosition.TMScore(x, y, x.length);
+		
 		// if rmsd or angle deviation is above threshold, stop
 		double angleThresholdRadians = Math.toRadians(parameters.getAngleThreshold());
 		double deltaAngle = Math.abs(Math.PI-axisAngle.angle);
@@ -70,20 +76,21 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 			return;
 		}
 		
+		// add unit operation
+		addEOperation();
+
+		// add C2 operation
+		List<Integer> permutation = new ArrayList<Integer>();
+		permutation.add(new Integer(1));
+		permutation.add(new Integer(0));
+
 		// combine with translation
 		Matrix4d combined = new Matrix4d();
 		combined.setIdentity();
 		combined.setTranslation(trans);
 		transformation.mul(combined);
-
-		// add unit operation
-		addEOperation();
-		
-		// add C2 operation
-		List<Integer> permutation = new ArrayList<Integer>();
-		permutation.add(new Integer(1));
-		permutation.add(new Integer(0));
-		Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, 0.0, caRmsd, 2);
+	
+		Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, 0.0, caRmsd, caTmScoreMin, 2);
 		rotations.addRotation(symmetryOperation);
     }
     
@@ -95,8 +102,9 @@ public class C2RotationSolver implements QuatSymmetrySolver {
     	AxisAngle4d axisAngle = new AxisAngle4d();
     	double rmsd = 0.0;
     	double caRmsd = 0.0;
+    	double caTmScoreMin = 1.0;
     	int fold = 1; // ??
-        Rotation rotation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, caRmsd, fold);
+        Rotation rotation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, caRmsd, caTmScoreMin, fold);
         rotations.addRotation(rotation);
     }
     
@@ -111,13 +119,14 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         rotation.mul(rotation, centroidInverse);
     }
 
-    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double subunitRmsd, double caRmsd, int fold) {
+    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double subunitRmsd, double caRmsd, double caTmScoreMin, int fold) {
         Rotation s = new Rotation();
         s.setPermutation(new ArrayList<Integer>(permutation));
         s.setTransformation(new Matrix4d(transformation));
         s.setAxisAngle(new AxisAngle4d(axisAngle));
         s.setSubunitRmsd(subunitRmsd);
         s.setTraceRmsd(caRmsd);
+        s.setTraceTmScoreMin(caTmScoreMin);
         s.setFold(fold);
         return s;
     }

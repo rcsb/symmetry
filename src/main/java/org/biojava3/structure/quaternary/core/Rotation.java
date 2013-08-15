@@ -12,6 +12,7 @@ import javax.vecmath.Matrix4d;
 public class Rotation {
     private double subunitRmsd = Double.MAX_VALUE;
     private double traceRmsd = Double.MAX_VALUE;
+    private double traceTmScoreMin = Double.MAX_VALUE;
     private List<Integer> permutation;
     private Matrix4d transformation;
     private AxisAngle4d axisAngle;
@@ -46,6 +47,21 @@ public class Rotation {
         this.traceRmsd = traceRmsd;
     }
 
+    /**
+     * @param traceTmScoreMin the traceTmScore to set
+     */
+    public void setTraceTmScoreMin(double traceTmScoreMin) {
+        this.traceTmScoreMin = traceTmScoreMin;
+    }
+    
+    /**
+     * @return the traceTmScoreMin
+     */
+    public double getTraceTmScoreMin() {
+        return traceTmScoreMin;
+    }
+
+    
     /**
      * @return the permutation
      */
@@ -131,10 +147,12 @@ public class Rotation {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(" fold       : " + fold);
+        sb.append(" fold: " + fold);
         sb.append(" orientation: " + direction);
-        sb.append(" axisAngle  : " + axisAngle);
-        sb.append(" RMSD       : " + subunitRmsd);
+        sb.append(" axisAngle: " + axisAngle);
+        sb.append(" subunitRMSD: " + subunitRmsd);
+        sb.append(" caRMSD: " + traceRmsd);
+        sb.append(" caTmScoreMin: " + traceTmScoreMin);
         sb.append(" permutation: " + permutation);
         return sb.toString();
     }

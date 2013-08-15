@@ -177,10 +177,11 @@ public class RotationSolver implements QuatSymmetrySolver {
 			combineWithTranslation(transformation);
 			// evaluate superposition of CA traces with GTS score
 			double caRmsd = scorer.calcCalphaRMSD(transformation, permutation);
+			double caTmScoreMin = scorer.calcCalphaMinTMScore(transformation, permutation);
 			if (caRmsd < 0.0 || caRmsd > parameters.getRmsdThreshold()) {
 				return false;
 			}
-			Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, subunitRmsd, caRmsd, fold);
+			Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, subunitRmsd, caRmsd, caTmScoreMin, fold);
 			rotations.addRotation(symmetryOperation);
 			return true;
 		}
@@ -260,13 +261,14 @@ public class RotationSolver implements QuatSymmetrySolver {
         rotation.mul(rotation, centroidInverse);
     }
 
-    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double subunitRmsd, double rmsd, int fold) {
+    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double subunitRmsd, double rmsd, double tmScoreMin, int fold) {
         Rotation s = new Rotation();
         s.setPermutation(new ArrayList<Integer>(permutation));
         s.setTransformation(new Matrix4d(transformation));
         s.setAxisAngle(new AxisAngle4d(axisAngle));
         s.setSubunitRmsd(subunitRmsd);
         s.setTraceRmsd(rmsd);
+        s.setTraceTmScoreMin(tmScoreMin);
         s.setFold(fold);
         return s;
     }

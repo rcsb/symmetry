@@ -53,6 +53,9 @@ public Map<Integer[], Integer> getInteractingRepeatUnits() {
 
 private void run() {
 	this.repeatUnitCenters = calcRepeatUnitCenters();
+	if (this.repeatUnitCenters.size() == 0) {
+		return;
+	}
 	this.repeatUnits = calcRepeatUnits();
 	this.interactingNeighbors = findInteractingNeigbors();
 }
@@ -67,7 +70,8 @@ private List<Point3d> calcRepeatUnitCenters() {
 	List<Point3d> centers = subunits.getCenters();
 	List<Integer> models = subunits.getModelNumbers();
 	
-	if (modelCount == maxFold && subunits.getSubunitCount() > 3) {
+//	if (modelCount == maxFold && subunits.getSubunitCount() > 3) {
+	if (maxFold%modelCount == 0 && modelCount > 1 && subunits.getSubunitCount() > 3) {
 		for (int i = 0; i < modelCount; i++) {
 			List<Integer> subunitIndices = new ArrayList<Integer>();
 			Point3d p = new Point3d();
@@ -97,13 +101,19 @@ private List<Point3d> calcRepeatUnitCenters() {
 			}
 		}
 	}
+	
+	// helixes should have at least 3 repeat centers
+	System.out.println();
+	if (repeatCenters.size() < 3) {
+		repeatCenters.clear();
+	}
+	
 	return repeatCenters;
 }
 
 private List<Point3d[]> calcRepeatUnits() {
 	Set<Integer> uniqueModels = new HashSet<Integer>(subunits.getModelNumbers());
 	int modelCount = uniqueModels.size();
-	int subunitCount = subunits.getSubunitCount();
 	List<Integer> folds = this.subunits.getFolds();
 	int maxFold = folds.get(folds.size()-1);
 
@@ -111,7 +121,8 @@ private List<Point3d[]> calcRepeatUnits() {
 	List<Integer> models = subunits.getModelNumbers();
 	List<Point3d[]> traces = subunits.getTraces();
 	
-	if (modelCount == maxFold && subunitCount > 3) {
+//	if (modelCount == maxFold && subunitCount > 3) {
+	if (maxFold%modelCount == 0 && modelCount > 1 && subunits.getSubunitCount() > 3) {
 		for (int i = 0; i < modelCount; i++) {
 			List<Point3d> coords = new ArrayList<Point3d>();
 			for (int j = 0; j < models.size(); j++) {
@@ -121,7 +132,8 @@ private List<Point3d[]> calcRepeatUnits() {
 			}
 			Point3d[] x = new Point3d[coords.size()];
 			coords.toArray(x);
-			repeatTraces.add(x);
+//			repeatTraces.add(x); // make sure we don't accidently change the original coordinates
+			repeatTraces.add(SuperPosition.clonePoint3dArray(x));
 		}
 	} else {
 		List<Integer> sequenceClusterIds = subunits.getSequenceClusterIds();

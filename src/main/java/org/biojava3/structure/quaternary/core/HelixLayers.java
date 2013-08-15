@@ -105,6 +105,17 @@ public class HelixLayers {
 		return rmsd/this.size();
 	}
 	
+	public double getAverageTraceTmScoreMin() {
+		if (size() == 0) {
+			return 0;
+		}
+		double sum = 0;
+		for (Helix helix: helices) {
+			sum+= helix.getTraceTmScoreMin();
+		}
+		return sum/this.size();
+	}
+	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Helices: " + size() + "\n");

@@ -463,9 +463,65 @@ public class QuatSymmetryDetector {
 			subunits.setPseudoSymmetric(false);
 		}
 		
+		// Check structures with Cn symmetry (n = 1, ...) for helical symmetry		
+		if (pointGroup.startsWith("C")) {			
+			HelixSolver hc = new HelixSolver(subunits, rotationGroup.getOrder(), parameters);
+			HelixLayers helixLayers = hc.getSymmetryOperations();
+
+			if (helixLayers.size() > 0) {		
+				// if the complex has no symmetry (c1) or has Cn (n>=2) symmetry and the 
+				// helical symmetry has a lower RMSD than the cyclic symmetry, set helical symmetry
+				// If the RMSD for helical and cyclic symmetry is similar, a slight preference is
+				// given to the helical symmetry by the helixRmsdThreshold parameter.
+				double hRmsd = helixLayers.getAverageTraceRmsd();
+				double deltaRmsd = hRmsd - cRmsd;
+				if (pointGroup.equals("C1") || (!pointGroup.equals("C1") && deltaRmsd <= parameters.getHelixRmsdThreshold())) {
+					method = "rottranslation";
+					results = new QuatSymmetryResults(subunits, helixLayers, method);
+				}
+			}
+		}
+
+		return results;
+	}
+	
+	private QuatSymmetryResults calcQuatSymmetryOld(Subunits subunits) {
+		if (subunits.getSubunitCount() == 0) {
+			return null;
+		}
+		
+		RotationGroup rotationGroup = null;
+		String method = null;
+		if (subunits.getFolds().size() == 1) {			
+			// no symmetry possible, create empty ("C1") rotation group
+			method = "norotation";
+			rotationGroup =  new RotationGroup();
+			rotationGroup.setC1(subunits.getSubunitCount());
+		} else if (subunits.getSubunitCount() == 2 && subunits.getFolds().contains(2)) {
+			method = "C2rotation";
+			QuatSymmetrySolver solver = new C2RotationSolver(subunits, parameters);
+			rotationGroup = solver.getSymmetryOperations();
+		} else {
+			method = "rotation";
+			QuatSymmetrySolver solver = new RotationSolver(subunits, parameters);
+			rotationGroup = solver.getSymmetryOperations();
+		}
+		
+		QuatSymmetryResults results = new QuatSymmetryResults(subunits, rotationGroup, method);
+		
+		String pointGroup = rotationGroup.getPointGroup();
+		double cRmsd = rotationGroup.getAverageTraceRmsd();
+		
+		// asymmetric structures cannot be pseudosymmetric
+		if (pointGroup.startsWith("C1")) {
+			subunits.setPseudoSymmetric(false);
+		}
+		
 		// For helical symmetry check cases with:
 		// a) no symmetry, or
 		// b) Cn symmetry with low rmsd (could be candidates for n-start helixes, i.e., 1IFD)
+		
+		// TODO 3J4F is identified as C2 symmetric, therefore, helix solver is not used??
 		if (pointGroup.startsWith("C1") || (pointGroup.startsWith("C") && cRmsd < 0.05)) {			
 			HelixSolver hc = new HelixSolver(subunits, rotationGroup.getOrder(), parameters);
 			HelixLayers helixLayers = hc.getSymmetryOperations();

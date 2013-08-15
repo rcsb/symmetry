@@ -63,7 +63,8 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 		Matrix4d transformation = SuperPosition.superposeAtOrigin(x, y, axisAngle);
 		double caRmsd = SuperPosition.rmsd(x,  y);
 		
-		// TODO should treat each subunit separately!
+		// TODO this is not the proper way to calculate the TM score. Each subunit should be treated
+		// separately!
 		double caTmScoreMin = SuperPosition.TMScore(x, y, x.length);
 		
 		// if rmsd or angle deviation is above threshold, stop

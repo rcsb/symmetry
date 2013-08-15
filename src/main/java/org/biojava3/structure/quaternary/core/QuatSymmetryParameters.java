@@ -9,6 +9,11 @@ public class QuatSymmetryParameters {
 	private double alignmentFractionThreshold = 0.9;
 	private double rmsdThreshold = 7.0;
 	private double angleThreshold = 10.0; // max angle deviation for C2 solver
+	// if a structure has both cyclic and helical symmetry (i.e., 3J4F: C2 and H), 
+	// then helical symmetry is assigned if Rmsd(helical) - Rmsd(cyclic) <= helixRmsdThreshold
+	// A slightly positive value gives preference to helical, if the RMSDs for the two symmetries
+	// are almost identical
+	private double helixRmsdThreshold = 0.05;
 	private double minimumHelixRise = 1.0;
 	private double minimumHelixAngle = 5.0; // min helix angle to differentiate it from a translational repeat
 	private int maximumLocalCombinations = 50000; // max number of combinations to try for local symmetry calculation
@@ -77,6 +82,12 @@ public class QuatSymmetryParameters {
 		this.angleThreshold = angleThreshold;
 	}
 	
+	public double getHelixRmsdThreshold() {
+		return helixRmsdThreshold;
+	}
+	public void setHelixRmsdThreshold(double helixRmsdThreshold) {
+		this.helixRmsdThreshold = helixRmsdThreshold;
+	}
 	public double getMinimumHelixRise() {
 		return minimumHelixRise;
 	}

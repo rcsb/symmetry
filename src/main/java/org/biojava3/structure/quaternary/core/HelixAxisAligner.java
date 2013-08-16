@@ -253,7 +253,6 @@ public class HelixAxisAligner extends AxisAligner {
 			meanDepth /= orbit.size();
 
 			if (depthMap.get(meanDepth) != null) {
-				// System.out.println("Conflict in depthMap");
 				meanDepth += 0.01;
 			}
 //			System.out.println("calcAlignedOrbits: " + meanDepth + " orbit: " + orbit);

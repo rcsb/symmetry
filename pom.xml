@@ -213,4 +213,14 @@
 		</extensions>
 		
 	</build>
+	<url>https://github.com/rcsb/symmetry</url>
+	<description>Detect, analyze, and visualize protein symmetry
+
+ - Detect symmetry in biological assemblies
+ - Detect internal pseudo-symmetry in protein chains
+ - Visualize results in Jmol</description>
+	<organization>
+		<name>RCSB</name>
+		<url>http://www.rcsb.org</url>
+	</organization>
 </project>

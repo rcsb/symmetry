@@ -124,14 +124,10 @@ public class QuatSymmetryDetector {
 			// TODO example 2PT7: global C2, but local C6 symm., should that be included here ...?
 			// i.e., include all heteromers here, for example if higher symmetry is possible by stoichiometry? A6B2 -> local A6  can have higher symmetry
 			if (parameters.isLocalSymmetry()) {
-				if (gSymmetry.getRotationGroup() != null && gSymmetry.getRotationGroup().getPointGroup().equals("C1") &&
-						chainCount > 2) {
-//						clusterCount > 1 && chainCount > 2) {
-
-					List<Subunits> localSubunits = createLocalSubunits();
+				if (gSymmetry.getSymmetry().equals("C1") && chainCount > 2) {
 					List<QuatSymmetryResults> lSymmetry = new ArrayList<QuatSymmetryResults>();
 
-					for (Subunits subunits: localSubunits) {
+					for (Subunits subunits: createLocalSubunits()) {
 						QuatSymmetryResults result = calcQuatSymmetry(subunits);
 						addToLocalSymmetry(result, lSymmetry);
 					}
@@ -144,8 +140,26 @@ public class QuatSymmetryDetector {
 			}
 		}
 		
+		trimLocalSymmetryResults();
 		setPseudoSymmetry();
 		setPreferredResults();
+	}
+	
+	/**
+	 * trims local symmetry results if any global symmetry is found. This only happens in special cases.
+	 */
+	private void trimLocalSymmetryResults() {
+		boolean hasGlobalSymmetry = false;
+		for (QuatSymmetryResults result: globalSymmetry) {
+			if (! result.getSymmetry().equals("C1")) {
+				hasGlobalSymmetry = true;
+				break;
+			}
+		} 
+		
+		if (hasGlobalSymmetry) {
+			localSymmetries.clear();
+		}
 	}
 	
 	/**

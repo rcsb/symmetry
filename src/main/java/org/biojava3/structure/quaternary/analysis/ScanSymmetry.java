@@ -12,16 +12,15 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
+import org.biojava.bio.structure.io.mmcif.AllChemCompProvider;
+import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
+import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
-import org.biojava3.structure.quaternary.core.AxisAligner;
-import org.biojava3.structure.quaternary.core.HelixAxisAligner;
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 import org.biojava3.structure.quaternary.core.Subunits;
-import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
-import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGeneratorH;
 import org.biojava3.structure.quaternary.misc.ProteinComplexSignature;
 import org.biojava3.structure.quaternary.utils.BlastClustReader;
 
@@ -72,6 +71,7 @@ public class ScanSymmetry implements Runnable {
 		
 		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 
+		parameters.setVerbose(true);
 
 		Set<String> set = GetRepresentatives.getAll();
 
@@ -79,8 +79,10 @@ public class ScanSymmetry implements Runnable {
 		boolean skip = false;
 		String restartId = "4A0W";
 		
-		for (String pdbId: set) {
+//		for (String pdbId: set) {
 //		for (String pdbId: helixExamples) {
+//		for (String pdbId: errorExamples) {
+		for (String pdbId: collagenExamples) {
 			if (skip && pdbId.equals(restartId)) {
 				skip = false;
 			} 
@@ -101,8 +103,12 @@ public class ScanSymmetry implements Runnable {
 
 			StructureIO.setAtomCache(cache);
 			int bioAssemblyCount = StructureIO.getNrBiologicalAssemblies(pdbId);
+			
+			ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
+			
 			int bioAssemblyId = 0;
 			System.out.println("Bioassemblies: " + bioAssemblyCount);
+			System.out.println(ChemCompGroupFactory.getChemCompProvider().getClass().getName());
 			if (bioAssemblyCount > 0) {
 				bioAssemblyId = 1;
 			}
@@ -221,11 +227,16 @@ public class ScanSymmetry implements Runnable {
 		params.setAlignSeqRes(true);
 		params.setParseCAOnly(true);
 		params.setLoadChemCompInfo(true);
+		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
 	}
 	
+	// errors where # subunits is incorrect (collagen examples)
+	private static String[] errorExamples = {
+        "1CAG","1EI8","2DRX"};
+
 	private static String[] helixExamples = {
 "1B47","1BKV","1C09","1CGD","1CGM","1CR0","1CR1","1CR2","1CR4","1FC3","1FFX","1FZD","1GL2","1HGV","1HGZ","1HH0","1IFD","1IFI",
-"1IFJ","1IFK","1IFL","1IFM","1IFN","1IFP","1JI7","1K6F","1L5A","1L6O","1M8Q","1MM9","1MOY","1MVW","1MVW","1N03","1NMT","1O18",
+"1IFJ","1IFK","1IFL","1IFM","1IFN","1IFP","1JI7","1K6F","1L5A","1M8Q","1MM9","1MOY","1MVW","1MVW","1N03","1NMT","1O18",
 "1O19","1O1A","1O1B","1O1C","1O1D","1O1E","1O1F","1O1G","1PFI","1PV4","1PVO","1QL1","1QL2","1QSU","1QVR","1R6Z","1RHG","1RIR",
 "1RMV","1RQ0","1SA0","1SA1","1SZP","1T5E","1U94","1U98","1U99","1VF7","1VTM","1VZJ","1WUD","1XMS","1XMV","1XP8","1YJ7","1YS3",
 "1YSR","1Z0B","1Z0C","1Z0W","1Z2B","1Z4V","1Z4W","1Z4X","1Z4Y"};

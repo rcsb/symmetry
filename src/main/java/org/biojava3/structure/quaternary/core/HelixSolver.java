@@ -51,7 +51,6 @@ public class HelixSolver {
 		double maxRise = 0;
 		Map<Integer[], Integer> interactionMap = unit.getInteractingRepeatUnits();
 
-//		for (Integer[] pair: unit.getInteractingRepeatUnits().keySet()) {
 		for (Entry<Integer[], Integer> entry : interactionMap.entrySet()) {
 			Integer[] pair = entry.getKey();
 			int contacts = entry.getValue();
@@ -108,7 +107,7 @@ public class HelixSolver {
 				continue;
 			}
 
-			// keep track of which subunits are permutated
+			// keep track of which subunits are permuted
 			Set<Integer> permSet = new HashSet<Integer>();
 			int count = 0;
 			for (int i = 0; i < permutation.size(); i++) {
@@ -154,11 +153,11 @@ public class HelixSolver {
 				rise = getRise(transformation, repeatUnitCenters.get(pair[0]), repeatUnitCenters.get(pair[1]));
 				angle = getAngle(transformation);
 
-				if (parameters.isVerbose()) {
-					System.out.println("Subunit rmsd: " + subunitRmsd);
-					System.out.println("Subunit rise: " + rise);
-					System.out.println("Subunit angle: " + Math.toDegrees(angle));
-				}
+//				if (parameters.isVerbose()) {
+//					System.out.println("Subunit rmsd: " + subunitRmsd);
+//					System.out.println("Subunit rise: " + rise);
+//					System.out.println("Subunit angle: " + Math.toDegrees(angle));
+//				}
 
 				if (subunitRmsd > parameters.getRmsdThreshold()) {
 					continue;
@@ -194,7 +193,7 @@ public class HelixSolver {
 
 			double traceRmsd = SuperPosition.rmsd(h1, h2);
 			
-			// TM score should be calcualted separately for each subunit!
+			// TM score should be calculated separately for each subunit!
 			double traceTmScore = SuperPosition.TMScore(h1, h2, h1.length);
 			rise = getRise(transformation, repeatUnitCenters.get(pair[0]), repeatUnitCenters.get(pair[1]));
 			angle = getAngle(transformation);
@@ -272,24 +271,27 @@ public class HelixSolver {
 		double rmsdThresholdSq = Math.pow(this.parameters.getRmsdThreshold(), 2);
 
 		List<Point3d> centers = subunits.getOriginalCenters();
+		List<Integer> seqClusterId = subunits.getSequenceClusterIds();
 
 		List<Integer> permutations = new ArrayList<Integer>(centers.size());
 		double[] dSqs = new double[centers.size()];
 		boolean[] used = new boolean[centers.size()];
 		Arrays.fill(used, false);
 
-		for (Point3d center: centers) {
-			Point3d tCenter = new Point3d(center);
+		for (int i = 0; i < centers.size(); i++) {
+			Point3d tCenter = new Point3d(centers.get(i));
 			transformation.transform(tCenter);
 			int permutation = -1;
 			double minDistSq = Double.MAX_VALUE;
-			for (int i = 0; i < centers.size(); i++) {
-				if (! used[i]) {
-					double dSq = tCenter.distanceSquared(centers.get(i));
-					if (dSq < minDistSq && dSq <= rmsdThresholdSq) {
-						minDistSq = dSq;
-						permutation = i; 
-						dSqs[i] = dSq;
+			for (int j = 0; j < centers.size(); j++) {
+				if (seqClusterId.get(i) == seqClusterId.get(j)) {
+					if (! used[j]) {
+						double dSq = tCenter.distanceSquared(centers.get(j));
+						if (dSq < minDistSq && dSq <= rmsdThresholdSq) {
+							minDistSq = dSq;
+							permutation = j; 
+							dSqs[j] = dSq;
+						}
 					}
 				}
 			}
@@ -302,12 +304,13 @@ public class HelixSolver {
 				used[permutation] = true;
 			}
 
+	
 			permutations.add(permutation);
 		}
 
 		return permutations;
 	}
-
+	
 	/**
 	 * Returns the rise of a helix given the subunit centers of two adjacent
 	 * subunits and the helix transformation

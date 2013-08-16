@@ -1,30 +1,28 @@
 /*
- *                    BioJava development code
- *
- * This code may be freely distributed and modified under the
- * terms of the GNU Lesser General Public Licence.  This should
- * be distributed with the code.  If you do not have a copy,
- * see:
- *
- *      http://www.gnu.org/copyleft/lesser.html
- *
- * Copyright for this code is held jointly by the individual
- * authors.  These should be listed in @author doc comments.
- *
- * For more information on the BioJava project and its aims,
- * or to join the biojava-l mailing list, visit the home page
+ * BioJava development code
+ * 
+ * This code may be freely distributed and modified under the terms of the GNU Lesser General Public Licence. This
+ * should be distributed with the code. If you do not have a copy, see:
+ * 
+ * http://www.gnu.org/copyleft/lesser.html
+ * 
+ * Copyright for this code is held jointly by the individual authors. These should be listed in @author doc comments.
+ * 
+ * For more information on the BioJava project and its aims, or to join the biojava-l mailing list, visit the home page
  * at:
- *
- *      http://www.biojava.org/
- *
+ * 
+ * http://www.biojava.org/
+ * 
  * Created on 2013-03-10
- *
  */
 package org.biojava3.structure.align.symm.census2.stats;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Map;
@@ -39,48 +37,53 @@ import org.biojava3.structure.align.symm.census2.Significance;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
+ * Calculates % symmetry, % rotationally symmetric, and other statistics comprehensively per-family, per-superamily, and
+ * per-fold. Uses majority voting: a family, superfamily, or fold is considered to be symmetric if half or more of its
+ * domains make the significance thresholds of TM-score and order.
  * 
  * @author dmyerstu
+ * @see {@link SmartStats}, which uses instead requires that the <em>mean</em> TM-score is at least the threshold
+ *      TM-score, and that the order is at least the order threshold
  */
 public class BasicStats {
 
-	private static final Logger logger = LogManager.getLogger(BasicStats.class.getPackage().getName());
-
 	public static final String NEWLINE;
+
+	private static final Logger logger = LogManager.getLogger(BasicStats.class.getPackage().getName());
 	private static final int MAX_FRACTION_DIGITS = 2;
 
 	private static NumberFormat nf = new DecimalFormat();
 
 	private final Grouping grouping;
 
-	private int nTotal;
-	private int nSymm;
-	private int nUnknown;
 	private int nOrderUnknown;
 	private int nRotational;
+	private final NavigableMap<String, Integer> nRotClass = new TreeMap<String, Integer>();
+	private final NavigableMap<String, Integer> nRotFold = new TreeMap<String, Integer>();
+	private final NavigableMap<String, Integer> nRotGroup = new TreeMap<String, Integer>();
+
+	private final NavigableMap<String, Integer> nRotUnknownGroup = new TreeMap<String, Integer>();
+	private int nSymm;
+	private final NavigableMap<String, Integer> nSymmClass = new TreeMap<String, Integer>();
+	private final NavigableMap<String, Integer> nSymmFold = new TreeMap<String, Integer>();
+	private final NavigableMap<String, Integer> nSymmGroup = new TreeMap<String, Integer>();
+
+	private int nTotal;
+	private final NavigableMap<String, Integer> nTotalClass = new TreeMap<String, Integer>();
+	private final NavigableMap<String, Integer> nTotalFold = new TreeMap<String, Integer>();
 
 	private final NavigableMap<String, Integer> nTotalGroup = new TreeMap<String, Integer>();
-	private final NavigableMap<String, Integer> nSymmGroup = new TreeMap<String, Integer>();
+	private int nUnknown;
 	private final NavigableMap<String, Integer> nUnknownGroup = new TreeMap<String, Integer>();
-	private final NavigableMap<String, Integer> nRotGroup = new TreeMap<String, Integer>();
-	private final NavigableMap<String, Integer> nRotUnknownGroup = new TreeMap<String, Integer>();
-
-	private final NavigableMap<String, Integer> nTotalFold = new TreeMap<String, Integer>();
-	private final NavigableMap<String, Integer> nSymmFold = new TreeMap<String, Integer>();
-	private final NavigableMap<String, Integer> nRotFold = new TreeMap<String, Integer>();
-
-	private final NavigableMap<String, Integer> nTotalClass = new TreeMap<String, Integer>();
-	private final NavigableMap<String, Integer> nSymmClass = new TreeMap<String, Integer>();
-	private final NavigableMap<String, Integer> nRotClass = new TreeMap<String, Integer>();
 
 	private String text;
 
-	protected Significance rotationallySymmetric = SignificanceFactory.symmetric();
+	protected Significance rotationallySymmetric = SignificanceFactory.rotationallySymmetricSmart();
 	protected Significance sig = SignificanceFactory.generallySymmetric();
 	static {
 		NEWLINE = System.getProperty("line.separator");
 	}
-	
+
 	static {
 		nf.setMaximumFractionDigits(MAX_FRACTION_DIGITS);
 		nf.setMinimumFractionDigits(1);
@@ -88,14 +91,32 @@ public class BasicStats {
 
 	public static void main(String[] args) {
 		Grouping grouping = Grouping.byName(args[0]);
-		File[] files = new File[args.length-1];
+		File[] files = new File[args.length - 1];
 		for (int i = 1; i < args.length; i++) {
-			files[i-1] = new File(args[i]);
+			files[i - 1] = new File(args[i]);
 		}
 		printBasicStats(System.out, grouping, files);
 	}
 
 	public static void printBasicStats(PrintStream ps, Grouping grouping, File... censusFiles) {
+		try {
+			PrintWriter pw = new PrintWriter(new OutputStreamWriter(ps, "UTF-8")); // do NOT close
+			printBasicStats(pw, grouping, censusFiles);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static void printBasicStats(PrintStream ps, Grouping grouping, File censusFile) {
+		try {
+			PrintWriter pw = new PrintWriter(new OutputStreamWriter(ps, "UTF-8")); // do NOT close
+			printBasicStats(pw, grouping, censusFile);
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static void printBasicStats(PrintWriter ps, Grouping grouping, File... censusFiles) {
 		for (File file : censusFiles) {
 			System.out.println(file.getName() + ":");
 			printBasicStats(System.out, grouping, file);
@@ -103,7 +124,7 @@ public class BasicStats {
 		}
 	}
 
-	public static void printBasicStats(PrintStream ps, Grouping grouping, File censusFile) {
+	public static void printBasicStats(PrintWriter ps, Grouping grouping, File censusFile) {
 		BasicStats stats;
 		try {
 			stats = new BasicStats(grouping, censusFile);

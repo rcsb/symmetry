@@ -147,7 +147,7 @@ public class Protodomain {
 	 * @return
 	 * @throws ProtodomainCreationException
 	 */
-	public static Protodomain fromAfpChain(AFPChain afpChain, Atom[] ca, boolean keepStructure, int order,
+	public static Protodomain fromAfpChain(AFPChain afpChain, Atom[] ca,
 			int numBlocks, int chainIndex, AtomCache cache) throws ProtodomainCreationException {
 		final ScopDatabase scopInst = ScopFactory.getSCOP();
 		final ScopDomain scopDomain = scopInst.getDomainByScopID(afpChain.getName2());
@@ -222,24 +222,11 @@ public class Protodomain {
 			splicedRanges = spliceApproxConsecutive(map, totalRanges, APPROX_CONSECUTIVE);
 		}
 
-		// note that we must include gaps in the argument to cut().
-		// also, truncation is okay here
-		final List<ResidueRange> cutRanges = calcSubstruct(splicedRanges, map, order, 1);
+		final int length = ResidueRange.calcLength(splicedRanges);
 
-		final int length = ResidueRange.calcLength(cutRanges);
-
-		Protodomain protodomain = new Protodomain(pdbId, scopId, cutRanges, length, cache);
+		Protodomain protodomain = new Protodomain(pdbId, scopId, splicedRanges, length, cache);
 
 		protodomain.length = length; // is the length of the AFPChain
-		if (keepStructure) try {
-			protodomain.buildStructure();
-		} catch (IOException e) {
-			throw new ProtodomainCreationException(protodomain.toString(), scopId, e,
-					"Could not create the structure, which was required.");
-		} catch (StructureException e) {
-			throw new ProtodomainCreationException(protodomain.toString(), scopId, e,
-					"Could not create the structure, which was required.");
-		}
 		return protodomain;
 
 	}
@@ -259,12 +246,12 @@ public class Protodomain {
 	 * @return
 	 * @throws ProtodomainCreationException
 	 */
-	public static Protodomain fromReferral(AFPChain afpChain, Atom[] ca, int order, AtomCache cache)
+	public static Protodomain fromReferral(AFPChain afpChain, Atom[] ca, AtomCache cache)
 			throws ProtodomainCreationException {
 		if (afpChain.getOptLen().length != 1) throw new ProtodomainCreationException("unknown", afpChain.getName2(),
 				"The AFPChain did not contain exactly 1 block.");
 		try {
-			return fromAfpChain(afpChain, ca, false, order, 1, 1, cache);
+			return fromAfpChain(afpChain, ca, 1, 1, cache);
 		} catch (Exception e) { // IOException | StructureException | ArrayIndexOutOfBoundsException |
 			// NullPointerException
 			throw new ProtodomainCreationException("unknown", afpChain.getName2(), e);
@@ -278,15 +265,10 @@ public class Protodomain {
 	 * @param string
 	 *            A string of the form: pdbId.chain_start-end,chain_start-end, ..., chain_start-end.
 	 * @param scopDomain
-	 * @param keepStructure
-	 *            If set to true, the structure will be recreated.
-	 * @param order
-	 *            What the whole Protodomain will be "cut" by. For example, if it is set to 1, it the whole Protodomain
-	 *            will be returned. This should ordinarily be set to the symmetry order.
 	 * @return
 	 * @throws ProtodomainCreationException
 	 */
-	public static Protodomain fromString(String string, ScopDomain scopDomain, boolean keepStructure, int order,
+	public static Protodomain fromString(String string, ScopDomain scopDomain,
 			AtomCache cache) throws ProtodomainCreationException {
 
 		final String pdbId = scopDomain.getPdbId();
@@ -297,30 +279,7 @@ public class Protodomain {
 		int length = ResidueRange.calcLength(list);
 
 		Protodomain protodomain = new Protodomain(pdbId, scopDomain.getScopId(), list, length, cache);
-		if (keepStructure) {
-			try {
-				protodomain.buildStructure();
-			} catch (IOException e) {
-				throw new ProtodomainCreationException(protodomain.toString(), pdbId, e);
-			} catch (StructureException e) {
-				throw new ProtodomainCreationException(protodomain.toString(), pdbId, e);
-			}
-		}
-
-		return protodomain.createSubstruct(order);
-
-	}
-
-	/**
-	 * Calls {@link #fromString(String, ScopDomain, boolean, int, AtomCache)} without creating a {@link Structure}.
-	 * Ranges for this Protodomain will <em>not</em> be spliced; if this is desired, call
-	 * {@link #spliceApproxConsecutive()} or {@link #spliceApproxConsecutive(int)}.
-	 * 
-	 * @see #fromString(String, ScopDomain, boolean, int, AtomCache)
-	 */
-	public static Protodomain fromString(String string, ScopDomain domain, int order, AtomCache cache)
-			throws ProtodomainCreationException {
-		return fromString(string, domain, false, order, cache);
+		return protodomain;
 	}
 
 	/**
@@ -330,17 +289,12 @@ public class Protodomain {
 	 * @param string
 	 *            A string of the form: pdbId.chain_start-end,chain_start-end, ..., chain_start-end.
 	 * @param scopId
-	 * @param keepStructure
-	 *            If set to true, the structure will be recreated.
-	 * @param order
-	 *            What the whole Protodomain will be "cut" by. For example, if it is set to 1, it the whole Protodomain
-	 *            will be returned. This should ordinarily be set to the symmetry order.
 	 * @return
 	 * @throws ProtodomainCreationException
 	 */
-	public static Protodomain fromString(String string, String scopId, boolean keepStructure, int order, AtomCache cache)
+	public static Protodomain fromString(String string, String scopId, AtomCache cache)
 			throws ProtodomainCreationException, IllegalArgumentException {
-		return fromString(string, ScopFactory.getSCOP().getDomainByScopID(scopId), keepStructure, order, cache);
+		return fromString(string, ScopFactory.getSCOP().getDomainByScopID(scopId), cache);
 	}
 
 	/**
@@ -360,7 +314,7 @@ public class Protodomain {
 			throws ProtodomainCreationException {
 		if (afpChain.getBlockNum() != 2) throw new ProtodomainCreationException("unknown", afpChain.getName2(),
 				"The AFPChain did not contain exactly 2 blocks.");
-		return fromAfpChain(afpChain, ca, false, order, 2, 0, cache);
+		return fromAfpChain(afpChain, ca, 2, 0, cache);
 	}
 
 	/**
@@ -498,32 +452,12 @@ public class Protodomain {
 		RangeBuilder rangeBuilder = new RangeBuilder();
 		for (String domainRange : domainRanges) {
 
-			final String chainId = domainRange.substring(0, 1);
-
 			// a range is of the form: A:05-117 (chain:start-end) OR just A:
-			// 
-			ResidueNumber domainStartR, domainEndR;
+			ResidueRange rr = ResidueRange.parse(domainRange, map);
+			ResidueNumber domainStartR = rr.getStart();
+			ResidueNumber domainEndR = rr.getEnd();
 			int domainStart, domainEnd;
-			if (domainRange.length() > 2) {
-				// chain:start-end
-				Pattern pattern = Pattern.compile("^([-]?[\\d]+[\\w]?)-([-]?[\\d]+[\\w]?)$");
-				Matcher matcher = pattern.matcher(domainRange.substring(2));
-				matcher.find();
-				try {
-					domainStartR = ResidueNumber.fromString(matcher.group(1));
-					domainEndR = ResidueNumber.fromString(matcher.group(2));
-				} catch (IllegalStateException e) {
-					throw new ProtodomainCreationException("Failed to match range " + domainRange.substring(2), scopId, e);
-				}
-				// set the chains because ResidueNumber doesn't
-				domainStartR.setChainId(chainId);
-				domainEndR.setChainId(chainId);
-			} else {
-				// no actual numbers; just the chain plus a colon
-				domainStartR = map.getFirst(chainId);
-				domainEndR = map.getLast(chainId);
-			}
-		
+			
 			// these are the insertion-code-independent positions
 			Integer domainStartO = map.getPosition(domainStartR);
 			if (domainStartO == null) throw new ProtodomainCreationException("unknown", scopId,

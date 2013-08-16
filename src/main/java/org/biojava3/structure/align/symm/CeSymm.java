@@ -25,7 +25,7 @@ import org.biojava3.structure.utils.SymmetryTools;
 
 
 /** Try to identify all possible symmetries by iterating resursively over all results and disabling the diagonal of each previous result.
- * 
+ *
  * @author andreas
  *
  */
@@ -38,10 +38,58 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	public static final String version = "1.0";
 
 	/**
-	 * The penalty x residues from the main diagonal is: (standard score) - GRADIENT_EXP_COEFF*e^(-x) - GRADIENT_POLY_COEFF[n]*x^(-n) - GRADIENT_POLY_COEFF[n-1]*x^(-n+1) - GRADIENT_POLY_COEFF[n-2]*x^(-n+2) - ... - GRADIENT_POLY_COEFF[0]*x^0
+	 * Percentage change in RSSE required to improve score.
+	 * Avoids reporting slight improvements in favor of lower order.
 	 */
-	public static double[] GRADIENT_POLY_COEFF = {Integer.MIN_VALUE}; // from left to right: ..., quintic, quartic, cubic, quadratic, linear, constant; can be any length
-	public static double GRADIENT_EXP_COEFF = 0; // the corresponding radix is e
+	private float minimumMetricChange = 0.40f;
+	
+	/**
+	 * Maximum degree of rotational symmetry to consider.
+	 */
+	private int maxSymmetryOrder = 8;
+	
+	/**
+	 * The penalty x residues from the main diagonal is: (standard score) - GRADIENT_EXP_COEFF*e^(-x) - GRADIENT_POLY_COEFF[n]*x^(-n) - GRADIENT_POLY_COEFF[n-1]*x^(-n+1) - GRADIENT_POLY_COEFF[n-2]*x^(-n+2) - ... - GRADIENT_POLY_COEFF[0]*x^0
+	 * That is, from left to right: ..., quintic, quartic, cubic, quadratic, linear, constant. The array can be of any length.
+	 */
+	private double[] gradientPolyCoeff = {Integer.MIN_VALUE};
+
+	/**
+	 * An penalty that is exp(e, x), where x is the number of residues from the main diagonal.
+	 */
+	private double gradientExpCoeff = 0;
+
+	public float getMinimumMetricChange() {
+		return minimumMetricChange;
+	}
+
+	public void setMinimumMetricChange(float minimumMetricChange) {
+		this.minimumMetricChange = minimumMetricChange;
+	}
+
+	public int getMaxSymmetryOrder() {
+		return maxSymmetryOrder;
+	}
+
+	public void setMaxSymmetryOrder(int maxSymmetryOrder) {
+		this.maxSymmetryOrder = maxSymmetryOrder;
+	}
+
+	public double[] getGradientPolyCoeff() {
+		return gradientPolyCoeff;
+	}
+
+	public void setGradientPolyCoeff(double[] gradientPolyCoeff) {
+		this.gradientPolyCoeff = gradientPolyCoeff;
+	}
+
+	public double getGradientExpCoeff() {
+		return gradientExpCoeff;
+	}
+
+	public void setGradientExpCoeff(double gradientExpCoeff) {
+		this.gradientExpCoeff = gradientExpCoeff;
+	}
 
 	AFPChain afpChain;
 
@@ -54,7 +102,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	//int loopCount ;
 	int maxNrAlternatives = 1;
 
-
+	private boolean refineResult = false;
 
 	public static void main(String[] args){
 
@@ -67,14 +115,14 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			return;
 		}
 
-		if (args.length  == 0 ) {			
+		if (args.length  == 0 ) {
 			System.out.println(ce.printHelp());
-			return;			
+			return;
 		}
 
 		if ( args.length == 1){
 			if (args[0].equalsIgnoreCase("-h") || args[0].equalsIgnoreCase("-help")|| args[0].equalsIgnoreCase("--help")){
-				System.out.println(ce.printHelp());								
+				System.out.println(ce.printHelp());
 				return;
 			}
 
@@ -102,7 +150,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		//
 		//		//1JQZ.A -  beta trefoil
 		//		//1MSO - insulin
-		//		// 2PHL.A - Phaseolin 
+		//		// 2PHL.A - Phaseolin
 		//
 		//		//String name1 = name1;
 		//		//String name2 = name2;
@@ -152,14 +200,14 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		str.append(afpChain.getName2());
 		str.append("\t");
 		str.append(String.format("%.2f",afpChain.getAlignScore()));
-		str.append("\t");     		
-		str.append(String.format("%.2f",afpChain.getProbability()));		
+		str.append("\t");
+		str.append(String.format("%.2f",afpChain.getProbability()));
 		str.append("\t");
 		str.append(String.format("%.2f",afpChain.getTotalRmsdOpt()));
 		str.append("\t");
 		str.append(afpChain.getCa1Length());
 		str.append("\t");
-		str.append(afpChain.getCa2Length());      
+		str.append(afpChain.getCa2Length());
 		str.append("\t");
 		str.append(afpChain.getCoverage1());
 		str.append("\t");
@@ -190,7 +238,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 	public static  boolean isSignificant(AFPChain myAFP){
 
-		//|| 
+		//||
 		return ( (myAFP.getTMScore() >= 0.35  || myAFP.getProbability() >= 3.5 ) && myAFP.getTotalRmsdOpt() < 5.0);
 	}
 
@@ -212,7 +260,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		String cs1 = "{"+centroid1.getX() + " " + centroid1.getY() + " " +centroid1.getZ()+"}";
 		String cs2 = "{"+centroid2.getX() + " " + centroid2.getY() + " " +centroid2.getZ()+"}";
 
-		jmol.evalString("draw l1 line 100 "+cs1+" (" + 
+		jmol.evalString("draw l1 line 100 "+cs1+" (" +
 				res1.getSeqNum()+":" + chainId1+".CA/1) ; draw l2 line 100 "+cs2+" ("+
 				res2.getSeqNum()+":" + chainId2+".CA/2);" );
 
@@ -221,8 +269,8 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 
 
-	private static Matrix align(AFPChain afpChain,  Atom[] ca1, Atom[] ca2, 
-			CeParameters params, Matrix origM, CECalculator calculator, int counter) throws StructureException{
+	private static Matrix align(AFPChain afpChain,  Atom[] ca1, Atom[] ca2,
+			CeParameters params, Matrix origM, CECalculator calculator, int counter, double[] GRADIENT_POLY_COEFF, double GRADIENT_EXP_COEFF) throws StructureException{
 
 		int fragmentLength = params.getWinSize();
 		//if ( ca1.length > 200 && ca2.length > 200 )
@@ -273,7 +321,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			//System.out.println("BLANK OUT PREVIOUS");
 			//SymmetryTools.showMatrix(origM, "iteration  matrix " +counter);
 
-		}		
+		}
 
 		Matrix clone =(Matrix) origM.clone();
 
@@ -315,13 +363,13 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		try {
 			if ( afpChain != null) {
 				//afpChain = CeMain.filterDuplicateAFPs(afpChain, calculator, ca1, ca2);
-				breakFlag = SymmetryTools.blankOutBreakFlag(afpChain, 
+				breakFlag = SymmetryTools.blankOutBreakFlag(afpChain,
 						ca2, rows, cols, calculator, breakFlag, fragmentLength);
 			}
 
 			//			for ( AFPChain prevAlig : prevAligs) {
 			//				prevAlig = CeMain.filterDuplicateAFPs(prevAlig, calculator, ca1, ca2);
-			//				breakFlag =  SymmetryTools.blankOutBreakFlag(prevAlig, 
+			//				breakFlag =  SymmetryTools.blankOutBreakFlag(prevAlig,
 			//						ca2, rows, cols, calculator, breakFlag, fragmentLength);
 			//			}
 		} catch (Exception e){
@@ -383,7 +431,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 				if ( origM != null) {
 					myAFP.setDistanceMatrix((Matrix)origM.clone());
 				}
-				origM = align(myAFP, ca1,ca2, params, origM, calculator, i);
+				origM = align(myAFP, ca1, ca2, params, origM, calculator, i, gradientPolyCoeff, gradientExpCoeff);
 
 
 
@@ -405,11 +453,8 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 
 
-			double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
-			afpChain.setTMScore(tmScore2);
 			try {
 				afpChain = CeCPMain.postProcessAlignment(afpChain, ca1, ca2, calculator);
-				afpChain.setTMScore(tmScore2);
 			} catch (Exception e){
 				e.printStackTrace();
 				return afpChain;
@@ -418,9 +463,17 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			//afpChain = CeMain.filterDuplicateAFPs(afpChain,calculator,ca1,ca2);
 			//	prevAligs.add(afpChain);
 			if ( displayJmol) {
-				//if ( afpChain.getProbability() > 3.5) 
+				//if ( afpChain.getProbability() > 3.5)
 				showCurrentAlig(afpChain, ca1, ca2);
 			}
+
+			if(refineResult) {
+				int order = getSymmetryOrder(afpChain);
+				afpChain = SymmRefiner.refineSymmetry(afpChain, ca1, ca2O, order);
+			}
+
+			double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
+			afpChain.setTMScore(tmScore2);
 
 			//System.out.println("We went through " + i + " iterations. Final TM score: " + afpChain.getTMScore());
 			//afpChain.setAlgorithmName("CE-symmetry final result ");
@@ -459,7 +512,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 	/**
 	 * Guesses the order of a symmetric alignment.
-	 * 
+	 *
 	 * <p><strong>Details</strong><br/>
 	 * Considers the distance (in number of residues) which a residue moves
 	 * after undergoing <i>n</i> transforms by the alignment. If <i>n</i> corresponds
@@ -472,11 +525,9 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	 * @throws StructureException If afpChain is not one-to-one
 	 */
 	public static int getSymmetryOrder(AFPChain afpChain) throws StructureException {
-		//maximum degree of rotational symmetry to consider
+		
 		final int maxSymmetry = 8;
 
-		// Percentage change in RSSE required to improve score
-		// Avoids reporting slight improvements in favor of lower order
 		final float minimumMetricChange = 0.40f;
 
 		Map<Integer,Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
@@ -486,5 +537,18 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 				maxSymmetry, minimumMetricChange);
 	}
 
+	/**
+	 * @return the refineResult
+	 */
+	public boolean isRefineResult() {
+		return refineResult;
+	}
+
+	/**
+	 * @param refineResult the refineResult to set
+	 */
+	public void setRefineResult(boolean refineResult) {
+		this.refineResult = refineResult;
+	}
 
 }

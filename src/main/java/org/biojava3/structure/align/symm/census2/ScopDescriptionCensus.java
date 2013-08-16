@@ -29,16 +29,16 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.scop.ScopNode;
+import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 
 /**
- * A census that takes a list of sun Ids
+ * A census that takes a list of sun Ids.
  * @author dmyerstu
  */
 public class ScopDescriptionCensus extends Census {
@@ -47,13 +47,12 @@ public class ScopDescriptionCensus extends Census {
 
 	protected int[] sunIds;
 
-	public static void buildDefault(String pdbDir, File censusFile, int[] sunIds) {
+	public static void buildDefault(File censusFile, int[] sunIds) {
 		try {
-			Census.setBerkeleyScop(pdbDir);
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			ScopDescriptionCensus census = new ScopDescriptionCensus(maxThreads, sunIds);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache(pdbDir, false));
+			census.setCache(new AtomCache());
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -62,13 +61,22 @@ public class ScopDescriptionCensus extends Census {
 	}
 
 	public static void main(String[] args) {
-		final String pdbDir = args[0];
-		final File censusFile = new File(args[1]);
-		int[] sunIds = new int[args.length - 2];
-		for (int i = 2; i < args.length; i++) {
-			sunIds[i - 2] = Integer.parseInt(args[i]);
+		if (args.length < 2) {
+			System.err.println("Usage: " + ScopDescriptionCensus.class.getSimpleName() + " output-census-file sun-id-1 [sun-id-2 sun-id-3 ...]");
+			return;
 		}
-		buildDefault(pdbDir, censusFile, sunIds);
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
+		final File censusFile = new File(args[0]);
+		int[] sunIds = new int[args.length - 1];
+		StringBuilder sb = new StringBuilder();
+		for (int i = 1; i < args.length; i++) {
+			Integer sunId = ScopSupport.getInstance().getSunId(args[i]);
+			if (sunId == null) throw new IllegalArgumentException("Couldn't find " + args[i]);
+			sb.append(sunId + ",");
+			sunIds[i - 1] = sunId;
+		}
+		logger.info("Running on " + sb.toString().substring(0, sb.toString().length()-1));
+		buildDefault(censusFile, sunIds);
 	}
 
 	public ScopDescriptionCensus(int maxThreads, int[] sunIds) {
@@ -79,7 +87,6 @@ public class ScopDescriptionCensus extends Census {
 	@Override
 	protected List<ScopDomain> getDomains() {
 		List<ScopDomain> domains = new ArrayList<ScopDomain>();
-		ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // TODO Why the hell do I have to do this again here?
 		ScopDatabase scop = ScopFactory.getSCOP();
 		for (int sunId : sunIds) {
 			domains.addAll(scop.getScopDomainsBySunid(sunId));
@@ -88,6 +95,11 @@ public class ScopDescriptionCensus extends Census {
 		return domains;
 	}
 
+	/**
+	 * @deprecated Use {@link ScopSupport} instead
+	 * TODO Swap out with ScopSupport, and verify that everything (particularly in CLI) still works.
+	 */
+	@Deprecated
 	public static void getDomainsUnder(int sunId, List<ScopDomain> domains) {
 		
 		final ScopDatabase scop = ScopFactory.getSCOP();

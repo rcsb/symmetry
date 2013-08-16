@@ -42,11 +42,16 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava3.structure.align.symm.census2.CensusJob;
 import org.biojava3.structure.utils.FileUtils;
 
 
 
 
+/**
+ * @deprecated Replaced by {@link Results}
+ */
+@Deprecated
 @XmlRootElement(name = "CensusResults", namespace ="http://source.rcsb.org")
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public class CensusResults implements Serializable{

@@ -41,9 +41,7 @@ import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.StructureAlignment;
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
@@ -56,27 +54,33 @@ import org.biojava3.structure.utils.FileUtils;
 /**
  * Runs the symmetry census on every domain. The work is done in order of superfamily (since we're using multiple cores,
  * this may not be the order in which they are output).
- * 
+ *
  * @author dmyerstu
  */
 public class Census {
 
 	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
 
+	/**
+	 * A class that creates a new {@link StructureAlignment StructureAlignments} for each {@link CensusJob}, to avoid
+	 * concurrency issues.
+	 * @author dmyersturnbull
+	 *
+	 */
 	public static abstract class AlgorithmGiver {
 		public static AlgorithmGiver getDefault() {
 			return new AlgorithmGiver() {
 				@Override
 				public StructureAlignment getAlgorithm() {
 					CeSymm ceSymm = new CeSymm();
-//					ConfigStrucAligParams params = ceSymm.getParameters();
-//					if (params instanceof CeParameters) {
-//						CeParameters ceparams = (CeParameters) params;
-//						ceparams.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
-//						ceparams.setSeqWeight(2);
-//						ceparams.setScoringStrategy(CeParameters.SIDE_CHAIN_SCORING);
-//						ceSymm.setParameters(ceparams);
-//					}
+					//					ConfigStrucAligParams params = ceSymm.getParameters();
+					//					if (params instanceof CeParameters) {
+					//						CeParameters ceparams = (CeParameters) params;
+					//						ceparams.setScoringStrategy(CeParameters.SEQUENCE_CONSERVATION);
+					//						ceparams.setSeqWeight(2);
+					//						ceparams.setScoringStrategy(CeParameters.SIDE_CHAIN_SCORING);
+					//						ceSymm.setParameters(ceparams);
+					//					}
 					return ceSymm;
 				}
 			};
@@ -84,7 +88,7 @@ public class Census {
 
 		public abstract StructureAlignment getAlgorithm();
 	}
-	
+
 	private AtomCache cache;
 
 	private boolean doPrefetch = false;
@@ -99,13 +103,14 @@ public class Census {
 
 	private Map<String, Integer> total = new TreeMap<String, Integer>();
 
-	public static void buildDefault(String pdbDir, File censusFile) {
+	private AlgorithmGiver algorithm = null;
+
+	public static void buildDefault(File censusFile) {
 		try {
-			Census.setBerkeleyScop(pdbDir);
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			Census census = new Census(maxThreads);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache(pdbDir, false));
+			census.setCache(new AtomCache());
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -118,18 +123,13 @@ public class Census {
 	}
 
 	public static void main(String[] args) {
-		final String pdbDir = args[0];
-		final File censusFile = new File(args[1]);
-		buildDefault(pdbDir, censusFile);
-	}
-
-	public static ScopDatabase setBerkeleyScop(String pdbDir) {
-		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR, pdbDir);
-		ScopDatabase scop = ScopFactory.getSCOP();
-		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
+		if (args.length != 1) {
+			System.err.println("Usage: " + Census.class.getSimpleName() + " output-census-file");
+			return;
 		}
-		return ScopFactory.getSCOP();
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
+		final File censusFile = new File(args[0]);
+		buildDefault(censusFile);
 	}
 
 	public Census() {
@@ -162,7 +162,7 @@ public class Census {
 	}
 
 	public final void run() {
-		
+
 		try {
 
 			if (file == null) throw new IllegalStateException("Must set file first");
@@ -183,23 +183,20 @@ public class Census {
 				domains = getDomains();
 			}
 			logger.info("There are " + domains.size() + " domains");
-			
+
 			List<CensusJob> submittedJobs = new ArrayList<CensusJob>(domains.size()); // to get time taken
 
 			// submit jobs
 			for (ScopDomain domain : domains) {
 				if (count % 1000 == 0) logger.info("Working on " + count + " / " + domains.size());
-				// if (domain.getScopId().equals("ds046__")) continue;
 				if (domain.getRanges() == null || domain.getRanges().isEmpty()) {
 					logger.debug("Skipping " + domain.getScopId() + " because SCOP ranges for it are not defined");
 					continue;
 				}
 				if (knownResults.contains(domain.getScopId())) continue;
 				logger.debug("Submitting new job for " + domain.getScopId() + " (job #" + count + ")");
-				CensusJob calc = new CensusJob(cache, getAlgorithm(), significance);
-				calc.setDomain(domain);
-				calc.setSuperfamily(scop.getScopDescriptionBySunid(domain.getSuperfamilyId())); // TODO is this correct?
-				calc.setCount(count);
+				CensusJob calc = CensusJob.forScopId(getAlgorithm(), significance, domain.getScopId(), count, cache, scop);
+				initializeJob(calc);
 				submittedJobs.add(calc);
 				Future<Result> result = ConcurrencyTools.submit(calc);
 				futures.add(result);
@@ -249,14 +246,21 @@ public class Census {
 				}
 			}
 			avgTimeTaken = (double) timeTaken / (double) nSuccess;
-			
+
 		} finally {
 			ConcurrencyTools.shutdown();
 		}
 	}
 
+	/**
+	 * Do anything else to the {@link CensusJob} object before it is run.
+	 * @param calc
+	 */
+	protected void initializeJob(CensusJob job) {
+	}
+
 	private double avgTimeTaken;
-	
+
 	public double getAvgTimeTaken() {
 		return avgTimeTaken;
 	}
@@ -290,12 +294,12 @@ public class Census {
 	}
 
 	/**
-	 * Returns the names of the domains that we already analyzed
-	 * 
+	 * Returns the names of the domains that we already analyzed.
+	 *
 	 * @param census
 	 * @return
 	 */
-	private List<String> getKnownResults(Results census) {
+	private final List<String> getKnownResults(Results census) {
 		List<String> names = new ArrayList<String>();
 		List<Result> results = census.getData();
 		int i = 0;
@@ -327,8 +331,14 @@ public class Census {
 		return filtered;
 	}
 
-	protected AlgorithmGiver getAlgorithm() {
-		return AlgorithmGiver.getDefault();
+	public AlgorithmGiver getAlgorithm() {
+		if( this.algorithm == null) {
+			this.algorithm = AlgorithmGiver.getDefault();
+		}
+		return this.algorithm;
+	}
+	public void setAlgorithm(AlgorithmGiver alg) {
+		this.algorithm = alg;
 	}
 
 	protected List<ScopDomain> getDomains() {

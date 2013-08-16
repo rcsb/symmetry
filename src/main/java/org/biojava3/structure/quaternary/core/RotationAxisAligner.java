@@ -40,6 +40,7 @@ public class RotationAxisAligner extends AxisAligner{
 	public RotationAxisAligner(QuatSymmetryResults results) {
 		this.subunits = results.getSubunits();
 		this.rotationGroup = results.getRotationGroup();
+
 		if (subunits == null) {
 			throw new IllegalArgumentException("AxisTransformation: Subunits are null");
 		} else if (rotationGroup == null) {

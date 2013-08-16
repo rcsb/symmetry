@@ -143,14 +143,21 @@ public class CalcBioAssemblySymmetry {
 		return detector;
 	}
 
+	/** Only works if this is not helical symmetry. Deprecated, use getSymmetry instead */
+	@Deprecated
 	public RotationGroup getRotationGroup() {
 		return results.getRotationGroup();
 	}
 
+	
 	public Subunits getSubunits() {
 		return results.getSubunits();
 	}
 	
+	/** String representation of Symmetry, e.g. C1, C2, H 
+	 * 
+	 * @return
+	 */
 	public String getSymmetry() {
 		return results.getSymmetry();
 	}

@@ -92,32 +92,9 @@ public class Results implements Serializable {
 	
 	public static List<SimpleResult> convertResults(List<Result> data){
 		List<SimpleResult> results = new ArrayList<SimpleResult>();
-		
 		for ( Result r : data){
-			SimpleResult s = new SimpleResult();
-			results.add(s);
-			
-			s.setAlignScore(r.getAlignment().getAlignScore());
-			s.setClassification(r.getClassification());
-			s.setDescription(r.getDescription());
-			s.setGapLength(r.getAlignment().getGapLength());
-			s.setIdentity(r.getAlignment().getIdentity());
-			s.setIsSignificant(r.getIsSignificant());
-			s.setOrder(r.getOrder());
-			s.setProtodomain(r.getProtodomain());
-			s.setRank(r.getRank());
-			s.setScopId(r.getScopId());
-			s.setSimilarity(r.getAlignment().getSimilarity());
-			s.setSunId(r.getSunId());
-			if ( r.getAxis() != null)
-				s.setTheta(r.getAxis().getTheta());
-			s.setTmScore(r.getAlignment().getTmScore());
-			s.setzScore(r.getAlignment().getzScore());
-			s.setRmsd(r.getAlignment().getRmsd());
-			s.setAlignLength(r.getAlignment().getAlignLength());
-			s.setLength1(r.getAlignment().getGapLength() + r.getAlignment().getAlignLength());
+			results.add(new SimpleResult(r));
 		}
-		
 		return results;
 	}
 

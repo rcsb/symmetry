@@ -31,10 +31,12 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
+import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 /**
@@ -47,30 +49,30 @@ public class NamesCensus extends Census {
 
 	private List<ScopDomain> domains;
 
-	public static void buildDefault(String pdbDir, File censusFile, File lineByLine) {
+	public static void buildDefault(File censusFile, File lineByLine, final boolean doRefine) {
+		// Alignment algorithm to actually run
+		AlgorithmGiver algorithm = new AlgorithmGiver() {
+			@Override
+			public StructureAlignment getAlgorithm() {
+				CeSymm ce = new CeSymm();
+				ce.setRefineResult(doRefine);
+				return ce;
+			}
+		};
+		buildDefault(censusFile, lineByLine, algorithm);
+	}
+
+	public static void buildDefault(File censusFile, File lineByLine, AlgorithmGiver algorithm) {
 		try {
-			ScopDatabase scop = Census.setBerkeleyScop(pdbDir);
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			NamesCensus census = new NamesCensus(maxThreads);
 			census.setOutputWriter(censusFile);
-			census.domains = new ArrayList<ScopDomain>();
-			try {
-				BufferedReader br = new BufferedReader(new FileReader(lineByLine));
-				String line = "";
-				while ((line = br.readLine()) != null) {
-					if (line.trim().isEmpty()) continue;
-					ScopDomain domain = scop.getDomainByScopID(line);
-					if (domain == null) {
-						logger.error("No SCOP domain with id " + line + " was found");
-					} else {
-						census.domains.add(domain);
-					}
-				}
-				br.close();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-			census.setCache(new AtomCache(pdbDir, false));
+			census.domains = readNames(lineByLine);
+			census.setPrintFrequency(10);
+			census.setAlgorithm(algorithm);
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -78,11 +80,42 @@ public class NamesCensus extends Census {
 		}
 	}
 
+	private static List<ScopDomain> readNames(File lineByLine) {
+		List<ScopDomain> domains = new ArrayList<ScopDomain>();
+		try {
+			BufferedReader br = new BufferedReader(new FileReader(lineByLine));
+			String line = "";
+			while ((line = br.readLine()) != null) {
+				if (line.trim().isEmpty()) continue;
+				ScopDomain domain = ScopFactory.getSCOP().getDomainByScopID(line);
+				if (domain == null) {
+					logger.error("No SCOP domain with id " + line + " was found");
+				} else {
+					domains.add(domain);
+				}
+			}
+			br.close();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return domains;
+	}
+
 	public static void main(String[] args) {
-		final String pdbDir = args[0];
-		final File censusFile = new File(args[1]);
-		final File lineByLine = new File(args[2]);
-		buildDefault(pdbDir, censusFile, lineByLine);
+		if (args.length != 2 && args.length != 3) {
+			System.err.println("Usage: " + NamesCensus.class.getSimpleName() + " output-census-file line-by-line-input-names-file [do-refinement]");
+			return;
+		}
+		final File censusFile = new File(args[0]);
+		final File lineByLine = new File(args[1]);
+		boolean doRefine = false;
+		if (args.length > 2) {
+			if (args[2].toLowerCase().equals("true") || args[2].toLowerCase().equals("refine")) {
+				doRefine = true;
+			}
+		}
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
+		buildDefault(censusFile, lineByLine, doRefine);
 	}
 
 	public NamesCensus(int maxThreads) {
@@ -111,7 +144,7 @@ public class NamesCensus extends Census {
 			}
 		};
 	}
-	
+
 	@Override
 	protected List<ScopDomain> getDomains() {
 		return domains;

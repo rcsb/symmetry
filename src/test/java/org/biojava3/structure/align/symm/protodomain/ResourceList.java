@@ -188,10 +188,7 @@ public class ResourceList {
 	static {
 		StructureAlignmentFactory.addAlgorithm(new CeMain());
 		StructureAlignmentFactory.addAlgorithm(new CeCPMain());
-		ScopDatabase scop = ScopFactory.getSCOP();
-		if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation()); // ScopDatabase is too hard to mock well
-		}
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 	}
 
 	// notice the side effects here

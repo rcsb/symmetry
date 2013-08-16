@@ -35,6 +35,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.scop.Astral;
+import org.biojava.bio.structure.scop.Astral.AstralSet;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
@@ -42,7 +44,6 @@ import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.scop.ScopInstallation;
-import org.biojava3.structure.align.symm.census2.AstralScopDescriptionCensus.AstralSet;
 
 /**
  * Decent command-line interface to Census. Combines aspects of many of the other census subclasses.
@@ -83,10 +84,7 @@ public class CLI {
 				return;
 			}
 
-			ScopDatabase scop = ScopFactory.getSCOP();
-			if (!scop.getClass().getName().equals(BerkeleyScopInstallation.class.getName())) { // for efficiency
-				ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
-			}
+			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 
 			final String pdbDir = cmd.getOptionValue("pdb");
 			final String censusFile = cmd.getOptionValue("file");
@@ -130,13 +128,14 @@ public class CLI {
 			final boolean randomize = cmd.hasOption("randomize");
 			final boolean restart = cmd.hasOption("restart");
 			final boolean prefetch = cmd.hasOption("prefetch");
-			final boolean oldScop = cmd.hasOption("oldscop");
+			final String scopVersion = cmd.getOptionValue("scopversion");
+
 
 			final String sigClass = cmd.getOptionValue("sigclass");
 			final String sigMethod = cmd.getOptionValue("sigmethod");
 
 			run(pdbDir, censusFile, nThreads, writeEvery, number, clustering, sunIds, superfamilies, folds, randomize,
-					restart, prefetch, oldScop, sigClass, sigMethod);
+					restart, prefetch, scopVersion, sigClass, sigMethod);
 
 		} catch (RuntimeException e) {
 			printError(e);
@@ -156,7 +155,7 @@ public class CLI {
 	public static void run(final String pdbDir, final String censusFile, final Integer pNThreads,
 			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] pSunIds,
 			final String[] superfamilies, final String[] folds, final boolean randomize, final boolean restart,
-			boolean prefetch, final boolean oldScop, String sigClass, String sigMethod) {
+			boolean prefetch, final String scopVersion, String sigClass, String sigMethod) {
 
 		// get a significance object
 		final Significance sig;
@@ -216,7 +215,7 @@ public class CLI {
 				// get sequence clusters
 				Set<String> clusterRepresentatives = null;
 				if (clustering != null) {
-					clusterRepresentatives = AstralScopDescriptionCensus.getClusterRepresentatives(clustering);
+					clusterRepresentatives = Astral.getRepresentatives(clustering);
 					logger.info("Using sequence clustering at " + clustering.getId());
 					logger.info("Number of clusters: " + clusterRepresentatives.size());
 				}
@@ -280,12 +279,20 @@ public class CLI {
 			}
 		};
 
-		// set final options
-		if (!oldScop) {
-			ScopFactory.setScopDatabase(new BerkeleyScopInstallation());
-		} else {
-			ScopFactory.setScopDatabase(new ScopInstallation());
+		// set SCOP version
+		if (scopVersion != null) {
+			if (scopVersion.endsWith("A")) {
+				BerkeleyScopInstallation inst = new BerkeleyScopInstallation();
+				inst.setScopVersion(scopVersion);
+				ScopFactory.setScopDatabase(inst);
+			} else {
+				ScopInstallation inst = new ScopInstallation();
+				inst.setScopVersion(scopVersion);
+				ScopFactory.setScopDatabase(inst);
+			}
 		}
+		
+		// set final options
 		if (writeEvery != null) census.setPrintFrequency(writeEvery);
 		census.setDoPrefetch(prefetch);
 		if (censusFile != null) {
@@ -323,8 +330,8 @@ public class CLI {
 		options.addOption(OptionBuilder.hasArg(false)
 				.withDescription("Ignore any existing work and start from scratch.").isRequired(false)
 				.create("restart"));
-		options.addOption(OptionBuilder.hasArg(false).withDescription("Don't use Berkeley SCOP.").isRequired(false)
-				.create("oldscop"));
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Use the specified SCOP version; otherwise will use 1.75A.").isRequired(false)
+				.create("scopversion"));
 		options.addOption(OptionBuilder.hasArg(false).withDescription("Prefetch all PDB files.").isRequired(false)
 				.create("prefetch"));
 		options.addOption(OptionBuilder.hasArg(true).withDescription("Write to file every n jobs.").isRequired(false)
@@ -333,12 +340,12 @@ public class CLI {
 				.hasArg(true)
 				.withDescription(
 						"Apply sequence clustering at the specified sequence identity, in decimal. A value of 0 (default) means no sequence clustering.")
-				.isRequired(false).create("clustering"));
+						.isRequired(false).create("clustering"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
 						"Run on only the specified space-seperated list of SCOP sun ids. Defaults to SCOP classes A-F, \"46456 48724 51349 53931 56572 56835\"")
-				.isRequired(false).create("sunids"));
+						.isRequired(false).create("sunids"));
 		options.addOption(OptionBuilder.hasArg(true)
 				.withDescription("Run on only the specified space-seperated list of superfamily names.")
 				.isRequired(false).create("superfamilies"));
@@ -349,32 +356,32 @@ public class CLI {
 				.hasArg(true)
 				.withDescription(
 						"Use only the specified number of entities from the sun ids or superfamilies selected. A value of -1 (default) means all. This option does not attempt to select diverse domains from the sets (will fix). Use with -randomize.")
-				.isRequired(false).create("number"));
+						.isRequired(false).create("number"));
 		options.addOption(OptionBuilder
 				.hasArg(false)
 				.withDescription(
 						"Randomize the order in which the entities are chosen (from sun ids or superfamilies).")
-				.isRequired(false).create("randomize"));
+						.isRequired(false).create("randomize"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
 						"Run on only the nth fold. Special option for running on OSG. Does not work with -oldscop.")
-				.isRequired(false).create("foldindex"));
+						.isRequired(false).create("foldindex"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
 						"Run on only the nth superfamily. Special option for running on OSG. Does not work with -oldscop.")
-				.isRequired(false).create("sfindex"));
+						.isRequired(false).create("sfindex"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
 						"A fully-qualified class name for a Significance object. If sigmethod is also set, calls that factory method; otherwise, calls a constructor.")
-				.isRequired(false).create("sigclass"));
+						.isRequired(false).create("sigclass"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
 						"The name of a factory method that returns a Significance object. If sigclass is also set, expects the factory method to be in that class; otherwise, checks in SignificanceFactory.")
-				.isRequired(false).create("sigmethod"));
+						.isRequired(false).create("sigmethod"));
 		return options;
 	}
 

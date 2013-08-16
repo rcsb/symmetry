@@ -89,6 +89,7 @@ public class BioassemblyCheck {
 	
 			table.add(list);
 		}
+		reader.close();
 	}
 	
 	private void calcMap(Map<String, Integer> map, int index) {

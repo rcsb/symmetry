@@ -32,8 +32,11 @@ import org.biojava.bio.structure.align.util.AtomCache;
 /** a bean storing the results of the latest SCOP census.
  * 
  * @author Andreas Prlic
+ * 
+ * @deprecated Replaced by {@link Results}
  *
  */
+@Deprecated
 public class CensusResult implements Serializable  {
 
 	/**

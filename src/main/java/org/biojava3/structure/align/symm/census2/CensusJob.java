@@ -236,7 +236,7 @@ public class CensusJob implements Callable<Result> {
 				}
 			}
 
-			return convertResult(afpChain, isSignificant, order, protodomain.toString(), name, angle, fractionHelical);
+			return convertResult(afpChain, isSignificant, order, protodomain, name, angle, fractionHelical);
 
 		} else { // trying this would take too long
 			logger.debug("Result is not significant (job #" + count + ")");
@@ -288,7 +288,7 @@ public class CensusJob implements Callable<Result> {
 		this.storeAfpChain = storeAfpChain;
 	}
 
-	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, Integer order, String protodomain,
+	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, Integer order, Protodomain protodomain,
 			String name, Float angle, Float fractionHelical) {
 
 		if (storeAfpChain) this.afpChain = afpChain;
@@ -306,7 +306,7 @@ public class CensusJob implements Callable<Result> {
 			final String description = superfamily.getDescription();
 			r.setDescription(description);
 		}
-		r.setProtodomain(protodomain);
+		if (protodomain != null) r.setProtodomain(protodomain.toString());
 
 		r.setAlignment(new Alignment(afpChain));
 		r.setIsSignificant(isSymmetric);

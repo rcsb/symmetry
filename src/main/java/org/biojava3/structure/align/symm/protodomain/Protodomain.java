@@ -25,12 +25,12 @@ package org.biojava3.structure.align.symm.protodomain;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Set;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.AtomPositionMap;
@@ -43,7 +43,6 @@ import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 
@@ -120,7 +119,7 @@ public class Protodomain {
 
 	private final String ranges;
 
-	private final String scopId;
+	private final String enclosingName;
 
 	private Structure structure;
 
@@ -130,6 +129,8 @@ public class Protodomain {
 	 * That is, the Protodomain will have two {@link ResidueRange ResidueRanges} for every gap that contains {@code APPROX_CONSECUTIVE} residues.
 	 * Currently, {@code APPROX_CONSECUTIVE} is 4; a subsequent change will break the interface.
 	 * 
+	 * @param enclosingName
+	 *            The name of the enclosing structure; can be a SCOP domain, a PDB Id, or a String of the form {@code PDB_ID:CHAIN_ID}
 	 * @param afpChain
 	 *            The AFPChain returned by the alignment. {@code afpChain.getName1()} and {@code afpChain.getName2()}
 	 *            must be non-null and correct.
@@ -137,9 +138,6 @@ public class Protodomain {
 	 *            An array of C-alpha {@link Atom Atoms} from which to create the Protodomain
 	 * @param keepStructure
 	 *            If set to true, the structure will be recreated.
-	 * @param order
-	 *            What the whole protodomain will be "cut" by. This should ordinarily be set to the symmetry order. For
-	 *            example, if it is set to 1, it the whole protodomain will be returned.
 	 * @param numBlocks
 	 *            The number of blocks in the alignment to include. Should either be 1 or 2.
 	 * @param chainIndex
@@ -147,31 +145,62 @@ public class Protodomain {
 	 * @return
 	 * @throws ProtodomainCreationException
 	 */
-	public static Protodomain fromAfpChain(AFPChain afpChain, Atom[] ca,
+	public static Protodomain fromAfpChain(String enclosingName, AFPChain afpChain, Atom[] ca,
 			int numBlocks, int chainIndex, AtomCache cache) throws ProtodomainCreationException {
-		final ScopDatabase scopInst = ScopFactory.getSCOP();
-		final ScopDomain scopDomain = scopInst.getDomainByScopID(afpChain.getName2());
-
-		StructureName name = new StructureName(afpChain.getName2());
-		String pdbId = name.getPdbId().toLowerCase();
-
-		List<String> domainRanges ;
-
-		String scopId = null;
-		if ( scopDomain != null) {
-			scopId = scopDomain.getScopId();
-			domainRanges = scopDomain.getRanges();
-		} else {
+		StructureName name = new StructureName(enclosingName);
+		List<String> domainRanges;
+		if (name.isScopName()) {
+			// SCOP
+			domainRanges = ScopFactory.getSCOP().getDomainByScopID(enclosingName).getRanges();
+		} else if (enclosingName.contains(".")) {
+			// chain
 			domainRanges = new ArrayList<String>();
-			domainRanges.add(name.getChainId());
+			domainRanges.add(name.getChainId() + ":");
+		} else {
+			// whole PDB Id
+			domainRanges = new ArrayList<String>();
+			Set<String> chains = new HashSet<String>();
+			for (Atom atom : ca) {
+				chains.add(atom.getGroup().getChainId());
+			}
+			for (String chain : chains) domainRanges.add(chain + ":");
 		}
+		return fromAfpChain(name.getPdbId().toLowerCase(), enclosingName, domainRanges, afpChain, ca, numBlocks, chainIndex, cache);
+	}
 
+	
+	/**
+	 * Client code should avoid calling this method if either fromSymmetryAlignment or fromReferral is more appropriate.
+	 * The created Protodomain will include a gap in the alignment if and only if it is no greater than {@link #APPROX_CONSECUTIVE} residues.
+	 * That is, the Protodomain will have two {@link ResidueRange ResidueRanges} for every gap that contains {@code APPROX_CONSECUTIVE} residues.
+	 * Currently, {@code APPROX_CONSECUTIVE} is 4; a subsequent change will break the interface.
+	 * 
+	 * @param enclosingName
+	 *            The name of the enclosing structure; can be a SCOP domain, a PDB Id, or a String of the form {@code PDB_ID:CHAIN_ID}
+	 * @param domainRanges
+	 *            A list of Strings of the form {@code chain:} or {@code chain:start-end}
+	 * @param afpChain
+	 *            The AFPChain returned by the alignment. {@code afpChain.getName1()} and {@code afpChain.getName2()}
+	 *            must be non-null and correct.
+	 * @param ca
+	 *            An array of C-alpha {@link Atom Atoms} from which to create the Protodomain
+	 * @param keepStructure
+	 *            If set to true, the structure will be recreated.
+	 * @param numBlocks
+	 *            The number of blocks in the alignment to include. Should either be 1 or 2.
+	 * @param chainIndex
+	 *            The chain in {@code afpChain} to create the Protodomain from.
+	 * @return
+	 * @throws ProtodomainCreationException
+	 */
+	public static Protodomain fromAfpChain(String pdbId, String enclosingName, List<String> domainRanges, AFPChain afpChain, Atom[] ca,
+			int numBlocks, int chainIndex, AtomCache cache) throws ProtodomainCreationException {
 
 		// int numAtomsInBlock1Alignment = afpChain.getOptLen()[0];
 		// if (numAtomsInBlock1Alignment == 0) throw new ProtodomainCreationException("unknown", scopId);
 
 		// this keeps a list of insertion-code-independent positions of the groups (where they are in the PDB file)
-		final AtomPositionMap map = getAminoAcidPositions(cache, pdbId, scopId);
+		final AtomPositionMap map = getAminoAcidPositions(cache, pdbId, enclosingName);
 
 		// since CE-Symm has two blocks, we're going to have to do this in 2 parts:
 		// from the start of block 1 to end end of block 1
@@ -191,7 +220,7 @@ public class Protodomain {
 
 		for (int block = 0; block < numBlocks; block++) {
 			if (block + 1 > afpChain.getOptLen().length) {
-				System.out.println("Warning: a block is missing in AFPChain from the alignment of " + scopId
+				System.out.println("Warning: a block is missing in AFPChain from the alignment of " + enclosingName
 						+ " Assuming the alignment ends in block " + (block + 1) + ".");
 				break;
 			}
@@ -208,7 +237,7 @@ public class Protodomain {
 				final int protodomainStart = map.getPosition(protodomainStartR);
 				final int protodomainEnd = map.getPosition(protodomainEndR);
 				final List<ResidueRange> blockRanges = getBlockRanges(protodomainStart, protodomainEnd, domainRanges,
-						protodomainStartR, protodomainEndR, startGroup, endGroup, map, scopId);
+						protodomainStartR, protodomainEndR, startGroup, endGroup, map, enclosingName);
 				if (blockRanges != null) { // should this always be true?
 					totalRanges.addAll(blockRanges);
 				}
@@ -224,7 +253,7 @@ public class Protodomain {
 
 		final int length = ResidueRange.calcLength(splicedRanges);
 
-		Protodomain protodomain = new Protodomain(pdbId, scopId, splicedRanges, length, cache);
+		Protodomain protodomain = new Protodomain(pdbId, enclosingName, splicedRanges, length, cache);
 
 		protodomain.length = length; // is the length of the AFPChain
 		return protodomain;
@@ -251,7 +280,7 @@ public class Protodomain {
 		if (afpChain.getOptLen().length != 1) throw new ProtodomainCreationException("unknown", afpChain.getName2(),
 				"The AFPChain did not contain exactly 1 block.");
 		try {
-			return fromAfpChain(afpChain, ca, 1, 1, cache);
+			return fromAfpChain(afpChain.getName2(), afpChain, ca, 1, 1, cache);
 		} catch (Exception e) { // IOException | StructureException | ArrayIndexOutOfBoundsException |
 			// NullPointerException
 			throw new ProtodomainCreationException("unknown", afpChain.getName2(), e);
@@ -270,16 +299,7 @@ public class Protodomain {
 	 */
 	public static Protodomain fromString(String string, ScopDomain scopDomain,
 			AtomCache cache) throws ProtodomainCreationException {
-
-		final String pdbId = scopDomain.getPdbId();
-
-		final AtomPositionMap map = Protodomain.getAminoAcidPositions(cache, pdbId, scopDomain.getScopId());
-		final List<ResidueRange> list = ResidueRange.parseMultiple(string.substring(string.indexOf('.') + 1), map);
-
-		int length = ResidueRange.calcLength(list);
-
-		Protodomain protodomain = new Protodomain(pdbId, scopDomain.getScopId(), list, length, cache);
-		return protodomain;
+		return fromString(string, scopDomain.getScopId(), cache);
 	}
 
 	/**
@@ -288,13 +308,22 @@ public class Protodomain {
 	 * 
 	 * @param string
 	 *            A string of the form: pdbId.chain_start-end,chain_start-end, ..., chain_start-end.
-	 * @param scopId
+	 * @param enclosingName
 	 * @return
 	 * @throws ProtodomainCreationException
 	 */
-	public static Protodomain fromString(String string, String scopId, AtomCache cache)
+	public static Protodomain fromString(String string, String enclosingName, AtomCache cache)
 			throws ProtodomainCreationException, IllegalArgumentException {
-		return fromString(string, ScopFactory.getSCOP().getDomainByScopID(scopId), cache);
+		
+		String pdbId = new StructureName(enclosingName).getPdbId().toLowerCase();
+		
+		final AtomPositionMap map = Protodomain.getAminoAcidPositions(cache, pdbId, enclosingName);
+		final List<ResidueRange> list = ResidueRange.parseMultiple(string.substring(string.indexOf('.') + 1), map);
+
+		int length = ResidueRange.calcLength(list);
+
+		Protodomain protodomain = new Protodomain(pdbId, enclosingName, list, length, cache);
+		return protodomain;
 	}
 
 	/**
@@ -314,7 +343,7 @@ public class Protodomain {
 			throws ProtodomainCreationException {
 		if (afpChain.getBlockNum() != 2) throw new ProtodomainCreationException("unknown", afpChain.getName2(),
 				"The AFPChain did not contain exactly 2 blocks.");
-		return fromAfpChain(afpChain, ca, 2, 0, cache);
+		return fromAfpChain(afpChain.getName1(), afpChain, ca, 2, 0, cache);
 	}
 
 	/**
@@ -362,7 +391,7 @@ public class Protodomain {
 						for (int j = 0; j < numResiduesWant - numResiduesHave; j++) {
 							endResidueNumber = navMap.higherEntry(endResidueNumber).getKey();
 						}
-						part.add(new ResidueRange(rr.getChain(), rr.getStart(), endResidueNumber, numResiduesWant
+						part.add(new ResidueRange(rr.getChainId(), rr.getStart(), endResidueNumber, numResiduesWant
 								- numResiduesHave));
 						break outer; // we filled up numResiduesTraversed, so we won't be able to add further residue
 						// ranges
@@ -382,7 +411,7 @@ public class Protodomain {
 	 * @return
 	 * @throws ProtodomainCreationException
 	 */
-	private static AtomPositionMap getAminoAcidPositions(AtomCache cache, String pdbId, String scopId)
+	private static AtomPositionMap getAminoAcidPositions(AtomCache cache, String pdbId, String enclosingName)
 			throws ProtodomainCreationException {
 		try {
 			// We cannot use CA atoms only here because sometimes the C-alpha atom is missing
@@ -391,10 +420,10 @@ public class Protodomain {
 			// ok here?
 			return new AtomPositionMap(allAtoms);
 		} catch (IOException e) {
-			throw new ProtodomainCreationException("unknown", scopId, e,
+			throw new ProtodomainCreationException("unknown", enclosingName, e,
 					"Could not get a list of amino acid residue number positions.");
 		} catch (StructureException e) {
-			throw new ProtodomainCreationException("unknown", scopId, e,
+			throw new ProtodomainCreationException("unknown", enclosingName, e,
 					"Could not get a list of amino acid residue number positions.");
 		}
 	}
@@ -525,11 +554,11 @@ public class Protodomain {
 			final int dist = map.calcLengthDirectional(growing.getEnd(), next.getStart());
 
 			// if they're of different chains, CANNOT splice safely, so don't
-			if (dist > approxConsecutive || growing.getChain() != next.getChain()) {
+			if (dist > approxConsecutive || !growing.getChainId().equals(next.getChainId())) {
 				spliced.add(growing);
 				growing = next;
 			} else {
-				growing = new ResidueRange(growing.getChain(), growing.getStart(), next.getEnd(), growing.getLength()
+				growing = new ResidueRange(growing.getChainId(), growing.getStart(), next.getEnd(), growing.getLength()
 						+ next.getLength() + dist);
 			}
 
@@ -542,7 +571,7 @@ public class Protodomain {
 
 	/**
 	 * @param pdbId
-	 * @param scopId
+	 * @param enclosingName
 	 * @param list
 	 *            A list of {@link ResidueRange ResidueRanges} that define this Protodomain.
 	 * @param length
@@ -551,9 +580,9 @@ public class Protodomain {
 	 *            these lengths should be equal to this argument.
 	 * @param cache
 	 */
-	public Protodomain(String pdbId, String scopId, List<ResidueRange> list, int length, AtomCache cache) {
+	public Protodomain(String pdbId, String enclosingName, List<ResidueRange> list, int length, AtomCache cache) {
 		this.pdbId = pdbId;
-		this.scopId = scopId;
+		this.enclosingName = enclosingName;
 		this.list = list;
 		this.cache = cache;
 		this.length = length;
@@ -591,9 +620,9 @@ public class Protodomain {
 	 * @throws ProtodomainCreationException
 	 */
 	public Protodomain createSubstruct(int order) throws ProtodomainCreationException {
-		AtomPositionMap map = Protodomain.getAminoAcidPositions(cache, pdbId, scopId);
+		AtomPositionMap map = Protodomain.getAminoAcidPositions(cache, pdbId, enclosingName);
 		List<ResidueRange> rrs = calcSubstruct(list, map, order, 1);
-		return new Protodomain(pdbId, scopId, rrs, ResidueRange.calcLength(rrs), cache);
+		return new Protodomain(pdbId, enclosingName, rrs, ResidueRange.calcLength(rrs), cache);
 	}
 
 	@Override
@@ -645,7 +674,7 @@ public class Protodomain {
 	 * @return This Protodomain's parent {@link ScopDomain#getScopId() SCOP id}.
 	 */
 	public String getScopId() {
-		return scopId;
+		return enclosingName;
 	}
 
 	/**
@@ -720,9 +749,9 @@ public class Protodomain {
 	 */
 	public Protodomain spliceApproxConsecutive(int approxConsecutive) {
 		try {
-			List<ResidueRange> ranges = spliceApproxConsecutive(getAminoAcidPositions(cache, pdbId, scopId), list,
+			List<ResidueRange> ranges = spliceApproxConsecutive(getAminoAcidPositions(cache, pdbId, enclosingName), list,
 					approxConsecutive);
-			return new Protodomain(pdbId, scopId, ranges, 1, cache);
+			return new Protodomain(pdbId, enclosingName, ranges, 1, cache);
 		} catch (ProtodomainCreationException e) { // this really shouldn't happen, unless the AtomCache has changed
 			// since this Protodomain was created
 			throw new IllegalArgumentException(e);

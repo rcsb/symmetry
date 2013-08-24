@@ -34,7 +34,6 @@ public class RotationSolver implements QuatSymmetrySolver {
     private Set<List<Integer>> hashCodes = new HashSet<List<Integer>>();
 
     private RotationGroup rotations = new RotationGroup();
-    private QuatSuperpositionScorer scorer = null;
 
     public RotationSolver(Subunits subunits, QuatSymmetryParameters parameters) {
     	if (subunits.getSubunitCount()== 2) {
@@ -145,43 +144,23 @@ public class RotationSolver implements QuatSymmetrySolver {
 		}
 
 		int fold = PermutationGroup.getOrder(permutation);
+		
 		// get optimal transformation and axisangle by superimposing subunits
 		AxisAngle4d axisAngle = new AxisAngle4d();
-		
-//		 ---
-//		long t1 = System.nanoTime();
-//		// are these coordinates precentered??
-//		SuperPositionQCP sp = new SuperPositionQCP();
-//		sp.set(transformedCoords, originalCoords);
-//		sp.setCentered(true);
-//		double subunitRmsd = sp.getRmsd();
-//		long t2 = System.nanoTime();
-	    // ----
 		Matrix4d transformation = SuperPosition.superposeAtOrigin(transformedCoords, originalCoords, axisAngle);
 		double subunitRmsd 		= SuperPosition.rmsd(transformedCoords, originalCoords);
-		//
-	//	long t3 = System.nanoTime();
-		// --
-//		System.out.println(" rmsd: " + subunitRmsd);
-//		System.out.println(" new: " + (t2-t1));
-		// --
 		
 		if (subunitRmsd < parameters.getRmsdThreshold()) {
-//			Matrix4d transformation = sp.getTransformationMatrix();
-//			transformedCoords = sp.getTransformedCoordinates();
-//			axisAngle.set(transformation); // creates alternative 2-fold without rotation for 4D8S
-			
-//			long t3 = System.nanoTime();
-//			System.out.println(" total time: " + (t3-t1));
-			// transform to original coordinate system
 			combineWithTranslation(transformation);
-			// evaluate superposition of CA traces with GTS score
-			double caRmsd = scorer.calcCalphaRMSD(transformation, permutation);
-			double caTmScoreMin = scorer.calcCalphaMinTMScore(transformation, permutation);
-			if (caRmsd < 0.0 || caRmsd > parameters.getRmsdThreshold()) {
+			
+			// evaluate superposition of CA traces
+			QuatSymmetryScores scores = QuatSuperpositionScorer.calcScores(subunits, transformation, permutation);
+			if (scores.getRmsd() < 0.0 || scores.getRmsd() > parameters.getRmsdThreshold()) {
 				return false;
 			}
-			Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, subunitRmsd, caRmsd, caTmScoreMin, fold);
+			
+			scores.setRmsdCenters(subunitRmsd);
+			Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, fold, scores);
 			rotations.addRotation(symmetryOperation);
 			return true;
 		}
@@ -212,27 +191,27 @@ public class RotationSolver implements QuatSymmetrySolver {
     }
 
     private boolean isValidPermutation(List<Integer> permutation) {
-    	  // if this permutation is a duplicate, return false
+    	 if (permutation.size() == 0) {
+             return false;
+         }
+    	 
+    	 // if this permutation is a duplicate, return false
     	if (hashCodes.contains(permutation)) {
     		return false;
     	}
-        if (permutation.size() == 0) {
- //       	System.out.println("permutation size zero");
-            return false;
-        }
+       
         // check if permutation is allowed
         if (! isAllowedPermutation(permutation)) {
         	return false;
         }
-     // get fold and make sure there is only one E (fold=1) permutation
+        
+        // get fold and make sure there is only one E (fold=1) permutation
         int fold = PermutationGroup.getOrder(permutation);
         if (rotations.getOrder() > 1 && fold == 1) {
-//        	System.out.println("Symop = 1");
             return false;
         }
+        
         if (fold == 0 || subunits.getSubunitCount() % fold != 0) {
-  //      	System.out.println(permutation);
-  //      	System.out.println("Remove: " + subunits.getSubunitCount() + " / " + fold);
         	return false;
         }
         
@@ -261,15 +240,14 @@ public class RotationSolver implements QuatSymmetrySolver {
         rotation.mul(rotation, centroidInverse);
     }
 
-    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double subunitRmsd, double rmsd, double tmScoreMin, int fold) {
+    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, int fold, QuatSymmetryScores scores) {
         Rotation s = new Rotation();
         s.setPermutation(new ArrayList<Integer>(permutation));
         s.setTransformation(new Matrix4d(transformation));
         s.setAxisAngle(new AxisAngle4d(axisAngle));
-        s.setSubunitRmsd(subunitRmsd);
-        s.setTraceRmsd(rmsd);
-        s.setTraceTmScoreMin(tmScoreMin);
         s.setFold(fold);
+        s.setScores(scores);
+
         return s;
     }
 
@@ -296,7 +274,6 @@ public class RotationSolver implements QuatSymmetrySolver {
         }
         double distanceThreshold = Math.sqrt(threshold);
 
- //       System.out.println("Distance threshold: " + distanceThreshold);
         distanceThreshold = Math.max(distanceThreshold, parameters.getRmsdThreshold());
         
         return distanceThreshold;
@@ -337,20 +314,13 @@ public class RotationSolver implements QuatSymmetrySolver {
         
         // if size mismatch, clear permutation (its invalid)
         if (set.size() != originalCoords.length) {
-  //      	System.out.println("RotationSolver: getPermutation: duplicate members" + set.size());
             permutation.clear();
         }
-      
-//        System.out.println("RMSD: " + rmsd + " missed: " + Math.sqrt(missed) + " closest: " + missedI + " count: " + count);
- //       System.out.println("P1: " + permutation);
- //       System.out.println("P2: " + p2);
+
         return permutation;
     }
 
-    private void initialize() {
-        scorer = new QuatSuperpositionScorer(subunits);
-        
-                
+    private void initialize() {        
         // translation to centered coordinate system
         centroid = new Vector3d(subunits.getCentroid());
         // translation back to original coordinate system

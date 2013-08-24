@@ -51,10 +51,8 @@ public class RotationGroup {
 		m.setIdentity();
 		r.setTransformation(m);
 		r.setAxisAngle(new AxisAngle4d());
-		r.setSubunitRmsd(0.0);
-		r.setTraceRmsd(0.0);
-		r.setTraceTmScoreMin(1.0);
 		r.setFold(1);
+		r.setScores(new QuatSymmetryScores());
 		rotations.add(r);
 		pointGroup = "C1";
 	}
@@ -67,22 +65,13 @@ public class RotationGroup {
 	public void complete() {
 		if (modified) {
 			if (rotations.size() > 0) {
-				for (Rotation rotation: rotations) {
-					if (rotation.getNStart() > 0) {
-						pointGroup = "H";
-						break;
-					}
-				}
-
-				if (! pointGroup.equals("H")) {
-					findHighestOrderAxis();
-					setEAxis();
-					calcAxesDirections();
-					findHigherOrderAxes();
-					findTwoFoldsPerpendicular();
-					calcPointGroup();
-					sortByFoldDecending();
-				}
+				findHighestOrderAxis();
+				setEAxis();
+				calcAxesDirections();
+				findHigherOrderAxes();
+				findTwoFoldsPerpendicular();
+				calcPointGroup();
+				sortByFoldDecending();
 			}
 			modified = false;
 		}
@@ -98,53 +87,62 @@ public class RotationGroup {
 		return pointGroup;
 	}
 
-	public double getAverageSubunitRmsd() {
-		if (rotations.size() < 2) {
-			return 0.0;
-		}
-		double rmsd = 0;
-		// note, this loop starts at 1, because we don't take into account 
-		// RMSD of first operation (E)
-		for (int i = 1; i < rotations.size(); i++) {
-			rmsd += rotations.get(i).getSubunitRmsd();
-		}
-		return rmsd/(rotations.size()-1);
-	}
+	/**
+	 * Returns QuatSymmetryScores averaged over all rotations 
+	 * (except the first rotation, which is the unit operation E)
+	 * @return mean scores average over rotations
+	 */
+	public QuatSymmetryScores getScores() {
+		QuatSymmetryScores scores = new QuatSymmetryScores();
 
-	public double getAverageTraceRmsd() {
-		if (rotations.size() < 2) {
-			return 0.0;
-		}
-		double rmsd = 0;
-		// note, this loop starts at 1, because we don't take into account 
-		// RMSD of first operation (E)
-		for (int i = 1; i < rotations.size(); i++) {
-			double r = rotations.get(i).getTraceRmsd();
-			// if any invalid rmsd is found, stop
-			if (r < 0.0) {
-				return r;
+		int n = rotations.size()-1;
+		
+		if (n > 0) {
+			double[] values = new double[n];
+
+			// minRmsd
+			for (int i = 1; i < rotations.size(); i++) {
+				values[i-1] = rotations.get(i).getScores().getMinRmsd();
 			}
-			rmsd += r;
-		}
-		return rmsd/(rotations.size()-1);
-	}
-	
-	public double getAverageTraceTmScoreMin() {
-		if (rotations.size() < 2) {
-			return 1.0;
-		}
-		double sum = 0;
-		// note, this loop starts at 1, because we don't take into account 
-		// RMSD of first operation (E)
-		for (int i = 1; i < rotations.size(); i++) {
-			double t = rotations.get(i).getTraceTmScoreMin();
-			// if any invalid value is found, stop
-			if (t < 0.0) {
-				return t;
+			scores.setMinRmsd(minScores(values));
+
+			// maxRmsd
+			for (int i = 1; i < rotations.size(); i++) {
+				values[i-1] = rotations.get(i).getScores().getMaxRmsd();
 			}
-			sum += t;
+			scores.setMaxRmsd(maxScores(values));
+
+			// Rmsd
+			for (int i = 1; i < rotations.size(); i++) {
+				values[i-1] = rotations.get(i).getScores().getRmsd();
+			}
+			scores.setRmsd(averageScores(values));
+
+			// minTm
+			for (int i = 1; i < rotations.size(); i++) {
+				values[i-1] = rotations.get(i).getScores().getMinTm();
+			}
+			scores.setMinTm(minScores(values));
+
+			// maxTm
+			for (int i = 1; i < rotations.size(); i++) {
+				values[i-1] = rotations.get(i).getScores().getMaxTm();
+			}
+			scores.setMaxTm(maxScores(values));
+
+			// Tm
+			for (int i = 1; i < rotations.size(); i++) {
+				values[i-1] = rotations.get(i).getScores().getTm();
+			}
+			scores.setTm(averageScores(values));
+
+			// Rmsd subunit centers
+			for (int i = 1; i < rotations.size(); i++) {
+				values[i-1] = rotations.get(i).getScores().getRmsdCenters();
+			}
+			scores.setRmsdCenters(averageScores(values));
 		}
-		return sum/(rotations.size()-1);
+		return scores;
 	}
 	
 	public boolean isComplete() {
@@ -158,6 +156,30 @@ public class RotationGroup {
 			sb.append(s.toString() + "\n");
 		}
 		return sb.toString();
+	}
+	
+	private double averageScores(double[] scores) {
+		double sum = 0;
+		for (double s: scores) {
+			sum += s;
+		}
+		return sum/scores.length;
+	}
+	
+	private double minScores(double[] scores) {
+		double score = Double.MAX_VALUE;
+		for (double s: scores) {
+			score = Math.min(score, s);
+		}
+		return score;
+	}
+	
+	private double maxScores(double[] scores) {
+		double score = Double.MIN_VALUE;
+		for (double s: scores) {
+			score = Math.max(score, s);
+		}
+		return score;
 	}
 
 	private void findHighestOrderAxis() {

@@ -33,6 +33,7 @@ public class Subunits {
     private List<Point3d> originalCenters = new ArrayList<Point3d>();
     private List<Point3d> centers = new ArrayList<Point3d>();
     private List<Vector3d> unitVectors = new ArrayList<Vector3d>();
+    private int nucleicAcidChainCount = 0;
     private boolean pseudoSymmetric = false;
 
     private Point3d centroid;
@@ -186,7 +187,22 @@ public class Subunits {
     	return momentsOfInertia;
     }
     
-    public boolean overlaps(Subunits subunits) {
+    /**
+	 * @return the nucleicAcidChainCount
+	 */
+	public int getNucleicAcidChainCount() {
+		run();
+		return nucleicAcidChainCount;
+	}
+
+	/**
+	 * @param nucleicAcidChainCount the nucleicAcidChainCount to set
+	 */
+	public void setNucleicAcidChainCount(int nucleicAcidChainCount) {
+		this.nucleicAcidChainCount = nucleicAcidChainCount;
+	}
+
+	public boolean overlaps(Subunits subunits) {
     	Set<String> set1 = getSignatures(this);
     	Set<String> set2 = getSignatures(subunits);
     	set1.retainAll(set2);

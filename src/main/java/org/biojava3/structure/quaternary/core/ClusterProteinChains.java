@@ -10,6 +10,8 @@ public class ClusterProteinChains {
 	private Structure structure2 = null;
 	private QuatSymmetryParameters parameters = null;
 	private ClusterMerger merger = null;
+	private int proteinChainCount = 0;
+	private int nucleicAcidChainCount = 0;
 
 	public ClusterProteinChains(Structure structure, QuatSymmetryParameters parameters) {
 		this.structure = structure;
@@ -31,6 +33,20 @@ public class ClusterProteinChains {
 		return merger.getMergedClusters(sequenceIdentityThreshold);
 	}
 	
+	/**
+	 * @return the proteinChainCount
+	 */
+	public int getProteinChainCount() {
+		return proteinChainCount;
+	}
+
+	/**
+	 * @return the nucleicAcidChainCount
+	 */
+	public int getNucleicAcidChainCount() {
+		return nucleicAcidChainCount;
+	}
+
 	private void run () {
 		// cluster protein entities
 		List<SequenceAlignmentCluster> seqClusters = null;
@@ -38,11 +54,13 @@ public class ClusterProteinChains {
 		if (structure2 == null) {
 			ProteinSequenceClusterer clusterer = new ProteinSequenceClusterer(structure, parameters);
 			seqClusters = clusterer.getSequenceAlignmentClusters();
+			proteinChainCount = clusterer.getProteinChainCount();
+			nucleicAcidChainCount = clusterer.getNucleicAcidChainCount();
 		} else if (structure !=null && structure2 != null) {
 			ProteinSequenceClusterer clusterer = new ProteinSequenceClusterer(structure, structure2, parameters);
 			seqClusters = clusterer.getSequenceAlignmentClusters();
 		}
-		if (seqClusters.size() == 0) {
+		if (seqClusters == null  || seqClusters.size() == 0) {
 			return;
 		}
 	

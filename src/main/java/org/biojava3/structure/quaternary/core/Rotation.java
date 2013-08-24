@@ -13,6 +13,7 @@ public class Rotation {
     private double subunitRmsd = Double.MAX_VALUE;
     private double traceRmsd = Double.MAX_VALUE;
     private double traceTmScoreMin = Double.MAX_VALUE;
+    private QuatSymmetryScores scores = new QuatSymmetryScores();
     private List<Integer> permutation;
     private Matrix4d transformation;
     private AxisAngle4d axisAngle;
@@ -105,6 +106,20 @@ public class Rotation {
     }
 
     /**
+	 * @return the scores
+	 */
+	public QuatSymmetryScores getScores() {
+		return scores;
+	}
+
+	/**
+	 * @param scores the scores to set
+	 */
+	public void setScores(QuatSymmetryScores scores) {
+		this.scores = scores;
+	}
+
+	/**
      * @return the direction
      */
     public int getDirection() {
@@ -147,13 +162,18 @@ public class Rotation {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(" fold: " + fold);
-        sb.append(" orientation: " + direction);
-        sb.append(" axisAngle: " + axisAngle);
-        sb.append(" subunitRMSD: " + subunitRmsd);
-        sb.append(" caRMSD: " + traceRmsd);
-        sb.append(" caTmScoreMin: " + traceTmScoreMin);
-        sb.append(" permutation: " + permutation);
+        sb.append("fold       : ");
+        sb.append(fold);
+        sb.append("/n");
+        sb.append("orientation: ");
+        sb.append("direction  : ");
+        sb.append("/n");
+        sb.append("axisAngle  : ");
+        sb.append(axisAngle);
+        sb.append("/n");
+        sb.append("permutation: ");
+        sb.append(permutation);
+        sb.append(scores);
         return sb.toString();
     }
 }

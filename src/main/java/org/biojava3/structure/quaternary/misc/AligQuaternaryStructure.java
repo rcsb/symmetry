@@ -20,7 +20,6 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava3.structure.quaternary.core.ChainClusterer;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
-import org.biojava3.structure.quaternary.core.QuatSymmetryWriter;
 import org.biojava3.structure.quaternary.geometry.SuperPosition;
 
 public class AligQuaternaryStructure {

@@ -1,4 +1,4 @@
-package org.biojava3.structure.quaternary.core;
+package org.biojava3.structure.quaternary.misc;
 
 import java.io.FileWriter;
 import java.io.IOException;

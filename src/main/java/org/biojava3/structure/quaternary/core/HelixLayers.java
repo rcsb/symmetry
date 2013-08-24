@@ -83,37 +83,82 @@ public class HelixLayers {
 		return largest;
 	}
 	
-	public double getAverageSubunitRmsd() {
-		if (size() == 0) {
-			return 0;
-		}
-		double rmsd = 0;
-		for (Helix helix: helices) {
-			rmsd+= helix.getSubunitRmsd();
-		}
-		return rmsd/this.size();
-	}
+	/**
+	 * Returns QuatSymmetryScores averaged over all rotations 
+	 * (except the first rotation, which is the unit operation E)
+	 * @return mean scores average over rotations
+	 */
+	public QuatSymmetryScores getScores() {
+		QuatSymmetryScores scores = new QuatSymmetryScores();
 
-	public double getAverageTraceRmsd() {
-		if (size() == 0) {
-			return 0;
+		double[] values = new double[helices.size()];
+
+		// minRmsd
+		for (int i = 0; i < helices.size(); i++) {
+			values[i] = helices.get(i).getScores().getMinRmsd();
 		}
-		double rmsd = 0;
-		for (Helix helix: helices) {
-			rmsd+= helix.getTraceRmsd();
+		scores.setMinRmsd(minScores(values));
+
+		// maxRmsd
+		for (int i = 0; i < helices.size(); i++) {
+			values[i] = helices.get(i).getScores().getMaxRmsd();
 		}
-		return rmsd/this.size();
+		scores.setMaxRmsd(maxScores(values));
+
+		// Rmsd
+		for (int i = 0; i < helices.size(); i++) {
+			values[i] = helices.get(i).getScores().getRmsd();
+		}
+		scores.setRmsd(averageScores(values));
+
+		// minTm
+		for (int i = 0; i < helices.size(); i++) {
+			values[i] = helices.get(i).getScores().getMinTm();
+		}
+		scores.setMinTm(minScores(values));
+
+		// maxTm
+		for (int i = 0; i < helices.size(); i++) {
+			values[i] = helices.get(i).getScores().getMaxTm();
+		}
+		scores.setMaxTm(maxScores(values));
+
+		// Tm
+		for (int i = 0; i < helices.size(); i++) {
+			values[i] = helices.get(i).getScores().getTm();
+		}
+		scores.setTm(averageScores(values));
+		
+		// Rmsd subunit centers
+		for (int i = 0; i < helices.size(); i++) {
+			values[i] = helices.get(i).getScores().getRmsdCenters();
+		}
+		scores.setRmsdCenters(averageScores(values));
+		return scores;
 	}
 	
-	public double getAverageTraceTmScoreMin() {
-		if (size() == 0) {
-			return 0;
-		}
+	private double averageScores(double[] scores) {
 		double sum = 0;
-		for (Helix helix: helices) {
-			sum+= helix.getTraceTmScoreMin();
+		for (double s: scores) {
+			sum += s;
 		}
-		return sum/this.size();
+		return sum/scores.length;
+	}
+	
+	private double minScores(double[] scores) {
+		double score = Double.MAX_VALUE;
+		for (double s: scores) {
+			score = Math.min(score, s);
+		}
+		return score;
+	}
+	
+	private double maxScores(double[] scores) {
+		double score = Double.MIN_VALUE;
+		for (double s: scores) {
+			score = Math.max(score, s);
+		}
+		return score;
 	}
 	
 	public String toString() {

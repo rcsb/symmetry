@@ -99,26 +99,48 @@ public class QuatSymmetryResults {
 		return "";
 	}
 	
+	
+	public QuatSymmetryScores getScores() {
+		if (helixLayers != null && helixLayers.size() > 0) {
+			return helixLayers.getScores();
+		} else if (rotationGroup != null && rotationGroup.getOrder() > 0) {
+			return rotationGroup.getScores();
+		}
+		return new QuatSymmetryScores();
+	}
+	
 	/**
 	 * Returns the average Calpha trace RMSD for all symmetry operations
 	 * @return
+	 * @deprecated use {@link getScores()} instead.  
 	 */
+	@Deprecated
 	public double getAverageTraceRmsd() {
 		if (helixLayers != null && helixLayers.size() > 0) {
-			return helixLayers.getAverageTraceRmsd();
+			return helixLayers.getScores().getRmsd();
 		} else if (rotationGroup != null && rotationGroup.getOrder() > 0) {
-			return rotationGroup.getAverageTraceRmsd();
+			return rotationGroup.getScores().getRmsd();
 		}
 		return 0;
 	}
 	
+	/**
+	 * Returns the average Calpha trace Tm for all symmetry operations
+	 * @return
+	 * @deprecated use {@link getScores()} instead.  
+	 */
+	@Deprecated
 	public double getAverageTraceTmScoreMin() {
 		if (helixLayers != null && helixLayers.size() > 0) {
-			return helixLayers.getAverageTraceTmScoreMin();
+			return helixLayers.getScores().getTm();
 		} else if (rotationGroup != null && rotationGroup.getOrder() > 0) {
-			return rotationGroup.getAverageTraceTmScoreMin();
+			return rotationGroup.getScores().getTm();
 		}
 		return 0;
+	}
+	
+	public int getNucleicAcidChainCount() {
+		return subunits.getNucleicAcidChainCount();
 	}
 	
 	public double getSequenceIdentityThreshold() {

@@ -61,10 +61,18 @@ public final class PdbEntryInfoParser {
 		Document doc = null;
 		try {
 			doc = db.parse(URL);
+			if (doc == null) {
+				return;
+			}
 		} catch (SAXException e) {
 			e.printStackTrace();
+			return;
 		} catch (IOException e) {
 			e.printStackTrace();
+			return;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return;
 		}
 		doc.getDocumentElement().normalize();
 

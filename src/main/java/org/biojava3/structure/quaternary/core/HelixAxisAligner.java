@@ -269,10 +269,7 @@ public class HelixAxisAligner extends AxisAligner {
 			alignedOrbits.add(orbit);
 		}
 	}
-	
-	
 
-	
 
 	private void calcTransformation() {
 		calcTransformationBySymmetryAxes();

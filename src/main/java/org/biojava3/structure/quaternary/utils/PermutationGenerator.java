@@ -1,5 +1,5 @@
 
-package org.biojava3.structure.quaternary.core;
+package org.biojava3.structure.quaternary.utils;
 
 import java.math.BigInteger;
 

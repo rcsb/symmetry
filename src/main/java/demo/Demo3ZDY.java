@@ -149,9 +149,6 @@ public class Demo3ZDY {
 		return calc;
 	}
 
-
-
-
 	private static String getGlobalPseudoSymmetry(
 			QuatSymmetryDetector detector, QuatSymmetryParameters parameters) {
 
@@ -171,7 +168,7 @@ public class Demo3ZDY {
 					System.out.println("Stoichiometry       : " + globalSymmetry.getSubunits().getStoichiometry());
 					System.out.println("Pseudostoichiometry : " + globalSymmetry.getSubunits().isPseudoStoichiometric());
 					System.out.println("Point group         : " + globalSymmetry.getRotationGroup().getPointGroup());				
-					System.out.println("Symmetry RMSD       : " + (float) globalSymmetry.getRotationGroup().getAverageTraceRmsd());
+					System.out.println("Symmetry RMSD       : " + (float) globalSymmetry.getScores().getRmsd());
 				}
 
 				RotationAxisAligner axisTransformation = new RotationAxisAligner(globalSymmetry);
@@ -203,7 +200,7 @@ public class Demo3ZDY {
 				System.out.println("Stoichiometry       : " + localSymmetry.getSubunits().getStoichiometry());
 				System.out.println("Pseudostoichiometry : " + localSymmetry.getSubunits().isPseudoStoichiometric());
 				System.out.println("Point group         : " + localSymmetry.getRotationGroup().getPointGroup());				
-				System.out.println("Symmetry RMSD       : " + (float) localSymmetry.getRotationGroup().getAverageTraceRmsd());
+				System.out.println("Symmetry RMSD       : " + (float) localSymmetry.getScores().getRmsd());
 				System.out.println();
 				JmolSymmetryScriptGenerator gen = JmolSymmetryScriptGeneratorPointGroup.getInstance(at, "l"+count);
 				if (count == 0) {

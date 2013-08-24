@@ -21,7 +21,6 @@ public class C2RotationSolver implements QuatSymmetrySolver {
     private QuatSymmetryParameters parameters = null;
     private Vector3d centroid = new Vector3d();
     private Matrix4d centroidInverse = new Matrix4d();
-    private QuatSuperpositionScorer scorer = null;
 
     private RotationGroup rotations = new RotationGroup();
 
@@ -32,7 +31,6 @@ public class C2RotationSolver implements QuatSymmetrySolver {
     	}
         this.subunits = subunits;
         this.parameters = parameters;
-        this.scorer = new QuatSuperpositionScorer(subunits);
     }
    
     public RotationGroup getSymmetryOperations() {
@@ -61,17 +59,12 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 		AxisAngle4d axisAngle = new AxisAngle4d();
 
 		Matrix4d transformation = SuperPosition.superposeAtOrigin(x, y, axisAngle);
-		double caRmsd = SuperPosition.rmsd(x,  y);
-		
-		// TODO this is not the proper way to calculate the TM score. Each subunit should be treated
-		// separately!
-		double caTmScoreMin = SuperPosition.TMScore(x, y, x.length);
 		
 		// if rmsd or angle deviation is above threshold, stop
 		double angleThresholdRadians = Math.toRadians(parameters.getAngleThreshold());
 		double deltaAngle = Math.abs(Math.PI-axisAngle.angle);
 	
-		if (caRmsd > parameters.getRmsdThreshold() || deltaAngle > angleThresholdRadians) {
+		if (deltaAngle > angleThresholdRadians) {
 			rotations.setC1(subunits.getSubunitCount());
 			return;
 		}
@@ -79,18 +72,19 @@ public class C2RotationSolver implements QuatSymmetrySolver {
 		// add unit operation
 		addEOperation();
 
-		// add C2 operation
-		List<Integer> permutation = new ArrayList<Integer>();
-		permutation.add(new Integer(1));
-		permutation.add(new Integer(0));
+		// add C2 operation	
+		int fold = 2;
+	    combineWithTranslation(transformation);
+		List<Integer> permutation = Arrays.asList(1,0);
+		QuatSymmetryScores scores = QuatSuperpositionScorer.calcScores(subunits, transformation, permutation);
+		scores.setRmsdCenters(0.0); // rmsd for superposition of two subunits centers is zero by definition
+		
+		if (scores.getRmsd() > parameters.getRmsdThreshold() || deltaAngle > angleThresholdRadians) {
+			rotations.setC1(subunits.getSubunitCount());
+			return;
+		}
 
-		// combine with translation
-		Matrix4d combined = new Matrix4d();
-		combined.setIdentity();
-		combined.setTranslation(trans);
-		transformation.mul(combined);
-	
-		Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, 0.0, caRmsd, caTmScoreMin, 2);
+		Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, fold, scores);
 		rotations.addRotation(symmetryOperation);
     }
     
@@ -100,11 +94,9 @@ public class C2RotationSolver implements QuatSymmetrySolver {
     	transformation.setIdentity();
 		combineWithTranslation(transformation);
     	AxisAngle4d axisAngle = new AxisAngle4d();
-    	double rmsd = 0.0;
-    	double caRmsd = 0.0;
-    	double caTmScoreMin = 1.0;
+    	QuatSymmetryScores scores = new QuatSymmetryScores();
     	int fold = 1; // ??
-        Rotation rotation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, caRmsd, caTmScoreMin, fold);
+        Rotation rotation = createSymmetryOperation(permutation, transformation, axisAngle, fold, scores);
         rotations.addRotation(rotation);
     }
     
@@ -119,15 +111,13 @@ public class C2RotationSolver implements QuatSymmetrySolver {
         rotation.mul(rotation, centroidInverse);
     }
 
-    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double subunitRmsd, double caRmsd, double caTmScoreMin, int fold) {
+    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, int fold, QuatSymmetryScores scores) {
         Rotation s = new Rotation();
         s.setPermutation(new ArrayList<Integer>(permutation));
         s.setTransformation(new Matrix4d(transformation));
         s.setAxisAngle(new AxisAngle4d(axisAngle));
-        s.setSubunitRmsd(subunitRmsd);
-        s.setTraceRmsd(caRmsd);
-        s.setTraceTmScoreMin(caTmScoreMin);
         s.setFold(fold);
+        s.setScores(scores);
         return s;
     }
 

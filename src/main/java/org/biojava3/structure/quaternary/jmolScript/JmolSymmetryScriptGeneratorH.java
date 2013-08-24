@@ -7,9 +7,12 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Color4f;
@@ -403,43 +406,158 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 		return coloring;
 	}
 	
+	
 	/**
 	 * Returns a Jmol script that colors subunits to highlight the symmetry within a structure
+	 * Different subunits should have a consistent color scheme or different shade of the same colors
 	 * @return Jmol script
 	 */
 	public String colorBySymmetry() {
-		List<List<Integer>> repeatUnits = helixAxisAligner.getHelixLayers().getByLargestContacts().getRepeatUnits();
+		List<Integer> permutation = helixAxisAligner.getHelixLayers().getByLargestContacts().getPermutation();
+		List<List<Integer>> units = calcLayerLines(permutation);
+		units = orientLayerLines(units);
 		Subunits subunits = helixAxisAligner.getSubunits();
 		List<Integer> modelNumbers = subunits.getModelNumbers();
 		List<String> chainIds = subunits.getChainIds();
+		List<Integer> clusterIds = subunits.getSequenceClusterIds();
+		int clusterCount = Collections.max(clusterIds) + 1;
 
-		Map<Color4f, List<String>> colorMap = new HashMap<Color4f, List<String>>();
+		Map<Color4f, List<String>> colorMap = new HashMap<Color4f, List<String>>(); 
+
+		int maxLen = 0;
+		for (List<Integer> unit: units) {
+			maxLen = Math.max(maxLen,  unit.size());
+		}
+	
+		Color4f[] colors = getSymmetryColors(permutation.size()); 
+		int count = 0;
 		
-		Color4f[] colors = getSymmetryColors(repeatUnits.size()); 
-
-		for (int i = 0; i < repeatUnits.size(); i++) {
-			List<Integer> repeatUnit = repeatUnits.get(i);
-			int m = repeatUnit.size();
-
-			for (int j = 0; j < m; j++) {
-				int subunit = repeatUnit.get(j);
-				float scale = 0.2f + 0.8f * (float) (j+1)/m;
-				Color4f c = new Color4f(colors[i]);
-				c.scale(scale);
-				List<String> ids = colorMap.get(c);
-				if (ids == null) {
-					ids = new ArrayList<String>();
-					colorMap.put(c,  ids);
+		for (int i = 0; i < maxLen; i++) {
+			for (int j = 0; j < units.size(); j++) {
+				int m = units.get(j).size();
+				if (i < m) {
+					int subunit = units.get(j).get(i);
+					int cluster = clusterIds.get(subunit);
+					float scale = 0.3f + 0.7f * (float) (cluster+1)/clusterCount;
+					Color4f c = new Color4f(colors[count]);
+					count++;
+					c.scale(scale);
+					List<String> ids = colorMap.get(c);
+					if (ids == null) {
+						ids = new ArrayList<String>();
+						colorMap.put(c,  ids);
+					}
+					String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
+					ids.add(id);
 				}
-				String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
-				ids.add(id);
 			}
 		}
 		
 		String coloring = defaultColoring + getJmolColorScript(colorMap);
 		return coloring;
 	}
+	
+	/**
+	 * Orients layer lines from lowest y-axis value to largest y-axis value
+	 */
+	private List<List<Integer>> orientLayerLines(List<List<Integer>> layerLines) {
+		Matrix4d transformation = helixAxisAligner.getTransformation();
+		List<Point3d> centers = helixAxisAligner.getSubunits().getOriginalCenters();
+		
+		for (int i = 0; i < layerLines.size(); i++) {
+			List<Integer> layerLine = layerLines.get(i);
+			
+			// get center of first subunit in layerline and transform to standard orientation (helix axis aligned with y-axis)
+			int first = layerLine.get(0);
+			Point3d firstSubunit = new Point3d(centers.get(first));
+			transformation.transform(firstSubunit);
+			
+			// get center of last subunit in layerline and transform to standard orientation (helix axis aligned with y-axis)
+			int last = layerLine.get(layerLine.size()-1);
+			Point3d lastSubunit = new Point3d(centers.get(last));
+			transformation.transform(lastSubunit);
+			
+			// a layerline should start at the lowest y-value, so all layerlines have a consisten direction from -y value to +y value
+			if (firstSubunit.y > lastSubunit.y) {
+				System.out.println("reorienting layer line: " + layerLine);
+				Collections.reverse(layerLine);
+			}
+		}
+		return layerLines;
+	}
+	
+	private List<List<Integer>> calcLayerLines(List<Integer> permutation) {
+		List<List<Integer>> layerLines = new ArrayList<List<Integer>>();
+		
+		createLineSegments(permutation, layerLines);
+		
+//		System.out.println("Line segments: " + layerLines.size());
+//		for (List<Integer> lineSegment: layerLines) {
+//			System.out.println(lineSegment);
+//		}
+		
+		int count = layerLines.size();
+		
+		// iteratively join line segments
+		do {
+			count = layerLines.size();
+			joinLineSegments(layerLines);
+			// after joining line segments, get rid of the empty line segments left behind
+			trimEmptyLineSegments(layerLines);
 
+//			System.out.println("Line segments: " + count);
+//			for (List<Integer> lineSegment: layerLines) {
+//				System.out.println(lineSegment);
+//			}
+		} while (layerLines.size() < count);
+		
+		return layerLines;
+	}
+
+	private void createLineSegments(List<Integer> permutation,
+			List<List<Integer>> layerLines) {
+		for (int i = 0; i < permutation.size(); i++) {
+			if (permutation.get(i) != -1 ) {
+				List<Integer> lineSegment = new ArrayList<Integer>();
+				lineSegment.add(i);
+				lineSegment.add(permutation.get(i));
+				layerLines.add(lineSegment);
+			}
+		}
+	}
+	
+	private void joinLineSegments(List<List<Integer>> layerLines) {
+		for (int i = 0; i < layerLines.size()-1; i++) {
+			List<Integer> lineSegmentI = layerLines.get(i);
+			if (! lineSegmentI.isEmpty()) {
+				for (int j = i + 1; j < layerLines.size(); j++) {
+					List<Integer> lineSegmentJ = layerLines.get(j);
+					if (! lineSegmentJ.isEmpty()) {
+						if (lineSegmentI.get(lineSegmentI.size()-1).equals(lineSegmentJ.get(0))) {
+//							System.out.println("join right: " + lineSegmentI + " - " + lineSegmentJ);
+							lineSegmentI.addAll(lineSegmentJ.subList(1,  lineSegmentJ.size()));
+//							System.out.println("joned segment: " + lineSegmentI);
+							lineSegmentJ.clear();		
+						} else if ((lineSegmentI.get(0).equals(lineSegmentJ.get(lineSegmentJ.size()-1)))) {
+							lineSegmentI.addAll(0, lineSegmentJ.subList(0,  lineSegmentJ.size()-1));
+//							System.out.println("join left: " + lineSegmentJ + " - " + lineSegmentI);
+//							System.out.println("joned segment: " + lineSegmentI);
+							lineSegmentJ.clear();
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	private void trimEmptyLineSegments(List<List<Integer>> layerLines) {
+		for (Iterator<List<Integer>> iter = layerLines.iterator(); iter.hasNext();) {
+			if (iter.next().isEmpty()) {
+				iter.remove();
+			}
+		}
+	}
+	
 	
 	// --- protected methods ---
 	/**

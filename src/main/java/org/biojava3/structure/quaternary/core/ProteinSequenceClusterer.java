@@ -17,9 +17,9 @@ public class ProteinSequenceClusterer {
 	private List<Atom[]> caUnaligned = new ArrayList<Atom[]>();
 	private List<String> chainIds = new ArrayList<String>();
 	private List<Integer> modelNumbers = new ArrayList<Integer>();
-	private List<String> sequences = new ArrayList<String>();
-	
+	private List<String> sequences = new ArrayList<String>();	
 	private List<SequenceAlignmentCluster> seqClusters = new ArrayList<SequenceAlignmentCluster>();
+	private int nucleicAcidChainCount = 0;
 	private boolean modified = true;
 
 	public ProteinSequenceClusterer(Structure structure, QuatSymmetryParameters parameters) {
@@ -38,6 +38,19 @@ public class ProteinSequenceClusterer {
 		return seqClusters;
 	}
 	
+	public int getProteinChainCount() {
+		run();
+		return sequences.size();
+	}
+	
+	/**
+	 * @return the nucleicAcidChainCount
+	 */
+	public int getNucleicAcidChainCount() {
+		run();
+		return nucleicAcidChainCount;
+	}
+
 	public static void sortSequenceClustersBySize(List<SequenceAlignmentCluster> clusters) {
 		Collections.sort(clusters, new Comparator<SequenceAlignmentCluster>() {
 			public int compare(SequenceAlignmentCluster c1, SequenceAlignmentCluster c2) {
@@ -64,6 +77,8 @@ public class ProteinSequenceClusterer {
 		chainIds  = extractor.getChainIds();
 		sequences = extractor.getSequences();
 		modelNumbers = extractor.getModelNumbers();
+		nucleicAcidChainCount = extractor.getNucleicAcidChainCount();
+		
 		if (structure2 != null) {
 			extractor = new ProteinChainExtractor(structure2,  parameters);
 			caUnaligned.addAll(extractor.getCalphaTraces());

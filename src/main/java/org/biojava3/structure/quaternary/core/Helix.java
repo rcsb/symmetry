@@ -11,9 +11,10 @@ import javax.vecmath.Matrix4d;
  * @author Peter
  */
 public class Helix {
-    private double subunitRmsd = Double.MAX_VALUE;
-    private double traceRmsd = Double.MAX_VALUE;
-    private double traceTmScoreMin = Double.MAX_VALUE;
+//    private double subunitRmsd = Double.MAX_VALUE;
+//    private double traceRmsd = Double.MAX_VALUE;
+//    private double traceTmScoreMin = Double.MAX_VALUE;
+    private QuatSymmetryScores scores = new QuatSymmetryScores();
     private List<Integer> permutation;
     private List<List<Integer>> repeatUnits;
     private Matrix4d transformation;
@@ -23,46 +24,18 @@ public class Helix {
     private int contacts;
 
     /**
-     * @return the subunitRmsd
-     */
-    public double getSubunitRmsd() {
-        return subunitRmsd;
-    }
+	 * @return the scores
+	 */
+	public QuatSymmetryScores getScores() {
+		return scores;
+	}
 
-    /**
-     * @param subunitRmsd the subunitRmsd to set
-     */
-    public void setSubunitRmsd(double subunitRmsd) {
-        this.subunitRmsd = subunitRmsd;
-    }
-
-    /**
-     * @return the traceRmsd
-     */
-    public double getTraceRmsd() {
-        return traceRmsd;
-    }
-
-    /**
-     * @param traceRmsd the traceRmsd to set
-     */
-    public void setTraceRmsd(double traceRmsd) {
-        this.traceRmsd = traceRmsd;
-    }
-    
-    /**
-     * @param traceRmsd the traceRmsd to set
-     */
-    public void setTraceTmScoreMin(double traceTmScoreMin) {
-        this.traceTmScoreMin = traceTmScoreMin;
-    }
-    
-    /**
-     * @return the traceRmsd
-     */
-    public double getTraceTmScoreMin() {
-        return traceTmScoreMin;
-    }
+	/**
+	 * @param scores the scores to set
+	 */
+	public void setScores(QuatSymmetryScores scores) {
+		this.scores = scores;
+	}
 
     /**
      * @return the permutation
@@ -160,8 +133,6 @@ public class Helix {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Subunit RMSD  : " + getSubunitRmsd() + "\n");
-        sb.append("CA RMSD       : " + getTraceRmsd() + "\n");
         sb.append("Permutation   : " + getPermutation() + "\n");
         sb.append("Repeat units  : " + getRepeatUnits() + "\n");
         sb.append("Rise          : " + getRise() + "\n");

@@ -45,10 +45,8 @@ public class HelixSolver {
 		List<Point3d> repeatUnitCenters = unit.getRepeatUnitCenters();
 		List<Point3d[]> repeatUnits = unit.getRepeatUnits();
 		Set<List<Integer>> permutations = new HashSet<List<Integer>>();
-		Set<Integer> subunitsUsed = new HashSet<Integer>();
-		int maxCount = 0;
+
 		double minRise = parameters.getMinimumHelixRise() * fold;  // for n-start helix, the rise must be steeper
-		double maxRise = 0;
 		Map<Integer[], Integer> interactionMap = unit.getInteractingRepeatUnits();
 
 		for (Entry<Integer[], Integer> entry : interactionMap.entrySet()) {
@@ -57,7 +55,6 @@ public class HelixSolver {
 			Point3d[] h1 = null;
 			Point3d[] h2 = null;
 
-			//	System.out.println("************** Comparing: " + pair[0] + "-" + pair[1]);
 			// trial superposition of repeat unit pairs to get a seed permutation
 			h1 = SuperPosition.clonePoint3dArray(repeatUnits.get(pair[0]));
 			h2 = SuperPosition.clonePoint3dArray(repeatUnits.get(pair[1]));
@@ -82,12 +79,10 @@ public class HelixSolver {
 				continue;
 			}
 
+			// determine which subunits are permuted by the transformation
 			List<Integer> permutation = getPermutation(transformation);
-//			if (parameters.isVerbose()) {
-//				System.out.println("Permutation: " + permutation);
-//			}
-
-			// check permutations
+			
+			// check permutations for validity
 
 			// don't save redundant permutations
 			if (permutations.contains(permutation)) {
@@ -95,29 +90,35 @@ public class HelixSolver {
 			}
 			permutations.add(permutation);
 
-			// in a helix a repeat unit cannot map onto itself
-			boolean valid = true;
-			for (int j = 0; j < permutation.size(); j++) {
-				if (permutation.get(j) == j) {
-					valid = false;
-					break;
-				}
-			}
-			if (!valid) {
-				continue;
-			}
-
 			// keep track of which subunits are permuted
 			Set<Integer> permSet = new HashSet<Integer>();
 			int count = 0;
+			boolean valid = true;
 			for (int i = 0; i < permutation.size(); i++) {
+				if (permutation.get(i) == i) {
+					valid = false;
+					break;
+				}
 				if (permutation.get(i) != -1) {
 					permSet.add(permutation.get(i));
 					permSet.add(i);
 					count++;
 				}
+				
 			}
-			if (count == 1) {
+			
+			// a helix a repeat unit cannot map onto itself
+			if (! valid) {
+				continue;
+			}
+			
+			// all subunits must be involved in a permutation
+			if (permSet.size() != subunits.getSubunitCount()) {
+				continue;
+			}
+			
+			// if all subunit permutation values are set, then it can't be helical symmetry (must be cyclic symmetry)
+			if (count == permutation.size()) {
 				continue;
 			}
 
@@ -126,17 +127,10 @@ public class HelixSolver {
 			List<Point3d> point2 = new ArrayList<Point3d>();
 			List<Point3d> centers = subunits.getOriginalCenters();
 			for (int j = 0; j < permutation.size(); j++) {
-				if (permutation.get(j) == -1) {
-					continue;
+				if (permutation.get(j) != -1) {
+					point1.add(new Point3d(centers.get(j)));
+					point2.add(new Point3d(centers.get(permutation.get(j))));
 				}
-				point1.add(new Point3d(centers.get(j)));
-				point2.add(new Point3d(centers.get(permutation.get(j))));
-			}
-
-			// for helical symmetry, the number of permuted subunits must be less
-			// than the total number of subunits, if they are equal cyclic symmetry was found
-			if (point1.size() == subunits.getSubunitCount()) {
-				continue;
 			}
 
 			h1 = new Point3d[point1.size()];
@@ -152,7 +146,7 @@ public class HelixSolver {
 				subunitRmsd = SuperPosition.rmsd(h1, h2);
 				rise = getRise(transformation, repeatUnitCenters.get(pair[0]), repeatUnitCenters.get(pair[1]));
 				angle = getAngle(transformation);
-
+				
 //				if (parameters.isVerbose()) {
 //					System.out.println("Subunit rmsd: " + subunitRmsd);
 //					System.out.println("Subunit rise: " + rise);
@@ -164,6 +158,10 @@ public class HelixSolver {
 				}
 
 				if (Math.abs(rise) < minRise) {
+					continue;
+				}
+				
+				if (subunitRmsd > parameters.getHelixRmsdToRiseRatio()*Math.abs(rise)) {
 					continue;
 				}
 			}
@@ -193,8 +191,6 @@ public class HelixSolver {
 
 			double traceRmsd = SuperPosition.rmsd(h1, h2);
 			
-			// TM score should be calculated separately for each subunit!
-			double traceTmScore = SuperPosition.TMScore(h1, h2, h1.length);
 			rise = getRise(transformation, repeatUnitCenters.get(pair[0]), repeatUnitCenters.get(pair[1]));
 			angle = getAngle(transformation);
 
@@ -202,8 +198,9 @@ public class HelixSolver {
 //				System.out.println("Trace rmsd: " + traceRmsd);
 //				System.out.println("Trace rise: " + rise);
 //				System.out.println("Trace angle: " + Math.toDegrees(angle));
+//				System.out.println("Permutation: " + permutation);
 //			}
-
+//	
 			if (traceRmsd > parameters.getRmsdThreshold()) {
 				continue;
 			}
@@ -213,40 +210,29 @@ public class HelixSolver {
 			}
 
 			// This prevents translational repeats to be counted as helices
-			// TODO fine-tune this threshold and add to QuatSymmeteryParameters
 			if (angle < Math.toRadians(parameters.getMinimumHelixAngle())) {
 				continue;
 			}
+			
+			if (traceRmsd > parameters.getHelixRmsdToRiseRatio()*Math.abs(rise)) {
+				continue;
+			}
 
-			// save this helix rot-tranlation
+			// save this helix rot-translation
 			Helix helix = new Helix();
 			helix.setTransformation(transformation);
 			helix.setPermutation(permutation);
 			helix.setRise(rise);
-			helix.setSubunitRmsd(subunitRmsd);
-			helix.setTraceRmsd(traceRmsd);
-			helix.setTraceTmScoreMin(traceTmScore);
+			// Old version of Vecmath on LINUX doesn't set element m33 to 1. Here we make sure it's 1.
+	        transformation.setElement(3, 3, 1.0);
+			transformation.invert();
+			QuatSymmetryScores scores = QuatSuperpositionScorer.calcScores(subunits, transformation, permutation);
+			scores.setRmsdCenters(subunitRmsd);
+			helix.setScores(scores);
 			helix.setFold(fold);
 			helix.setContacts(contacts);
 			helix.setRepeatUnits(unit.getRepeatUnitIndices());
 			helixLayers.addHelix(helix);
-
-			subunitsUsed.addAll(permSet);
-			maxCount = Math.max(maxCount, count);
-			maxRise = Math.max(maxRise, rise);
-		}
-
-		// if too few subunits are permuted, it's likely an invalid solution
-		if (maxCount < (subunits.getSubunitCount()-this.fold)*0.8) {
-//			if (parameters.isVerbose()) {
-//				System.out.println("maxCount too low: " + maxCount + " out of " + subunits.getSubunitCount());
-//			}
-			helixLayers = new HelixLayers();
-		}
-
-		// if not all subunits have been used, there can't be full helical symmetry
-		if (subunitsUsed.size() != subunits.getSubunitCount()) {
-			helixLayers = new HelixLayers();
 		}
 
 		return;
@@ -310,6 +296,8 @@ public class HelixSolver {
 
 		return permutations;
 	}
+	
+	
 	
 	/**
 	 * Returns the rise of a helix given the subunit centers of two adjacent

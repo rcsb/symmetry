@@ -253,10 +253,6 @@ public class FindEvolutionaryRelationships {
 			String c2 = composition2.get(key); 
 			if (value >= thresholdCount) {
 			out.println(c1 + "," + c2 + "," + value);
-			// homo-oligomers only
-			if (! (c1.contains("B") || c2.contains("B"))) {
-		//	    out1.println(c1 + "," + c2 + "," + value);
-			}
 			}
 		}
 		out.flush();

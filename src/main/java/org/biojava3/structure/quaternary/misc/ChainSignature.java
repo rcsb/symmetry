@@ -58,7 +58,7 @@ public class ChainSignature implements Comparable<ChainSignature> {
 	public int hashCode() {
 		int hash = 7;
 		hash = 31 * hash + chainCount;
-		hash = 31 * hash + (representative != null ? 0 : representative.hashCode());
+		hash = 31 * hash + (representative == null ? 0 : representative.hashCode());
 		return hash;		
 	}
 	

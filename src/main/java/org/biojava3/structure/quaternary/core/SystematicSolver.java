@@ -12,6 +12,7 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import org.biojava3.structure.quaternary.geometry.SuperPosition;
+import org.biojava3.structure.quaternary.utils.PermutationGenerator;
 
 
 /**
@@ -27,7 +28,6 @@ public class SystematicSolver implements QuatSymmetrySolver {
     private RotationGroup rotations = new RotationGroup();
     private Vector3d centroid = new Vector3d();
     private Matrix4d centroidInverse = new Matrix4d();
-    private QuatSuperpositionScorer scorer = null;
     private Set<List<Integer>> hashCodes = new HashSet<List<Integer>>();
 
     public SystematicSolver(Subunits subunits, QuatSymmetryParameters parameters) {
@@ -85,15 +85,13 @@ public class SystematicSolver implements QuatSymmetrySolver {
         rotation.mul(rotation, centroidInverse);
     }
 
-    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, double rmsd, double caRmsd, double caTmScoreMin, int fold) {
+    private Rotation createSymmetryOperation(List<Integer> permutation, Matrix4d transformation, AxisAngle4d axisAngle, int fold, QuatSymmetryScores scores) {
         Rotation s = new Rotation();
         s.setPermutation(new ArrayList<Integer>(permutation));
         s.setTransformation(new Matrix4d(transformation));
         s.setAxisAngle(new AxisAngle4d(axisAngle));
-        s.setSubunitRmsd(rmsd);
-        s.setTraceRmsd(caRmsd);
-        s.setTraceTmScoreMin(caTmScoreMin);
         s.setFold(fold);
+        s.setScores(scores);
         return s;
     }
     
@@ -124,14 +122,14 @@ public class SystematicSolver implements QuatSymmetrySolver {
     }
     
     private boolean isValidPermutation(List<Integer> permutation) {
+    	if (permutation.size() == 0) {
+    		return false;
+    	}
+        
     	// if this permutation is a duplicate, return false
     	if (hashCodes.contains(permutation)) {
     		return false;
     	}
-        if (permutation.size() == 0) {
- //       	System.out.println("permutation size zero");
-            return false;
-        }
         
         // check if permutation is pseudosymmetric
         if (! isAllowedPermuation(permutation)) {
@@ -144,7 +142,6 @@ public class SystematicSolver implements QuatSymmetrySolver {
             return false;
         }
         if (fold == 0 || subunits.getSubunitCount() % fold != 0) {
- //       	System.out.println("Remove: " + subunits.getSubunitCount() + " / " + fold);
         	return false;
         }
         
@@ -173,34 +170,25 @@ public class SystematicSolver implements QuatSymmetrySolver {
 		// get optimal transformation and axisangle by superimposing subunits
 		AxisAngle4d axisAngle = new AxisAngle4d();
 		Matrix4d transformation = SuperPosition.superposeAtOrigin(transformedCoords, originalCoords, axisAngle);
-		double rmsd = SuperPosition.rmsd(transformedCoords, originalCoords);
-		// handle ambiguity of superposing two subunits with the E operation (count=1)
-        if (subunits.getSubunitCount() == 2 && rotations.getOrder() == 0) {
-        	transformation.setIdentity();
-        }
- //               System.out.println("Complete: " + permutation + " rmsd: " + rmsd);
-		// check if it meets criteria and save symmetry operation
-		if (rmsd <parameters.getRmsdThreshold()) {
+		double subunitRmsd = SuperPosition.rmsd(transformedCoords, originalCoords);
+
+		if (subunitRmsd <parameters.getRmsdThreshold()) {
 			// transform to original coordinate system
-		    combineWithTranslation(transformation);
-		    	double caRmsd = scorer.calcCalphaRMSD(transformation, permutation);
-		    	if (caRmsd < 0.0) {
-		    		return false;
-		    	}
-		    	if (caRmsd > parameters.getRmsdThreshold()) {
-		            return false;
-		    	}
-				double caTmScoreMin = scorer.calcCalphaMinTMScore(transformation, permutation);
-		        Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, rmsd, caRmsd, caTmScoreMin, fold);
-		        rotations.addRotation(symmetryOperation);
-		        return true;
-//		    }
+			combineWithTranslation(transformation);
+			QuatSymmetryScores scores = QuatSuperpositionScorer.calcScores(subunits, transformation, permutation);
+			if (scores.getRmsd() < 0.0 || scores.getRmsd() > parameters.getRmsdThreshold()) {
+				return false;
+			}
+
+			scores.setRmsdCenters(subunitRmsd);
+			Rotation symmetryOperation = createSymmetryOperation(permutation, transformation, axisAngle, fold, scores);
+			rotations.addRotation(symmetryOperation);
+			return true;
 		}
 		return false;
 	}
 
     private void initialize() {
-        scorer = new QuatSuperpositionScorer(subunits);
         // translation to centered coordinate system
         centroid = new Vector3d(subunits.getCentroid());
 

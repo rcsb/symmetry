@@ -20,6 +20,7 @@ public class QuatSymmetryParameters {
 	// A slightly positive value gives preference to helical, if the RMSDs for the two symmetries
 	// are almost identical
 	private double helixRmsdThreshold = 0.05;
+	private double helixRmsdToRiseRatio = 0.75; // rmsd must be < 0.75* abs(rise)
 	private double minimumHelixRise = 1.0;
 	private double minimumHelixAngle = 5.0; // min helix angle to differentiate it from a translational repeat
 	private int maximumLocalCombinations = 50000; // max number of combinations to try for local symmetry calculation
@@ -115,6 +116,18 @@ public class QuatSymmetryParameters {
 	}
 	public void setHelixRmsdThreshold(double helixRmsdThreshold) {
 		this.helixRmsdThreshold = helixRmsdThreshold;
+	}
+	/**
+	 * @return the helixRmsdToRiseRatio
+	 */
+	public double getHelixRmsdToRiseRatio() {
+		return helixRmsdToRiseRatio;
+	}
+	/**
+	 * @param helixRmsdToRiseRatio the helixRmsdToRiseRatio to set
+	 */
+	public void setHelixRmsdToRiseRatio(double helixRmsdToRiseRatio) {
+		this.helixRmsdToRiseRatio = helixRmsdToRiseRatio;
 	}
 	public double getMinimumHelixRise() {
 		return minimumHelixRise;

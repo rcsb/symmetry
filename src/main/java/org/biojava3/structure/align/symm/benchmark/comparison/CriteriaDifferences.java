@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
@@ -39,7 +41,7 @@ import org.biojava3.structure.align.symm.census2.Results;
  */
 public class CriteriaDifferences {
 
-	public static class Difference {
+	public static class Difference implements Comparable<Difference> {
 		private final Double first;
 		private String scopId;
 		private final Double second;
@@ -99,6 +101,11 @@ public class CriteriaDifferences {
 		public String toString() {
 			return "Difference [scopId=" + scopId + ", first=" + first + ", second=" + second + "]";
 		}
+
+		@Override
+		public int compareTo(Difference o) {
+			return (new Double(Math.abs(o.getFirst() - o.getSecond()))).compareTo(new Double(Math.abs(first - second)));
+		}
 	}
 
 	/**
@@ -115,7 +122,7 @@ public class CriteriaDifferences {
 		CriteriaDifferences comp = new CriteriaDifferences(a, b);
 		// Results results = Results.fromXML(new File(args[0]));
 		Sample sample = Sample.fromXML(new File(args[0]));
-		List<Difference> differences = comp.findDifferences(sample, 0.001);
+		SortedSet<Difference> differences = comp.findDifferences(sample, 0.001);
 		System.out.println(differences.size() + " found:");
 		for (Difference diff : differences) {
 			System.out.println(diff.print(a, b));
@@ -150,17 +157,19 @@ public class CriteriaDifferences {
 		return diffs;
 	}
 
-	public List<Difference> findDifferences(Sample sample, double precision) {
-		List<Difference> diffs = new ArrayList<Difference>();
+	public SortedSet<Difference> findDifferences(Sample sample, double precision) {
+		SortedSet<Difference> diffs = new TreeSet<Difference>();
 		for (Case cas : sample.getData()) {
 			Double x = null, y = null;
 			try {
 				x = a.get(cas.getResult());
 			} catch (NoncomputableCriterionException e) {
+				e.printStackTrace();
 			}
 			try {
 				y = b.get(cas.getResult());
 			} catch (NoncomputableCriterionException e) {
+				e.printStackTrace();
 			}
 			if (Math.abs(x) - Math.abs(y) >= precision) {
 				diffs.add(new Difference(cas.getScopId(), x, y));

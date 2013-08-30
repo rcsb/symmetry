@@ -30,6 +30,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.SortedSet;
@@ -102,31 +103,33 @@ public class ROCCurves {
 
 			// ROC curves
 			List<Criterion> ceSymmCriteria = new ArrayList<Criterion>();
-//			ceSymmCriteria.add(Criterion.tmScore().noFail(-10000000f));
-//			ceSymmCriteria.add(Criterion.zScore().noFail(-10000000f));
-//			ceSymmCriteria.add(Criterion.alignLength().noFail(-10000000f));
-//			ceSymmCriteria.add(Criterion.epsilon().noFail(-10000000f));
-//			ceSymmCriteria.add(Criterion.screw().noFail(-10000000f));
-//			ceSymmCriteria.add(Criterion.epsilon().noFail(-10000000f));
-//			ceSymmCriteria.add(Criterion.identity().noFail(-10000000f));
-//			ceSymmCriteria.add(Criterion.identity().noFail(-10000000f));
-//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.1));
-//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.15));
-//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.3));
-//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.4));
-//			ceSymmCriteria.add(Criterion.hasOrder(0.1f));
-//			ceSymmCriteria.add(Criterion.hasOrder(0.2f));
-//			ceSymmCriteria.add(Criterion.hasOrder(0.3f));
+			//			ceSymmCriteria.add(Criterion.tmScore().noFail(-10000000f));
+			//			ceSymmCriteria.add(Criterion.zScore().noFail(-10000000f));
+			//			ceSymmCriteria.add(Criterion.alignLength().noFail(-10000000f));
+			//			ceSymmCriteria.add(Criterion.epsilon().noFail(-10000000f));
+			//			ceSymmCriteria.add(Criterion.screw().noFail(-10000000f));
+			//			ceSymmCriteria.add(Criterion.epsilon().noFail(-10000000f));
+			//			ceSymmCriteria.add(Criterion.identity().noFail(-10000000f));
+			//			ceSymmCriteria.add(Criterion.identity().noFail(-10000000f));
+			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.1));
+			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.15));
+			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.3));
+			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.4));
+			//			ceSymmCriteria.add(Criterion.hasOrder(0.1f));
+			//			ceSymmCriteria.add(Criterion.hasOrder(0.2f));
+			//			ceSymmCriteria.add(Criterion.hasOrder(0.3f));
 			ceSymmCriteria.add(Criterion.tmScore());
-			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
-			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderLiberal(1f), 1, 1));
-//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
-//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderByAngle(0.5f, 5 * Math.PI/180), 1, 1000));
-//			ceSymmCriteria.add(Criterion.random());
-//			ceSymmCriteria.add(Criterion.thetaIsCorrect());
+//			ceSymmCriteria.add(Criterion.tmpr());
+//			ceSymmCriteria.add(Criterion.symdZScore());
+			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
+						ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderLiberal(1f), 1, 1));
+			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
+			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderByAngle(0.5f, 5 * Math.PI/180), 1, 1000));
+			//			ceSymmCriteria.add(Criterion.random());
+			//			ceSymmCriteria.add(Criterion.thetaIsCorrect());
 			ROCCurves ceSymmRocs = new ROCCurves(input, ceSymmCriteria);
 			ceSymmRocs.graph(output);
-
+			ceSymmRocs.printMatrices(System.out);
 			// print text
 			ceSymmRocs.printText();
 
@@ -150,9 +153,9 @@ public class ROCCurves {
 
 			// ROC curves
 			List<Criterion> symdCriteria = new ArrayList<Criterion>();
-//			symdCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
-//			symdCriteria.add(Criterion.symdZScore());
-//			symdCriteria.add(Criterion.symdTm());
+			//			symdCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
+			//			symdCriteria.add(Criterion.symdZScore());
+			//			symdCriteria.add(Criterion.symdTm());
 			symdCriteria.add(Criterion.tmScore());
 			symdCriteria.add(Criterion.tmpr());
 			ROCCurves symdRocs = new ROCCurves(input, symdCriteria);
@@ -222,59 +225,106 @@ public class ROCCurves {
 
 	public void printText(PrintStream ps) {
 		if (dataset == null) dataset = getRocPoints(); // lazy initialization
-		
+
 		for (int i = 0; i < criteria.size(); i++) {
-			
+
 			// print the name of the criterion
 			final Criterion criterion = criteria.get(i);
 			final XYSeries series = dataset.getSeries(i);
 			ps.println(criterion);
-			
+
 			// print the X points
 			for (int j = 0; j < series.getItemCount(); j++) {
 				final double x = series.getX(j).doubleValue();
 				ps.print(x + "\t");
 			}
 			ps.println();
-			
+
 			// print the Y points
 			for (int j = 0; j < series.getItemCount(); j++) {
 				final double y = series.getY(j).doubleValue();
 				ps.print(y + "\t");
 			}
 			ps.println("\n");
-			
+
 		}
 	}
+
+	public void printMatrices(PrintStream ps) {
+		List<Case> positive = new ArrayList<Case>();
+		for (Case c : sample.getData()) {
+			if (c.getKnownInfo().hasRotationalSymmetry()) {
+				positive.add(c);
+			}
+		}
+		List<Case> negative = new ArrayList<Case>();
+		for (Case c : sample.getData()) {
+			if (!c.getKnownInfo().hasRotationalSymmetry()) {
+				negative.add(c);
+			}
+		}
+		ps.println("------------------POSITIVE------------------");
+		for (Case c : positive) {
+			Iterator<Criterion> iter = criteria.iterator();
+			while (iter.hasNext()) {
+				double value = -1;
+				try {
+					value = iter.next().get(c.getResult());
+				} catch (NoncomputableCriterionException e) {
+					e.printStackTrace();
+				}
+				ps.print(value);
+				if (iter.hasNext()) ps.print("\t");
+			}
+			ps.println();
+		}
+		ps.println(); ps.println();
+		ps.println("------------------NEGATIVE------------------");
+		for (Case c : negative) {
+			Iterator<Criterion> iter = criteria.iterator();
+			while (iter.hasNext()) {
+				double value = -1;
+				try {
+					value = iter.next().get(c.getResult());
+				} catch (NoncomputableCriterionException e) {
+					e.printStackTrace();
+				}
+				ps.print(value);
+				if (iter.hasNext()) ps.print("\t");
+			}
+			ps.println();
+		}
+	}
+
 	/**
 	 * For each {@link Criterion}, prints a line of X coordinates followed by a line of Y coordinates.
 	 * @param ps
 	 */
 	public void printText(PrintWriter ps) {
-		
+
 		if (dataset == null) dataset = getRocPoints(); // lazy initialization
-		
+
 		for (int i = 0; i < criteria.size(); i++) {
-			
+
 			// print the name of the criterion
 			final Criterion criterion = criteria.get(i);
 			final XYSeries series = dataset.getSeries(i);
 			ps.println(criterion);
-			
+
 			// print the X points
 			for (int j = 0; j < series.getItemCount(); j++) {
 				final double x = series.getX(j).doubleValue();
 				ps.print(x + "\t");
 			}
 			ps.println();
-			
+
 			// print the Y points
 			for (int j = 0; j < series.getItemCount(); j++) {
 				final double y = series.getY(j).doubleValue();
 				ps.print(y + "\t");
 			}
 			ps.println("\n");
-			
+
 		}
 	}
 
@@ -325,7 +375,7 @@ public class ROCCurves {
 	public XYSeriesCollection getRocPoints() {
 
 		if (dataset != null) return dataset;
-		
+
 		XYSeriesCollection dataset = new XYSeriesCollection();
 
 		for (Criterion criterion : criteria) {
@@ -343,7 +393,7 @@ public class ROCCurves {
 			 * but it's O(nlogn) + O(n) rather than O(nlogn) + O(n^2).
 			 */
 			int tp = 0, fp = 0;
-			
+
 			/*
 			 * We need updated statistics for the number of positive and negative known values.
 			 * This is because data points may not exist for this criterion (or we may have new data points).
@@ -380,16 +430,16 @@ public class ROCCurves {
 							+ ", " + nf.format(y) + ")");
 				}
 				series.add(x, y);
-				
+
 			}
 
 			logger.info("Adding series " + criterion.getName() + " with " + nSymm + " symmetric and " + nAsymm
 					+ " asymmetric:");
-			
+
 			// add the series to the collection
 			series.setDescription(criterion.getName());
 			dataset.addSeries(series);
-			
+
 		}
 
 		return dataset;

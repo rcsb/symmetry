@@ -88,7 +88,7 @@
         <dependency>
             <groupId>org.biojava</groupId>
             <artifactId>symmetry</artifactId>
-            <version>0.2.2-SNAPSHOT</version>
+            <version>0.3.2-SNAPSHOT</version>
         </dependency>
 		<dependency>
 			<groupId>java3d</groupId>

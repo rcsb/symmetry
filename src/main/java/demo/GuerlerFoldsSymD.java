@@ -1,20 +1,15 @@
 package demo;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.scop.ScopInstallation;
-import org.biojava3.structure.align.symm.benchmark.external.SymDResults;
+import org.biojava3.structure.align.symm.benchmark.external.SymDRunner;
 import org.biojava3.structure.align.symm.census2.NamesCensus;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
@@ -46,8 +41,8 @@ public class GuerlerFoldsSymD {
 		for (String fold : folds) {
 			File censusFile = new File(DIR + fold + ".xml");
 			File lineByLine = new File(RESOURCE_DIR + fold + "_names.list");
-			List<ScopDomain> scopDomains = readNames(lineByLine);
-			SymDResults.runSymD(SYMD_PATH, SYMD_RESOURCE_PATH, cache, scopDomains, censusFile);
+			SymDRunner runner = new SymDRunner(cache, scop, SYMD_PATH, censusFile, true);
+			runner.run(lineByLine);
 			NamesCensus.buildDefault(censusFile, lineByLine, false);
 			PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(STATS_FILE, true)));
 			int x = 0;
@@ -58,39 +53,6 @@ public class GuerlerFoldsSymD {
 			pw.println(fold + "\t" + x + "\t" + results.size());
 			pw.close();
 		}
-	}
-
-	private static List<ScopDomain> readNames(File lineByLine) {
-		List<ScopDomain> domains = new ArrayList<ScopDomain>();
-		BufferedReader br = null;
-		boolean success = false;
-		try {
-			br = new BufferedReader(new FileReader(lineByLine));
-			String line = "";
-			while ((line = br.readLine()) != null) {
-				if (line.trim().isEmpty()) continue;
-				ScopDomain domain = ScopFactory.getSCOP().getDomainByScopID(line);
-				if (domain == null) {
-					System.err.println("No SCOP domain with id " + line + " was found");
-				} else {
-					domains.add(domain);
-				}
-			}
-			success = true;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		} finally {
-			try {
-				br.close();
-			} catch (IOException e) {
-				if (!success) {
-					throw new RuntimeException("Couldn't close", e);
-				} else {
-					System.err.println("Couldn't close");
-				}
-			}
-		}
-		return domains;
 	}
 
 }

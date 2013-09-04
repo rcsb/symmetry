@@ -47,6 +47,9 @@ import org.biojava3.structure.align.symm.census2.Result;
  */
 public class SymDResultsTest {
 
+	// TODO
+	/*
+	
 	private static String RESOURCE_PATH = "src/test/resources/";
 
 	private static final String SYMD_PATH = "src/test/resources/census2/benchmark/symd";
@@ -119,5 +122,7 @@ public class SymDResultsTest {
 
 		outputFile.delete();
 	}
+	
+	*/
 
 }

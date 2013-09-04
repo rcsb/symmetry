@@ -27,7 +27,8 @@ import java.io.Serializable;
 import org.biojava.bio.structure.align.model.AFPChain;
 
 /**
- * The results of a symmetry alignment. Includes information for CE-Symm or SymD.
+ * The results of a symmetry alignment. Includes information for CE-Symm or
+ * SymD.
  * 
  * @author dmyerstu
  */
@@ -60,7 +61,7 @@ public class Alignment implements Serializable {
 	private Float similarity;
 
 	private Float symDZScore;
-	
+
 	private Float symDTMScore;
 
 	private Float tmScore;
@@ -104,6 +105,98 @@ public class Alignment implements Serializable {
 		this.zScore = zScore;
 		this.block1Length = block1Length;
 		this.block2Length = block2Length;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Alignment other = (Alignment) obj;
+		if (alignLength == null) {
+			if (other.alignLength != null)
+				return false;
+		} else if (!alignLength.equals(other.alignLength))
+			return false;
+		if (alignScore == null) {
+			if (other.alignScore != null)
+				return false;
+		} else if (!alignScore.equals(other.alignScore))
+			return false;
+		if (block1Length == null) {
+			if (other.block1Length != null)
+				return false;
+		} else if (!block1Length.equals(other.block1Length))
+			return false;
+		if (block2Length == null) {
+			if (other.block2Length != null)
+				return false;
+		} else if (!block2Length.equals(other.block2Length))
+			return false;
+		if (coverage == null) {
+			if (other.coverage != null)
+				return false;
+		} else if (!coverage.equals(other.coverage))
+			return false;
+		if (gapLength == null) {
+			if (other.gapLength != null)
+				return false;
+		} else if (!gapLength.equals(other.gapLength))
+			return false;
+		if (identity == null) {
+			if (other.identity != null)
+				return false;
+		} else if (!identity.equals(other.identity))
+			return false;
+		if (initialShift == null) {
+			if (other.initialShift != null)
+				return false;
+		} else if (!initialShift.equals(other.initialShift))
+			return false;
+		if (nNonSelfAligned == null) {
+			if (other.nNonSelfAligned != null)
+				return false;
+		} else if (!nNonSelfAligned.equals(other.nNonSelfAligned))
+			return false;
+		if (rmsd == null) {
+			if (other.rmsd != null)
+				return false;
+		} else if (!rmsd.equals(other.rmsd))
+			return false;
+		if (similarity == null) {
+			if (other.similarity != null)
+				return false;
+		} else if (!similarity.equals(other.similarity))
+			return false;
+		if (symDTMScore == null) {
+			if (other.symDTMScore != null)
+				return false;
+		} else if (!symDTMScore.equals(other.symDTMScore))
+			return false;
+		if (symDZScore == null) {
+			if (other.symDZScore != null)
+				return false;
+		} else if (!symDZScore.equals(other.symDZScore))
+			return false;
+		if (tScore == null) {
+			if (other.tScore != null)
+				return false;
+		} else if (!tScore.equals(other.tScore))
+			return false;
+		if (tmScore == null) {
+			if (other.tmScore != null)
+				return false;
+		} else if (!tmScore.equals(other.tmScore))
+			return false;
+		if (zScore == null) {
+			if (other.zScore != null)
+				return false;
+		} else if (!zScore.equals(other.zScore))
+			return false;
+		return true;
 	}
 
 	public Integer getAlignLength() {
@@ -154,8 +247,20 @@ public class Alignment implements Serializable {
 		return similarity;
 	}
 
+	public Float getSymDTmScore() {
+		return symDTMScore;
+	}
+
+	public Float getSymDZScore() {
+		return symDZScore;
+	}
+
 	public Float getTmScore() {
 		return tmScore;
+	}
+
+	public Float gettScore() {
+		return tScore;
 	}
 
 	public Float getzScore() {
@@ -168,7 +273,6 @@ public class Alignment implements Serializable {
 		int result = 1;
 		result = prime * result + (alignLength == null ? 0 : alignLength.hashCode());
 		result = prime * result + (alignScore == null ? 0 : alignScore.hashCode());
-		result = prime * result + (tScore == null ? 0 : tScore.hashCode());
 		result = prime * result + (block1Length == null ? 0 : block1Length.hashCode());
 		result = prime * result + (block2Length == null ? 0 : block2Length.hashCode());
 		result = prime * result + (coverage == null ? 0 : coverage.hashCode());
@@ -178,8 +282,10 @@ public class Alignment implements Serializable {
 		result = prime * result + (nNonSelfAligned == null ? 0 : nNonSelfAligned.hashCode());
 		result = prime * result + (rmsd == null ? 0 : rmsd.hashCode());
 		result = prime * result + (similarity == null ? 0 : similarity.hashCode());
-		result = prime * result + (tmScore == null ? 0 : tmScore.hashCode());
 		result = prime * result + (symDTMScore == null ? 0 : symDTMScore.hashCode());
+		result = prime * result + (symDZScore == null ? 0 : symDZScore.hashCode());
+		result = prime * result + (tScore == null ? 0 : tScore.hashCode());
+		result = prime * result + (tmScore == null ? 0 : tmScore.hashCode());
 		result = prime * result + (zScore == null ? 0 : zScore.hashCode());
 		return result;
 	}
@@ -190,10 +296,6 @@ public class Alignment implements Serializable {
 
 	public void setAlignScore(Float alignScore) {
 		this.alignScore = alignScore;
-	}
-
-	public void setAlternateTm(Float alternateTm) {
-		this.tScore = alternateTm;
 	}
 
 	public void setBlock1Length(Integer block1Length) {
@@ -232,45 +334,34 @@ public class Alignment implements Serializable {
 		this.similarity = similarity;
 	}
 
-	public void setTmScore(Float tmScore) {
-		this.tmScore = tmScore;
-	}
-
-	public void setzScore(Float zScore) {
-		this.zScore = zScore;
-	}
-
-	public Float gettScore() {
-		return tScore;
-	}
-
-	public void settScore(Float tScore) {
-		this.tScore = tScore;
-	}
-
-	public Float getSymDZScore() {
-		return symDZScore;
+	public void setSymDTmScore(Float symDTMScore) {
+		this.symDTMScore = symDTMScore;
 	}
 
 	public void setSymDZScore(Float symDZScore) {
 		this.symDZScore = symDZScore;
 	}
 
-	public Float getSymDTMScore() {
-		return symDTMScore;
+	public void setTmScore(Float tmScore) {
+		this.tmScore = tmScore;
 	}
 
-	public void setSymDTMScore(Float symDTMScore) {
-		this.symDTMScore = symDTMScore;
+	public void settScore(Float tScore) {
+		this.tScore = tScore;
+	}
+
+	public void setzScore(Float zScore) {
+		this.zScore = zScore;
 	}
 
 	@Override
 	public String toString() {
-		return "Alignment [alignLength=" + alignLength + ", alignScore=" + alignScore + ", block1Length="
-				+ block1Length + ", block2Length=" + block2Length + ", coverage=" + coverage + ", gapLength="
-				+ gapLength + ", identity=" + identity + ", rmsd=" + rmsd + ", similarity=" + similarity + ", tmScore="
-				+ tmScore + ", alternateTm=" + tScore + ", zScore=" + zScore + ", initialShift=" + initialShift
-				+ ", nNonSelfAligned=" + nNonSelfAligned + ", tmpr=" + symDTMScore + "]";
+		return "Alignment [alignLength=" + alignLength + ", alignScore=" + alignScore + ", tScore=" + tScore
+				+ ", block1Length=" + block1Length + ", block2Length=" + block2Length + ", coverage=" + coverage
+				+ ", gapLength=" + gapLength + ", identity=" + identity + ", initialShift=" + initialShift
+				+ ", nNonSelfAligned=" + nNonSelfAligned + ", rmsd=" + rmsd + ", similarity=" + similarity
+				+ ", symDZScore=" + symDZScore + ", symDTMScore=" + symDTMScore + ", tmScore=" + tmScore + ", zScore="
+				+ zScore + "]";
 	}
 
 }

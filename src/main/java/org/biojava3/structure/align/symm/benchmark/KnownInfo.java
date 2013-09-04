@@ -146,7 +146,7 @@ public class KnownInfo implements Serializable, Comparable<KnownInfo> {
 	 *         a curve.
 	 */
 	public boolean hasSuperhelicalSymmetry() {
-		return group.equals("SH");
+		return group.startsWith("SH");
 	}
 
 	/**
@@ -161,7 +161,10 @@ public class KnownInfo implements Serializable, Comparable<KnownInfo> {
 	 *         superhelical or non-integral order helical symmetry.
 	 */
 	public boolean hasTrueHelicalSymmetry() {
-		return hasHelicalSymmetry() && !hasSuperhelicalSymmetry() && !hasNonIntegralOrderSymmetry();
+		if (group.startsWith("H")) {
+			System.err.println(group);
+		}
+		return group.startsWith("H");
 	}
 
 	/**

@@ -78,13 +78,17 @@ public class ROCCurves {
 	 * 
 	 */
 	public static void main(String[] args) {
-		if (args.length != 2 && args.length != 4) {
-			System.err.println("Usage: " + ROCCurves.class.getSimpleName() + " input-cesymm-benchmark-file output-cesymm-file [input-symd-benchmark-file output-symd-file]");
+		if (args.length < 2 || args.length > 5) {
+			System.err.println("Usage: " + ROCCurves.class.getSimpleName() + " input-cesymm-benchmark-file output-cesymm-file [input-symd-benchmark-file output-symd-file [1.5b]]");
 			return;
 		}
 		runForCeSymm(new File(args[0]), new File(args[1]));
+		boolean updated = false;
+		if (args.length > 4) {
+			if (args[4].equalsIgnoreCase("1.5b") || args[4].equalsIgnoreCase("true") || args[4].equalsIgnoreCase("updated")) updated = true;
+		}
 		if (args.length > 2) {
-			runForSymD(new File(args[2]), new File(args[3]));
+			runForSymD(new File(args[2]), new File(args[3]), updated);
 		}
 	}
 
@@ -103,30 +107,8 @@ public class ROCCurves {
 
 			// ROC curves
 			List<Criterion> ceSymmCriteria = new ArrayList<Criterion>();
-			//			ceSymmCriteria.add(Criterion.tmScore().noFail(-10000000f));
-			//			ceSymmCriteria.add(Criterion.zScore().noFail(-10000000f));
-			//			ceSymmCriteria.add(Criterion.alignLength().noFail(-10000000f));
-			//			ceSymmCriteria.add(Criterion.epsilon().noFail(-10000000f));
-			//			ceSymmCriteria.add(Criterion.screw().noFail(-10000000f));
-			//			ceSymmCriteria.add(Criterion.epsilon().noFail(-10000000f));
-			//			ceSymmCriteria.add(Criterion.identity().noFail(-10000000f));
-			//			ceSymmCriteria.add(Criterion.identity().noFail(-10000000f));
-			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.1));
-			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.15));
-			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.3));
-			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 0.4));
-			//			ceSymmCriteria.add(Criterion.hasOrder(0.1f));
-			//			ceSymmCriteria.add(Criterion.hasOrder(0.2f));
-			//			ceSymmCriteria.add(Criterion.hasOrder(0.3f));
 			ceSymmCriteria.add(Criterion.tmScore());
-//			ceSymmCriteria.add(Criterion.tmpr());
-//			ceSymmCriteria.add(Criterion.symdZScore());
-			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
-						ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderLiberal(1f), 1, 1));
-			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
-			//			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderByAngle(0.5f, 5 * Math.PI/180), 1, 1000));
-			//			ceSymmCriteria.add(Criterion.random());
-			//			ceSymmCriteria.add(Criterion.thetaIsCorrect());
+			ceSymmCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrderLiberal(1f), 1, 1));
 			ROCCurves ceSymmRocs = new ROCCurves(input, ceSymmCriteria);
 			ceSymmRocs.graph(output);
 			ceSymmRocs.printMatrices(System.out);
@@ -148,20 +130,20 @@ public class ROCCurves {
 	 * @param ceSymmOutput
 	 * @param symdOutput
 	 */
-	public static void runForSymD(File input, File output) {
+	public static void runForSymD(File input, File output, boolean isUpdated) {
 		try {
 
 			// ROC curves
 			List<Criterion> symdCriteria = new ArrayList<Criterion>();
-			//			symdCriteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1f), 1, 1));
-			//			symdCriteria.add(Criterion.symdZScore());
-			//			symdCriteria.add(Criterion.symdTm());
+			symdCriteria.add(Criterion.symdZScore());
+			symdCriteria.add(Criterion.tScore());
+			if (isUpdated) symdCriteria.add(Criterion.symDTMScore());
 			symdCriteria.add(Criterion.tmScore());
-			symdCriteria.add(Criterion.tmpr());
 			ROCCurves symdRocs = new ROCCurves(input, symdCriteria);
 			symdRocs.graph(output);
 
 			// print text
+			symdRocs.printMatrices(System.out);
 			symdRocs.printText();
 
 		} catch (IOException e) {
@@ -195,6 +177,7 @@ public class ROCCurves {
 				throw e; // just be safe
 			}
 		}
+		logger.info("Found " + sample.size() + " cases");
 		sample.setData(cases);
 		this.sample = sample;
 		this.criteria = criteria;

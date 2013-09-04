@@ -223,12 +223,12 @@ public abstract class Criterion {
 			}
 		};
 	}
-	public static Criterion symdTm() {
+	public static Criterion tScore() {
 		return new Criterion() {
 			@Override
 			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().getAlternateTm() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getAlternateTm();
+				if (result.getAlignment() == null || result.getAlignment().gettScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getAlignment().gettScore();
 			}
 
 			@Override
@@ -241,8 +241,8 @@ public abstract class Criterion {
 		return new Criterion() {
 			@Override
 			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().getzScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getzScore();
+				if (result.getAlignment() == null || result.getAlignment().getSymDZScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getAlignment().getSymDZScore();
 			}
 
 			@Override
@@ -266,17 +266,17 @@ public abstract class Criterion {
 
 		};
 	}
-	public static Criterion tmpr() {
+	public static Criterion symDTMScore() {
 		return new Criterion() {
 			@Override
 			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().getTmpr() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getTmpr();
+				if (result.getAlignment() == null || result.getAlignment().getSymDTmScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getAlignment().getSymDTmScore();
 			}
 
 			@Override
 			public String getName() {
-				return "Tmpr";
+				return "SymD TM-score";
 			}
 		};
 	}
@@ -355,24 +355,7 @@ public abstract class Criterion {
 
 		};
 	}
-	public static Criterion thetaIsCorrect() {
-		return new Criterion() {
-			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAxis() == null) throw new NoncomputableCriterionException("The case has a null getAxis()");
-				if (result.getOrder() == null) throw new NoncomputableCriterionException("The case has a null getOrder()");
-				float theta = result.getAxis().getTheta();
-				float shouldBe = (float) (2*Math.PI / result.getOrder());
-				return -Math.abs(shouldBe - theta);
-			}
-
-			@Override
-			public String getName() {
-				return "order~angle";
-			}
-
-		};
-	}
+	
 	public static Criterion epsilon() {
 		return new Criterion() {
 			@Override
@@ -392,6 +375,7 @@ public abstract class Criterion {
 
 		};
 	}
+	
 	private static volatile Random random = new Random();
 	public static Criterion random() {
 		return new Criterion() {
@@ -424,23 +408,25 @@ public abstract class Criterion {
 
 		};
 	}
-//	public static Criterion helical() {
-//		return new Criterion() {
-//			@Override
-//			public double get(Result result) throws NoncomputableCriterionException {
-//				if (result.getFractionHelical() == null) {
-//					throw new NoncomputableCriterionException("The case has a null getFractionHelical()");
-//				}
-//				return result.getFractionHelical();
-//			}
-//
-//			@Override
-//			public String getName() {
-//				return "% helical";
-//			}
-//
-//		};
-//	}
+	
+	public static Criterion helical() {
+		return new Criterion() {
+			@Override
+			public double get(Result result) throws NoncomputableCriterionException {
+				if (result.getFractionHelical() == null) {
+					throw new NoncomputableCriterionException("The case has a null getFractionHelical()");
+				}
+				return result.getFractionHelical();
+			}
+
+			@Override
+			public String getName() {
+				return "% helical";
+			}
+
+		};
+	}
+	
 	public static Criterion alignLength() {
 		return new Criterion() {
 			@Override

@@ -118,7 +118,7 @@ public class CriteriaDifferences {
 			return;
 		}
 		Criterion a = Criterion.tmScore();
-		Criterion b = Criterion.tmpr();
+		Criterion b = Criterion.symDTMScore();
 		CriteriaDifferences comp = new CriteriaDifferences(a, b);
 		// Results results = Results.fromXML(new File(args[0]));
 		Sample sample = Sample.fromXML(new File(args[0]));

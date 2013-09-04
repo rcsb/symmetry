@@ -47,7 +47,8 @@ public class SampleBuilderTest {
 	public void testBuildSample() throws IOException {
 		File knownInfosFile = new File(RESOURCE_PATH + "census2/benchmark/benchmark1_known_orders");
 		File inputFile = new File(RESOURCE_PATH + "census2/benchmark/benchmark1_stub.xml");
-		File outputFile = new File(RESOURCE_PATH + "census2/benchmark/benchmark1_actual.xml");
+		File outputFile = new File("benchmark1_actual.xml");
+		outputFile.deleteOnExit();
 		File expectedOutputFile = new File(RESOURCE_PATH + "census2/benchmark/benchmark1_expected.xml");
 		Map<String,KnownInfo> knownInfos = SampleBuilder.getOrders(knownInfosFile);
 		SampleBuilder.buildSample(inputFile, outputFile, knownInfos);
@@ -56,11 +57,11 @@ public class SampleBuilderTest {
 		assertEquals(actual.size(), 93); // note that the size is here manually
 		for (int i = 0; i < actual.size(); i++) {
 			if (!expected.getData().get(i).equals((actual).getData().get(i))) {
+				System.err.println(i);
 				System.err.println(actual.getData().get(i));
 				fail();
 			}
 		}
-		outputFile.delete();
 	}
 
 }

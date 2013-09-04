@@ -3,7 +3,6 @@
     <data>
         <knownInfo>
             <group>C6</group>
-            <order>6</order>
         </knownInfo>
         <result>
             <alignment>
@@ -40,7 +39,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -77,7 +75,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -114,7 +111,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -151,7 +147,6 @@
     <data>
         <knownInfo>
             <group>C3</group>
-            <order>3</order>
         </knownInfo>
         <result>
             <alignment>
@@ -188,7 +183,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -223,7 +217,6 @@
     <data>
         <knownInfo>
             <group>D8*</group>
-            <order>8</order>
         </knownInfo>
         <result>
             <alignment>
@@ -258,7 +251,6 @@
     <data>
         <knownInfo>
             <group>D8</group>
-            <order>8</order>
         </knownInfo>
         <result>
             <alignment>
@@ -295,7 +287,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -332,7 +323,6 @@
     <data>
         <knownInfo>
             <group>D2*</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -369,7 +359,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -406,7 +395,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -443,7 +431,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -480,7 +467,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -517,7 +503,6 @@
     <data>
         <knownInfo>
             <group>C7</group>
-            <order>7</order>
         </knownInfo>
         <result>
             <alignment>
@@ -554,7 +539,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -591,7 +575,6 @@
     <data>
         <knownInfo>
             <group>D8</group>
-            <order>8</order>
         </knownInfo>
         <result>
             <alignment>
@@ -628,7 +611,6 @@
     <data>
         <knownInfo>
             <group>C6</group>
-            <order>6</order>
         </knownInfo>
         <result>
             <alignment>
@@ -665,7 +647,6 @@
     <data>
         <knownInfo>
             <group>C5</group>
-            <order>5</order>
         </knownInfo>
         <result>
             <alignment>
@@ -702,7 +683,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -739,7 +719,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -776,7 +755,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -811,7 +789,6 @@
     <data>
         <knownInfo>
             <group>D2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -848,7 +825,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -885,7 +861,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -922,7 +897,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -959,7 +933,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -996,7 +969,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1033,7 +1005,6 @@
     <data>
         <knownInfo>
             <group>C3</group>
-            <order>3</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1070,7 +1041,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1107,7 +1077,6 @@
     <data>
         <knownInfo>
             <group>D8</group>
-            <order>8</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1144,7 +1113,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1181,7 +1149,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1218,7 +1185,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1255,7 +1221,6 @@
     <data>
         <knownInfo>
             <group>D2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1292,7 +1257,6 @@
     <data>
         <knownInfo>
             <group>C3</group>
-            <order>3</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1329,7 +1293,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1366,7 +1329,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1401,7 +1363,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1436,7 +1397,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1471,7 +1431,6 @@
     <data>
         <knownInfo>
             <group>R</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1506,7 +1465,6 @@
     <data>
         <knownInfo>
             <group>C3</group>
-            <order>3</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1543,7 +1501,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1580,7 +1537,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1617,7 +1573,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1654,7 +1609,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1691,7 +1645,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1728,7 +1681,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1765,7 +1717,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1802,7 +1753,6 @@
     <data>
         <knownInfo>
             <group>C2-iffy</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1839,7 +1789,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1876,7 +1825,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1911,7 +1859,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1946,7 +1893,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -1983,7 +1929,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2020,7 +1965,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2055,7 +1999,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2092,7 +2035,6 @@
     <data>
         <knownInfo>
             <group>D8</group>
-            <order>8</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2129,7 +2071,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2166,7 +2107,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2201,7 +2141,6 @@
     <data>
         <knownInfo>
             <group>D2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2238,7 +2177,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2275,7 +2213,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2312,7 +2249,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2349,7 +2285,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2386,7 +2321,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2423,7 +2357,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2460,7 +2393,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2497,7 +2429,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2534,7 +2465,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2569,7 +2499,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2606,7 +2535,6 @@
     <data>
         <knownInfo>
             <group>C8</group>
-            <order>8</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2643,7 +2571,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2680,7 +2607,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2717,7 +2643,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2752,7 +2677,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2787,7 +2711,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2824,7 +2747,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2861,7 +2783,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2898,7 +2819,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2935,7 +2855,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -2972,7 +2891,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3009,7 +2927,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3046,7 +2963,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3083,7 +2999,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3120,7 +3035,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3157,7 +3071,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3194,7 +3107,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3231,7 +3143,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3268,7 +3179,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3305,7 +3215,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3342,7 +3251,6 @@
     <data>
         <knownInfo>
             <group>C2</group>
-            <order>2</order>
         </knownInfo>
         <result>
             <alignment>
@@ -3379,7 +3287,6 @@
     <data>
         <knownInfo>
             <group>C1</group>
-            <order>1</order>
         </knownInfo>
         <result>
             <alignment>

@@ -1,4 +1,4 @@
-package demo;
+package org.biojava3.structure.align.symm.benchmark.folds;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -21,30 +21,34 @@ import org.biojava3.structure.align.symm.census2.SignificanceFactory;
  * The files are in {@code src/main/resources/Guerler_folds}.
  * @author dmyerstu
  */
-public class GuerlerFoldsSymD {
+public class FoldsSymD {
 
-	private static String DIR = "/Users/dmyerstu/Desktop/folds/";
-	private static String RESOURCE_DIR = "/Users/dmyerstu/Documents/workspace/symmetry-benchmark/src/main/resources/Guerler_folds/";
-	private static String SYMD_RESOURCE_PATH = "/Users/dmyerstu/Desktop/SymD/symd_result_files/";
-	private static String SYMD_PATH = "/Users/dmyerstu/Desktop/SymD/symd_revised";
-	private static File STATS_FILE = new File("/Users/dmyerstu/Desktop/folds/stats.txt");
-	
 	public static void main(String[] args) throws IOException {
+		if (args.length != 2) {
+			System.err.println("Usage: " + FoldsSymD.class.getSimpleName() + " output-dir symd-path");
+			return;
+		}
+		run(args[0], args[1]);
+	}
+
+	private static final String RESOURCE_DIR = "src/main/resources/Guerler_folds/";
+	
+	public static void run(String dir, String symdPath) throws IOException {
 		final AtomCache cache = new AtomCache();
 		cache.setFetchFileEvenIfObsolete(true);
 		ScopInstallation scop = new ScopInstallation();
 		scop.setScopVersion("1.73");
 		ScopFactory.setScopDatabase(scop);
 		Significance sig = SignificanceFactory.generallySymmetric();
-		new File(DIR).mkdirs();
+		new File(dir).mkdirs();
 		String[] folds = new String[] {"a.24", "b.1", "b.11", "b.42", "b.69", "c.1", "d.131", "d.58"};
 		for (String fold : folds) {
-			File censusFile = new File(DIR + fold + ".xml");
+			File censusFile = new File(dir + fold + ".xml");
 			File lineByLine = new File(RESOURCE_DIR + fold + "_names.list");
-			SymDRunner runner = new SymDRunner(cache, scop, SYMD_PATH, censusFile, true);
+			SymDRunner runner = new SymDRunner(cache, scop, symdPath, censusFile, true);
 			runner.run(lineByLine);
 			NamesCensus.buildDefault(censusFile, lineByLine, false);
-			PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(STATS_FILE, true)));
+			PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(new File(dir + "stats.txt"), true)));
 			int x = 0;
 			Results results = Results.fromXML(censusFile);
 			for (Result result : results.getData()) {

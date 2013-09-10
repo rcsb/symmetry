@@ -83,4 +83,9 @@ public class StatUtils {
 		map.put(key, map.get(key) + value);
 	}
 
+	public static <T> void plusF(Map<T, Float> map, T key, float value) {
+		if (!map.containsKey(key)) map.put(key, 0.0f);
+		map.put(key, map.get(key) + value);
+	}
+
 }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -24,6 +25,10 @@ import org.biojava3.structure.align.symm.census2.Significance;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 import org.biojava3.structure.align.symm.census2.stats.StatUtils;
 
+/**
+ * Classify symmetry by Enzyme Classification.
+ * @author dmyerstu
+ */
 public class ECCorrelation {
 
 	private static final Logger logger = LogManager.getLogger(ECCorrelation.class.getName());
@@ -93,22 +98,38 @@ public class ECCorrelation {
 		}
 	}
 
-	public void printComparison() {
-		Map<Integer,Integer> symm = new HashMap<Integer,Integer>();
+	private String getLabel(String ec, int level) {
+		String[] parts = ec.split("\\.");
+		String label = parts[0];
+		for (int i = 1; i <= level; i++) {
+			if (i >= parts.length) return null; // can happen if the EC number isn't fully specified (in fact, this is common)
+			label += "." + parts[i];
+		}
+		return label;
+	}
+	
+	public void printComparison(int level) {
+		if (level < 0 || level > 3) throw new IllegalArgumentException("Level must be between 0 and 3, inclusive");
+		Set<String> labels = new LinkedHashSet<String>();
+		Map<String,Integer> symm = new HashMap<String,Integer>();
 		for (String ec : symmEcs.values()) {
-			int value = Integer.parseInt(ec.substring(0, 1));
-			StatUtils.plus(symm, value);
+			String label = getLabel(ec, level);
+			if (label == null) continue;
+			StatUtils.plus(symm, label);
+			labels.add(label);
 		}
-		Map<Integer,Integer> asymm = new HashMap<Integer,Integer>();
+		Map<String,Integer> asymm = new HashMap<String,Integer>();
 		for (String ec : asymmEcs.values()) {
-			int value = Integer.parseInt(ec.substring(0, 1));
-			StatUtils.plus(asymm, value);
+			String label = getLabel(ec, level);
+			if (label == null) continue;
+			StatUtils.plus(asymm, label);
+			labels.add(label);
 		}
-		for (int i = 1; i <= 6; i++) {
+		for (String label : labels) {
 			double fSymm = 0, fAsymm = 0;
-			if (symm.containsKey(i)) fSymm = (double) symm.get(new Integer(i)) / (double) symmEcs.size();
-			if (asymm.containsKey(i)) fAsymm = (double) asymm.get(new Integer(i)) / (double) asymmEcs.size();
-			System.out.println(i + "\t" + fSymm + "\t" + fAsymm);
+			if (symm.containsKey(label)) fSymm = (double) symm.get(label);
+			if (asymm.containsKey(label)) fAsymm = (double) asymm.get(label);
+			System.out.println(label + "\t" + StatUtils.formatP(fSymm / (fSymm+fAsymm)) + "\t" + (fSymm+fAsymm));
 		}
 	}
 	
@@ -131,8 +152,15 @@ public class ECCorrelation {
 			return;
 		}
 		ECCorrelation ecs = new ECCorrelation(Results.fromXML(new File(args[0])));
+		System.out.println("============List of EC numbers of domains============");
 		System.out.println(ecs);
-		ecs.printComparison();
+		System.out.println("=====================================================" + StatUtils.NEWLINE);
+		System.out.println("===================EC numbers level 0================");
+		ecs.printComparison(0);
+		System.out.println("=====================================================" + StatUtils.NEWLINE);
+		System.out.println("===================EC numbers level 1================");
+		ecs.printComparison(1);
+		System.out.println("=====================================================" + StatUtils.NEWLINE);
 	}
 
 }

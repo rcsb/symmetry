@@ -71,6 +71,22 @@ public abstract class Grouping {
 		};
 	}
 
+	public static Grouping family() {
+		return new Grouping() {
+			@Override
+			public String group(Result result) {
+				String[] parts = result.getClassification().split("\\.");
+				if (parts.length < 3) throw new IllegalArgumentException("Classification id is invalid for " + result.getScopId());
+				return parts[0] + "." + parts[1] + "." + parts[2] + "." + parts[3];
+			}
+
+			@Override
+			public String toString() {
+				return "family";
+			}
+		};
+	}
+
 	public static Grouping fold() {
 		return new Grouping() {
 			@Override

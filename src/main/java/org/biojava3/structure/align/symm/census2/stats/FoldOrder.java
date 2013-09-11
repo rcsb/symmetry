@@ -1,12 +1,15 @@
 package org.biojava3.structure.align.symm.census2.stats;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.biojava.bio.structure.jama.Matrix;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
@@ -22,6 +25,10 @@ public class FoldOrder {
 
 	public interface ConsensusDecider {
 		int decide(Map<Integer,Integer> orders);
+	}
+
+	public void setConsensusDecider(ConsensusDecider consensusDecider) {
+		this.consensusDecider = consensusDecider;
 	}
 
 	public static final ConsensusDecider MODE_DECIDER = new ConsensusDecider() {
@@ -43,41 +50,68 @@ public class FoldOrder {
 
 	/**
 	 * A {@link CensusDecider} that treats any <em>divisor</em> of an order as potentially being the order itself.
-	 * TODO: Decide increases with a little more basis.
 	 */
-	public static final ConsensusDecider SMART_DECIDER = new ConsensusDecider() {
+	public static class ErrorKernelDecider implements ConsensusDecider {
+
+		private Matrix kernel;
+
+		public ErrorKernelDecider(Matrix kernel) {
+			super();
+			this.kernel = kernel;
+		}
+
 		@Override
 		public int decide(Map<Integer,Integer> countsByOrders) {
-			int[] newCounts = new int[] {0, 0, 0, 0, 0, 0, 0};
+			
+			double[] flows = new double[] {0, 0, 0, 0, 0, 0, 0};
+			
 			for (int i = 2; i <= 8; i++) {
 				for (int j = 2; j <= 8; j++) {
-					/*
-					 * Ex: If i=6 and j=3, say that each j is the square root of an i
-					 */
-					Integer c = countsByOrders.get(j);
-					if (c == null) c = 0;
-					double increase = Math.pow((double) c, (double) j / (double) i);
-//					for (int p = 1; p < i / j; p++) { // make sure we don't do this loop if i = j
-//						increase = Math.log(increase);
-//					}
-					if (i % j == 0) newCounts[i-2] += increase;
+					
+					// the number of states we're allowed to use
+					int m = i / j;
+					
+					// use Chapman–Kolmogorov equation
+					Matrix mStateTransition = kernel;
+					for (int k = 1; k < m; k++) mStateTransition = mStateTransition.times(kernel);
+					Integer count = countsByOrders.get(j);
+					if (count == null) count = 0;
+					double flow = mStateTransition.get(j - 2, i - 2);
+					flows[i-2] += count * flow;
+					
 				}
 			}
-			int maxCount = 0;
+			
+			double maxFlow = 0;
 			int maximizingOrder = 0;
 			for (int i = 2; i <= 8; i++) {
-				int count = newCounts[i-2];
-				if (count > maxCount) {
-					maxCount = count;
+				double flow = flows[i-2];
+				if (flow > maxFlow) {
+					maxFlow = flow;
 					maximizingOrder = i;
 				}
 			}
 			return maximizingOrder;
 		}
-	};
-	
-	private ConsensusDecider consensusDecider = SMART_DECIDER;
-	
+	}
+
+	private static Matrix KERNEL;
+	static {
+		BufferedReader br = null;
+		try {
+			try {
+				br = new BufferedReader(new FileReader("src/main/resources/error_kernel.matrix"));
+				KERNEL = Matrix.read(br);
+			} finally {
+				if (br != null) br.close();
+			}
+		} catch (IOException e) {
+			e.printStackTrace(); // might be ok
+		}
+	}
+
+	private ConsensusDecider consensusDecider = new ErrorKernelDecider(KERNEL);
+
 	/**
 	 * A helper class that can decide the order of a fold based on consensus of the domains.
 	 * 

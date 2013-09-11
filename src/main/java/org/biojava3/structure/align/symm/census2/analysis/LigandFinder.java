@@ -82,7 +82,7 @@ public class LigandFinder {
 
 	public void find(Results census) {
 
-		if (output.exists()) {
+		if (output != null && output.exists()) {
 			try {
 				ligandList = LigandList.fromXml(output);
 			} catch (IOException e) {

@@ -14,12 +14,70 @@ import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 
 /**
- * Tabulate symmetry by order, normalizing by a SCOP category.
+ * Tabulate symmetry by order, where symmetry order is determined by consensus over domains in a SCOP category.
  * 
  * @author dmyerstu
  */
 public class FoldOrder {
 
+	public interface ConsensusDecider {
+		int decide(Map<Integer,Integer> orders);
+	}
+
+	public static final ConsensusDecider MODE_DECIDER = new ConsensusDecider() {
+		@Override
+		public int decide(Map<Integer,Integer> countsByOrders) {
+			int maxCount = 0;
+			int maximizingOrder = 0;
+			for (int i = 2; i <= 8; i++) {
+				Integer count = countsByOrders.get(i);
+				if (count == null) count = 0;
+				if (count > maxCount) {
+					maxCount = count;
+					maximizingOrder = i;
+				}
+			}
+			return maximizingOrder;
+		}
+	};
+
+	/**
+	 * A {@link CensusDecider} that treats any <em>divisor</em> of an order as potentially being the order itself.
+	 * TODO: Decide increases with a little more basis.
+	 */
+	public static final ConsensusDecider SMART_DECIDER = new ConsensusDecider() {
+		@Override
+		public int decide(Map<Integer,Integer> countsByOrders) {
+			int[] newCounts = new int[] {0, 0, 0, 0, 0, 0, 0};
+			for (int i = 2; i <= 8; i++) {
+				for (int j = 2; j <= 8; j++) {
+					/*
+					 * Ex: If i=6 and j=3, say that each j is the square root of an i
+					 */
+					Integer c = countsByOrders.get(j);
+					if (c == null) c = 0;
+					double increase = Math.pow((double) c, (double) j / (double) i);
+//					for (int p = 1; p < i / j; p++) { // make sure we don't do this loop if i = j
+//						increase = Math.log(increase);
+//					}
+					if (i % j == 0) newCounts[i-2] += increase;
+				}
+			}
+			int maxCount = 0;
+			int maximizingOrder = 0;
+			for (int i = 2; i <= 8; i++) {
+				int count = newCounts[i-2];
+				if (count > maxCount) {
+					maxCount = count;
+					maximizingOrder = i;
+				}
+			}
+			return maximizingOrder;
+		}
+	};
+	
+	private ConsensusDecider consensusDecider = SMART_DECIDER;
+	
 	/**
 	 * A helper class that can decide the order of a fold based on consensus of the domains.
 	 * 
@@ -80,17 +138,8 @@ public class FoldOrder {
 				return 1;
 			}
 
-			// otherwise, return the mode order
-			int maxCount = 0;
-			int maximizingOrder = 0;
-			for (int i = 2; i <= 8; i++) {
-				Integer count = ordersMap.get(fold).get(i);
-				if (count == null) count = 0;
-				if (count > maxCount) {
-					maxCount = count;
-					maximizingOrder = i;
-				}
-			}
+			// otherwise return the consensus order
+			int maximizingOrder = consensusDecider.decide(ordersMap.get(fold));
 			assert(maximizingOrder > 0);
 			return maximizingOrder;
 		}

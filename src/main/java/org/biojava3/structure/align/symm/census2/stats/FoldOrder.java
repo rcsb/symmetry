@@ -34,29 +34,23 @@ public class FoldOrder {
 
 		public void add(Result result) {
 
+			if (result.getAlignment() == null) return;
+
 			String fold = normalizer.group(result);
 
 			StatUtils.plus(counts, fold);
-			
-			if (result.getAlignment() != null) {
-				StatUtils.plusF(tmScoreMap, fold, result.getAlignment().getTmScore());
-			}
 
-			int order = 1;
-			if (result.getOrder() != null) {
-				order = result.getOrder();
-				if (order < 0) order = 1; // it would be unfair to decrease the score
-				StatUtils.plus(hasOrderMap, fold, order > 1 ? 1 : 0);
-			}
+			StatUtils.plusF(tmScoreMap, fold, result.getAlignment().getTmScore());
+
+			// also note it would be unfair to decrease the hasOrder score with -1
+			Integer order = result.getOrder();
+			if (order == null || result.getOrder() < 2) order = 1;
+			StatUtils.plus(hasOrderMap, fold, order > 1 ? 1 : 0);
 
 			if (ordersMap.get(fold) == null) {
 				ordersMap.put(fold, new HashMap<Integer,Integer>(7));
 			}
-			if (result.getAlignment() != null && result.getAlignment().getTmScore() >= tmScoreCutoff && order > 1) {
-				StatUtils.plus(ordersMap.get(fold), order);
-			} else {
-//				StatUtils.plus(ordersMap.get(fold), 1);
-			}
+			StatUtils.plus(ordersMap.get(fold), order);
 
 		}
 
@@ -97,6 +91,7 @@ public class FoldOrder {
 					maximizingOrder = i;
 				}
 			}
+			assert(maximizingOrder > 0);
 			return maximizingOrder;
 		}
 
@@ -126,7 +121,7 @@ public class FoldOrder {
 	// just always call this "fold" in the code
 	private Grouping normalizer = Grouping.fold();
 
-	private double orderCutoff = 0.00;
+	private double orderCutoff = 0.5;
 
 	private double tmScoreCutoff = 0.4;
 
@@ -178,7 +173,7 @@ public class FoldOrder {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("order\tN-folds" + StatUtils.NEWLINE);
+		sb.append("order\tN " + normalizer + StatUtils.NEWLINE);
 		for (Map.Entry<Integer, Integer> entry : nFoldsByOrder.entrySet()) {
 			sb.append(entry.getKey() + "\t" + entry.getValue() + StatUtils.NEWLINE);
 		}

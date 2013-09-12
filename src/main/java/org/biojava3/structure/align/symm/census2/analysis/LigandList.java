@@ -56,14 +56,6 @@ public class LigandList implements Serializable {
 			FileInputStream fis = new FileInputStream(file);
 			LigandList ligands = (LigandList) un.unmarshal(fis);
 
-			// due to a side effect by JAXB
-			Map<String, StructureLigands> newData = new HashMap<String, StructureLigands>();
-			for (Map.Entry<String, StructureLigands> entry : newData.entrySet()) {
-				if (entry != null)
-					newData.put(entry.getKey(), entry.getValue());
-			}
-			ligands.setData(newData);
-
 			return ligands;
 
 		} catch (JAXBException e) {

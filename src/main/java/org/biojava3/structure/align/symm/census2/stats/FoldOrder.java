@@ -65,18 +65,32 @@ public class FoldOrder {
 			
 			double[] flows = new double[] {0, 0, 0, 0, 0, 0, 0};
 			
-			for (int i = 2; i <= 8; i++) {
-				for (int j = 2; j <= 8; j++) {
+			for (int i = 2; i <= 8; i++) { // correct
+				for (int j = 2; j <= 8; j++) { // putative
 					
 					// the number of states we're allowed to use
 					int m = i / j;
 					
-					// use Chapman–Kolmogorov equation
+					/*
+					 *  use Chapman–Kolmogorov equation to find m-state transition kernel
+					 *  We want the m-state transition because we're only concerned with flow from i to j,
+					 *  which we know requires EXACTLY m steps
+					 */
 					Matrix mStateTransition = kernel;
 					for (int k = 1; k < m; k++) mStateTransition = mStateTransition.times(kernel);
+					
+					// get the number of "j"s, our putative actual "i"s
 					Integer count = countsByOrders.get(j);
 					if (count == null) count = 0;
-					double flow = mStateTransition.get(j - 2, i - 2);
+					
+					/*
+					 * We want to make "putative" flow into "correct"
+					 * Ex: Matrix[4,2] = 0.1, the probability we got 2 instead of 4
+					 * Then we're using mStateTransition[4, 2] = 0.1
+					 * And thus we allow 0.1 * count to flow from 2 into 4
+					 * So this is the correct indexing
+					 */
+					double flow = mStateTransition.get(i - 2, j - 2);
 					flows[i-2] += count * flow;
 					
 				}

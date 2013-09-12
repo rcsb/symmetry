@@ -106,8 +106,17 @@ public class ErrorKernel {
 				}
 
 			} else if (order % knownOrder == 0) {
-				// okay, this case is weird, but we need to take it into account
-				// TODO I'm not sure what to do with negative numbers though
+				/*
+				 * This case is weird, but we need to take it into account
+				 * Fortunately, we only have 5 cases of this
+				 * A transition from 4 to 2 is precisely equivalent to an inverse transition from 2 to 4
+				 */
+				int divisor = order / knownOrder;
+				// divisor can't be 1 thanks to above clause
+				List<Integer> primeFactors = Primes.primeFactors(divisor);
+				for (int primeFactor : primeFactors) {
+					singleStepMistakeRates[primeFactor]--;
+				}
 			}
 
 		}

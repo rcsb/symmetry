@@ -3,12 +3,15 @@ package org.biojava3.structure.align.symm.census2.analysis;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +20,7 @@ import org.biojava.bio.structure.rcsb.RCSBDescription;
 import org.biojava.bio.structure.rcsb.RCSBDescriptionFactory;
 import org.biojava.bio.structure.rcsb.RCSBPolymer;
 import org.biojava.bio.structure.scop.ScopDatabase;
+import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.Result;
@@ -35,7 +39,7 @@ public class ECCorrelation {
 
 	private Map<String,String> symmEcs = new HashMap<String,String>();
 	private Map<String,String> asymmEcs = new HashMap<String,String>();
-	
+
 	public ECCorrelation(Results census) {
 
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
@@ -45,7 +49,7 @@ public class ECCorrelation {
 		for (Result result : census.getData()) {
 
 			try {
-				
+
 				String scopId = result.getScopId();
 				ScopDomain domain = scop.getDomainByScopID(scopId);
 				if (domain == null) {
@@ -76,20 +80,25 @@ public class ECCorrelation {
 					String ec = polymer.getEnzClass();
 					if (ec != null) ecs.add(ec);
 				}
-				
+
 				if (ecs.size() == 1) {
+
+					String ec = ecs.first();
+
 					if (sig.isSignificant(result)) {
-						symmEcs.put(scopId, ecs.first());
+						symmEcs.put(scopId, ec);
 					} else {
-						asymmEcs.put(scopId, ecs.first());
+						asymmEcs.put(scopId, ec);
 					}
+
 				} else if (ecs.size() > 1) {
 					logger.info("Found different EC numbers for " + domain.getScopId()); // technically, this doesn't mean anything's wrong
 				}
 
 				if (i > 0 && i % 10000 == 0) logger.debug("Working on #" + i);
-				
+
 			} catch (RuntimeException e) {
+				e.printStackTrace();
 				logger.error(e);
 			} finally {
 				i++;
@@ -107,17 +116,36 @@ public class ECCorrelation {
 		}
 		return label;
 	}
-	
-	public void printComparison(int level) {
+
+	public void printComparison(int level, int nExamples) {
+
+		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
+
 		if (level < 0 || level > 3) throw new IllegalArgumentException("Level must be between 0 and 3, inclusive");
 		Set<String> labels = new LinkedHashSet<String>();
+
+		final Map<String,Map<String,Integer>> foldsInEcs = new HashMap<String,Map<String,Integer>>();
+
 		Map<String,Integer> symm = new HashMap<String,Integer>();
-		for (String ec : symmEcs.values()) {
+		for (Map.Entry<String,String> entry : symmEcs.entrySet()) {
+
+			final String scopId = entry.getKey();
+			final String ec = entry.getValue();
+
 			String label = getLabel(ec, level);
 			if (label == null) continue;
+
+			// record the fold
+			if (!foldsInEcs.containsKey(label)) foldsInEcs.put(label, new HashMap<String,Integer>());
+			ScopDomain domain = scop.getDomainByScopID(scopId);
+			ScopDescription desc = scop.getScopDescriptionBySunid(domain.getFoldId());
+			String fold = desc.getName();
+			StatUtils.plus(foldsInEcs.get(label), fold);
+
 			StatUtils.plus(symm, label);
 			labels.add(label);
 		}
+
 		Map<String,Integer> asymm = new HashMap<String,Integer>();
 		for (String ec : asymmEcs.values()) {
 			String label = getLabel(ec, level);
@@ -125,14 +153,33 @@ public class ECCorrelation {
 			StatUtils.plus(asymm, label);
 			labels.add(label);
 		}
+
 		for (String label : labels) {
 			double fSymm = 0, fAsymm = 0;
 			if (symm.containsKey(label)) fSymm = (double) symm.get(label);
 			if (asymm.containsKey(label)) fAsymm = (double) asymm.get(label);
-			System.out.println(label + "\t" + StatUtils.formatP(fSymm / (fSymm+fAsymm)) + "\t" + (fSymm+fAsymm));
+			System.out.print(label + "\t" + StatUtils.formatP(fSymm / (fSymm+fAsymm)) + "\t" + (fSymm+fAsymm));
+			final Map<String,Integer> map = foldsInEcs.get(label);
+			if (map != null) {
+				Comparator<String> comp = new Comparator<String>() {
+					@Override
+					public int compare(String o1, String o2) {
+						if (!map.containsKey(o1) || !map.containsKey(o2)) return 0;
+						return map.get(o2).compareTo(map.get(o1));
+					}
+				};
+				SortedMap<String,Integer> examples = new TreeMap<String,Integer>(comp);
+				examples.putAll(map);
+				int i = 0;
+				for (Map.Entry<String,Integer> entry : examples.entrySet()) {
+					System.out.print("\t" + entry.getKey());
+					i++;
+					if (i > nExamples) break;
+				}
+			}
 		}
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -141,7 +188,7 @@ public class ECCorrelation {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * @param args
 	 * @throws IOException
@@ -156,10 +203,10 @@ public class ECCorrelation {
 		System.out.println(ecs);
 		System.out.println("=====================================================" + StatUtils.NEWLINE);
 		System.out.println("===================EC numbers level 0================");
-		ecs.printComparison(0);
+		ecs.printComparison(0, 10);
 		System.out.println("=====================================================" + StatUtils.NEWLINE);
 		System.out.println("===================EC numbers level 1================");
-		ecs.printComparison(1);
+		ecs.printComparison(1, 10);
 		System.out.println("=====================================================" + StatUtils.NEWLINE);
 	}
 

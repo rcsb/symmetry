@@ -15,6 +15,10 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
 import org.rcsb.fatcat.server.PdbChainKey;
 
+/**
+ * @deprecated Use {@link census2.Census} instead.
+ */
+@Deprecated
 public class ScanDBForSymmetry {
 	public static void main(String[] args){
 		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();

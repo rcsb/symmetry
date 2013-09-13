@@ -86,6 +86,11 @@ public class ECCorrelation {
 		int i = 0;
 		for (Result result : census.getData()) {
 
+			if (i % 10 != 0) {
+				i++;
+				continue;
+			}
+			
 			try {
 
 				String scopId = result.getScopId();
@@ -133,7 +138,7 @@ public class ECCorrelation {
 					logger.info("Found different EC numbers for " + domain.getScopId()); // technically, this doesn't mean anything's wrong
 				}
 
-				if (i > 0 && i % 1000 == 0) logger.debug("Working on #" + i);
+				if (i > 0 && i % 1 == 0) logger.debug("Working on #" + i);
 
 			} catch (RuntimeException e) {
 				e.printStackTrace();
@@ -195,7 +200,7 @@ public class ECCorrelation {
 			if (!symmFoldsByEcs.containsKey(label)) symmFoldsByEcs.put(label, new HashMap<String,Integer>());
 			ScopDomain domain = scop.getDomainByScopID(scopId);
 			ScopDescription desc = scop.getScopDescriptionBySunid(domain.getFoldId());
-			String fold = desc.getName();
+			String fold = desc.getClassificationId();
 			StatUtils.plus(symmFoldsByEcs.get(label), fold);
 
 			StatUtils.plus(nSymmDomainsByEc, label);

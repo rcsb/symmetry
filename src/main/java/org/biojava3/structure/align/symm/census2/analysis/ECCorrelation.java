@@ -85,11 +85,6 @@ public class ECCorrelation {
 
 		int i = 0;
 		for (Result result : census.getData()) {
-
-			if (i % 10 != 0) {
-				i++;
-				continue;
-			}
 			
 			try {
 

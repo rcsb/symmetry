@@ -1,8 +1,8 @@
 package org.biojava3.structure.align.symm.census2.analysis;
 
-import java.io.BufferedWriter;
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -43,8 +43,43 @@ public class ECCorrelation {
 	private Map<String,String> ecsBySymmDomain = new HashMap<String,String>();
 	private Map<String,String> ecsByAsymmDomain = new HashMap<String,String>();
 
-	public ECCorrelation(Results census) {
+	public static ECCorrelation fromTabbed(File file) throws IOException {
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(file));
+			return fromTabbed(br);
+		} finally {
+			if (br != null) br.close();
+		}
+	}
 
+	public static ECCorrelation fromTabbed(BufferedReader br) throws IOException {
+		ECCorrelation corr = new ECCorrelation();
+		String line = "";
+		boolean onSymm = true;
+		while ((line = br.readLine()) != null) {
+			if (line.startsWith("<")) return null; // means XML
+			if (line.startsWith("=")) {
+				onSymm = false;
+				continue;
+			}
+			String[] parts = line.split("\t");
+			if (onSymm) {
+				corr.ecsBySymmDomain.put(parts[0], parts[1]);
+			} else {
+				corr.ecsByAsymmDomain.put(parts[0], parts[1]);
+			}
+		}
+		return corr;
+	}
+
+	public static ECCorrelation rebuild(File file) throws IOException {
+		return rebuild(Results.fromXML(file));
+	}
+
+	public static ECCorrelation rebuild(Results census) {
+
+		ECCorrelation corr = new ECCorrelation();
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 		Significance sig = SignificanceFactory.rotationallySymmetricSmart();
 
@@ -89,9 +124,9 @@ public class ECCorrelation {
 					String ec = ecs.first();
 
 					if (sig.isSignificant(result)) {
-						ecsBySymmDomain.put(scopId, ec);
+						corr.ecsBySymmDomain.put(scopId, ec);
 					} else {
-						ecsByAsymmDomain.put(scopId, ec);
+						corr.ecsByAsymmDomain.put(scopId, ec);
 					}
 
 				} else if (ecs.size() > 1) {
@@ -108,6 +143,9 @@ public class ECCorrelation {
 			}
 
 		}
+		
+		return corr;
+		
 	}
 
 	/**
@@ -227,7 +265,7 @@ public class ECCorrelation {
 		for (Map.Entry<String,String> entry : ecsBySymmDomain.entrySet()) {
 			sb.append(entry.getKey() + "\t" + entry.getValue() + StatUtils.NEWLINE);
 		}
-		sb.append("---------------------------------------------------" + StatUtils.NEWLINE);
+		sb.append("=============================================" + StatUtils.NEWLINE);
 		for (Map.Entry<String,String> entry : ecsByAsymmDomain.entrySet()) {
 			sb.append(entry.getKey() + "\t" + entry.getValue() + StatUtils.NEWLINE);
 		}
@@ -240,10 +278,13 @@ public class ECCorrelation {
 	 */
 	public static void main(String[] args) throws IOException {
 		if (args.length < 1 || args.length > 2) {
-			System.err.println("Usage: " + ECCorrelation.class.getSimpleName() + " census-file.xml [ecs-output-file.tsv]");
+			System.err.println("Usage: " + ECCorrelation.class.getSimpleName() + " census-file.xml|ecs-input-file.tsv [ecs-output-file.tsv]");
 			return;
 		}
-		ECCorrelation ecs = new ECCorrelation(Results.fromXML(new File(args[0])));
+		ECCorrelation ecs = ECCorrelation.fromTabbed(new File(args[0]));
+		if (ecs == null) {
+			ecs = ECCorrelation.rebuild(new File(args[0]));
+		}
 		System.out.println("============List of EC numbers of domains============");
 		System.out.println(ecs.toString());
 		if (args.length > 1) {

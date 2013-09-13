@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.math3.primes.Primes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
@@ -45,6 +47,8 @@ import org.biojava3.structure.utils.SymmetryTools;
  */
 public class ErrorKernel {
 
+	private static final Logger logger = LogManager.getLogger(ErrorKernel.class.getName());
+
 	public static void main(String[] args) throws IOException {
 		if (args.length < 1 || args.length > 2) {
 			System.err.println("Usage: " + ErrorKernel.class.getSimpleName()
@@ -54,10 +58,23 @@ public class ErrorKernel {
 		Sample sample = Sample.fromXML(new File(args[0]));
 		ErrorKernel kernel = new ErrorKernel(sample);
 		System.out.println(kernel);
+		System.out.println(kernel.vectorToString());
 		if (args.length > 1) {
 			kernel.print(new File(args[1]));
 		}
 
+	}
+
+	/**
+	 * This is our function that maps divisors to probabilities. It is
+	 * indexed starting at divisor=1. The transition of a composite number greater than 1
+	 * is defined to be zero (otherwise we'd be including multi-state transition
+	 * probabilities).
+	 */
+	private int[] singleStepMistakeRates = new int[] {0, 0, 0, 0, 0};
+
+	public int[] getVector() {
+		return singleStepMistakeRates;
 	}
 
 	private Matrix kernel;
@@ -65,14 +82,6 @@ public class ErrorKernel {
 	private Significance significance = SignificanceFactory.rotationallySymmetricSmart();
 
 	public ErrorKernel(Sample sample) {
-
-		/**
-		 * This is our function that maps divisors to probabilities. It is
-		 * indexed starting at divisor=2. The transition of a composite number greater than 1
-		 * is defined to be zero (otherwise we'd be including multi-state transition
-		 * probabilities).
-		 */
-		int[] singleStepMistakeRates = new int[] { 0, 0, 0, 0, 0 };
 
 		Map<Integer, Integer> knownOrderCounts = new HashMap<Integer, Integer>();
 		for (Case c : sample.getData()) {
@@ -99,10 +108,14 @@ public class ErrorKernel {
 				if (divisor > 1) { // primeFactors fails when given 1
 					List<Integer> primeFactors = Primes.primeFactors(divisor);
 					for (int primeFactor : primeFactors) {
-						singleStepMistakeRates[primeFactor]++;
+						try {
+							singleStepMistakeRates[primeFactor-1]++;
+						} catch (ArrayIndexOutOfBoundsException e) {
+							throw new RuntimeException("Got prime factor " + primeFactor + ", which is too big for our vector");
+						}
 					}
 				} else {
-					singleStepMistakeRates[1]++;
+					singleStepMistakeRates[0]++;
 				}
 
 			} else if (order % knownOrder == 0) {
@@ -115,7 +128,7 @@ public class ErrorKernel {
 				// divisor can't be 1 thanks to above clause
 				List<Integer> primeFactors = Primes.primeFactors(divisor);
 				for (int primeFactor : primeFactors) {
-					singleStepMistakeRates[primeFactor]--;
+					singleStepMistakeRates[primeFactor-1]--;
 				}
 			}
 
@@ -129,7 +142,12 @@ public class ErrorKernel {
 				int order = j + 2;
 				if (knownOrder % order == 0) {
 					int divisor = knownOrder / order;
-					double flow = singleStepMistakeRates[divisor];
+					double flow = 0;
+					if (divisor < singleStepMistakeRates.length-1) {
+						flow = singleStepMistakeRates[divisor-1];
+					} else if (Primes.isPrime(divisor)) { // we should always include primes
+						logger.error("Divisior " + divisor + " out of range");
+					}
 					kernel.set(i, j, flow);
 					rowSum += flow;
 				}
@@ -139,6 +157,17 @@ public class ErrorKernel {
 			}
 		}
 
+	}
+	
+	public String vectorToString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (int i = 0; i < singleStepMistakeRates.length; i++) {
+			sb.append(singleStepMistakeRates[i]);
+			if (i < singleStepMistakeRates.length - 1) sb.append(" ");
+		}
+		sb.append("]" + StatUtils.NEWLINE);
+		return sb.toString();
 	}
 
 	public Matrix getKernel() {

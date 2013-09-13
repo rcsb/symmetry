@@ -15,6 +15,8 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
+import org.biojava3.structure.align.symm.census2.Significance;
+import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * Tabulate symmetry by order, where symmetry order is determined by consensus over domains in a SCOP category.
@@ -69,15 +71,15 @@ public class FoldOrder {
 				for (int j = 2; j <= 8; j++) { // putative
 					
 					// the number of states we're allowed to use
-					int m = i / j;
+					int m = i / j - 1;
 					
 					/*
 					 *  use Chapman–Kolmogorov equation to find m-state transition kernel
 					 *  We want the m-state transition because we're only concerned with flow from i to j,
 					 *  which we know requires EXACTLY m steps
 					 */
-					Matrix mStateTransition = kernel;
-					for (int k = 1; k < m; k++) mStateTransition = mStateTransition.times(kernel);
+					Matrix mStateTransition = Matrix.identity(7, 7);
+					for (int k = 0; k < m; k++) mStateTransition = mStateTransition.times(kernel);
 					
 					// get the number of "j"s, our putative actual "i"s
 					Integer count = countsByOrders.get(j);
@@ -138,6 +140,8 @@ public class FoldOrder {
 		private Map<String, Float> tmScoreMap = new HashMap<String, Float>();
 		private Map<String, Integer> counts = new HashMap<String, Integer>();
 
+		private Significance sig = SignificanceFactory.rotationallySymmetricSmart();
+		
 		public void add(Result result) {
 
 			if (result.getAlignment() == null) return;
@@ -153,6 +157,9 @@ public class FoldOrder {
 			if (order == null || result.getOrder() < 2) order = 1;
 			StatUtils.plus(hasOrderMap, fold, order > 1 ? 1 : 0);
 
+			// do this AFTER we do hasOrderMap, but before ordersMap
+//			if (!sig.isSignificant(result)) order = 1;
+			
 			if (ordersMap.get(fold) == null) {
 				ordersMap.put(fold, new HashMap<Integer,Integer>(7));
 			}
@@ -175,6 +182,7 @@ public class FoldOrder {
 		public int getConsensusOrder(String fold) {
 
 			// if asymmetric, return 1
+			if (!counts.containsKey(fold)) return 1;
 			int n = counts.get(fold);
 			Float tmScore = tmScoreMap.get(fold);
 			if (tmScore == null) tmScore = 0.0f;

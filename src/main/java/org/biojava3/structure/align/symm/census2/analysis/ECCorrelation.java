@@ -1,7 +1,10 @@
 package org.biojava3.structure.align.symm.census2.analysis;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -30,15 +33,15 @@ import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 import org.biojava3.structure.align.symm.census2.stats.StatUtils;
 
 /**
- * Classify symmetry by Enzyme Classification.
+ * Classify symmetry by Enzyme Commission number.
  * @author dmyerstu
  */
 public class ECCorrelation {
 
 	private static final Logger logger = LogManager.getLogger(ECCorrelation.class.getName());
 
-	private Map<String,String> symmEcs = new HashMap<String,String>();
-	private Map<String,String> asymmEcs = new HashMap<String,String>();
+	private Map<String,String> ecsBySymmDomain = new HashMap<String,String>();
+	private Map<String,String> ecsByAsymmDomain = new HashMap<String,String>();
 
 	public ECCorrelation(Results census) {
 
@@ -86,16 +89,16 @@ public class ECCorrelation {
 					String ec = ecs.first();
 
 					if (sig.isSignificant(result)) {
-						symmEcs.put(scopId, ec);
+						ecsBySymmDomain.put(scopId, ec);
 					} else {
-						asymmEcs.put(scopId, ec);
+						ecsByAsymmDomain.put(scopId, ec);
 					}
 
 				} else if (ecs.size() > 1) {
 					logger.info("Found different EC numbers for " + domain.getScopId()); // technically, this doesn't mean anything's wrong
 				}
 
-				if (i > 0 && i % 10000 == 0) logger.debug("Working on #" + i);
+				if (i > 0 && i % 1000 == 0) logger.debug("Working on #" + i);
 
 			} catch (RuntimeException e) {
 				e.printStackTrace();
@@ -107,27 +110,42 @@ public class ECCorrelation {
 		}
 	}
 
+	/**
+	 * 
+	 * @param ec
+	 * @param level
+	 * @return
+	 */
 	private String getLabel(String ec, int level) {
 		String[] parts = ec.split("\\.");
 		String label = parts[0];
 		for (int i = 1; i <= level; i++) {
-			if (i >= parts.length) return null; // can happen if the EC number isn't fully specified (in fact, this is common)
+			// this can happen if the EC number isn't fully specified (in fact, this is common)
+			if (i >= parts.length) return null;
 			label += "." + parts[i];
 		}
 		return label;
 	}
 
-	public void printComparison(int level, int nExamples) {
+	/**
+	 * Prints a comparison between symmetric and asymmetric results for each EC.
+	 * @param level The depth of the EC: 0 for top-level and 3 for 3rd-tier
+	 * @param maxExamples The maximum number of example folds to list; example folds are sorted from most prevalent to least
+	 */
+	public void printComparison(int level, int maxExamples) {
 
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 
 		if (level < 0 || level > 3) throw new IllegalArgumentException("Level must be between 0 and 3, inclusive");
-		Set<String> labels = new LinkedHashSet<String>();
 
-		final Map<String,Map<String,Integer>> foldsInEcs = new HashMap<String,Map<String,Integer>>();
-
-		Map<String,Integer> symm = new HashMap<String,Integer>();
-		for (Map.Entry<String,String> entry : symmEcs.entrySet()) {
+		/*
+		 * build a map of the number of symmetric domains by EC
+		 * also record which folds each EC includes, and the number of times that fold is used
+		 */
+		Set<String> labels = new LinkedHashSet<String>(); // these are the parts of the ECs we care about
+		Map<String,Integer> nSymmDomainsByEc = new HashMap<String,Integer>();
+		final Map<String,Map<String,Integer>> symmFoldsByEcs = new HashMap<String,Map<String,Integer>>();
+		for (Map.Entry<String,String> entry : ecsBySymmDomain.entrySet()) {
 
 			final String scopId = entry.getKey();
 			final String ec = entry.getValue();
@@ -136,55 +154,82 @@ public class ECCorrelation {
 			if (label == null) continue;
 
 			// record the fold
-			if (!foldsInEcs.containsKey(label)) foldsInEcs.put(label, new HashMap<String,Integer>());
+			if (!symmFoldsByEcs.containsKey(label)) symmFoldsByEcs.put(label, new HashMap<String,Integer>());
 			ScopDomain domain = scop.getDomainByScopID(scopId);
 			ScopDescription desc = scop.getScopDescriptionBySunid(domain.getFoldId());
 			String fold = desc.getName();
-			StatUtils.plus(foldsInEcs.get(label), fold);
+			StatUtils.plus(symmFoldsByEcs.get(label), fold);
 
-			StatUtils.plus(symm, label);
+			StatUtils.plus(nSymmDomainsByEc, label);
 			labels.add(label);
 		}
 
-		Map<String,Integer> asymm = new HashMap<String,Integer>();
-		for (String ec : asymmEcs.values()) {
+		/*
+		 * build a map of the number of asymmetric domains by EC
+		 * in this case we don't care about the folds
+		 */
+		Map<String,Integer> nAsymmDomainsByEc = new HashMap<String,Integer>();
+		for (String ec : ecsByAsymmDomain.values()) {
 			String label = getLabel(ec, level);
 			if (label == null) continue;
-			StatUtils.plus(asymm, label);
+			StatUtils.plus(nAsymmDomainsByEc, label);
 			labels.add(label);
 		}
 
+		/*
+		 * now print the results
+		 */
 		for (String label : labels) {
-			double fSymm = 0, fAsymm = 0;
-			if (symm.containsKey(label)) fSymm = (double) symm.get(label);
-			if (asymm.containsKey(label)) fAsymm = (double) asymm.get(label);
-			System.out.print(label + "\t" + StatUtils.formatP(fSymm / (fSymm+fAsymm)) + "\t" + (fSymm+fAsymm));
-			final Map<String,Integer> map = foldsInEcs.get(label);
-			if (map != null) {
-				Comparator<String> comp = new Comparator<String>() {
-					@Override
-					public int compare(String o1, String o2) {
-						if (!map.containsKey(o1) || !map.containsKey(o2)) return 0;
-						return map.get(o2).compareTo(map.get(o1));
+
+			// print basic stats: % symm domains and number of domains
+			double fractionSymm = 0, fractionAsymm = 0;
+			if (nSymmDomainsByEc.containsKey(label)) fractionSymm = (double) nSymmDomainsByEc.get(label);
+			if (nAsymmDomainsByEc.containsKey(label)) fractionAsymm = (double) nAsymmDomainsByEc.get(label);
+			System.out.print(label + "\t" + StatUtils.formatP(fractionSymm / (fractionSymm+fractionAsymm)) + "\t" + (fractionSymm+fractionAsymm));
+
+			/*
+			 * now we want to list example domains
+			 * for this, we want the top most common folds
+			 * so we need a new map sorted by values
+			 */
+			if (fractionSymm > 0) {
+				final Map<String,Integer> domainCountByFold = symmFoldsByEcs.get(label);
+				System.out.print("\t" + domainCountByFold.size()); // print out the number of folds
+
+				if (domainCountByFold != null) {
+					Comparator<String> nDomainsInFoldComp = new Comparator<String>() {
+						@Override
+						public int compare(String o1, String o2) {
+							if (!domainCountByFold.containsKey(o1) || !domainCountByFold.containsKey(o2)) return 0;
+							return domainCountByFold.get(o2).compareTo(domainCountByFold.get(o1));
+						}
+					};
+					SortedMap<String,Integer> sortedFoldExamples = new TreeMap<String,Integer>(nDomainsInFoldComp);
+					sortedFoldExamples.putAll(domainCountByFold);
+
+					// now we have some examples, so we can print them out
+					int i = 0;
+					for (Map.Entry<String,Integer> entry : sortedFoldExamples.entrySet()) {
+						System.out.print("\t" + entry.getKey());
+						i++;
+						if (i > maxExamples) break;
 					}
-				};
-				SortedMap<String,Integer> examples = new TreeMap<String,Integer>(comp);
-				examples.putAll(map);
-				int i = 0;
-				for (Map.Entry<String,Integer> entry : examples.entrySet()) {
-					System.out.print("\t" + entry.getKey());
-					i++;
-					if (i > nExamples) break;
+
 				}
 			}
+			System.out.println(); // we're done with this EC
 		}
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		for (Map.Entry<String,String> entry : symmEcs.entrySet()) {
-			System.out.println(entry.getKey() + "\t" + entry.getValue());
+		for (Map.Entry<String,String> entry : ecsBySymmDomain.entrySet()) {
+			sb.append(entry.getKey() + "\t" + entry.getValue() + StatUtils.NEWLINE);
+		}
+		sb.append("---------------------------------------------------" + StatUtils.NEWLINE);
+		for (Map.Entry<String,String> entry : ecsByAsymmDomain.entrySet()) {
+			sb.append(entry.getKey() + "\t" + entry.getValue() + StatUtils.NEWLINE);
 		}
 		return sb.toString();
 	}
@@ -194,13 +239,24 @@ public class ECCorrelation {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		if (args.length != 1) {
-			System.err.println("Usage: " + ECCorrelation.class.getSimpleName() + " census-file.xml");
+		if (args.length < 1 || args.length > 2) {
+			System.err.println("Usage: " + ECCorrelation.class.getSimpleName() + " census-file.xml [ecs-output-file.tsv]");
 			return;
 		}
 		ECCorrelation ecs = new ECCorrelation(Results.fromXML(new File(args[0])));
 		System.out.println("============List of EC numbers of domains============");
-		System.out.println(ecs);
+		System.out.println(ecs.toString());
+		if (args.length > 1) {
+			PrintWriter pw = null;
+			try {
+				pw = new PrintWriter(new File(args[1]), "UTF-8");
+				pw.print(ecs.toString());
+			} catch (IOException e) {
+				logger.error("Couldn't print to " + args[1]);
+			} finally {
+				if (pw != null) pw.close();
+			}
+		}
 		System.out.println("=====================================================" + StatUtils.NEWLINE);
 		System.out.println("===================EC numbers level 0================");
 		ecs.printComparison(0, 10);

@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,12 +35,14 @@ import org.biojava3.structure.align.symm.census2.stats.StatUtils;
 
 /**
  * Classify symmetry by Enzyme Commission number.
+ * As a warning, this class is poorly designed.
  * @author dmyerstu
  */
 public class ECCorrelation {
 
 	private static final Logger logger = LogManager.getLogger(ECCorrelation.class.getName());
 
+	private Set<String> ecsByUnknownDomain = new HashSet<String>();
 	private Map<String,String> ecsBySymmDomain = new HashMap<String,String>();
 	private Map<String,String> ecsByAsymmDomain = new HashMap<String,String>();
 
@@ -64,31 +67,52 @@ public class ECCorrelation {
 				continue;
 			}
 			String[] parts = line.split("\t");
-			if (onSymm) {
-				corr.ecsBySymmDomain.put(parts[0], parts[1]);
+			if (parts[1] != "-") {
+				if (onSymm) {
+					corr.ecsBySymmDomain.put(parts[0], parts[1]);
+				} else {
+					corr.ecsByAsymmDomain.put(parts[0], parts[1]);
+				}
 			} else {
-				corr.ecsByAsymmDomain.put(parts[0], parts[1]);
+				corr.ecsByUnknownDomain.add(parts[0]);
 			}
 		}
 		return corr;
 	}
 
-	public static ECCorrelation rebuild(File file) throws IOException {
-		return rebuild(Results.fromXML(file));
+	public void rebuild(File file, File output) throws IOException {
+		rebuild(Results.fromXML(file), output);
 	}
 
-	public static ECCorrelation rebuild(Results census) {
+	private void print(File output) {
+		PrintWriter pw = null;
+		try {
+			pw = new PrintWriter(output);
+			pw.print(toString());
+			pw.flush();
+		} catch (IOException e) {
+			logger.error("Couldn't print to " + output);
+		} finally {
+			if (pw != null) pw.close();
+		}
+	}
+	
+	public void rebuild(Results census, File output) {
 
-		ECCorrelation corr = new ECCorrelation();
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 		Significance sig = SignificanceFactory.rotationallySymmetricSmart();
 
 		int i = 0;
 		for (Result result : census.getData()) {
-			
+
 			try {
 
 				String scopId = result.getScopId();
+
+				if (this.ecsByAsymmDomain.containsKey(scopId) || this.ecsBySymmDomain.containsKey(scopId) || ecsByUnknownDomain.contains(scopId)) {
+					continue;
+				}
+
 				ScopDomain domain = scop.getDomainByScopID(scopId);
 				if (domain == null) {
 					logger.error(result.getScopId() + " is null");
@@ -124,16 +148,22 @@ public class ECCorrelation {
 					String ec = ecs.first();
 
 					if (sig.isSignificant(result)) {
-						corr.ecsBySymmDomain.put(scopId, ec);
+						ecsBySymmDomain.put(scopId, ec);
 					} else {
-						corr.ecsByAsymmDomain.put(scopId, ec);
+						ecsByAsymmDomain.put(scopId, ec);
 					}
 
 				} else if (ecs.size() > 1) {
 					logger.info("Found different EC numbers for " + domain.getScopId()); // technically, this doesn't mean anything's wrong
+				} else {
+					logger.debug("Didn't find EC for " + scopId);
+					ecsByUnknownDomain.add(scopId);
 				}
 
-				if (i > 0 && i % 1 == 0) logger.debug("Working on #" + i);
+				if (i > 0 && i % 100 == 0) {
+					print(output);
+					logger.debug("Working on #" + i);
+				}
 
 			} catch (RuntimeException e) {
 				e.printStackTrace();
@@ -143,9 +173,7 @@ public class ECCorrelation {
 			}
 
 		}
-		
-		return corr;
-		
+
 	}
 
 	/**
@@ -248,7 +276,8 @@ public class ECCorrelation {
 					// now we have some examples, so we can print them out
 					int i = 0;
 					for (Map.Entry<String,Integer> entry : sortedFoldExamples.entrySet()) {
-						System.out.print("\t" + entry.getKey());
+						String percentageOfEc = StatUtils.formatP(((double) entry.getValue()) / nSymmDomainsByEc.get(label));
+						System.out.print("\t" + entry.getKey() + "(" + percentageOfEc + ")");
 						i++;
 						if (i > maxExamples) break;
 					}
@@ -269,6 +298,9 @@ public class ECCorrelation {
 		for (Map.Entry<String,String> entry : ecsByAsymmDomain.entrySet()) {
 			sb.append(entry.getKey() + "\t" + entry.getValue() + StatUtils.NEWLINE);
 		}
+		for (String scopId : ecsByUnknownDomain) {
+			sb.append(scopId + "\t-" + StatUtils.NEWLINE);
+		}
 		return sb.toString();
 	}
 
@@ -277,27 +309,20 @@ public class ECCorrelation {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		if (args.length < 1 || args.length > 2) {
-			System.err.println("Usage: " + ECCorrelation.class.getSimpleName() + " census-file.xml|ecs-input-file.tsv [ecs-output-file.tsv]");
+		if (args.length != 3) {
+			System.err.println("Usage: " + ECCorrelation.class.getSimpleName() + " census-file.xml ecs-input-file.tsv ecs-output-file.tsv");
 			return;
 		}
-		ECCorrelation ecs = ECCorrelation.fromTabbed(new File(args[0]));
-		if (ecs == null) {
-			ecs = ECCorrelation.rebuild(new File(args[0]));
+		ECCorrelation ecs;
+		if (new File(args[1]).exists()) {
+			ecs = ECCorrelation.fromTabbed(new File(args[1]));
+		} else {
+			ecs = new ECCorrelation();
+		}
+		if (new File(args[1]).exists()) {
+			ecs.rebuild(new File(args[0]), new File(args[2]));
 		}
 		System.out.println("============List of EC numbers of domains============");
-		System.out.println(ecs.toString());
-		if (args.length > 1) {
-			PrintWriter pw = null;
-			try {
-				pw = new PrintWriter(new File(args[1]), "UTF-8");
-				pw.print(ecs.toString());
-			} catch (IOException e) {
-				logger.error("Couldn't print to " + args[1]);
-			} finally {
-				if (pw != null) pw.close();
-			}
-		}
 		System.out.println("=====================================================" + StatUtils.NEWLINE);
 		System.out.println("===================EC numbers level 0================");
 		ecs.printComparison(0, 10);

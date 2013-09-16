@@ -30,6 +30,12 @@ import org.biojava3.structure.align.symm.census2.stats.StatUtils;
 
 /**
  * Classify symmetry by Enzyme Commission number.
+ * Reads from and writes to tab-delimited files of the form:
+ * <pre>
+ * scopId	EC_number
+ * scopId	-
+ * </pre>
+ * A hyphen-minus means the EC class could not be found.
  * @author dmyerstu
  */
 public class ECFinder {
@@ -40,18 +46,30 @@ public class ECFinder {
 	private Map<String,String> ecsBySymmDomain = new HashMap<String,String>();
 	private Map<String,String> ecsByAsymmDomain = new HashMap<String,String>();
 
+	/**
+	 * Returns a set of SCOP Ids for which an EC number was not found.
+	 */
 	public Set<String> getEcsByUnknownDomain() {
 		return ecsByUnknownDomain;
 	}
 
+	/**
+	 * Returns a map of SCOP Ids and their corresponding EC numbers, restricted to the case of symmetric domains.
+	 */
 	public Map<String, String> getEcsByAsymmDomain() {
 		return ecsByAsymmDomain;
 	}
 
+	/**
+	 * Returns a map of SCOP Ids and their corresponding EC numbers, restricted to the case of asymmetric domains.
+	 */
 	public Map<String, String> getEcsBySymmDomain() {
 		return ecsBySymmDomain;
 	}
 
+	/**
+	 * Creates a new ECFinder from a tab-delimited file.
+	 */
 	public static ECFinder fromTabbed(File file) throws IOException {
 		BufferedReader br = null;
 		try {
@@ -87,7 +105,7 @@ public class ECFinder {
 	}
 
 	public void rebuild(File file, File output) throws IOException {
-		rebuild(Results.fromXML(file), output);
+		buildFromCensus(Results.fromXML(file), output);
 	}
 
 	private void print(File output) {
@@ -102,8 +120,12 @@ public class ECFinder {
 			if (pw != null) pw.close();
 		}
 	}
-	
-	public void rebuild(Results census, File output) {
+
+	/**
+	 * Attempts to find an EC number for every domain in {@code census}, skipping those which are already listed in this ECFinder.
+	 * Prints to {@code output} periodically.
+	 */
+	public void buildFromCensus(Results census, File output) {
 
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 		Significance sig = SignificanceFactory.rotationallySymmetricSmart();
@@ -214,14 +236,8 @@ public class ECFinder {
 			ecs = new ECFinder();
 		}
 		ecs.rebuild(new File(args[0]), new File(args[1]));
-		System.out.println("============List of EC numbers of domains============");
-		System.out.println("=====================================================" + StatUtils.NEWLINE);
-		System.out.println("===================EC numbers level 0================");
-//		ecs.printComparison(0, 10);
-		System.out.println("=====================================================" + StatUtils.NEWLINE);
-		System.out.println("===================EC numbers level 1================");
-//		ecs.printComparison(1, 10);
-		System.out.println("=====================================================" + StatUtils.NEWLINE);
+		NormalizedECs.printComparisonUnnormalized(0, 10, ecs.ecsBySymmDomain, ecs.ecsBySymmDomain);
+		NormalizedECs.printComparisonUnnormalized(1, 10, ecs.ecsBySymmDomain, ecs.ecsBySymmDomain);
 	}
 
 }

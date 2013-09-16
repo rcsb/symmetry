@@ -40,6 +40,18 @@ public class ECFinder {
 	private Map<String,String> ecsBySymmDomain = new HashMap<String,String>();
 	private Map<String,String> ecsByAsymmDomain = new HashMap<String,String>();
 
+	public Set<String> getEcsByUnknownDomain() {
+		return ecsByUnknownDomain;
+	}
+
+	public Map<String, String> getEcsByAsymmDomain() {
+		return ecsByAsymmDomain;
+	}
+
+	public Map<String, String> getEcsBySymmDomain() {
+		return ecsBySymmDomain;
+	}
+
 	public static ECFinder fromTabbed(File file) throws IOException {
 		BufferedReader br = null;
 		try {
@@ -61,7 +73,7 @@ public class ECFinder {
 				continue;
 			}
 			String[] parts = line.split("\t");
-			if (parts[1] != "-") {
+			if (!parts[1].equals("-")) {
 				if (onSymm) {
 					corr.ecsBySymmDomain.put(parts[0], parts[1]);
 				} else {
@@ -150,7 +162,7 @@ public class ECFinder {
 				} else if (ecs.size() > 1) {
 					logger.info("Found different EC numbers for " + domain.getScopId()); // technically, this doesn't mean anything's wrong
 				} else {
-					logger.debug("Didn't find EC for " + scopId);
+//					logger.debug("Didn't find EC for " + scopId);
 					ecsByUnknownDomain.add(scopId);
 				}
 
@@ -201,9 +213,7 @@ public class ECFinder {
 		} else {
 			ecs = new ECFinder();
 		}
-		if (new File(args[0]).exists()) {
-			ecs.rebuild(new File(args[0]), new File(args[2]));
-		}
+		ecs.rebuild(new File(args[0]), new File(args[1]));
 		System.out.println("============List of EC numbers of domains============");
 		System.out.println("=====================================================" + StatUtils.NEWLINE);
 		System.out.println("===================EC numbers level 0================");

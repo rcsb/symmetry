@@ -50,7 +50,7 @@ public class NormalizedECs {
 		}
 
 		/**
-		 * Records a result as a potential 
+		 * Records a result as a potential example.
 		 * @param fold
 		 * @param superfamily
 		 */
@@ -72,7 +72,7 @@ public class NormalizedECs {
 				double fractionOfEc = (double) example.getValue() / symmSfsInLabel.size();
 				sb.append("\t" + example.getKey() + "(" + StatUtils.formatP(fractionOfEc) + ")");
 				i++;
-				if (i > maxExamples) {
+				if (i >= maxExamples) {
 					break;
 				}
 			}
@@ -315,14 +315,14 @@ public class NormalizedECs {
 			final boolean isSymm = symmFolds.contains(sf);
 
 			// record the superfamily
-			if (isSymm) {
-				if (!symmSfsByLabel.containsKey(label)) {
-					symmSfsByLabel.put(label, new HashSet<String>());
-				}
-				symmSfsByLabel.get(label).add(sf);
-			}
 			if (!totalSfsByLabel.containsKey(label)) {
 				totalSfsByLabel.put(label, new HashSet<String>());
+			}
+			if (!symmSfsByLabel.containsKey(label)) {
+				symmSfsByLabel.put(label, new HashSet<String>());
+			}
+			if (isSymm) {
+				symmSfsByLabel.get(label).add(sf);
 			}
 			totalSfsByLabel.get(label).add(sf);
 
@@ -331,9 +331,9 @@ public class NormalizedECs {
 			if (!examples.containsKey(label)) {
 				examples.put(label, new ExampleSet(label));
 			}
-			if (isSymm) {
+//			if (isSymm) {
 				examples.get(label).record(fold, sf);
-			}
+//			}
 		}
 
 		for (Map.Entry<String, Set<String>> entry : symmSfsByLabel.entrySet()) {
@@ -342,7 +342,7 @@ public class NormalizedECs {
 			final int nSymm = entry.getValue().size();
 			final int nTotal = totalSfsByLabel.containsKey(label) ? totalSfsByLabel.get(label).size() : 0;
 
-			System.out.print(label + "\t" + nSymm + "\t" + nTotal);
+			System.out.print(label + "\t" + nSymm + "\t" + nTotal + "\t" + StatUtils.formatP((double) nSymm / nTotal));
 
 			/*
 			 * now we want to list example domains for this, we want the top most common folds so we need a new map

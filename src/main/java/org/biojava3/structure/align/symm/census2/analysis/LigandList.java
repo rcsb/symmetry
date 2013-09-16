@@ -97,7 +97,11 @@ public class LigandList implements Serializable {
 		return ligands.keySet();
 	}
 
-	public void put(String key, Ligand value) {
+	public void put(String key, StructureLigands value) {
+		ligands.put(key, value);
+	}
+
+	public void add(String key, Ligand value) {
 		if (!ligands.containsKey(key)) {
 			ligands.put(key, new StructureLigands(key));
 		}
@@ -106,7 +110,7 @@ public class LigandList implements Serializable {
 
 	public void putAll(Map<? extends String, ? extends Ligand> m) {
 		for (Map.Entry<? extends String, ? extends Ligand> entry : m.entrySet()) {
-			put(entry.getKey(), entry.getValue());
+			add(entry.getKey(), entry.getValue());
 		}
 	}
 

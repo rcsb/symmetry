@@ -51,7 +51,7 @@ public class LigandFinder {
 	};
 	private int radius = DEFAULT_RADIUS;
 	private File output;
-	private int printFrequency = 20;
+	private int printFrequency = 100;
 
 	public void setPrintFrequency(int printFrequency) {
 		this.printFrequency = printFrequency;
@@ -127,17 +127,13 @@ public class LigandFinder {
 						excluded, radius, false, false);
 
 				if (!ligandDistances.isEmpty()) {
+					logger.debug("Assigning " + ligandDistances.size() + " ligands to " + scopId);
 					for (Group group : ligandDistances.keySet()) {
-						ligandList.put(scopId, new Ligand(group.getAtoms(), ligandDistances.get(group)));
-						if (i % printFrequency == 0 && i > 0 && output != null) {
-							logger.info("Printing to " + output.getPath());
-							try {
-								ligandList.writeXmlToFile(output);
-							} catch (IOException e1) {
-								logger.error("Couldn't write to " + output, e1);
-							}
-						}
+						ligandList.add(scopId, new Ligand(group.getAtoms(), ligandDistances.get(group)));
 					}
+				} else {
+					logger.debug("Found no center ligands for " + scopId);
+					ligandList.put(scopId, new StructureLigands(scopId));
 				}
 
 			} catch (Exception e) {
@@ -145,6 +141,14 @@ public class LigandFinder {
 				logger.error(e.getClass().getSimpleName() + " on " + scopId);
 			} finally {
 				i++;
+				if (i % printFrequency == 0 && i > 0 && output != null) {
+					logger.info("Printing to " + output.getPath());
+					try {
+						ligandList.writeXmlToFile(output);
+					} catch (IOException e1) {
+						logger.error("Couldn't write to " + output, e1);
+					}
+				}
 			}
 		}
 

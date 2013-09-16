@@ -100,7 +100,6 @@ public class LigandFinderTest {
 		String ligand = find(scopId, RADIUS);
 		assertNull(ligand);
 	}
-	
 
 	@Test
 	public void testAsymmetric() {
@@ -119,6 +118,7 @@ public class LigandFinderTest {
 		LigandFinder finder = new LigandFinder(radius);
 		finder.find(results);
 		Map<String,String> formulas = finder.getFormulas();
+		if (("[" + scopId + "]").equals(formulas.get(scopId))) return null;
 		return formulas.get(scopId);
 	}
 }

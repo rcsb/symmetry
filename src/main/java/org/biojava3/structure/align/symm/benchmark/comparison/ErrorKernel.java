@@ -11,6 +11,7 @@ import java.util.Map;
 import org.apache.commons.math3.primes.Primes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.biojava.bio.structure.jama.EigenvalueDecomposition;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
@@ -55,123 +56,229 @@ public class ErrorKernel {
 					+ " input-sample-file [matrix-output-file]");
 			return;
 		}
+		ErrorKernel kernel = new ErrorKernel();
 		Sample sample = Sample.fromXML(new File(args[0]));
-		ErrorKernel kernel = new ErrorKernel(sample);
+		kernel.build(sample);
 		System.out.println(kernel);
 		System.out.println(kernel.vectorToString());
+		Eigenpair steadyState = kernel.calcSteadyState();
+		System.out.println(steadyState);
 		if (args.length > 1) {
 			kernel.print(new File(args[1]));
 		}
 
 	}
 
-	/**
-	 * This is our function that maps divisors to probabilities. It is
-	 * indexed starting at divisor=1. The transition of a composite number greater than 1
-	 * is defined to be zero (otherwise we'd be including multi-state transition
-	 * probabilities).
-	 */
-	private int[] singleStepMistakeRates = new int[] {0, 0, 0, 0, 0};
-
-	public int[] getVector() {
-		return singleStepMistakeRates;
+	private double epsilon = 0.001;
+	
+	public void setEpsilon(double epsilon) {
+		this.epsilon = epsilon;
 	}
 
 	private Matrix kernel;
+	private Significance significance = SignificanceFactory.forCeSymmTm();
 
-	private Significance significance = SignificanceFactory.rotationallySymmetricSmart();
+	private double[] singleStepInverseMistakeRates = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-	public ErrorKernel(Sample sample) {
+	/**
+	 * This is our function that maps divisors to probabilities. It is indexed
+	 * starting at divisor=1. The transition of a composite number greater than
+	 * 1 is defined to be zero (otherwise we'd be including multi-state
+	 * transition probabilities).
+	 */
+	private double[] singleStepMistakeRates = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+	public void build(Sample sample) {
+		
+		/*
+		 * We'll use these to normalize the vectors
+		 */
+		int[] singleStepInverseMistakesPossible = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		int[] singleStepMistakesPossible = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 		Map<Integer, Integer> knownOrderCounts = new HashMap<Integer, Integer>();
 		for (Case c : sample.getData()) {
 
-			if (c.getKnownOrder() < 2)
-				continue;
-			if (c.getOrder() == null || c.getOrder() < 2)
-				continue;
-			if (!significance.isSignificant(c.getResult()))
-				continue;
+			if (!significance.isSignificant(c.getResult())) continue;
 
-			int order = c.getOrder();
+			Integer order = c.getOrder();
+			if (order == null || order < 1) order = 1;
 			int knownOrder = c.getKnownOrder();
 			StatUtils.plus(knownOrderCounts, knownOrder);
 
-			if (knownOrder % order == 0) {
-
-				/*
-				 * If we get 2 instead of 12, we know that we made exactly 3 mistakes:
-				 * 2, 2, and 3
-				 * Therefore, we want to add 2 mistakes to divisor=2 and 1 to divisor=3
-				 */
-				int divisor = knownOrder / order;
-				if (divisor > 1) { // primeFactors fails when given 1
-					List<Integer> primeFactors = Primes.primeFactors(divisor);
-					for (int primeFactor : primeFactors) {
-						try {
-							singleStepMistakeRates[primeFactor-1]++;
-						} catch (ArrayIndexOutOfBoundsException e) {
-							throw new RuntimeException("Got prime factor " + primeFactor + ", which is too big for our vector");
-						}
+			/*
+			 * Record all the possible primes, which are given by:
+			 * phi(knownOrder / 1) for forward errors phi(order / 1) for inverse
+			 * errors
+			 */
+			if (knownOrder > 1) {
+				List<Integer> primeFactors = Primes.primeFactors(knownOrder);
+				for (int primeFactor : primeFactors) {
+					try {
+						singleStepMistakesPossible[primeFactor - 1]++;
+					} catch (ArrayIndexOutOfBoundsException e) {
+						throw new RuntimeException("Got prime factor " + primeFactor
+								+ ", which is too big for our vector");
 					}
-				} else {
-					singleStepMistakeRates[0]++;
 				}
+			}
+			if (order > 1) {
+				List<Integer> primeFactors = Primes.primeFactors(order);
+				for (int primeFactor : primeFactors) {
+					try {
+						singleStepInverseMistakesPossible[primeFactor - 1]++;
+					} catch (ArrayIndexOutOfBoundsException e) {
+						throw new RuntimeException("Got prime factor " + primeFactor
+								+ ", which is too big for our vector");
+					}
+				}
+			}
 
+			/*
+			 * If we get 1 instead of 12, we know that we made exactly 3
+			 * mistakes: 2, 2, and 3 Therefore, we want to add 2 mistakes to
+			 * divisor=2 and 1 to divisor=3
+			 */
+			int divisor = 0;
+			double[] vector = null;
+			if (knownOrder % order == 0) {
+				divisor = knownOrder / order;
+				vector = singleStepMistakeRates;
 			} else if (order % knownOrder == 0) {
-				/*
-				 * This case is weird, but we need to take it into account
-				 * Fortunately, we only have 5 cases of this
-				 * A transition from 4 to 2 is precisely equivalent to an inverse transition from 2 to 4
-				 */
-				int divisor = order / knownOrder;
-				// divisor can't be 1 thanks to above clause
+				divisor = order / knownOrder;
+				vector = singleStepInverseMistakeRates;
+			}
+			if (divisor > 1) { // primeFactors fails when given 1
 				List<Integer> primeFactors = Primes.primeFactors(divisor);
 				for (int primeFactor : primeFactors) {
-					singleStepMistakeRates[primeFactor-1]--;
+					try {
+						vector[primeFactor - 1]++;
+					} catch (ArrayIndexOutOfBoundsException e) {
+						throw new RuntimeException("Got prime factor " + primeFactor
+								+ ", which is too big for our vector");
+					}
 				}
 			}
-
 		}
 
-		kernel = new Matrix(7, 7); // zeroes matrix;
-		for (int i = 0; i < 7; i++) {
-			double rowSum = 0;
-			for (int j = 0; j < 7; j++) {
-				int knownOrder = i + 2;
-				int order = j + 2;
+		/*
+		 * Normalize the mistake vectors
+		 */
+		for (int i = 1; i < singleStepMistakeRates.length; i++) {
+			if (!Primes.isPrime(i + 1)) continue;
+			if (singleStepMistakesPossible[i] == 0) throw new RuntimeException("Bad " + i);
+			singleStepMistakeRates[i] = singleStepMistakeRates[i] / singleStepMistakesPossible[i];
+		}
+		for (int i = 1; i < singleStepInverseMistakeRates.length; i++) {
+			if (!Primes.isPrime(i + 1)) continue;
+			if (singleStepInverseMistakesPossible[i] == 0) throw new RuntimeException("Bad " + i);
+			singleStepInverseMistakeRates[i] = singleStepInverseMistakeRates[i] / singleStepInverseMistakesPossible[i];
+		}
+
+		/*
+		 * Now build the matrix from the vector This should be straightforward
+		 */
+		kernel = new Matrix(8, 8); // zeroes matrix;
+
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 8; j++) {
+				int knownOrder = i + 1;
+				int order = j + 1;
+				int divisor = 0;
+				double[] vector = null;
 				if (knownOrder % order == 0) {
-					int divisor = knownOrder / order;
+					divisor = knownOrder / order;
+					vector = singleStepMistakeRates;
+				} else if (order % knownOrder == 0) {
+					divisor = order / knownOrder;
+					vector = singleStepInverseMistakeRates;
+				}
+				if (divisor != 0) {
 					double flow = 0;
-					if (divisor < singleStepMistakeRates.length-1) {
-						flow = singleStepMistakeRates[divisor-1];
-					} else if (Primes.isPrime(divisor)) { // we should always include primes
+					if (divisor < vector.length - 1) {
+						flow = vector[divisor - 1];
+					} else if (Primes.isPrime(divisor)) { // we should always
+															// include primes
 						logger.error("Divisior " + divisor + " out of range");
-					}
-					kernel.set(i, j, flow);
-					rowSum += flow;
+					} // else it's just a composite number
+					kernel.set(i, j, flow + epsilon);
+				} else {
+					kernel.set(i, j, epsilon);
 				}
 			}
-			for (int j = 0; j < 7; j++) {
-				kernel.set(i, j, kernel.get(i, j) / rowSum);
+		}
+
+		
+		/*
+		 * Set the diagonal entries as 1 minus the rest of the row
+		 */
+		for (int i = 1; i <= 8; i++) {
+			double n = 1;
+			for (int j = 1; j <= 8; j++) {
+				n -= kernel.get(i - 1, j - 1);
 			}
+			kernel.set(i - 1, i - 1, n);
 		}
 
 	}
 	
-	public String vectorToString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("[");
-		for (int i = 0; i < singleStepMistakeRates.length; i++) {
-			sb.append(singleStepMistakeRates[i]);
-			if (i < singleStepMistakeRates.length - 1) sb.append(" ");
+	public static class Eigenpair {
+		private double eigenvalue;
+		private double[] eigenvector;
+		public double getEigenvalue() {
+			return eigenvalue;
 		}
-		sb.append("]" + StatUtils.NEWLINE);
+		public void setEigenvalue(double eigenvalue) {
+			this.eigenvalue = eigenvalue;
+		}
+		public double[] getEigenvector() {
+			return eigenvector;
+		}
+		public void setEigenvector(double[] eigenvector) {
+			this.eigenvector = eigenvector;
+		}
+		public Eigenpair(double eigenvalue, double[] eigenvector) {
+			this.eigenvalue = eigenvalue;
+			this.eigenvector = eigenvector;
+		}
+
+		@Override
+		public String toString() {
+		if (eigenvector == null) return "null";
+		StringBuilder sb = new StringBuilder();
+		sb.append(StatUtils.formatD(eigenvalue));
+		sb.append(": [");
+		for (int i = 0; i < eigenvector.length; i++) {
+			sb.append(StatUtils.formatD(eigenvector[i]));
+			if (i < eigenvector.length - 1) sb.append(", ");
+		}
+		sb.append("]");
 		return sb.toString();
+		}
+	}
+
+	public Eigenpair calcSteadyState() {
+		EigenvalueDecomposition decomposition = kernel.eig();
+		Matrix eigenvalues = decomposition.getD();
+//		System.err.println(eigenvalues);
+//		System.err.println(decomposition.getV());
+		double[] pi = null;
+		double lambda = Double.NEGATIVE_INFINITY;
+		for (int i = 0; i < eigenvalues.rank(); i++) {
+			if (Math.abs(eigenvalues.get(i, i)) > lambda) {
+				lambda = eigenvalues.get(i, i);
+				pi = decomposition.getV().getArray()[i];
+			}
+		}
+		return new Eigenpair(lambda, pi);
 	}
 
 	public Matrix getKernel() {
 		return kernel;
+	}
+
+	public double[] getVector() {
+		return singleStepMistakeRates;
 	}
 
 	public void print(File output) throws IOException {
@@ -180,8 +287,7 @@ public class ErrorKernel {
 			pw = new PrintWriter(new FileWriter(output));
 			print(pw);
 		} finally {
-			if (pw != null)
-				pw.close();
+			if (pw != null) pw.close();
 		}
 	}
 
@@ -192,6 +298,23 @@ public class ErrorKernel {
 	@Override
 	public String toString() {
 		return kernel.toString();
+	}
+
+	public String vectorToString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (int i = 0; i < singleStepMistakeRates.length; i++) {
+			sb.append(StatUtils.formatD(singleStepMistakeRates[i]));
+			if (i < singleStepMistakeRates.length - 1) sb.append(" ");
+		}
+		sb.append("]" + StatUtils.NEWLINE);
+		sb.append("[");
+		for (int i = 0; i < singleStepInverseMistakeRates.length; i++) {
+			sb.append(StatUtils.formatD(singleStepInverseMistakeRates[i]));
+			if (i < singleStepInverseMistakeRates.length - 1) sb.append(" ");
+		}
+		sb.append("]" + StatUtils.NEWLINE);
+		return sb.toString();
 	}
 
 }

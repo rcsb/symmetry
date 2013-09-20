@@ -4,15 +4,19 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math3.linear.EigenDecomposition;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.primes.Primes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava.bio.structure.jama.EigenvalueDecomposition;
-import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
 import org.biojava3.structure.align.symm.census2.Significance;
@@ -61,7 +65,7 @@ public class ErrorKernel {
 		kernel.build(sample);
 		System.out.println(kernel);
 		System.out.println(kernel.vectorToString());
-		Eigenpair steadyState = kernel.calcSteadyState();
+		Eigenpair steadyState = new Eigenpair(0, kernel.calcSteadyState(0.0000000001));
 		System.out.println(steadyState);
 		if (args.length > 1) {
 			kernel.print(new File(args[1]));
@@ -69,13 +73,13 @@ public class ErrorKernel {
 
 	}
 
-	private double epsilon = 0.001;
-	
+	private double epsilon = 0.0000000001;
+
 	public void setEpsilon(double epsilon) {
 		this.epsilon = epsilon;
 	}
 
-	private Matrix kernel;
+	private RealMatrix kernel;
 	private Significance significance = SignificanceFactory.forCeSymmTm();
 
 	private double[] singleStepInverseMistakeRates = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -89,7 +93,7 @@ public class ErrorKernel {
 	private double[] singleStepMistakeRates = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 	public void build(Sample sample) {
-		
+
 		/*
 		 * We'll use these to normalize the vectors
 		 */
@@ -178,7 +182,7 @@ public class ErrorKernel {
 		/*
 		 * Now build the matrix from the vector This should be straightforward
 		 */
-		kernel = new Matrix(8, 8); // zeroes matrix;
+		kernel = MatrixUtils.createRealMatrix(8, 8); // zeroes matrix;
 
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
@@ -198,30 +202,30 @@ public class ErrorKernel {
 					if (divisor < vector.length - 1) {
 						flow = vector[divisor - 1];
 					} else if (Primes.isPrime(divisor)) { // we should always
-															// include primes
+						// include primes
 						logger.error("Divisior " + divisor + " out of range");
 					} // else it's just a composite number
-					kernel.set(i, j, flow + epsilon);
+					kernel.setEntry(i, j, flow + epsilon);
 				} else {
-					kernel.set(i, j, epsilon);
+					kernel.setEntry(i, j, epsilon);
 				}
 			}
 		}
 
-		
+
 		/*
 		 * Set the diagonal entries as 1 minus the rest of the row
 		 */
 		for (int i = 1; i <= 8; i++) {
 			double n = 1;
 			for (int j = 1; j <= 8; j++) {
-				n -= kernel.get(i - 1, j - 1);
+				n -= kernel.getEntry(i - 1, j - 1);
 			}
-			kernel.set(i - 1, i - 1, n);
+			kernel.setEntry(i - 1, i - 1, n);
 		}
 
 	}
-	
+
 	public static class Eigenpair {
 		private double eigenvalue;
 		private double[] eigenvector;
@@ -242,38 +246,65 @@ public class ErrorKernel {
 			this.eigenvector = eigenvector;
 		}
 
+		public Eigenpair(double eigenvalue, RealVector eigenvector) {
+			this(eigenvalue, eigenvector.toArray());
+		}
 		@Override
 		public String toString() {
-		if (eigenvector == null) return "null";
-		StringBuilder sb = new StringBuilder();
-		sb.append(StatUtils.formatD(eigenvalue));
-		sb.append(": [");
-		for (int i = 0; i < eigenvector.length; i++) {
-			sb.append(StatUtils.formatD(eigenvector[i]));
-			if (i < eigenvector.length - 1) sb.append(", ");
-		}
-		sb.append("]");
-		return sb.toString();
+			NumberFormat nf = new DecimalFormat();
+			nf.setMaximumFractionDigits(5);
+			if (eigenvector == null) return "null";
+			StringBuilder sb = new StringBuilder();
+			sb.append(StatUtils.formatD(eigenvalue));
+			sb.append(": [");
+			for (int i = 0; i < eigenvector.length; i++) {
+				sb.append(nf.format(eigenvector[i]));
+				if (i < eigenvector.length - 1) sb.append(", ");
+			}
+			sb.append("]");
+			return sb.toString();
 		}
 	}
 
-	public Eigenpair calcSteadyState() {
-		EigenvalueDecomposition decomposition = kernel.eig();
-		Matrix eigenvalues = decomposition.getD();
-//		System.err.println(eigenvalues);
-//		System.err.println(decomposition.getV());
-		double[] pi = null;
+	public double[] calcSteadyState(double minChange) {
+		RealMatrix m = kernel;
+		double delta = Double.POSITIVE_INFINITY;
+		while (delta > minChange) {
+			double prev = m.getFrobeniusNorm();
+			m = m.multiply(kernel);
+			double next = m.getFrobeniusNorm();
+			if (Math.abs(next - prev) < minChange) {
+				break;
+			}
+		}
+		return m.getRow(0); // arbitrary row
+	}
+
+	public double[] calcSteadyState(int power) {
+		RealMatrix m = kernel.power(power);
+		return m.getRow(0); // arbitrary row
+	}
+
+	/**
+	 * Calculates a steady-state distribution by eigendecomposition.
+	 * @return An Eigenpair containing the stationary distribution and the the dominant eigenvalue, which should be equal to 1.
+	 * TODO Why doesn't this work?
+	 */
+	public Eigenpair calcDominantEigenpair() {
+		EigenDecomposition decomposition = new EigenDecomposition(kernel);
+		RealMatrix eigenvalues = decomposition.getD();
+		RealVector pi = null;
 		double lambda = Double.NEGATIVE_INFINITY;
-		for (int i = 0; i < eigenvalues.rank(); i++) {
-			if (Math.abs(eigenvalues.get(i, i)) > lambda) {
-				lambda = eigenvalues.get(i, i);
-				pi = decomposition.getV().getArray()[i];
+		for (int i = 0; i < kernel.getRowDimension(); i++) {
+			if (Math.abs(eigenvalues.getEntry(i, i)) > lambda) {
+				lambda = eigenvalues.getEntry(i, i);
+				pi = decomposition.getEigenvector(i);
 			}
 		}
 		return new Eigenpair(lambda, pi);
 	}
 
-	public Matrix getKernel() {
+	public RealMatrix getKernel() {
 		return kernel;
 	}
 
@@ -292,12 +323,20 @@ public class ErrorKernel {
 	}
 
 	public void print(PrintWriter output) {
-		kernel.print(output, 5, 4);
+		//		kernel.print(output, 5, 4);
 	}
 
 	@Override
 	public String toString() {
-		return kernel.toString();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 8; j++) {
+				sb.append((kernel.getEntry(i, j)));
+				if (j < 7) sb.append(" ");
+			}
+			sb.append(StatUtils.NEWLINE);
+		}
+		return sb.toString();
 	}
 
 	public String vectorToString() {

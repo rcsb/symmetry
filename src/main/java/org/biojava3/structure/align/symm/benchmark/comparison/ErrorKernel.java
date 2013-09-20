@@ -57,7 +57,7 @@ public class ErrorKernel {
 	public static void main(String[] args) throws IOException {
 		if (args.length < 1 || args.length > 2) {
 			System.err.println("Usage: " + ErrorKernel.class.getSimpleName()
-					+ " input-sample-file [matrix-output-file]");
+					+ " input-sample-file [vector-output-file]");
 			return;
 		}
 		ErrorKernel kernel = new ErrorKernel();
@@ -68,7 +68,8 @@ public class ErrorKernel {
 		Eigenpair steadyState = new Eigenpair(0, kernel.calcSteadyState(0.0000000001));
 		System.out.println(steadyState);
 		if (args.length > 1) {
-			kernel.print(new File(args[1]));
+			//			kernel.print(new File(args[1]));
+			steadyState.printVector(new File(args[1]));
 		}
 
 	}
@@ -232,6 +233,22 @@ public class ErrorKernel {
 		public double getEigenvalue() {
 			return eigenvalue;
 		}
+		public void printVector(File file) throws IOException {
+			StringBuilder sb = new StringBuilder();
+			NumberFormat nf = new DecimalFormat();
+			nf.setMaximumFractionDigits(10);
+			for (int i = 0; i < eigenvector.length; i++) {
+				sb.append(nf.format(eigenvector[i]));
+				if (i < eigenvector.length - 1) sb.append("\t");
+			}
+			PrintWriter pw = null;
+			try {
+				pw = new PrintWriter(new FileWriter(file));
+				pw.println(sb.toString());
+			} finally {
+				if (pw != null) pw.close();
+			}
+		}
 		public void setEigenvalue(double eigenvalue) {
 			this.eigenvalue = eigenvalue;
 		}
@@ -323,7 +340,8 @@ public class ErrorKernel {
 	}
 
 	public void print(PrintWriter output) {
-		//		kernel.print(output, 5, 4);
+		output.print(toString());
+		output.flush();
 	}
 
 	@Override

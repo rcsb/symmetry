@@ -12,6 +12,7 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
+import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 import org.biojava3.structure.align.symm.census2.stats.Grouping;
 import org.biojava3.structure.align.symm.census2.stats.StatUtils;
 
@@ -62,15 +63,13 @@ public class FoldOrder {
 		this.exampler = exampler;
 	}
 
-	private double orderCutoff = 0.5;
-
 	private double tmScoreCutoff = 0.4;
 
 	private Map<String, Map<String,Integer>> examplesByFold = new HashMap<String, Map<String,Integer>>();
 	
 	public void run(Results census) {
 
-		OrderHelper decider = new OrderHelper(normalizer, tmScoreCutoff, orderCutoff, consensusDecider);
+		OrderHelper decider = new OrderHelper(normalizer, tmScoreCutoff, consensusDecider);
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 
 		Map<String, Integer> nDomainsInFolds = new HashMap<String, Integer>();
@@ -81,6 +80,7 @@ public class FoldOrder {
 				if (domain == null) {
 					logger.error(result.getScopId() + " is null");
 				}
+//				if (!SignificanceFactory.forCeSymmTm().isSignificant(result)) continue;
 				result.setClassification(domain.getClassificationId());
 				String fold = normalizer.group(result);
 				String superfamily = exampler.group(result);
@@ -108,10 +108,6 @@ public class FoldOrder {
 
 	public void setNormalizer(Grouping normalizer) {
 		this.normalizer = normalizer;
-	}
-
-	public void setOrderCutoff(double orderCutoff) {
-		this.orderCutoff = orderCutoff;
 	}
 
 	public void setTmScoreCutoff(double tmScoreCutoff) {

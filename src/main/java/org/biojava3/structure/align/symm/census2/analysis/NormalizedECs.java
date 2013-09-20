@@ -276,7 +276,7 @@ public class NormalizedECs {
 	private OrderHelper orderHelper;
 
 	public NormalizedECs() {
-		this(Grouping.superfamily(), Grouping.fold(), new OrderHelper(Grouping.superfamily(), 0.4, 0.5,
+		this(Grouping.superfamily(), Grouping.fold(), new OrderHelper(Grouping.superfamily(), 0.4,
 				ErrorKernelDecider.fromMatrixFile()));
 	}
 

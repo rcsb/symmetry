@@ -21,14 +21,12 @@ public class OrderHelper {
 
 	private Grouping normalizer;
 	private double tmScoreCutoff;
-	private double orderCutoff;
 	private ConsensusDecider consensusDecider;
 	
-	public OrderHelper(Grouping normalizer, double tmScoreCutoff, double orderCutoff, ConsensusDecider consensusDecider) {
+	public OrderHelper(Grouping normalizer, double tmScoreCutoff, ConsensusDecider consensusDecider) {
 		super();
 		this.normalizer = normalizer;
 		this.tmScoreCutoff = tmScoreCutoff;
-		this.orderCutoff = orderCutoff;
 		this.consensusDecider = consensusDecider;
 	}
 
@@ -79,8 +77,7 @@ public class OrderHelper {
 		Integer order = hasOrderMap.get(fold);
 		if (order == null) order = 1;
 		double meanTmScore = (double) tmScore / n;
-		double meanHasOrder = (double) order / n;
-		if (meanTmScore < tmScoreCutoff || meanHasOrder < orderCutoff) {
+		if (meanTmScore < tmScoreCutoff) {
 			return 1;
 		}
 

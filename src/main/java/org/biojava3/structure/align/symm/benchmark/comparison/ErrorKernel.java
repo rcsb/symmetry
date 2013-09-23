@@ -57,7 +57,7 @@ public class ErrorKernel {
 	public static void main(String[] args) throws IOException {
 		if (args.length < 1 || args.length > 2) {
 			System.err.println("Usage: " + ErrorKernel.class.getSimpleName()
-					+ " input-sample-file [vector-output-file]");
+					+ " input-sample-file [matrix-output-file]");
 			return;
 		}
 		ErrorKernel kernel = new ErrorKernel();
@@ -65,16 +65,35 @@ public class ErrorKernel {
 		kernel.build(sample);
 		System.out.println(kernel);
 		System.out.println(kernel.vectorToString());
-		Eigenpair steadyState = new Eigenpair(0, kernel.calcSteadyState(0.0000000001));
-		System.out.println(steadyState);
+		double[] steadyState = kernel.calcSteadyState(0.000000001, 100000);
+		System.out.println("π=" + vectorToString(steadyState));
 		if (args.length > 1) {
-			//			kernel.print(new File(args[1]));
-			steadyState.printVector(new File(args[1]));
+			printMatrix(kernel.getKernel(), new File(args[1]));
 		}
 
 	}
 
-	private double epsilon = 0.0000000001;
+	private static void printMatrix(RealMatrix matrix, File file) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		NumberFormat nf = new DecimalFormat();
+		nf.setMaximumFractionDigits(6);
+		for (int i = 0; i < matrix.getRowDimension(); i++) {
+			for (int j = 0; j < matrix.getColumnDimension(); j++) {
+				sb.append(nf.format(matrix.getEntry(i, j)));
+				if (j < matrix.getColumnDimension() - 1) sb.append("\t");
+			}
+			if (i < matrix.getRowDimension() - 1) sb.append(StatUtils.NEWLINE);
+		}
+		PrintWriter pw = null;
+		try {
+			pw = new PrintWriter(new FileWriter(file));
+			pw.println(sb.toString());
+		} finally {
+			if (pw != null) pw.close();
+		}
+	}
+
+	private double epsilon = 0.0;
 
 	public void setEpsilon(double epsilon) {
 		this.epsilon = epsilon;
@@ -213,7 +232,6 @@ public class ErrorKernel {
 			}
 		}
 
-
 		/*
 		 * Set the diagonal entries as 1 minus the rest of the row
 		 */
@@ -233,24 +251,11 @@ public class ErrorKernel {
 		public double getEigenvalue() {
 			return eigenvalue;
 		}
-		public void printVector(File file) throws IOException {
-			StringBuilder sb = new StringBuilder();
-			NumberFormat nf = new DecimalFormat();
-			nf.setMaximumFractionDigits(10);
-			for (int i = 0; i < eigenvector.length; i++) {
-				sb.append(nf.format(eigenvector[i]));
-				if (i < eigenvector.length - 1) sb.append("\t");
-			}
-			PrintWriter pw = null;
-			try {
-				pw = new PrintWriter(new FileWriter(file));
-				pw.println(sb.toString());
-			} finally {
-				if (pw != null) pw.close();
-			}
-		}
 		public void setEigenvalue(double eigenvalue) {
 			this.eigenvalue = eigenvalue;
+		}
+		public void printVector(File file) throws IOException {
+			ErrorKernel.printVector(eigenvector, file);
 		}
 		public double[] getEigenvector() {
 			return eigenvector;
@@ -271,30 +276,69 @@ public class ErrorKernel {
 			NumberFormat nf = new DecimalFormat();
 			nf.setMaximumFractionDigits(5);
 			if (eigenvector == null) return "null";
-			StringBuilder sb = new StringBuilder();
-			sb.append(StatUtils.formatD(eigenvalue));
-			sb.append(": [");
-			for (int i = 0; i < eigenvector.length; i++) {
-				sb.append(nf.format(eigenvector[i]));
-				if (i < eigenvector.length - 1) sb.append(", ");
-			}
-			sb.append("]");
-			return sb.toString();
+			return eigenvalue + ": " + vectorToString(eigenvector);
 		}
 	}
 
-	public double[] calcSteadyState(double minChange) {
+	private static void printVector(double[] vector, File file) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		NumberFormat nf = new DecimalFormat();
+		nf.setMaximumFractionDigits(10);
+		for (int i = 0; i < vector.length; i++) {
+			sb.append(nf.format(vector[i]));
+			if (i < vector.length - 1) sb.append("\t");
+		}
+		PrintWriter pw = null;
+		try {
+			pw = new PrintWriter(new FileWriter(file));
+			pw.println(sb.toString());
+		} finally {
+			if (pw != null) pw.close();
+		}
+	}
+	private static String vectorToString(double[] vector) {
+		NumberFormat nf = new DecimalFormat();
+		nf.setMaximumFractionDigits(5);
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (int i = 0; i < vector.length; i++) {
+			sb.append(nf.format(vector[i]));
+			if (i < vector.length - 1) sb.append(", ");
+		}
+		sb.append("]");
+		return sb.toString();
+	}
+
+	public double[] calcSteadyState(double minChange, int maxIter) {
 		RealMatrix m = kernel;
 		double delta = Double.POSITIVE_INFINITY;
+		int i = 0;
+		double error = Double.POSITIVE_INFINITY;
 		while (delta > minChange) {
-			double prev = m.getFrobeniusNorm();
+			RealMatrix prev = m.copy();
 			m = m.multiply(kernel);
-			double next = m.getFrobeniusNorm();
-			if (Math.abs(next - prev) < minChange) {
+			error = getMaxDiff(m, prev);
+			if (error < minChange) {
 				break;
 			}
+			i++;
+			if (i > maxIter) throw new RuntimeException("Computation failed: error still " + error + " after " + maxIter + " iterations");
 		}
+		logger.info("Steady-state distribution found after " + i + " iterations with error " + error);
 		return m.getRow(0); // arbitrary row
+	}
+	
+	private static double getMaxDiff(RealMatrix a, RealMatrix b) {
+		double max = Double.NEGATIVE_INFINITY;
+		for (int i = 0; i < a.getRowDimension(); i++) {
+			for (int j = 0; j < a.getColumnDimension(); j++) {
+				double delta = Math.abs(a.getEntry(i, j) - b.getEntry(i, j));
+				if (delta > max) {
+					max = delta;
+				}
+			}
+		}
+		return max;
 	}
 
 	public double[] calcSteadyState(int power) {
@@ -349,7 +393,7 @@ public class ErrorKernel {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
-				sb.append((kernel.getEntry(i, j)));
+				sb.append((StatUtils.formatD(kernel.getEntry(i, j))));
 				if (j < 7) sb.append(" ");
 			}
 			sb.append(StatUtils.NEWLINE);

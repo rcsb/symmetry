@@ -1,18 +1,12 @@
 package org.biojava3.structure.align.symm.census2.stats.order;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Map;
 
-import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.biojava3.structure.align.symm.census2.stats.StatUtils;
 
 /**
  * A {@link CensusDecider} that treats any <em>divisor</em> of an order as potentially being the order itself.
@@ -27,22 +21,32 @@ public class ErrorKernelDecider implements ConsensusDecider {
 
 	@Override
 	public int decide(Map<Integer,Integer> countsByOrders) {
-		RealVector counts = new ArrayRealVector(8);
-		for (Map.Entry<Integer, Integer> entry : countsByOrders.entrySet()) {
-			counts.setEntry(entry.getKey()-1, entry.getValue());
-		}
-		return decide(counts);
+		return decide(MathUtils.mapToShiftedVector(countsByOrders));
 	}
 	
 	public int decide(RealVector counts) {
 
+		RealMatrix upper = MatrixUtils.createRealMatrix(8, 8);
+		RealMatrix lower = MatrixUtils.createRealMatrix(8, 8);
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j <= i; j++) {
+				lower.setEntry(i, j, kernel.getEntry(i, j));
+			}
+			for (int j = i + 1; j < 8; j++) {
+				upper.setEntry(i, j, kernel.getEntry(i, j));
+			}
+		}
+		
 		double[] flows = new double[] {0, 0, 0, 0, 0, 0, 0, 0};
 
 		for (int i = 1; i <= 8; i++) { // correct
-			for (int j = 1; j <= 8; j++) { // putative TODO <=
+			for (int j = 1; j <= 8; j++) { // putative
 
 				// the number of states we're allowed to use
 				int m = Math.max(i, j) / Math.min(i, j) - 1;
+				
+				final RealMatrix half = i>j? upper : lower;
+				final double count = i>j? -counts.getEntry(i-1) : counts.getEntry(j-1); // note the - sign
 
 				/*
 				 *  use Chapman–Kolmogorov equation to find m-state transition kernel
@@ -50,10 +54,7 @@ public class ErrorKernelDecider implements ConsensusDecider {
 				 *  which we know requires EXACTLY m steps
 				 */
 				RealMatrix mStateTransition = MatrixUtils.createRealIdentityMatrix(8);
-				for (int k = 0; k < m; k++) mStateTransition = mStateTransition.multiply(kernel);
-
-				// get the number of "j"s, our putative actual "i"s
-				double count = counts.getEntry(j-1);
+				for (int k = 0; k < m; k++) mStateTransition = mStateTransition.multiply(half);
 
 				/*
 				 * We want to make "putative" flow into "correct"
@@ -62,67 +63,27 @@ public class ErrorKernelDecider implements ConsensusDecider {
 				 * And thus we allow 0.1 * count to flow from 2 into 4
 				 * So this is the correct indexing
 				 */
-				double flow = mStateTransition.getEntry(i-1, j-1); // TODO should be mStateTransition
+				double flow = mStateTransition.getEntry(i-1, j-1);
 				flows[i-1] += count * flow;
 
 			}
 		}
 
-		double maxFlow = 0;
-		int maximizingOrder = 0;
-		for (int i = 1; i <= 8; i++) {
-			double flow = flows[i-1];
-			if (flow > maxFlow) {
-				maxFlow = flow;
-				maximizingOrder = i;
-			}
-		}
-		return maximizingOrder;
+		return MathUtils.argmax(flows) + 1;
 	}
 
 	public static ErrorKernelDecider fromMatrixFile() {
 		try {
-			return fromVectorFile(new File("src/main/resources/error_kernel.matrix"));
+			return fromMatrixFile(new File("src/main/resources/error_kernel.matrix"));
 		} catch (IOException e) {
 			throw new RuntimeException("Couldn't load matrix", e);
 		}
 	}
 
-	public static ErrorKernelDecider fromVectorFile(File file) throws IOException {
-		BufferedReader br = null;
-		RealMatrix matrix = MatrixUtils.createRealMatrix(8, 8);
-		try {
-			br = new BufferedReader(new FileReader(file));
-			String line = "";
-			int r = 0;
-			while ((line = br.readLine()) != null) {
-				String[] parts = line.split("\t");
-				RealVector vector = new ArrayRealVector(8);
-				for (int i = 0; i < 8; i++) {
-					vector.setEntry(i, Double.parseDouble(parts[i]));
-				}
-				matrix.setRow(r, vector.toArray());
-				r++;
-			}
-		} finally {
-			if (br != null) br.close();
-		}
-		printMatrix(matrix);
+	public static ErrorKernelDecider fromMatrixFile(File file) throws IOException {
+		RealMatrix matrix = MathUtils.readMatrix(file);
+		MathUtils.printMatrix(matrix, 6);
 		return new ErrorKernelDecider(matrix);
-	}
-
-	private static void printMatrix(RealMatrix matrix) throws IOException {
-		StringBuilder sb = new StringBuilder();
-		NumberFormat nf = new DecimalFormat();
-		nf.setMaximumFractionDigits(6);
-		for (int i = 0; i < matrix.getRowDimension(); i++) {
-			for (int j = 0; j < matrix.getColumnDimension(); j++) {
-				sb.append(nf.format(matrix.getEntry(i, j)));
-				if (j < matrix.getColumnDimension() - 1) sb.append("\t");
-			}
-			if (i < matrix.getRowDimension() - 1) sb.append(StatUtils.NEWLINE);
-		}
-		System.out.println(sb.toString());
 	}
 
 }

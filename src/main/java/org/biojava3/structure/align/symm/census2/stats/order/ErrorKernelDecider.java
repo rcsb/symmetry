@@ -21,7 +21,7 @@ public class ErrorKernelDecider implements ConsensusDecider {
 
 	@Override
 	public int decide(Map<Integer,Integer> countsByOrders) {
-		return decide(MathUtils.mapToShiftedVector(countsByOrders));
+		return decide(MathUtils.mapToShiftedVector(countsByOrders, 8));
 	}
 	
 	public int decide(RealVector counts) {

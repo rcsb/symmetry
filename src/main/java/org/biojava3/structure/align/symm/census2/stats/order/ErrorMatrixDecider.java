@@ -21,17 +21,24 @@ public class ErrorMatrixDecider implements ConsensusDecider {
 
 	@Override
 	public int decide(Map<Integer,Integer> countsByOrders) {
-		return decide(MathUtils.mapToShiftedVector(countsByOrders));
+		return decide(MathUtils.mapToShiftedVector(countsByOrders, 8));
 	}
 	
 	public int decide(RealVector counts) {
+		System.out.println("---------------------------------");
+		System.out.println(counts);
 		RealVector modified = matrix.operate(counts);
-		return MathUtils.argmax(modified) + 1;
+		System.out.println(modified);
+		int max = MathUtils.argmax(modified) + 1;
+		if (max == 0) max = 1;
+		System.out.println(max);
+		System.out.println("---------------------------------\n");
+		return max;
 	}
 
 	public static ErrorMatrixDecider fromMatrixFile() {
 		try {
-			return fromMatrixFile(new File("src/main/resources/full_error_matrix.matrix"));
+			return fromMatrixFile(new File("src/main/resources/log_K_M_delta.matrix"));
 		} catch (IOException e) {
 			throw new RuntimeException("Couldn't load matrix", e);
 		}

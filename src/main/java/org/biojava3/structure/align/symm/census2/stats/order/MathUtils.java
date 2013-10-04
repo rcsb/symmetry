@@ -42,12 +42,8 @@ public class MathUtils {
 		return matrix;
 	}
 
-	public static RealVector mapToShiftedVector(Map<Integer,Integer> map) {
-		int max = 0;
-		for (Integer i : map.keySet()) {
-			if (i > max) max = i;
-		}
-		RealVector vector = new ArrayRealVector(max);
+	public static RealVector mapToShiftedVector(Map<Integer,Integer> map, int size) {
+		RealVector vector = new ArrayRealVector(size);
 		for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
 			vector.setEntry(entry.getKey()-1, entry.getValue());
 		}

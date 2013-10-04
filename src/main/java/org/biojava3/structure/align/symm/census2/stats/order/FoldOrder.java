@@ -30,7 +30,7 @@ public class FoldOrder {
 	private ConsensusDecider consensusDecider;
 	
 	public FoldOrder() {
-		consensusDecider = ErrorKernelDecider.fromMatrixFile();
+		consensusDecider = ErrorMatrixDecider.fromMatrixFile();
 	}
 
 	private static final Logger logger = LogManager.getLogger(SymmetryOrder.class.getName());

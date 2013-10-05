@@ -59,6 +59,7 @@ public class ThresholdTester {
 			pw.println(argmax);
 			pw.println(max);
 			pw.println(top);
+			pw.flush();
 		} finally {
 			if (pw != null) pw.close();
 		}

@@ -139,8 +139,6 @@ public class SymDRunner {
 	public SymDRunner(AtomCache cache, ScopDatabase scop, String symdPath, File outputFile, boolean isUpdated) {
 		super();
 		this.isUpdated = isUpdated;
-		if (!symdPdbFilesDir.endsWith("/"))
-			symdPdbFilesDir += "/";
 		this.cache = cache;
 		this.symdPath = symdPath;
 		symdPdbFilesDir = symdPdbFilesDir.substring(0, symdPdbFilesDir.lastIndexOf('/'));
@@ -215,9 +213,9 @@ public class SymDRunner {
 				try {
 					long startTime = System.currentTimeMillis();
 					if (isUpdated) {
-						result = runSymD13hw3(domain, structure, file.getPath());
-					} else {
 						result = runSymD15b(domain, structure, file.getPath());
+					} else {
+						result = runSymD13hw3(domain, structure, file.getPath());
 					}
 					long endTime = System.currentTimeMillis();
 					timeTaken += endTime - startTime;

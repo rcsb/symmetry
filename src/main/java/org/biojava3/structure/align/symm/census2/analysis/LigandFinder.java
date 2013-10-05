@@ -2,7 +2,11 @@ package org.biojava3.structure.align.symm.census2.analysis;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,12 +19,17 @@ import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.ResidueNumber;
 import org.biojava.bio.structure.Structure;
+import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.io.mmcif.chem.ResidueType;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.census2.Census;
+import org.biojava3.structure.align.symm.census2.CensusJob;
+import org.biojava3.structure.align.symm.census2.CensusJob.FullInfo;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
@@ -52,6 +61,11 @@ public class LigandFinder {
 	private int radius = DEFAULT_RADIUS;
 	private File output;
 	private int printFrequency = 100;
+	private boolean useOnlyAligned = true;
+
+	public void setUseOnlyAligned(boolean useOnlyAligned) {
+		this.useOnlyAligned = useOnlyAligned;
+	}
 
 	public void setPrintFrequency(int printFrequency) {
 		this.printFrequency = printFrequency;
@@ -117,7 +131,17 @@ public class LigandFinder {
 				// acids or water atoms
 				Structure structure = cache.getStructureForDomain(scopId, scop);
 				Atom[] ca = StructureTools.getAtomCAArray(structure);
-				Atom centroid = Calc.getCentroid(ca);
+
+				Atom centroid;
+				if (useOnlyAligned) {
+					// run CE-Symm to get alignment
+					FullInfo info = CensusJob.runOn(scopId, Census.AlgorithmGiver.getDefault(), sig, cache, scop);
+					RotationAxis axis = new RotationAxis(info.getAfpChain());
+					centroid = axis.getRotationPos();
+				} else {
+					centroid = Calc.getCentroid(ca);
+				}
+
 				AtomPositionMap atomPositions = new AtomPositionMap(ca, exclusionMatcher);
 				Set<ResidueNumber> excluded = atomPositions.getNavMap().keySet();
 				// Set<Group> ligands =
@@ -126,6 +150,9 @@ public class LigandFinder {
 				Map<Group, Double> ligandDistances = StructureTools.getGroupDistancesWithinShell(structure, centroid,
 						excluded, radius, false, false);
 
+				/*
+				 *  add ligands to list
+				 */
 				if (!ligandDistances.isEmpty()) {
 					logger.debug("Assigning " + ligandDistances.size() + " ligands to " + scopId);
 					for (Group group : ligandDistances.keySet()) {
@@ -155,13 +182,55 @@ public class LigandFinder {
 	}
 
 	/**
+	 * Removes unaligned groups from {@code ligandDistances}.
+	 * @param ligandDistances The map to remove from
+	 * @param alignment A map from group position numbers to group position numbers
+	 * @param ca All atoms of the structure
+	 * @throws StructureException
+	 * @throws IOException
+	 * @deprecated Irrelevant
+	 */
+	@Deprecated
+	private void removeUnaligned(Map<Group, Double> ligandDistances, Map<Integer,Integer> alignment, Atom[] ca) throws StructureException, IOException {
+
+		// get a list of all of the groups in the domain
+		// the index of the list is critical
+		List<Group> groupsInStructure = new ArrayList<Group>();
+		HashSet<WeakReference<Group>> groupsInStructureSet = new HashSet<WeakReference<Group>>(); // so we don't have to iterate thru in liear time
+		for (Atom atom : ca) {
+			Group group = atom.getGroup();
+			if (!groupsInStructureSet.contains(group)) {
+				groupsInStructure.add(group);
+				groupsInStructureSet.add(new WeakReference<Group>(group));
+			}
+		}
+
+		// now find aligned residues
+		HashSet<Group> alignedGroups = new HashSet<Group>();
+		for (Integer key : alignment.keySet()) {
+			alignedGroups.add(groupsInStructure.get(key));
+		}
+
+		// now remove any group that's not on the list
+		List<Group> toRemove = new ArrayList<Group>();
+		for (Group group : ligandDistances.keySet()) {
+			if (!alignedGroups.contains(group)) {
+				toRemove.add(group);
+			}
+		}
+		for (Group group : toRemove) {
+			ligandDistances.remove(group);
+		}
+	}
+
+	/**
 	 * @param args
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
 		if (args.length < 2 || args.length > 3) {
 			System.err
-					.println("Usage: " + LigandFinder.class.getSimpleName() + " census-file.xml output-file [radius]");
+			.println("Usage: " + LigandFinder.class.getSimpleName() + " census-file.xml output-file [radius]");
 			return;
 		}
 		int radius = LigandFinder.DEFAULT_RADIUS;

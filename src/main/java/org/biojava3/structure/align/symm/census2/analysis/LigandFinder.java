@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -96,6 +97,8 @@ public class LigandFinder {
 
 	public void find(Results census) {
 
+		Collections.shuffle(census.getData());
+		
 		if (output != null && output.exists()) {
 			try {
 				ligandList = LigandList.fromXml(output);

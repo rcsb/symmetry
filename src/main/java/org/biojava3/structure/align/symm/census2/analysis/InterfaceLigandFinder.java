@@ -2,6 +2,7 @@ package org.biojava3.structure.align.symm.census2.analysis;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -134,6 +135,8 @@ public class InterfaceLigandFinder {
 
 	public void find(Results census) {
 
+		Collections.shuffle(census.getData());
+		
 		if (output != null && output.exists()) {
 			try {
 				ligandList = LigandList.fromXml(output);

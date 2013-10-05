@@ -48,6 +48,7 @@ public class ThresholdTester {
 				pw.println("-------------------------" + value + "=" + matrix.getDiagonalSum() + "-------------------------");
 				pw.println(matrix.getMatrix());
 				pw.println("-----------------------------------------------------------------------");
+				pw.flush();
 				if (test > max) {
 					max = test;
 					argmax = value;

@@ -30,24 +30,29 @@ public class SimpleErrorMatrix {
 			return;
 		}
 		Sample sample = Sample.fromXML(new File(args[0]));
-		SimpleErrorMatrix matrix = new SimpleErrorMatrix(sample);
+		SimpleErrorMatrix matrix = new SimpleErrorMatrix();
+		matrix.run(sample);
 		System.out.println(matrix);
+		System.out.println(matrix.getDiagonalSum());
 	}
 
 	private Matrix matrix = new Matrix(8, 8);
 
 	private Significance significance = SignificanceFactory.forCeSymmTm();
+	private OrderDetermination orderer = OrderDeterminationFactory.simpleWithScrew(2 * Math.PI / 180, 7);
 
-	public SimpleErrorMatrix(Sample sample) {
+	public void setOrderer(OrderDetermination orderer) {
+		this.orderer = orderer;
+	}
+
+	public void run(Sample sample) {
 		for (Case c : sample.getData()) {
-			int knownOrder = c.getKnownOrder();
-			Integer order = c.getOrder();
-			if (c.getOrder() == null || c.getOrder() < 1) order = 1;
-			if (knownOrder == 4 && order == 8) System.err.println("HI");
 			if (!significance.isSignificant(c.getResult())) continue;
+			int knownOrder = c.getKnownOrder();
+			int order = orderer.getOrder(c.getResult());
 			matrix.set(knownOrder - 1, order - 1, matrix.get(knownOrder - 1, order - 1) + 1);
 			if (knownOrder % order != 0 && order % knownOrder != 0) {
-				logger.info("Found: " + knownOrder + "," + order);
+//				logger.info("Found: " + knownOrder + "," + order);
 			}
 		}
 	}
@@ -56,6 +61,14 @@ public class SimpleErrorMatrix {
 		return matrix;
 	}
 
+	public int getDiagonalSum() {
+		int sum = 0;
+		for (int i = 0; i < 8; i++) {
+			sum += matrix.get(i, i);
+		}
+		return sum;
+	}
+	
 	public void print(File output) throws IOException {
 		PrintWriter pw = null;
 		try {

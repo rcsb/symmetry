@@ -472,7 +472,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			}
 
 			if(refineResult) {
-				int order = getSymmetryOrder(afpChain, DEFAULT_MAX_SYMMETRY_ORDER, DEFAULT_MINIMUM_METRIC_CHANGE);
+				int order = getSymmetryOrder(afpChain, maxSymmetryOrder, minimumMetricChange);
 				afpChain = SymmRefiner.refineSymmetry(afpChain, ca1, ca2O, order);
 			}
 

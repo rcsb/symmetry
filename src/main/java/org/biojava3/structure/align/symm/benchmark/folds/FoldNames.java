@@ -4,8 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,9 +26,9 @@ public class FoldNames {
 
 	private static final Logger logger = LogManager.getLogger(FoldNames.class.getName());
 
-	public static void main(String[] args) throws MalformedURLException {
+	public static void main(String[] args) throws IOException {
 		URL url = new URL("http://scop.berkeley.edu/downloads/scopseq-1.73/astral-scopdom-seqres-gd-sel-gs-bib-95-1.73.fa");
-		Set<String> names = new Astral("1.73_40", url).getNames();
+		Set<String> names = new Astral("1.73_40", new InputStreamReader(url.openStream())).getNames();
 		ScopInstallation scop = new ScopInstallation();
 		scop.setScopVersion("1.73");
 		print(args, scop, names);

@@ -38,7 +38,7 @@ public class FoldsCeSymm {
 		Significance tm = SignificanceFactory.forCeSymmTm();
 		Significance ord = SignificanceFactory.forCeSymmOrd();
 		new File(dir).mkdirs();
-		String[] folds = new String[] {"a.24", "b.1", "b.11", "b.42", "b.69", "c.1", "d.131", "d.58"};
+		String[] folds = new String[] {"a.24", "d.58"};
 		System.out.println("fold\tTM\tord\tN");
 		for (String fold : folds) {
 			File censusFile = new File(dir + fold + ".xml");

@@ -80,7 +80,7 @@ public class NamesCensus extends Census {
 		}
 	}
 
-	private static List<ScopDomain> readNames(File lineByLine) {
+	public static List<ScopDomain> readNames(File lineByLine) {
 		List<ScopDomain> domains = new ArrayList<ScopDomain>();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(lineByLine));

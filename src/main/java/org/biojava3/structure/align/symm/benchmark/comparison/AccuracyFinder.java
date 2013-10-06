@@ -42,11 +42,11 @@ public class AccuracyFinder {
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 1 && args.length != 2) {
-			System.err.println("Usage: " + AccuracyFinder.class.getSimpleName() + " input-file [significance-class] [significance-method]");
+			System.err.println("Usage: " + AccuracyFinder.class.getSimpleName() + " input-file [significance-method] [significance-class]");
 			return;
 		}
 		File input = new File(args[0]);
-		Significance sig = SignificanceFactory.tmScore(0.5);
+		Significance sig = SignificanceFactory.forCeSymmOrd();
 		if (args.length > 2) {
 			logger.info("Using alternate Significance "  + args[1] + "." + args[2]);
 			sig = SignificanceFactory.fromMethod(args[1], args[2]);

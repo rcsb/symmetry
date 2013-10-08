@@ -1,5 +1,6 @@
 package org.biojava3.structure.align.symm;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 import org.biojava.bio.structure.Atom;
@@ -560,4 +561,45 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		this.refineResult = refineResult;
 	}
 
+	/**
+	 * Provide a rough alignment-free metric for the similarity between two
+	 * superimposed structures.
+	 *
+	 * The average distance from each atom to the closest atom in the other
+	 * is used.
+	 * @param ca1
+	 * @param ca2
+	 * @return
+	 * @throws StructureException
+	 */
+	public static double superpositionDistance(Atom[] ca1, Atom[] ca2) throws StructureException {
+
+		// Store the closest distance yet found
+		double[] bestDist1 = new double[ca1.length];
+		double[] bestDist2 = new double[ca2.length];
+		Arrays.fill(bestDist1, Double.POSITIVE_INFINITY);
+		Arrays.fill(bestDist2, Double.POSITIVE_INFINITY);
+
+		for(int i=0;i<ca1.length;i++) {
+			for(int j=0;j<ca2.length;j++) {
+				double dist = Calc.getDistance(ca1[i], ca2[j]);
+				if( dist < bestDist1[i]) {
+					bestDist1[i] = dist;
+				}
+				if( dist < bestDist2[j]) {
+					bestDist2[j] = dist;
+				}
+			}
+		}
+
+		double total = 0;
+		for(int i=0;i<ca1.length;i++) {
+			total += bestDist1[i];
+		}
+		for(int j=0;j<ca2.length;j++) {
+			total += bestDist2[j];
+		}
+
+		return total/(ca1.length+ca2.length);
+	}
 }

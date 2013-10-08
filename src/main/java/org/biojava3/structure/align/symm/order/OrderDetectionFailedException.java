@@ -1,14 +1,10 @@
 package org.biojava3.structure.align.symm.order;
 
 public class OrderDetectionFailedException extends Exception {
+	private static final long serialVersionUID = -7040421412578699838L;
 
 	public OrderDetectionFailedException() {
 		super();
-	}
-
-	public OrderDetectionFailedException(String message, Throwable cause, boolean enableSuppression,
-			boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
 	}
 
 	public OrderDetectionFailedException(String message, Throwable cause) {

@@ -1,8 +1,6 @@
 package org.biojava3.structure.align.symm.order;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Arrays;
 
 import org.biojava.bio.structure.Atom;
@@ -11,28 +9,25 @@ import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.align.symm.CeSymm;
 
 /**
- * Detects order by rotating the structure by angles that correspond to orders.
- * This one could be smart.
- * TODO Needs lots of work
- * @author dmyersturnbull
+ * Detects order by analyzing the goodness of fit as the protein is rotated
+ * around the axis of symmetry.
+ * @author Spencer Bliven
  */
 public class RotationOrderDetector implements OrderDetector {
 
-	private int maxOrder = 8;
-	private final double minScore;
+	private int maxOrder;
 
-	public RotationOrderDetector(double minTmScore) {
-		super();
-		this.minScore = minTmScore;
+	public RotationOrderDetector() {
+		this(8);
 	}
 
-	public RotationOrderDetector(int maxOrder, double minTmScore) {
+	public RotationOrderDetector(int maxOrder) {
 		super();
 		this.maxOrder = maxOrder;
-		this.minScore = minTmScore;
 	}
 
 	@Override
@@ -42,38 +37,19 @@ public class RotationOrderDetector implements OrderDetector {
 
 			RotationAxis axis = new RotationAxis(afpChain);
 
-			//AFPChain clone = (AFPChain) afpChain.clone();
-			Atom[] ca2 = null;
+			// Calculate weights for each order
+			//TODO only use aligned residues, rather than the whole ca
+			double[] coefficients = fitHarmonics(ca,axis);
 
-			double bestScore = minScore;
+			// Find order with maximum weight
+			double bestScore = coefficients[0];
 			int argmax = 1;
-			
-			for (int order = 1; order <= maxOrder; order++) {
-
-				ca2 = StructureTools.cloneCAArray(ca); // reset rotation for new order
-				double angle = 2*Math.PI / order; // will apply repeatedly
-
-				/*
-				 * If C6, we should be able to rotate 6 times and still get a decent superposition
-				 */
-				double lowestScore = Double.POSITIVE_INFINITY;
-				for (int j = 1; j < order; j++) {
-					axis.rotate(ca2, angle); // rotate repeatedly
-					//double score = AFPChainScorer.getTMScore(clone, ca, ca2);
-					double score = superpositionDistance(ca, ca2);
-
-					if (score < lowestScore) {
-						lowestScore = score;
-					}
+			for(int i=1;i<coefficients.length;i++) {
+				if(coefficients[i] > bestScore ) {
+					argmax = i+1;
+					bestScore = coefficients[i];
 				}
-
-				if (lowestScore > bestScore) {
-					bestScore = lowestScore;
-					argmax = order;
-				}
-
 			}
-
 			return argmax;
 
 		} catch (Exception e) {
@@ -87,12 +63,12 @@ public class RotationOrderDetector implements OrderDetector {
 	 *
 	 * The average distance from each atom to the closest atom in the other
 	 * is used.
-	 * @param ca1
-	 * @param ca2
-	 * @return
-	 * @throws StructureException
+	 * @param ca1 first structure
+	 * @param ca2 second structure
+	 * @return the average distance to the closest atom
+	 * @throws StructureException if an error occurs finding distances between atoms
 	 */
-	public static double superpositionDistance(Atom[] ca1, Atom[] ca2) throws StructureException {
+	public double superpositionDistance(Atom[] ca1, Atom[] ca2) throws StructureException {
 
 		// Store the closest distance yet found
 		double[] bestDist1 = new double[ca1.length];
@@ -124,50 +100,109 @@ public class RotationOrderDetector implements OrderDetector {
 		return dist;
 	}
 	
+	/**
+	 * Models the relationship between order and superpositionDistance as a
+	 * combination of sine squared functions:
+	 * 
+	 *  f(angle) = a1*sin(angle/2)^2 + a2*sin(2*angle/2)^2 + a3*sin(3*angle/2)^2 + ...
+	 *  
+	 * Performs a best-fit to find coefficients a1,a2,...,aMaxOrder.
+	 * These give the relative contribution of each order to the overall function.
+	 * @param ca Aligned residues from the protein structure
+	 * @param axis The rotaton axis about which to rotate
+	 * @return an array of length maxOrder giving the coefficients
+	 * @throws StructureException
+	 */
+	public double[] fitHarmonics(Atom[] ca, RotationAxis axis) throws StructureException {
+		final double angleIncr = 5*Calc.radiansPerDegree;
+		final int steps = (int)Math.floor(Math.PI/angleIncr);
+
+		// Fit (angle,distance) points to the following equation
+		// f(angle) = a1*sin^2(1*angle/2) + a2*sin^2(2*angle/2) +...+ a*sin2(maxOrder*angle/2)
+		// goal is to find a_1...a_maxOrder
+		
+		double[][] distances = new double[steps][1];
+		// holds the sin2(i*angle/2) terms
+		double[][] harmonics = new double[steps][maxOrder];
+		
+		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		
+		for (int step=0; step<steps;step++) {
+			double dist = superpositionDistance(ca, ca2);
+			distances[step][0] = dist;
+			
+			for(int order=0;order<maxOrder;order++) {
+				double angle = angleIncr*step;
+				double x = Math.sin( (order+1)*angle/2);
+				harmonics[step][order] = x*x;
+			}
+			// Rotate for next step
+			axis.rotate(ca2, angleIncr);
+		}
+		
+		Matrix y = new Matrix(distances);
+		Matrix M = new Matrix(harmonics);
+		//y=y.getMatrix(1, steps-1, 0, 0);
+		//M=M.getMatrix(1, steps-1, 1, maxOrder-1);
+		
+		
+		Matrix A = M.transpose().times(M).times(2);
+		Matrix b = M.transpose().times(y).times(2);
+		Matrix c = y.transpose().times(y);
+		
+		// f(x) = x'Ax/2-bx+c
+		// f'(x) = Ax-b = 0
+		// Ax = b
+//		assert(A.getRowDimension() == maxOrder);
+//		assert(A.getColumnDimension() == maxOrder);
+//		assert(b.getRowDimension() == 1);
+//		assert(b.getColumnDimension() == maxOrder);
+//		assert(c.getRowDimension() == 1);
+//		assert(c.getColumnDimension() == 1);
+		
+		A.inverse();
+		
+		Matrix harmonicWeights = A.solve(b);
+		
+//		assert(harmonicWeights.getRowDimension() == maxOrder);
+//		assert(harmonicWeights.getColumnDimension() == 1);
+
+		return harmonicWeights.transpose().getArray()[0];
+	}
+	
 	public static void main(String[] args) {
 		String name;
 		name = "d1ijqa1";
 //		name = "1G6S";
-//		name = "1MER.A";
+		name = "1MER.A";
 //		name = "1MER";
 //		name = "1TIM.A";
 //		name = "d1h70a_";
-		PrintStream out = System.out;
 		try {
-			// Output file
-			// Use stdout if the directory doesn't exist
-			String filename = "/Users/blivens/dev/bourne/symmetry/order/angle_"+name+".tsv";
-			File file = new File(filename);
-			if(file.getParentFile().exists()) {
-				System.out.println("Writing to "+file.getAbsolutePath());
-				out = new PrintStream(file);
-			}
-
 			
+			// Perform alignment to determine axis
 			Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
 			Atom[] ca2 = StructureTools.cloneCAArray(ca1);
-
 			CeSymm ce = new CeSymm();
-			
 			AFPChain alignment = ce.align(ca1, ca2);
-			
-			RotationAxis axis = new RotationAxis(alignment);
-			
-			out.println("Angle\tDistance");
-			out.format("%f\t%f%n", 0.,0.);
-			double angleIncr = 5*Calc.radiansPerDegree;
-			for (double angle = angleIncr; angle < 2*Math.PI; angle += angleIncr) {
-				axis.rotate(ca2, angleIncr);
-				double score = superpositionDistance(ca1, ca2);
-					
-				out.format("%f\t%f%n", angle,score);
-				//new StructureAlignmentJmol(alignment, ca1, ca2);
-			}
 
-			out.close();
+			// Search for orders up to 8
+			RotationOrderDetector detector = new RotationOrderDetector(8);
+			
+			// Calculate order
+			int order = detector.calculateOrder(alignment, ca1);
+			System.out.println("Order: "+order);
+
+			// Print weights for each order, for comparison
+			RotationAxis axis = new RotationAxis(alignment);
+			double[] harmonics = detector.fitHarmonics(ca1,axis);
+			System.out.println("Order Weights: "+Arrays.toString(harmonics));
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (StructureException e) {
+			e.printStackTrace();
+		} catch (OrderDetectionFailedException e) {
 			e.printStackTrace();
 		}
 		

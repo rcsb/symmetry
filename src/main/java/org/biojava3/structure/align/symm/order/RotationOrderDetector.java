@@ -150,7 +150,7 @@ public class RotationOrderDetector implements OrderDetector {
 
 				for (int j = 1; j < order; j++) {
 					axis.rotate(ca2, angle);
-					double score = CeSymm.superpositionDistance(ca1, ca2);
+					double score = superpositionDistance(ca1, ca2);
 					
 					System.out.format("%d\t%d\t%f%n", order,j,score);
 				}

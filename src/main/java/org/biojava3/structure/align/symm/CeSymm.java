@@ -582,7 +582,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 		for(int i=0;i<ca1.length;i++) {
 			for(int j=0;j<ca2.length;j++) {
-				double dist = Calc.getDistance(ca1[i], ca2[j]);
+				double dist = Calc.getDistanceFast(ca1[i], ca2[j]);
 				if( dist < bestDist1[i]) {
 					bestDist1[i] = dist;
 				}
@@ -594,12 +594,13 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 		double total = 0;
 		for(int i=0;i<ca1.length;i++) {
-			total += bestDist1[i];
+			total += Math.sqrt(bestDist1[i]);
 		}
 		for(int j=0;j<ca2.length;j++) {
-			total += bestDist2[j];
+			total += Math.sqrt(bestDist2[j]);
 		}
 
-		return total/(ca1.length+ca2.length);
+		double dist = total/(ca1.length+ca2.length);
+		return dist;
 	}
 }

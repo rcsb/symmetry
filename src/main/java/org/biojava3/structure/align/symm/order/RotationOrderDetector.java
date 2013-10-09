@@ -1,8 +1,10 @@
 package org.biojava3.structure.align.symm.order;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
@@ -57,7 +59,7 @@ public class RotationOrderDetector implements OrderDetector {
 				for (int j = 1; j < order; j++) {
 					axis.rotate(ca2, angle); // rotate repeatedly
 					//double score = AFPChainScorer.getTMScore(clone, ca, ca2);
-					double score = CeSymm.superpositionDistance(ca, ca2);
+					double score = superpositionDistance(ca, ca2);
 
 					if (score < lowestScore) {
 						lowestScore = score;
@@ -78,6 +80,48 @@ public class RotationOrderDetector implements OrderDetector {
 		}
 	}
 
+	/**
+	 * Provide a rough alignment-free metric for the similarity between two
+	 * superimposed structures.
+	 *
+	 * The average distance from each atom to the closest atom in the other
+	 * is used.
+	 * @param ca1
+	 * @param ca2
+	 * @return
+	 * @throws StructureException
+	 */
+	public static double superpositionDistance(Atom[] ca1, Atom[] ca2) throws StructureException {
+
+		// Store the closest distance yet found
+		double[] bestDist1 = new double[ca1.length];
+		double[] bestDist2 = new double[ca2.length];
+		Arrays.fill(bestDist1, Double.POSITIVE_INFINITY);
+		Arrays.fill(bestDist2, Double.POSITIVE_INFINITY);
+
+		for(int i=0;i<ca1.length;i++) {
+			for(int j=0;j<ca2.length;j++) {
+				double dist = Calc.getDistanceFast(ca1[i], ca2[j]);
+				if( dist < bestDist1[i]) {
+					bestDist1[i] = dist;
+				}
+				if( dist < bestDist2[j]) {
+					bestDist2[j] = dist;
+				}
+			}
+		}
+
+		double total = 0;
+		for(int i=0;i<ca1.length;i++) {
+			total += Math.sqrt(bestDist1[i]);
+		}
+		for(int j=0;j<ca2.length;j++) {
+			total += Math.sqrt(bestDist2[j]);
+		}
+
+		double dist = total/(ca1.length+ca2.length);
+		return dist;
+	}
 	
 	public static void main(String[] args) {
 		String name;

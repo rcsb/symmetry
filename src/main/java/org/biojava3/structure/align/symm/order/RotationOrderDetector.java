@@ -7,7 +7,6 @@ import java.util.Arrays;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Calc;
-import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.model.AFPChain;
@@ -128,16 +127,16 @@ public class RotationOrderDetector implements OrderDetector {
 	public static void main(String[] args) {
 		String name;
 		name = "d1ijqa1";
-		name = "1G6S";
-		name = "1MER.A";
-		name = "1MER";
-		name = "1TIM.A";
-		name = "d1h70a_";
+//		name = "1G6S";
+//		name = "1MER.A";
+//		name = "1MER";
+//		name = "1TIM.A";
+//		name = "d1h70a_";
 		PrintStream out = System.out;
 		try {
 			// Output file
 			// Use stdout if the directory doesn't exist
-			String filename = "/Users/blivens/dev/bourne/symmetry/order/order_"+name+".tsv";
+			String filename = "/Users/blivens/dev/bourne/symmetry/order/angle_"+name+".tsv";
 			File file = new File(filename);
 			if(file.getParentFile().exists()) {
 				System.out.println("Writing to "+file.getAbsolutePath());
@@ -146,33 +145,23 @@ public class RotationOrderDetector implements OrderDetector {
 
 			
 			Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-			Structure s2 = StructureTools.getStructure(name);
-			Atom[] ca2 = StructureTools.getAtomCAArray(s2);
+			Atom[] ca2 = StructureTools.cloneCAArray(ca1);
+
 			CeSymm ce = new CeSymm();
 			
 			AFPChain alignment = ce.align(ca1, ca2);
 			
 			RotationAxis axis = new RotationAxis(alignment);
 			
-			
-			out.println("Order\tRotations\tDistance");
-			
-			
-			int maxOrder = 8;
-			for (int order = 1; order <= maxOrder; order++) {
-				ca2 = StructureTools.cloneCAArray(ca1); // reset rotation for new order
-				double angle = 2*Math.PI / order; // will apply repeatedly
-
-				for (int j = 1; j < order; j++) {
-					axis.rotate(ca2, angle);
-					double score = superpositionDistance(ca1, ca2);
+			out.println("Angle\tDistance");
+			out.format("%f\t%f%n", 0.,0.);
+			double angleIncr = 5*Calc.radiansPerDegree;
+			for (double angle = angleIncr; angle < 2*Math.PI; angle += angleIncr) {
+				axis.rotate(ca2, angleIncr);
+				double score = superpositionDistance(ca1, ca2);
 					
-					out.format("%d\t%d\t%f%n", order,j,score);
-				}
-				
-				
+				out.format("%f\t%f%n", angle,score);
 				//new StructureAlignmentJmol(alignment, ca1, ca2);
-				
 			}
 
 			out.close();

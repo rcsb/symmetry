@@ -1,6 +1,8 @@
 package org.biojava3.structure.align.symm.order;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Arrays;
 
 import org.biojava.bio.structure.Atom;
@@ -126,11 +128,23 @@ public class RotationOrderDetector implements OrderDetector {
 	public static void main(String[] args) {
 		String name;
 		name = "d1ijqa1";
-//		name = "1G6S";
-//		name = "1MER";
+		name = "1G6S";
+		name = "1MER.A";
+		name = "1MER";
 		name = "1TIM.A";
 		name = "d1h70a_";
+		PrintStream out = System.out;
 		try {
+			// Output file
+			// Use stdout if the directory doesn't exist
+			String filename = "/Users/blivens/dev/bourne/symmetry/order/order_"+name+".tsv";
+			File file = new File(filename);
+			if(file.getParentFile().exists()) {
+				System.out.println("Writing to "+file.getAbsolutePath());
+				out = new PrintStream(file);
+			}
+
+			
 			Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
 			Structure s2 = StructureTools.getStructure(name);
 			Atom[] ca2 = StructureTools.getAtomCAArray(s2);
@@ -140,7 +154,8 @@ public class RotationOrderDetector implements OrderDetector {
 			
 			RotationAxis axis = new RotationAxis(alignment);
 			
-			System.out.println("Order\tRotations\tDistance");
+			
+			out.println("Order\tRotations\tDistance");
 			
 			
 			int maxOrder = 8;
@@ -152,7 +167,7 @@ public class RotationOrderDetector implements OrderDetector {
 					axis.rotate(ca2, angle);
 					double score = superpositionDistance(ca1, ca2);
 					
-					System.out.format("%d\t%d\t%f%n", order,j,score);
+					out.format("%d\t%d\t%f%n", order,j,score);
 				}
 				
 				
@@ -160,6 +175,7 @@ public class RotationOrderDetector implements OrderDetector {
 				
 			}
 
+			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (StructureException e) {

@@ -49,6 +49,8 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.core.util.ConcurrencyTools;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.order.OrderDetector;
+import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava3.structure.utils.FileUtils;
 
 /**
@@ -104,6 +106,12 @@ public class Census {
 	private Map<String, Integer> total = new TreeMap<String, Integer>();
 
 	private AlgorithmGiver algorithm = null;
+
+	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
+	
+	public void setOrderDetector(OrderDetector orderDetector) {
+		this.orderDetector = orderDetector;
+	}
 
 	public static void buildDefault(File censusFile) {
 		try {

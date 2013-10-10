@@ -26,9 +26,11 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
+import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
@@ -41,6 +43,8 @@ import org.biojava.bio.structure.secstruc.SecStrucGroup;
 import org.biojava.bio.structure.secstruc.SecStrucState;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
+import org.biojava3.structure.align.symm.order.OrderDetector;
+import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 /**
@@ -49,6 +53,12 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  * @author dmyerstu
  */
 public class CensusJob implements Callable<Result> {
+
+	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
+	
+	public void setOrderDetector(OrderDetector orderDetector) {
+		this.orderDetector = orderDetector;
+	}
 
 	public static class FullInfo {
 		private AFPChain afpChain;
@@ -158,10 +168,11 @@ public class CensusJob implements Callable<Result> {
 		logger.debug("Got " + ca1.length + " atoms (job #" + count + ")");
 
 		// run the alignment
+		StructureAlignment algorithm = this.algorithm.getAlgorithm();
 		AFPChain afpChain = null;
 		logger.debug("Running CE-Symm (job #" + count + ")");
 		try {
-			afpChain = findSymmetry(name, ca1, ca2);
+			afpChain = findSymmetry(name, algorithm, ca1, ca2);
 		} catch (Exception e) {
 			logger.error("Failed running CE-Symm on " + name + ": " + e.getMessage(), e);
 			return convertResult(null, null, null, null, name, null, null);
@@ -203,8 +214,7 @@ public class CensusJob implements Callable<Result> {
 			// now try to find the order
 			logger.debug("Finding order (job #" + count + ")");
 			try {
-				CeSymm s = (CeSymm) (algorithm.getAlgorithm());
-				order = CeSymm.getSymmetryOrder(afpChain, s.getMaxSymmetryOrder(), s.getMinimumMetricChange());
+				order = orderDetector.calculateOrder(afpChain, ca1);
 				logger.debug("Order is " + order + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.error("Failed to determine the order of symmetry on " + name + ": " + e.getMessage(), e);
@@ -231,7 +241,7 @@ public class CensusJob implements Callable<Result> {
 			Float fractionHelical = null;
 			if (calcFractionHelical) {
 				try {
-					fractionHelical = getFractionHelical(structure);
+//					fractionHelical = getFractionHelical(structure);
 				} catch (Exception e) {
 					logger.error("Could not assign secondary structure to " + name + " (job #" + count + ")", e);
 				}
@@ -336,10 +346,10 @@ public class CensusJob implements Callable<Result> {
 		return r;
 	}
 
-	private AFPChain findSymmetry(String name, Atom[] ca1, Atom[] ca2) throws StructureException, IOException {
+	private AFPChain findSymmetry(String name, StructureAlignment algorithm, Atom[] ca1, Atom[] ca2) throws StructureException, IOException {
 		if (!sanityCheckPreAlign(ca1, ca2)) throw new RuntimeException("Can't align using same structure.");
 		long startTime = System.currentTimeMillis();
-		AFPChain afpChain = algorithm.getAlgorithm().align(ca1, ca2);
+		AFPChain afpChain = algorithm.align(ca1, ca2);
 		long endTime = System.currentTimeMillis();
 		timeTaken = endTime - startTime;
 		if (afpChain == null) return null;

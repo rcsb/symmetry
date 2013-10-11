@@ -30,7 +30,6 @@ import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
-import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
@@ -41,7 +40,6 @@ import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.secstruc.SecStruc;
 import org.biojava.bio.structure.secstruc.SecStrucGroup;
 import org.biojava.bio.structure.secstruc.SecStrucState;
-import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.order.OrderDetector;
 import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
@@ -60,6 +58,10 @@ public class CensusJob implements Callable<Result> {
 		this.orderDetector = orderDetector;
 	}
 
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
 	public static class FullInfo {
 		private AFPChain afpChain;
 		private Result result;
@@ -100,7 +102,6 @@ public class CensusJob implements Callable<Result> {
 
 	private boolean calcFractionHelical;
 	private boolean storeAfpChain;
-	private AFPChain afpChain;
 
 	private Long timeTaken;
 
@@ -115,7 +116,7 @@ public class CensusJob implements Callable<Result> {
 	}
 
 	/**
-	 * Preferred method for web-based calls.
+	 * @deprecated
 	 */
 	public static FullInfo runOn(String name, AlgorithmGiver algorithm, Significance sig, AtomCache cache,
 			ScopDatabase scop) {
@@ -126,7 +127,7 @@ public class CensusJob implements Callable<Result> {
 		job.setName(name);
 		job.setCount(0);
 		Result r = job.call();
-		return new FullInfo(job.getAfpChain(), r);
+		return new FullInfo(r.getAlignmentMapping().toAfpChain(), r);
 	}
 
 	private static boolean sanityCheckPreAlign(Atom[] ca1, Atom[] ca2) {
@@ -255,19 +256,8 @@ public class CensusJob implements Callable<Result> {
 		}
 	}
 
-	public AFPChain getAfpChain() {
-		return afpChain;
-	}
-
 	public Long getTimeTaken() {
 		return timeTaken;
-	}
-
-	/**
-	 * Discards the stored AFPChain to free heap memory.
-	 */
-	public void nullifyAfpChain() {
-		afpChain = null;
 	}
 
 	public void setCache(AtomCache cache) {
@@ -302,9 +292,9 @@ public class CensusJob implements Callable<Result> {
 	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, Integer order, Protodomain protodomain,
 			String name, Float angle, Float fractionHelical) {
 
-		if (storeAfpChain) this.afpChain = afpChain;
-
 		Result r = new Result();
+
+		if (storeAfpChain) r.setAlignmentMapping(new AlignmentMapping(afpChain));
 
 		r.setRank(count);
 		r.setScopId(name);

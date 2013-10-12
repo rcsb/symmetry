@@ -24,7 +24,6 @@ import org.biojava3.structure.align.symm.census2.stats.Grouping;
 import org.biojava3.structure.align.symm.census2.stats.StatUtils;
 import org.biojava3.structure.align.symm.census2.stats.order.ConsensusDecider;
 import org.biojava3.structure.align.symm.census2.stats.order.OrderHelper;
-
 /**
  * Finds statistics for the relationship(s) between symmetry and Enzyme Commission (EC) number.
  * Statistics are normalized using {@link Grouping Groupings}. For brevity and concreteness, the
@@ -270,9 +269,9 @@ public class NormalizedECs {
 		return label;
 	}
 
-	private Grouping exampler = Grouping.superfamily();
+	private Grouping exampler;
 
-	private Grouping normalizer = Grouping.superfamily();
+	private Grouping normalizer;
 
 	private OrderHelper orderHelper;
 
@@ -281,11 +280,13 @@ public class NormalizedECs {
 				new ConsensusDecider() {
 					@Override
 					public int decide(Map<Integer, Integer> orders) {
+//						for (Map.Entry<Integer,Integer> e : orders.entrySet()) System.out.print(e + "\t");
 						int n = 0;
 						for (int value : orders.values()) n += value;
-						int symm = 0;
-						if (orders.containsKey(1)) symm = orders.get(1);
-						return ((double) symm / n) >= 0.5? 2 : 1;
+						int asymm = 0;
+						if (orders.containsKey(0)) asymm += orders.get(0);
+						if (orders.containsKey(1)) asymm += orders.get(1);
+						return (((double) (n - asymm)) / ((double) n)) >= 0.5? 2 : 1;
 					}
 		}));
 	}
@@ -346,18 +347,25 @@ public class NormalizedECs {
 //			}
 		}
 
+		
+		
 		System.out.println("label\tNr-symm-sfs\tNr-total-sfs\t%SFs-symm\tstddev\tN-folds\tfold1\tfold2\t...");
-		for (Map.Entry<String, Set<String>> entry : symmSfsByLabel.entrySet()) {
+		for (String label : totalSfsByLabel.keySet()) {
 
-			final String label = entry.getKey();
-			final int nSymm = entry.getValue().size();
-			final int nTotal = totalSfsByLabel.containsKey(label) ? totalSfsByLabel.get(label).size() : 0;
+//			final int nSymm = symmSfsByLabel.containsKey(label)? symmSfsByLabel.get(label).size() : 0;
+//			final int nTotal = totalSfsByLabel.containsKey(label) ? totalSfsByLabel.get(label).size() : 0;
 
+			Set<String> allSfs = totalSfsByLabel.get(label);
+			if (!symmSfsByLabel.containsKey(label)) symmSfsByLabel.put(label, new HashSet<String>());
+			Set<String> symmSfs = symmSfsByLabel.get(label);
+			
 			// calculate mean and stddev
 			int i = 0;
-			double[] stddevs = new double[totalSfsByLabel.get(label).size()];
-			for (String sf : totalSfsByLabel.get(label)) {
-				if (symmSfsByLabel.get(label).contains(sf)) {
+			int nTotal = allSfs.size();
+			int nSymm = symmSfs.size();
+			double[] stddevs = new double[allSfs.size()];
+			for (String sf : allSfs) {
+				if (symmSfs.contains(sf)) {
 					stddevs[i] = 1;
 				} else {
 					stddevs[i] = 0;
@@ -384,7 +392,7 @@ public class NormalizedECs {
 	private Set<String> getSymmetricSuperfamilies(Results census) {
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 
-		Set<String> folds = new HashSet<String>();
+		Set<String> sfs = new HashSet<String>();
 
 		for (Result result : census.getData()) {
 			try {
@@ -394,18 +402,18 @@ public class NormalizedECs {
 				}
 				result.setClassification(domain.getClassificationId());
 				orderHelper.add(result);
-				String fold = normalizer.group(result);
-				folds.add(fold);
+				String sf = normalizer.group(result);
+				sfs.add(sf);
 			} catch (RuntimeException e) {
 				logger.warn("Failed on " + result.getScopId(), e);
 			}
 		}
 
 		Set<String> symm = new HashSet<String>();
-		for (String fold : folds) {
-			int order = orderHelper.getConsensusOrder(fold);
+		for (String sf : sfs) {
+			int order = orderHelper.getConsensusOrder(sf);
 			if (order > 1) {
-				symm.add(fold);
+				symm.add(sf);
 			}
 		}
 		return symm;

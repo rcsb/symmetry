@@ -25,14 +25,14 @@ public class ErrorMatrixDecider implements ConsensusDecider {
 	}
 	
 	public int decide(RealVector counts) {
-		System.out.println("---------------------------------");
-		System.out.println(counts);
+//		System.out.println("---------------------------------");
+//		System.out.println(counts);
 		RealVector modified = matrix.operate(counts);
-		System.out.println(modified);
+//		System.out.println(modified);
 		int max = MathUtils.argmax(modified) + 1;
 		if (max == 0) max = 1;
-		System.out.println(max);
-		System.out.println("---------------------------------\n");
+//		System.out.println(max);
+//		System.out.println("---------------------------------\n");
 		return max;
 	}
 

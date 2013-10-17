@@ -98,7 +98,7 @@ public class Census {
 
 	private int numTotal;
 
-	private int printFrequency = 20;
+	private int printFrequency = 400;
 	private Map<String, Integer> symm = new TreeMap<String, Integer>();
 
 	private Map<String, Integer> total = new TreeMap<String, Integer>();
@@ -145,7 +145,7 @@ public class Census {
 		return printFrequency;
 	}
 
-	public void print(Results census) {
+	public synchronized void print(Results census) {
 		PrintWriter out = null;
 		try {
 			out = new PrintWriter(new BufferedWriter(new FileWriter(file)));

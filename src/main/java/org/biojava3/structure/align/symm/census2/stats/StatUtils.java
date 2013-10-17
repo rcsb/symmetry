@@ -24,7 +24,9 @@ package org.biojava3.structure.align.symm.census2.stats;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Static utilities for statistics.
@@ -53,26 +55,36 @@ public class StatUtils {
 		return nf.format(p*100.0) + "%";
 	}
 	
-	public static void plus(Map<String, Double> map, String key, double value) {
+	public static <T> void plus(Map<T, Double> map, T key, double value) {
 		if (!map.containsKey(key)) map.put(key, 0.0);
 		map.put(key, map.get(key) + value);
 	}
 
-	public static void plus(Map<String, Integer> map, String key) {
+	public static <T> void plus(Map<T, Integer> map, T key) {
 		plus(map, key, 1);
 	}
 
-	public static void plus(Map<String, Integer> map, String key, int value) {
+	public static <T> void plus(Map<T, Integer> map, T key, int value) {
 		if (!map.containsKey(key)) map.put(key, 0);
 		map.put(key, map.get(key) + value);
 	}
 
-	public static void plusD(Map<String, Double> map, String key) {
+	public static <T,V> void plusSet(Map<T, Set<V>> map, T key, V value) {
+		if (!map.containsKey(key)) map.put(key, new HashSet<V>());
+		map.get(key).add(value);
+	}
+
+	public static <T> void plusD(Map<T, Double> map, T key) {
 		plus(map, key, 1);
 	}
 
-	public static void plusD(Map<String, Double> map, String key, double value) {
+	public static <T> void plusD(Map<T, Double> map, T key, double value) {
 		if (!map.containsKey(key)) map.put(key, 0.0);
+		map.put(key, map.get(key) + value);
+	}
+
+	public static <T> void plusF(Map<T, Float> map, T key, float value) {
+		if (!map.containsKey(key)) map.put(key, 0.0f);
 		map.put(key, map.get(key) + value);
 	}
 

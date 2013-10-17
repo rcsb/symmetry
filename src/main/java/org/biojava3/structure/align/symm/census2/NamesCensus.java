@@ -64,7 +64,7 @@ public class NamesCensus extends Census {
 
 	public static void buildDefault(File censusFile, File lineByLine, AlgorithmGiver algorithm) {
 		try {
-			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
+			int maxThreads = 1;
 			NamesCensus census = new NamesCensus(maxThreads);
 			census.setOutputWriter(censusFile);
 			census.domains = readNames(lineByLine);
@@ -80,7 +80,7 @@ public class NamesCensus extends Census {
 		}
 	}
 
-	private static List<ScopDomain> readNames(File lineByLine) {
+	public static List<ScopDomain> readNames(File lineByLine) {
 		List<ScopDomain> domains = new ArrayList<ScopDomain>();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(lineByLine));

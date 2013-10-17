@@ -20,12 +20,17 @@
  * Created on 2013-03-25
  *
  */
-package org.biojava3.structure.align.symm.census2;
+package org.biojava3.structure.align.symm.census2.utils;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+
+import org.biojava3.structure.align.symm.census2.Result;
+import org.biojava3.structure.align.symm.census2.Results;
+import org.biojava3.structure.align.symm.census2.Significance;
+import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * A class to update a census ({@link Results}) XML file with new score cutoffs.

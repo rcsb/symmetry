@@ -99,10 +99,20 @@ public class SmartStats {
 			} catch (PropertyUndefinedException e) {
 				// okay, just leave as 0
 			}
+			int theOrder = 0;
 			try {
-				order = (int) Property.hasOrder().getProperty(result);
+				theOrder = (int) Property.hasOrder().getProperty(result);
 			} catch (PropertyUndefinedException e) {
 				// okay, just leave as 0
+			}
+			int guessedOrder = 0;
+			try {
+				guessedOrder =  (int) Property.hasGuessedOrder().getProperty(result);
+			} catch (PropertyUndefinedException e) {
+				// okay, just leave as 0
+			}
+			if (theOrder == 1 || guessedOrder == 1) {
+				order = 1; // otherwise, order = 0
 			}
 			StatUtils.plus(nDomainsInFolds, fold);
 			StatUtils.plus(nDomainsInFolds, clas);

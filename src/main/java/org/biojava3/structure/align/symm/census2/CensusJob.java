@@ -203,7 +203,8 @@ public class CensusJob implements Callable<Result> {
 			// now try to find the order
 			logger.debug("Finding order (job #" + count + ")");
 			try {
-				order = CeSymm.getSymmetryOrder(afpChain);
+				CeSymm s = (CeSymm) (algorithm.getAlgorithm());
+				order = CeSymm.getSymmetryOrder(afpChain, s.getMaxSymmetryOrder(), s.getMinimumMetricChange());
 				logger.debug("Order is " + order + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.error("Failed to determine the order of symmetry on " + name + ": " + e.getMessage(), e);

@@ -22,6 +22,7 @@
  */
 package org.biojava3.structure.align.symm.census2.stats;
 
+import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava3.structure.align.symm.census2.Result;
 
 /**
@@ -34,6 +35,8 @@ public abstract class Grouping {
 	public abstract String toString();
 	
 	public abstract String group(Result result);
+	
+	public abstract String group(ScopDomain domain);
 
 	public static Grouping byName(String name) {
 		try {
@@ -53,6 +56,10 @@ public abstract class Grouping {
 			public String toString() {
 				return "domain";
 			}
+			@Override
+			public String group(ScopDomain domain) {
+				return domain.getScopId();
+			}
 		};
 	}
 	public static Grouping superfamily() {
@@ -67,6 +74,34 @@ public abstract class Grouping {
 			@Override
 			public String toString() {
 				return "superfamily";
+			}
+			@Override
+			public String group(ScopDomain domain) {
+				String[] parts = domain.getClassificationId().split("\\.");
+				if (parts.length < 3) throw new IllegalArgumentException("Classification id is invalid for " + domain.getScopId());
+				return parts[0] + "." + parts[1] + "." + parts[2];
+			}
+		};
+	}
+
+	public static Grouping family() {
+		return new Grouping() {
+			@Override
+			public String group(Result result) {
+				String[] parts = result.getClassification().split("\\.");
+				if (parts.length < 3) throw new IllegalArgumentException("Classification id is invalid for " + result.getScopId());
+				return parts[0] + "." + parts[1] + "." + parts[2] + "." + parts[3];
+			}
+
+			@Override
+			public String toString() {
+				return "family";
+			}
+			@Override
+			public String group(ScopDomain domain) {
+				String[] parts = domain.getClassificationId().split("\\.");
+				if (parts.length < 3) throw new IllegalArgumentException("Classification id is invalid for " + domain.getScopId());
+				return parts[0] + "." + parts[1] + "." + parts[2] + "." + parts[3];
 			}
 		};
 	}
@@ -83,6 +118,12 @@ public abstract class Grouping {
 			@Override
 			public String toString() {
 				return "fold";
+			}
+			@Override
+			public String group(ScopDomain domain) {
+				String[] parts = domain.getClassificationId().split("\\.");
+				if (parts.length < 3) throw new IllegalArgumentException("Classification id is invalid for " + domain.getScopId());
+				return parts[0] + "." + parts[1];
 			}
 		};
 	}

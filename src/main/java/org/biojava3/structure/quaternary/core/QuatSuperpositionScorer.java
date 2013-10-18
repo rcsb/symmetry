@@ -1,10 +1,15 @@
 
 package org.biojava3.structure.quaternary.core;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
+
+import org.biojava3.structure.quaternary.geometry.SuperPosition;
 
 /**
  *
@@ -89,7 +94,59 @@ public class QuatSuperpositionScorer {
         scores.setTm(totalSumTm/totalLength);
         scores.setRmsd(Math.sqrt(totalSumDsq/totalLength));
         
+        // add intra subunit scores
+        calcIntrasubunitScores(subunits, transformation, permutation, scores);
+
 		return scores;
     }
     
+    private static void calcIntrasubunitScores(Subunits subunits, Matrix4d transformation, List<Integer> permutation, QuatSymmetryScores scores) {  
+        double totalSumTm = 0;
+        double totalSumDsq = 0;
+    	double totalLength = 0;
+        
+        Point3d t = new Point3d();
+        List<Point3d[]> traces = subunits.getTraces();
+        
+        // loop over the Calpha atoms of all subunits
+        for (int i = 0; i < traces.size(); i++) {
+        	// in helical systems not all permutations involve all subunit. -1 indicates subunits that should not be permuted.
+        	 if (permutation.get(i) == -1) {
+             	continue;
+             }
+        	// get original subunit
+            Point3d[] orig = traces.get(i);
+            totalLength += orig.length;
+            
+            // get permuted subunit
+            Point3d[] perm = traces.get(permutation.get(i));
+            
+            // calculate TM specific parameters
+            int tmLen = Math.max(orig.length, 17);  // don't let d0 get negative with short sequences
+            double d0 = 1.24 * Math.cbrt(tmLen - 15.0) - 1.8;
+            double d0Sq = d0 * d0;
+
+            double sumTm = 0;
+            double sumDsq = 0;
+            Point3d[] trans = new Point3d[orig.length];
+            for (int j = 0; j < orig.length; j++) {
+                trans[j] = new Point3d(perm[j]);
+            }
+            
+            // superpose individual subunits
+            SuperPosition.superposeWithTranslation(trans, orig);
+            for (int j = 0; j < orig.length; j++) {              
+                double dSq = orig[j].distanceSquared(trans[j]);
+               sumTm += 1.0/(1.0 + dSq/d0Sq);
+               sumDsq += dSq;
+            }
+            
+            totalSumTm += sumTm;
+            totalSumDsq += sumDsq;
+        }
+        // save mean scores over all subunits
+        scores.setRmsdIntra(Math.sqrt(totalSumDsq/totalLength));
+        scores.setTmIntra(totalSumTm/totalLength);
+    }
+	
 }

@@ -31,7 +31,7 @@ public class HelixAxisAligner extends AxisAligner {
 
 	private Vector3d minBoundary = new Vector3d();
 	private Vector3d maxBoundary = new Vector3d();
-	private double xyRadiusMax = Double.MIN_VALUE;
+	private double xzRadiusMax = Double.MIN_VALUE;
 
 	boolean modified = true;
 
@@ -131,9 +131,9 @@ public class HelixAxisAligner extends AxisAligner {
 	 * @see org.biojava3.structure.quaternary.core.AxisAligner#getXYRadius()
 	 */
 	@Override
-	public double getXYRadius() {
+	public double getRadius() {
 		run();
-		return xyRadiusMax;
+		return xzRadiusMax;
 	}
 
 	/* (non-Javadoc)
@@ -158,16 +158,17 @@ public class HelixAxisAligner extends AxisAligner {
 		
 		Point3d geometricCenter = new Point3d();
 		Vector3d translation = new Vector3d();
-		reverseTransformationMatrix.get(translation);
+//		reverseTransformationMatrix.get(translation);
 		
 		// TODO does this apply to the helic case?
 		// calculate adjustment around z-axis and transform adjustment to
 		//  original coordinate frame with the reverse transformation
 
-		Vector3d corr = new Vector3d(0,0, minBoundary.z+getDimension().z);
-		reverseTransformationMatrix.transform(corr);
-		geometricCenter.set(corr);
+//		Vector3d corr = new Vector3d(0,minBoundary.y+getDimension().y, 0);
+//		reverseTransformationMatrix.transform(corr);
+//		geometricCenter.set(corr);
 
+		reverseTransformationMatrix.transform(translation);
 		geometricCenter.add(translation);
 		return geometricCenter;
 	}
@@ -212,16 +213,109 @@ public class HelixAxisAligner extends AxisAligner {
 			calcPrincipalAxes();	
 			calcReferenceVector();
 			calcTransformation();
+			// orient helix along Y axis by rotating 90 degrees around X-axis
+			transformationMatrix = reorientHelix(0);
+			
 			calcReverseTransformation();
 			calcBoundaries();
 			calcAlignedOrbits();
+			calcCenterOfRotation();
 			
 			// orient helix along Y axis by rotating 90 degrees around X-axis
-			transformationMatrix = reorientHelix(0);
-			calcReverseTransformation();
+//			transformationMatrix = reorientHelix(0);
+//			calcReverseTransformation();
 
 			modified = false;
 		}
+	}
+	
+	public Point3d calcCenterOfRotation() {
+		List<Integer> line = getLongestLayerLine();
+		
+		// can't determine center of rotation if there are only 2 points
+		// TODO does this ever happen??
+		if (line.size() < 3) {
+			return subunits.getCentroid();
+		}
+		
+		Point3d centerOfRotation = new Point3d();
+	    List<Point3d> centers = subunits.getOriginalCenters();
+	    
+	    // calculate helix mid points for each set of 3 adjacent subunits
+	    for (int i = 0; i < line.size()-2; i++) {
+	    	Point3d p1 = new Point3d(centers.get(line.get(i)));
+	    	Point3d p2 = new Point3d(centers.get(line.get(i+1)));
+	    	Point3d p3 = new Point3d(centers.get(line.get(i+2)));
+	    	transformationMatrix.transform(p1);
+	    	transformationMatrix.transform(p2);
+	    	transformationMatrix.transform(p3);
+	    	centerOfRotation.add(getMidPoint(p1, p2, p3));
+	    }
+	    
+	    // average over all midpoints to find best center of rotation
+	    centerOfRotation.scale(1/(line.size()-2));
+	    // since helix is aligned along the y-axis, with an origin at y = 0, place the center of rotation there
+	    centerOfRotation.y = 0;
+	    // transform center of rotation to the original coordinate frame
+		reverseTransformationMatrix.transform(centerOfRotation);
+		System.out.println("center of rotation: " + centerOfRotation);
+		return centerOfRotation;
+	}
+
+	private List<Integer> getLongestLayerLine() {
+		int len = 0;
+		int index = 0;
+		
+		Helix helix = helixLayers.getByLargestContacts();
+		List<List<Integer>> layerLines = helix.getLayerLines();
+		for (int i = 0; i < layerLines.size(); i++) {
+			if (layerLines.get(i).size() > len) {
+				len = layerLines.get(i).size();
+				index = i;
+			}
+		}
+		return layerLines.get(index);
+	}
+
+	/**
+	 * Return a midpoint of a helix, calculated from three positions
+	 * of three adjacent subunit centers.
+	 * @param p1 center of first subunit
+	 * @param p2 center of second subunit
+	 * @param p3 center of third subunit
+	 * @return midpoint of helix
+	 */
+	private Point3d getMidPoint(Point3d p1, Point3d p2, Point3d p3) {
+		Vector3d v1 = new Vector3d();
+		v1.sub(p1, p2);
+		Vector3d v2 = new Vector3d();
+		v2.sub(p3, p2);
+		Vector3d v3 = new Vector3d();
+		v3.add(v1);
+		v3.add(v2);
+		v3.normalize();
+
+		// calculat the total distance between to subunits
+		double dTotal = v1.length();
+		// calculate the rise along the y-axis. The helix axis is aligned with y-axis,
+		// therfore, the rise between subunits is the y-distance
+		double rise = p2.y - p1.y;
+		// use phythagorean theoremm to calculate chord length between two subunit centers
+		double chord = Math.sqrt(dTotal*dTotal - rise*rise);
+		System.out.println("Chord d: " + dTotal + " rise: " + rise + "chord: " + chord);
+		double angle = helixLayers.getByLargestContacts().getAxisAngle().getAngle();
+		
+		// using the axis angle and the chord length, we can calculate the radius of the helix
+		// http://en.wikipedia.org/wiki/Chord_%28geometry%29
+		double radius = chord/Math.sin(angle/2)/2; // can this go to zero?
+		System.out.println("Radius: " + radius);
+		
+		// project the radius onto the vector that points toward the helix axis
+		v3.scale(radius);
+		v3.add(p2);
+		System.out.println("Angle: " + Math.toDegrees(helixLayers.getByLowestAngle().getAxisAngle().getAngle()));
+		Point3d cor = new Point3d(v3);
+		return cor;
 	}
 
 	private Matrix4d reorientHelix(int index) {
@@ -403,6 +497,7 @@ public class HelixAxisAligner extends AxisAligner {
 		maxBoundary.x = Double.MIN_VALUE;
 		minBoundary.z = Double.MAX_VALUE;
 		maxBoundary.z = Double.MIN_VALUE;
+		xzRadiusMax = Double.MIN_VALUE;
 
 		Point3d probe = new Point3d();
 
@@ -417,9 +512,12 @@ public class HelixAxisAligner extends AxisAligner {
 				maxBoundary.y = Math.max(maxBoundary.y, probe.y);
 				minBoundary.z = Math.min(minBoundary.z, probe.z);
 				maxBoundary.z = Math.max(maxBoundary.z, probe.z);
-				xyRadiusMax = Math.max(xyRadiusMax, Math.sqrt(probe.x*probe.x + probe.y * probe.y));
+				xzRadiusMax = Math.max(xzRadiusMax, Math.sqrt(probe.x*probe.x + probe.z * probe.z));
 			}
 		}
+		System.out.println("MinBoundary: " + minBoundary);
+		System.out.println("MaxBoundary: " + maxBoundary);
+		System.out.println("zxRadius: " + xzRadiusMax);
 	}
 	
 	/*
@@ -477,7 +575,8 @@ public class HelixAxisAligner extends AxisAligner {
 	 * @return principal rotation vector
 	 */
 	private void calcPrincipalRotationVector() {
-		AxisAngle4d axisAngle = helixLayers.getByLowestAngle().getAxisAngle();
+//		AxisAngle4d axisAngle = helixLayers.getByLowestAngle().getAxisAngle();
+		AxisAngle4d axisAngle = helixLayers.getByLargestContacts().getAxisAngle();
 		principalRotationVector = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 	}
 
@@ -504,6 +603,9 @@ public class HelixAxisAligner extends AxisAligner {
 //		System.out.println("Orig refVector: " + referenceVector);
 		if (dot < 0) {
 			vector2.negate();
+		}
+		if (Math.abs(dot) < 0.00001) {
+			System.out.println("HelixAxisAligner: Warning: reference axis parallel");
 		}
 		vector2.cross(vector1, vector2);
 //		System.out.println("Intermed. refVector: " + vector2);

@@ -103,7 +103,7 @@ private List<Point3d> calcRepeatUnitCenters() {
 	}
 	
 	// helixes should have at least 3 repeat centers
-	System.out.println();
+//	System.out.println("Number of repeat centers: " + repeatCenters.size());
 	if (repeatCenters.size() < 3) {
 		repeatCenters.clear();
 	}

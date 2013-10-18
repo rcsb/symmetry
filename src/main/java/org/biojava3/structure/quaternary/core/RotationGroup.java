@@ -24,8 +24,10 @@ public class RotationGroup {
 	private int twoFoldsPerpendicular = 0;
 	private int highestOrder = 0;
 	private String pointGroup = "C1";
+	private double symmetryDeviation = 0;
 	private boolean complete = true;
 	private boolean modified = true;
+
 
 	public int getOrder() {
 		return rotations.size();
@@ -141,10 +143,31 @@ public class RotationGroup {
 				values[i-1] = rotations.get(i).getScores().getRmsdCenters();
 			}
 			scores.setRmsdCenters(averageScores(values));
+			// TmIntra
+			for (int i = 1; i < rotations.size(); i++) {
+				values[i-1] = rotations.get(i).getScores().getTmIntra();
+			}
+			scores.setTmIntra(averageScores(values));
+
+			// RmsdIntra
+			for (int i = 1; i < rotations.size(); i++) {
+				values[i-1] = rotations.get(i).getScores().getRmsdIntra();
+			}
+			scores.setRmsdIntra(averageScores(values));
+			
+			// SymDeviation
+			scores.setSymDeviation(symmetryDeviation);
 		}
 		return scores;
 	}
-	
+
+	/**
+	 * @param symmetryDeviation the symmetryDeviation to set
+	 */
+	public void setSymmetryDeviation(double symmetryDeviation) {
+		this.symmetryDeviation = symmetryDeviation;
+	}
+
 	public boolean isComplete() {
 		return complete;
 	}

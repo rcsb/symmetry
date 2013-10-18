@@ -6,8 +6,10 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.biojava.bio.structure.PDBHeader;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
@@ -68,12 +70,15 @@ public class ScanSymmetry implements Runnable {
 		int failure = 0;
 
 		String header = "pdbId,bioassembly,local,pseudostoichiometric,stoichiometry,pseudosymmetric,pointgroup,order," +
-				"lowSymmetry,minidentity,maxidentity,rmsd,tm,minrmsd,maxrmsd,mintm,maxtm,subunits,nucleiacids,time,signature95,stoich95,signature30,stoich30,spacegroup";
+				"lowSymmetry,minidentity,maxidentity,subunitrmsd,rmsd,tm,minrmsd,maxrmsd,mintm,maxtm,rmsdintra,tmintra,symdeviation,subunits,nucleiacids,cacount,time,signature95,stoich95,signature30,stoich30,spacegroup";
 		out.println(header);
 
 		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 
 		parameters.setVerbose(true);
+//		parameters.setRmsdThreshold(7.0);
+//		parameters.setAngleThreshold(90);
+//		parameters.setHelixRmsdThreshold(2.0);
 
 		Set<String> set = GetRepresentatives.getAll();
 
@@ -81,8 +86,10 @@ public class ScanSymmetry implements Runnable {
 		boolean skip = false;
 		String restartId = "10MH";
 
-		for (String pdbId: set) {
+//		for (String pdbId: set) {
+			for (String pdbId: excludes) {
 //		for (String pdbId: testCase) {
+//	    for (String pdbId: helix20130916) {
 //					for (String pdbId: helixExamples) {
 //		for (String pdbId: collagenExamples) {
 			if (skip && pdbId.equals(restartId)) {
@@ -93,7 +100,7 @@ public class ScanSymmetry implements Runnable {
 			}
 
 			// exclude the following examples (out of memory exception)		
-			if (pdbId.equals("1M4X")) continue;
+//			if (pdbId.equals("1M4X")) continue;
 			if (pdbId.equals("3HQV")) continue;
 			if (pdbId.equals("3HR2")) continue;
 			if (pdbId.equals("4A8B")) continue; 
@@ -106,15 +113,14 @@ public class ScanSymmetry implements Runnable {
 			StructureIO.setAtomCache(cache);
 			int bioAssemblyCount = StructureIO.getNrBiologicalAssemblies(pdbId);
 
-			ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
-
 			int bioAssemblyId = 0;
 			System.out.println("Bioassemblies: " + bioAssemblyCount);
-			System.out.println(ChemCompGroupFactory.getChemCompProvider().getClass().getName());
 			if (bioAssemblyCount > 0) {
 				bioAssemblyId = 1;
 			}
 
+			// TODO
+//			bioAssemblyId = 0;
 			System.out.println("bioAssemblyId: " + bioAssemblyId);
 			//			for (int i = 0; i < bioAssemblyCount; i++) {	
 			Structure structure = null;
@@ -136,8 +142,14 @@ public class ScanSymmetry implements Runnable {
 
 			try {
 				String spaceGroup = "";
+				float resolution = 0.0f;
 				if (structure != null) {
 					spaceGroup = structure.getCrystallographicInfo().getSpaceGroup();
+					 structure.getCrystallographicInfo().getA();
+					PDBHeader pdbHeader = structure.getPDBHeader();
+					resolution = pdbHeader.getResolution();	
+					System.out.println("resolution: " + resolution);
+					System.out.println("space group: " + spaceGroup);
 				}
 				QuatSymmetryDetector detector = new QuatSymmetryDetector(structure, parameters);
 
@@ -198,6 +210,8 @@ public class ScanSymmetry implements Runnable {
 			JmolSymmetryScriptGenerator script = JmolSymmetryScriptGenerator.getInstance(aligner, "g");
 			String color = script.colorBySymmetry();
 			String orient = script.getOrientationWithZoom(0);
+			String axis = script.drawAxes();
+			String polyhedron = script.drawPolyhedron();
 
 			out.println("PDB" + pdbId +"," + bioAssemblyId + "," + results.isLocal() +
 					"," + results.getSubunits().isPseudoStoichiometric() +
@@ -208,14 +222,19 @@ public class ScanSymmetry implements Runnable {
 					"," + isLowSymmetry(results) +
 					"," + Math.round(results.getSubunits().getMinSequenceIdentity()*100.0) +
 					"," + Math.round(results.getSubunits().getMaxSequenceIdentity()*100.0) +
+					"," + (float) results.getScores().getRmsdCenters() +
 					"," + (float) results.getScores().getRmsd() +
 					"," + (float) results.getScores().getTm() +
 					"," + (float) results.getScores().getMinRmsd() +
 					"," + (float) results.getScores().getMaxRmsd() +
 					"," + (float) results.getScores().getMinTm() +
 					"," + (float) results.getScores().getMaxTm() +
+					"," + (float) results.getScores().getRmsdIntra() +
+					"," + (float) results.getScores().getTmIntra() +
+					"," + (float) results.getScores().getSymDeviation() +
 					"," + results.getSubunits().getSubunitCount() +
 					"," + results.getNucleicAcidChainCount() +
+					"," + results.getSubunits().getCalphaCount() +
 					"," + time +
 					"," + signature95 +
 					"," + stoich95 +
@@ -223,7 +242,9 @@ public class ScanSymmetry implements Runnable {
 					"," + stoich30 +
 					"," + spaceGroup +
 					"," + "\"" + orient +  "\"" +
-					"," +  "\"" + color +  "\""
+					"," +  "\"" + color +  "\"" +
+					"," +  "\"" + axis +  "\"" +
+					"," +  "\"" + polyhedron +  "\""
 					);
 		}
 	}
@@ -249,9 +270,51 @@ public class ScanSymmetry implements Runnable {
 		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
 	}
 	
-	private static String[] testCase = {"1A02"};
-	
+	private static String[] testCase = {"1NMT"}; //1JI7, 1NMT, 1HGV
+//	private static String[] testCase = {"4HHB","4J7H","2A6M","3K12","2WPR","2YKQ","2QTS","1A68","4DCI","1J1J","1HGV","2HIL","3BYH","3DTP","3B0S"};
 	// global helix examples from ccquickly
+	
+	private static String[] helix20130916 = {
+		"1HGV",
+		"3J2U",
+			"4IBU",
+			"3J4F",
+			"4BS1",
+			"4BT0",
+			"4BT1",
+			"3J2U",
+			"4DYS",
+			"2YMN",
+			"4GHL",
+			"4A6J",
+			"4GYX",
+			"4FZH",
+			"4GHA",
+			"4AXY",
+			"4A7N",
+			"3J1R",
+			"4DG7",
+			"2LLP",
+			"3B0S",
+			"2LPZ",
+			"3RNU",
+			"3B2C",
+			"4DMT",
+			"4E2H",
+			"3J0R",
+			"3U29",
+			"3J0S",
+			"3T98",
+			"3OPM",
+			"3R8F",
+			"3POD",
+			"3PON",
+			"3OB8",
+			"3OBA",
+			"3NTU",
+			"3PTZ"
+	};
+
 	private static String[] helixExamples = {
 	"1B47",
 	"1BKV",
@@ -431,4 +494,19 @@ public class ScanSymmetry implements Runnable {
 		"3AI6","3B0S","3B2C","3DMW","3IPN","3P46","3POB","3POD","3PON","3T4F",
 		"3U29","3ZHA","4AU2","4AU3","4AUO","4AXY","4DMT","4DMU","4GYX"
 	};
+	
+//	private static final String[] excludes = new String[]{"1M4X", "2BGJ" , "2J4Z", "2JBP","3HQV","3HR2", "2GSY","2DF7"};
+	// 1M4X 540 subunits, WARNING ID 1000> 100, 2081520 atoms, problem with reading BIOMT
+	// 2BGJ, small protein, subunits 1, atoms 260 (OK)
+	// 2J4Z, small protein, subunits 1, atoms 263 (OK)
+	// 2JBP, WARNING ID 3 > 1, 1st BA is single chain: subunits 1, atoms 283
+	// 3HQV, 27 subunits, 26865 atoms (OK, local/helical sym. exceeds time limit)
+	// 3HR2, 27 subunits, 26757 atoms (sub clusters: 24507, exceeds time limit)
+	// 2GSY, 60 subunits, 25680 atoms, made up of 3 AUs, A60/I 7300 ms, AU is asymmetric, exceeds time limit
+	// 2DF7, 60 subunits, 24480 atoms, made up of 3 AUs, A60/I 7500 ms
+	
+	
+	
+//	private static final String[] excludes = new String[]{"1M4X", "2BGJ" , "2J4Z", "2JBP","3HQV","3HR2", "2GSY","2DF7"};
+	private static final String[] excludes = new String[]{"1OHR"};
 }

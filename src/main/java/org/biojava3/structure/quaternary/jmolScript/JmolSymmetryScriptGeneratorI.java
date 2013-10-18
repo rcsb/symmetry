@@ -15,7 +15,7 @@ public class JmolSymmetryScriptGeneratorI extends JmolSymmetryScriptGeneratorPoi
 
 	public JmolSymmetryScriptGeneratorI(RotationAxisAligner axisTransformation, String name) {
 		super(axisTransformation, name);
-		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getXYRadius());
+		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getRadius());
 		Icosahedron i = new Icosahedron();
 		i.setMidRadius(radius);
 		setPolyhedron(i);

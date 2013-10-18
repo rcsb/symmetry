@@ -90,6 +90,20 @@ public abstract class Property {
 		};
 	}
 
+	public static Property hasGuessedOrder() {
+		return new Property() {
+			@Override
+			public double getProperty(Result result) throws PropertyUndefinedException {
+				if (result.getAxis() == null) return 0;
+				return result.getAxis().guessOrder() > 1? 1 : 0;
+			}
+			@Override
+			public String getName() {
+				return "hasOrder";
+			}
+		};
+	}
+
 	public static Property hasOrder() {
 		return new Property() {
 			@Override
@@ -99,7 +113,7 @@ public abstract class Property {
 			}
 			@Override
 			public String getName() {
-				return "order";
+				return "guessedOrder";
 			}
 		};
 	}

@@ -50,6 +50,16 @@ public class ProtodomainTest {
 	}
 
 	@Test
+	public void testWholeChain() throws Exception {
+		checkAlignSymm("1hiv.A_1-44,A_58-88,A_93-95", "1hiv.A");
+	}
+
+	@Test
+	public void testWholePdbFile() throws Exception {
+		checkAlignSymm("1hiv.A_1-99,B_1-99", "1hiv");
+	}
+
+	@Test
 	public void testNegativeStart() throws Exception {
 		checkAlignSymm("2ags.A_5-20,A_27-57,A_62-87,A_94-114,A_129-139,A_151-165,A_172-294,A_299-373,A_379-391", "d2agsa2"); // issue #3: has insertion codes in the SCOP range; USED TO BE 1qdm.A_3S-37S,A_65S-99S	
 	}

@@ -31,7 +31,7 @@ import org.biojava.bio.structure.align.util.SynchronizedOutFile;
 
 
 /**
- * @deprecated Use {@link org.biojava3.structure.align.symm.census2.ResultConverter} instead
+ * @deprecated Use {@link org.biojava3.structure.align.symm.census2.utils.ResultConverter} instead
  */
 @Deprecated
 public class ResultConverter {

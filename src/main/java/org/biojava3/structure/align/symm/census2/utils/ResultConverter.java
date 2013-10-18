@@ -22,7 +22,7 @@
  *
  * @since 3.0.2
  */
-package org.biojava3.structure.align.symm.census2;
+package org.biojava3.structure.align.symm.census2.utils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
+import org.biojava3.structure.align.symm.census2.Result;
+import org.biojava3.structure.align.symm.census2.Results;
 
 /**
  * Converts {@link Results} XML serializations to HTML files.

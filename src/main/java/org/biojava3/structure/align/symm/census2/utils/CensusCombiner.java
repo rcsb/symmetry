@@ -20,13 +20,15 @@
  * Created on 2013-02-20
  *
  */
-package org.biojava3.structure.align.symm.census2;
+package org.biojava3.structure.align.symm.census2.utils;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+
+import org.biojava3.structure.align.symm.census2.Results;
 
 /**
  * A utility that combines multiple census files into one census file.

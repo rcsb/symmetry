@@ -27,7 +27,8 @@ import java.io.Serializable;
 import org.biojava.bio.structure.align.model.AFPChain;
 
 /**
- * The results of a symmetry alignment. Includes information for CE-Symm or SymD.
+ * The results of a symmetry alignment. Includes information for CE-Symm or
+ * SymD.
  * 
  * @author dmyerstu
  */
@@ -39,7 +40,7 @@ public class Alignment implements Serializable {
 
 	private Float alignScore;
 
-	private Float alternateTm;
+	private Float tScore;
 
 	private Integer block1Length;
 
@@ -59,7 +60,9 @@ public class Alignment implements Serializable {
 
 	private Float similarity;
 
-	private Float tmpr;
+	private Float symDZScore;
+
+	private Float symDTMScore;
 
 	private Float tmScore;
 
@@ -123,11 +126,6 @@ public class Alignment implements Serializable {
 				return false;
 		} else if (!alignScore.equals(other.alignScore))
 			return false;
-		if (alternateTm == null) {
-			if (other.alternateTm != null)
-				return false;
-		} else if (!alternateTm.equals(other.alternateTm))
-			return false;
 		if (block1Length == null) {
 			if (other.block1Length != null)
 				return false;
@@ -173,15 +171,25 @@ public class Alignment implements Serializable {
 				return false;
 		} else if (!similarity.equals(other.similarity))
 			return false;
+		if (symDTMScore == null) {
+			if (other.symDTMScore != null)
+				return false;
+		} else if (!symDTMScore.equals(other.symDTMScore))
+			return false;
+		if (symDZScore == null) {
+			if (other.symDZScore != null)
+				return false;
+		} else if (!symDZScore.equals(other.symDZScore))
+			return false;
+		if (tScore == null) {
+			if (other.tScore != null)
+				return false;
+		} else if (!tScore.equals(other.tScore))
+			return false;
 		if (tmScore == null) {
 			if (other.tmScore != null)
 				return false;
 		} else if (!tmScore.equals(other.tmScore))
-			return false;
-		if (tmpr == null) {
-			if (other.tmpr != null)
-				return false;
-		} else if (!tmpr.equals(other.tmpr))
 			return false;
 		if (zScore == null) {
 			if (other.zScore != null)
@@ -200,7 +208,7 @@ public class Alignment implements Serializable {
 	}
 
 	public Float getAlternateTm() {
-		return alternateTm;
+		return tScore;
 	}
 
 	public Integer getBlock1Length() {
@@ -239,12 +247,20 @@ public class Alignment implements Serializable {
 		return similarity;
 	}
 
-	public Float getTmpr() {
-		return tmpr;
+	public Float getSymDTmScore() {
+		return symDTMScore;
+	}
+
+	public Float getSymDZScore() {
+		return symDZScore;
 	}
 
 	public Float getTmScore() {
 		return tmScore;
+	}
+
+	public Float gettScore() {
+		return tScore;
 	}
 
 	public Float getzScore() {
@@ -257,7 +273,6 @@ public class Alignment implements Serializable {
 		int result = 1;
 		result = prime * result + (alignLength == null ? 0 : alignLength.hashCode());
 		result = prime * result + (alignScore == null ? 0 : alignScore.hashCode());
-		result = prime * result + (alternateTm == null ? 0 : alternateTm.hashCode());
 		result = prime * result + (block1Length == null ? 0 : block1Length.hashCode());
 		result = prime * result + (block2Length == null ? 0 : block2Length.hashCode());
 		result = prime * result + (coverage == null ? 0 : coverage.hashCode());
@@ -267,8 +282,10 @@ public class Alignment implements Serializable {
 		result = prime * result + (nNonSelfAligned == null ? 0 : nNonSelfAligned.hashCode());
 		result = prime * result + (rmsd == null ? 0 : rmsd.hashCode());
 		result = prime * result + (similarity == null ? 0 : similarity.hashCode());
+		result = prime * result + (symDTMScore == null ? 0 : symDTMScore.hashCode());
+		result = prime * result + (symDZScore == null ? 0 : symDZScore.hashCode());
+		result = prime * result + (tScore == null ? 0 : tScore.hashCode());
 		result = prime * result + (tmScore == null ? 0 : tmScore.hashCode());
-		result = prime * result + (tmpr == null ? 0 : tmpr.hashCode());
 		result = prime * result + (zScore == null ? 0 : zScore.hashCode());
 		return result;
 	}
@@ -279,10 +296,6 @@ public class Alignment implements Serializable {
 
 	public void setAlignScore(Float alignScore) {
 		this.alignScore = alignScore;
-	}
-
-	public void setAlternateTm(Float alternateTm) {
-		this.alternateTm = alternateTm;
 	}
 
 	public void setBlock1Length(Integer block1Length) {
@@ -321,12 +334,20 @@ public class Alignment implements Serializable {
 		this.similarity = similarity;
 	}
 
-	public void setTmpr(Float tmpr) {
-		this.tmpr = tmpr;
+	public void setSymDTmScore(Float symDTMScore) {
+		this.symDTMScore = symDTMScore;
+	}
+
+	public void setSymDZScore(Float symDZScore) {
+		this.symDZScore = symDZScore;
 	}
 
 	public void setTmScore(Float tmScore) {
 		this.tmScore = tmScore;
+	}
+
+	public void settScore(Float tScore) {
+		this.tScore = tScore;
 	}
 
 	public void setzScore(Float zScore) {
@@ -335,11 +356,12 @@ public class Alignment implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Alignment [alignLength=" + alignLength + ", alignScore=" + alignScore + ", block1Length="
-				+ block1Length + ", block2Length=" + block2Length + ", coverage=" + coverage + ", gapLength="
-				+ gapLength + ", identity=" + identity + ", rmsd=" + rmsd + ", similarity=" + similarity + ", tmScore="
-				+ tmScore + ", alternateTm=" + alternateTm + ", zScore=" + zScore + ", initialShift=" + initialShift
-				+ ", nNonSelfAligned=" + nNonSelfAligned + ", tmpr=" + tmpr + "]";
+		return "Alignment [alignLength=" + alignLength + ", alignScore=" + alignScore + ", tScore=" + tScore
+				+ ", block1Length=" + block1Length + ", block2Length=" + block2Length + ", coverage=" + coverage
+				+ ", gapLength=" + gapLength + ", identity=" + identity + ", initialShift=" + initialShift
+				+ ", nNonSelfAligned=" + nNonSelfAligned + ", rmsd=" + rmsd + ", similarity=" + similarity
+				+ ", symDZScore=" + symDZScore + ", symDTMScore=" + symDTMScore + ", tmScore=" + tmScore + ", zScore="
+				+ zScore + "]";
 	}
 
 }

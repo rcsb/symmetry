@@ -203,7 +203,8 @@ public class CensusJob implements Callable<Result> {
 			// now try to find the order
 			logger.debug("Finding order (job #" + count + ")");
 			try {
-				order = CeSymm.getSymmetryOrder(afpChain);
+				CeSymm s = (CeSymm) (algorithm.getAlgorithm());
+				order = CeSymm.getSymmetryOrder(afpChain, s.getMaxSymmetryOrder(), s.getMinimumMetricChange());
 				logger.debug("Order is " + order + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.error("Failed to determine the order of symmetry on " + name + ": " + e.getMessage(), e);
@@ -236,7 +237,7 @@ public class CensusJob implements Callable<Result> {
 				}
 			}
 
-			return convertResult(afpChain, isSignificant, order, protodomain.toString(), name, angle, fractionHelical);
+			return convertResult(afpChain, isSignificant, order, protodomain, name, angle, fractionHelical);
 
 		} else { // trying this would take too long
 			logger.debug("Result is not significant (job #" + count + ")");
@@ -288,7 +289,7 @@ public class CensusJob implements Callable<Result> {
 		this.storeAfpChain = storeAfpChain;
 	}
 
-	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, Integer order, String protodomain,
+	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, Integer order, Protodomain protodomain,
 			String name, Float angle, Float fractionHelical) {
 
 		if (storeAfpChain) this.afpChain = afpChain;
@@ -306,7 +307,7 @@ public class CensusJob implements Callable<Result> {
 			final String description = superfamily.getDescription();
 			r.setDescription(description);
 		}
-		r.setProtodomain(protodomain);
+		if (protodomain != null) r.setProtodomain(protodomain.toString());
 
 		r.setAlignment(new Alignment(afpChain));
 		r.setIsSignificant(isSymmetric);

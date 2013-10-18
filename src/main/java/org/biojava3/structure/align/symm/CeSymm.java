@@ -37,6 +37,10 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 	public static final String version = "1.0";
 
+	public static final float DEFAULT_MINIMUM_METRIC_CHANGE = 0.4f;
+	
+	public static final int DEFAULT_MAX_SYMMETRY_ORDER = 8;
+	
 	/**
 	 * Percentage change in RSSE required to improve score.
 	 * Avoids reporting slight improvements in favor of lower order.
@@ -468,7 +472,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			}
 
 			if(refineResult) {
-				int order = getSymmetryOrder(afpChain);
+				int order = getSymmetryOrder(afpChain, maxSymmetryOrder, minimumMetricChange);
 				afpChain = SymmRefiner.refineSymmetry(afpChain, ca1, ca2O, order);
 			}
 
@@ -524,19 +528,24 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	 * @return The order of the alignment, or -1 if non-symmetric.
 	 * @throws StructureException If afpChain is not one-to-one
 	 */
-	public static int getSymmetryOrder(AFPChain afpChain) throws StructureException {
-		
-		final int maxSymmetry = 8;
-
-		final float minimumMetricChange = 0.40f;
+	public static int getSymmetryOrder(AFPChain afpChain, int maxSymmetryOrder, float minimumMetricChange) throws StructureException {
 
 		Map<Integer,Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
 
 		return AlignmentTools.getSymmetryOrder(alignment,
 				new AlignmentTools.IdentityMap<Integer>(),
-				maxSymmetry, minimumMetricChange);
+				maxSymmetryOrder, minimumMetricChange);
 	}
 
+	public static int getSymmetryOrder(AFPChain afpChain) throws StructureException {
+
+		Map<Integer,Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
+
+		return AlignmentTools.getSymmetryOrder(alignment,
+				new AlignmentTools.IdentityMap<Integer>(),
+				DEFAULT_MAX_SYMMETRY_ORDER, DEFAULT_MINIMUM_METRIC_CHANGE);
+	}
+	
 	/**
 	 * @return the refineResult
 	 */
@@ -550,5 +559,4 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	public void setRefineResult(boolean refineResult) {
 		this.refineResult = refineResult;
 	}
-
 }

@@ -1,19 +1,19 @@
 
 package org.biojava3.structure.quaternary.core;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix4d;
+import javax.vecmath.Quat4d;
 
 /**
  *
  * @author Peter
  */
 public class Helix {
-//    private double subunitRmsd = Double.MAX_VALUE;
-//    private double traceRmsd = Double.MAX_VALUE;
-//    private double traceTmScoreMin = Double.MAX_VALUE;
     private QuatSymmetryScores scores = new QuatSymmetryScores();
     private List<Integer> permutation;
     private List<List<Integer>> repeatUnits;
@@ -140,4 +140,76 @@ public class Helix {
         sb.append("Fold          : " + getFold() + "\n");
         return sb.toString();
     }
+    
+    public List<List<Integer>> getLayerLines() {
+		List<List<Integer>> layerLines = new ArrayList<List<Integer>>();
+		
+		createLineSegments(permutation, layerLines);
+		
+//		System.out.println("Line segments: " + layerLines.size());
+//		for (List<Integer> lineSegment: layerLines) {
+//			System.out.println(lineSegment);
+//		}
+		
+		int count = layerLines.size();
+		
+		// iteratively join line segments
+		do {
+			count = layerLines.size();
+			joinLineSegments(layerLines);
+			// after joining line segments, get rid of the empty line segments left behind
+			trimEmptyLineSegments(layerLines);
+
+//			System.out.println("Line segments: " + count);
+//			for (List<Integer> lineSegment: layerLines) {
+//				System.out.println(lineSegment);
+//			}
+		} while (layerLines.size() < count);
+		
+		return layerLines;
+	}
+
+	private static void createLineSegments(List<Integer> permutation,
+			List<List<Integer>> layerLines) {
+		for (int i = 0; i < permutation.size(); i++) {
+			if (permutation.get(i) != -1 ) {
+				List<Integer> lineSegment = new ArrayList<Integer>();
+				lineSegment.add(i);
+				lineSegment.add(permutation.get(i));
+				layerLines.add(lineSegment);
+			}
+		}
+	}
+	
+	private static void joinLineSegments(List<List<Integer>> layerLines) {
+		for (int i = 0; i < layerLines.size()-1; i++) {
+			List<Integer> lineSegmentI = layerLines.get(i);
+			if (! lineSegmentI.isEmpty()) {
+				for (int j = i + 1; j < layerLines.size(); j++) {
+					List<Integer> lineSegmentJ = layerLines.get(j);
+					if (! lineSegmentJ.isEmpty()) {
+						if (lineSegmentI.get(lineSegmentI.size()-1).equals(lineSegmentJ.get(0))) {
+//							System.out.println("join right: " + lineSegmentI + " - " + lineSegmentJ);
+							lineSegmentI.addAll(lineSegmentJ.subList(1,  lineSegmentJ.size()));
+//							System.out.println("joned segment: " + lineSegmentI);
+							lineSegmentJ.clear();		
+						} else if ((lineSegmentI.get(0).equals(lineSegmentJ.get(lineSegmentJ.size()-1)))) {
+							lineSegmentI.addAll(0, lineSegmentJ.subList(0,  lineSegmentJ.size()-1));
+//							System.out.println("join left: " + lineSegmentJ + " - " + lineSegmentI);
+//							System.out.println("joned segment: " + lineSegmentI);
+							lineSegmentJ.clear();
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	private static void trimEmptyLineSegments(List<List<Integer>> layerLines) {
+		for (Iterator<List<Integer>> iter = layerLines.iterator(); iter.hasNext();) {
+			if (iter.next().isEmpty()) {
+				iter.remove();
+			}
+		}
+	}
 }

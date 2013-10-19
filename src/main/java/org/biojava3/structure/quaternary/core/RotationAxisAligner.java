@@ -105,7 +105,7 @@ public class RotationAxisAligner extends AxisAligner{
 	 * Returns the radius for drawing the minor rotation axis in the xy-plane
 	 * @return double radius in xy-plane
 	 */
-	public double getXYRadius() {
+	public double getRadius() {
 		run();
 		return xyRadiusMax;
 	}

@@ -21,7 +21,7 @@ public class JmolSymmetryScriptGeneratorCn extends JmolSymmetryScriptGeneratorPo
 		} else {
 			Prism p = new Prism(axisTransformation.getRotationGroup().getRotation(0).getFold());
 			p.setHeight(axisTransformation.getDimension().z*2);
-			p.setInscribedRadius(axisTransformation.getXYRadius());
+			p.setInscribedRadius(axisTransformation.getRadius());
 			setPolyhedron(p);
 		}
 	}

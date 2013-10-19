@@ -105,6 +105,10 @@ public class CensusJob implements Callable<Result> {
 
 	private Long timeTaken;
 
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
 	public static CensusJob forScopId(AlgorithmGiver algorithm, Significance significance, String name, int count,
 			AtomCache cache, ScopDatabase scop) {
 		CensusJob job = new CensusJob(algorithm, significance);
@@ -115,9 +119,20 @@ public class CensusJob implements Callable<Result> {
 		return job;
 	}
 
+	public static Result runJob(String name, int count, AlgorithmGiver algorithm, Significance significance, AtomCache cache,
+			ScopDatabase scop) {
+		CensusJob job = new CensusJob(algorithm, significance);
+		job.setCache(cache);
+		job.setScop(scop);
+		job.setName(name);
+		job.setCount(count);
+		return job.call();
+	}
+	
 	/**
 	 * @deprecated
 	 */
+	@Deprecated
 	public static FullInfo runOn(String name, AlgorithmGiver algorithm, Significance sig, AtomCache cache,
 			ScopDatabase scop) {
 		CensusJob job = new CensusJob(algorithm, sig);

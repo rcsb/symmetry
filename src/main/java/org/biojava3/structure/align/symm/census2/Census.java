@@ -99,6 +99,8 @@ public class Census {
 	private int numSymm;
 
 	private int numTotal;
+	
+	private boolean storeAfpChain = false;
 
 	private int printFrequency = 400;
 	private Map<String, Integer> symm = new TreeMap<String, Integer>();
@@ -109,6 +111,10 @@ public class Census {
 
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
 	
+	public void setStoreAfpChain(boolean keepAfpChain) {
+		this.storeAfpChain = keepAfpChain;
+	}
+
 	public void setOrderDetector(OrderDetector orderDetector) {
 		this.orderDetector = orderDetector;
 	}
@@ -204,6 +210,7 @@ public class Census {
 				if (knownResults.contains(domain.getScopId())) continue;
 				logger.debug("Submitting new job for " + domain.getScopId() + " (job #" + count + ")");
 				CensusJob calc = CensusJob.forScopId(getAlgorithm(), significance, domain.getScopId(), count, cache, scop);
+				calc.setStoreAfpChain(storeAfpChain);
 				initializeJob(calc);
 				submittedJobs.add(calc);
 				Future<Result> result = ConcurrencyTools.submit(calc);

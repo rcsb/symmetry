@@ -54,10 +54,6 @@ public class CensusJob implements Callable<Result> {
 
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
 	
-	public void setOrderDetector(OrderDetector orderDetector) {
-		this.orderDetector = orderDetector;
-	}
-
 	/**
 	 * @deprecated
 	 */
@@ -100,16 +96,29 @@ public class CensusJob implements Callable<Result> {
 	private AtomCache cache;
 	private ScopDatabase scop;
 
-	private boolean calcFractionHelical;
-	private boolean storeAfpChain;
+	private boolean calcFractionHelical = false;
+	private boolean storeAfpChain = false;
+	private boolean recordAlignmentMapping = false; 
 
 	private Long timeTaken;
+	
+	private AFPChain afpChain;
 
 	/**
 	 * @deprecated
 	 */
 	@Deprecated
 	public static CensusJob forScopId(AlgorithmGiver algorithm, Significance significance, String name, int count,
+			AtomCache cache, ScopDatabase scop) {
+		return setUpJob(name, count, algorithm, significance, cache, scop);
+	}
+
+	public static Result runJob(String name, int count, AlgorithmGiver algorithm, Significance significance, AtomCache cache,
+			ScopDatabase scop) {
+		return setUpJob(name, count, algorithm, significance, cache, scop).call();
+	}
+
+	public static CensusJob setUpJob(String name, int count, AlgorithmGiver algorithm, Significance significance,
 			AtomCache cache, ScopDatabase scop) {
 		CensusJob job = new CensusJob(algorithm, significance);
 		job.setCache(cache);
@@ -119,16 +128,6 @@ public class CensusJob implements Callable<Result> {
 		return job;
 	}
 
-	public static Result runJob(String name, int count, AlgorithmGiver algorithm, Significance significance, AtomCache cache,
-			ScopDatabase scop) {
-		CensusJob job = new CensusJob(algorithm, significance);
-		job.setCache(cache);
-		job.setScop(scop);
-		job.setName(name);
-		job.setCount(count);
-		return job.call();
-	}
-	
 	/**
 	 * @deprecated
 	 */
@@ -142,7 +141,7 @@ public class CensusJob implements Callable<Result> {
 		job.setName(name);
 		job.setCount(0);
 		Result r = job.call();
-		return new FullInfo(r.getAlignmentMapping().toAfpChain(), r);
+		return new FullInfo(job.getAfpChain(), r);
 	}
 
 	private static boolean sanityCheckPreAlign(Atom[] ca1, Atom[] ca2) {
@@ -257,7 +256,7 @@ public class CensusJob implements Callable<Result> {
 			Float fractionHelical = null;
 			if (calcFractionHelical) {
 				try {
-//					fractionHelical = getFractionHelical(structure);
+					fractionHelical = getFractionHelical(structure);
 				} catch (Exception e) {
 					logger.error("Could not assign secondary structure to " + name + " (job #" + count + ")", e);
 				}
@@ -271,8 +270,16 @@ public class CensusJob implements Callable<Result> {
 		}
 	}
 
+	public AFPChain getAfpChain() {
+		return afpChain;
+	}
+
 	public Long getTimeTaken() {
 		return timeTaken;
+	}
+
+	public void setRecordAlignmentMapping(boolean recordAlignmentMapping) {
+		this.recordAlignmentMapping = recordAlignmentMapping;
 	}
 
 	public void setCache(AtomCache cache) {
@@ -291,10 +298,18 @@ public class CensusJob implements Callable<Result> {
 		this.name = name;
 	}
 
+	public void setOrderDetector(OrderDetector orderDetector) {
+		this.orderDetector = orderDetector;
+	}
+
 	public void setScop(ScopDatabase scop) {
 		this.scop = scop;
 	}
 
+	public void nullifyAfpChain() {
+		this.afpChain = null;
+	}
+	
 	/**
 	 * Store the raw AFPChain in {@link #getAfpChain()}. Requires a lot of memory. Not recommended.
 	 * 
@@ -309,7 +324,8 @@ public class CensusJob implements Callable<Result> {
 
 		Result r = new Result();
 
-		if (storeAfpChain) r.setAlignmentMapping(new AlignmentMapping(afpChain));
+		if (storeAfpChain) this.afpChain = afpChain;
+		if (recordAlignmentMapping) r.setAlignmentMapping(new AlignmentMapping(afpChain));
 
 		r.setRank(count);
 		r.setScopId(name);

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:CensusResults xmlns:ns2="http://source.rcsb.org">
+    <data>
+        <alignment>
+            <alignLength>115</alignLength>
+            <alignScore>82.4591</alignScore>
+            <block1Length>31</block1Length>
+            <block2Length>34</block2Length>
+            <coverage>52</coverage>
+            <gapLength>50</gapLength>
+            <identity>0.069565214</identity>
+            <rmsd>5.0854034</rmsd>
+            <similarity>0.1826087</similarity>
+            <tmScore>0.24488482</tmScore>
+            <zScore>1.64</zScore>
+        </alignment>
+        <alignmentMapping>
+            <simpleFunction>23=83;25=85;24=84;27=87;26=86;29=89;28=88;31=91;30=90;34=94;35=95;32=92;33=93;38=110;39=111;36=96;37=109;42=114;43=115;40=112;41=113;46=118;47=119;44=116;45=117;51=123;50=122;49=121;48=120;55=20;54=19;53=125;52=124;59=24;58=23;57=22;56=21;85=25;87=27;86=26;93=33;92=32;95=35;94=34;89=29;88=28;91=31;90=30;96=36;110=37;111=38;119=46;118=45;117=44;116=43;115=42;114=41;113=40;112=39;125=52;124=51;123=50;122=49;121=48;120=47;</simpleFunction>
+        </alignmentMapping>
+        <axis>
+            <orthogonal>54.17225</orthogonal>
+            <screw>0.98715436</screw>
+            <theta>3.1255682</theta>
+            <x>-0.5418386</x>
+            <y>-0.6299675</y>
+            <z>-0.5563739</z>
+        </axis>
+        <classification>a.60.8</classification>
+        <description>HRDC-like</description>
+        <isSignificant>true</isSignificant>
+        <order>2</order>
+        <protodomain>2c35.E_37-73,E_99-110,E_124-139</protodomain>
+        <rank>0</rank>
+        <scopId>d2c35e1</scopId>
+        <sunId>129717</sunId>
+    </data>
+    <timestamp>2013-10-19 17:45:38</timestamp>
+</ns2:CensusResults>

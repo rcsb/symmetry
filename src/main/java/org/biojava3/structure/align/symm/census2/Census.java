@@ -100,6 +100,7 @@ public class Census {
 
 	private int numTotal;
 	
+	private boolean recordAlignmentMapping = false;
 	private boolean storeAfpChain = false;
 
 	private int printFrequency = 400;
@@ -111,6 +112,10 @@ public class Census {
 
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
 	
+	public void setRecordAlignmentMapping(boolean recordAlignmentMapping) {
+		this.recordAlignmentMapping = recordAlignmentMapping;
+	}
+
 	public void setStoreAfpChain(boolean keepAfpChain) {
 		this.storeAfpChain = keepAfpChain;
 	}
@@ -209,7 +214,8 @@ public class Census {
 				}
 				if (knownResults.contains(domain.getScopId())) continue;
 				logger.debug("Submitting new job for " + domain.getScopId() + " (job #" + count + ")");
-				CensusJob calc = CensusJob.forScopId(getAlgorithm(), significance, domain.getScopId(), count, cache, scop);
+				CensusJob calc = CensusJob.setUpJob(domain.getScopId(), count, getAlgorithm(), significance, cache, scop);
+				calc.setRecordAlignmentMapping(recordAlignmentMapping);
 				calc.setStoreAfpChain(storeAfpChain);
 				initializeJob(calc);
 				submittedJobs.add(calc);

@@ -302,8 +302,8 @@ public class HelixAxisAligner extends AxisAligner {
 		double rise = p2.y - p1.y;
 		// use phythagorean theoremm to calculate chord length between two subunit centers
 		double chord = Math.sqrt(dTotal*dTotal - rise*rise);
-		System.out.println("Chord d: " + dTotal + " rise: " + rise + "chord: " + chord);
-		double angle = helixLayers.getByLargestContacts().getAxisAngle().getAngle();
+//		System.out.println("Chord d: " + dTotal + " rise: " + rise + "chord: " + chord);
+		double angle = helixLayers.getByLargestContacts().getAxisAngle().angle;
 		
 		// using the axis angle and the chord length, we can calculate the radius of the helix
 		// http://en.wikipedia.org/wiki/Chord_%28geometry%29
@@ -313,7 +313,7 @@ public class HelixAxisAligner extends AxisAligner {
 		// project the radius onto the vector that points toward the helix axis
 		v3.scale(radius);
 		v3.add(p2);
-		System.out.println("Angle: " + Math.toDegrees(helixLayers.getByLowestAngle().getAxisAngle().getAngle()));
+//		System.out.println("Angle: " + Math.toDegrees(helixLayers.getByLowestAngle().getAxisAngle().angle));
 		Point3d cor = new Point3d(v3);
 		return cor;
 	}

@@ -72,22 +72,27 @@ private List<Point3d> calcRepeatUnitCenters() {
 	
 //	if (modelCount == maxFold && subunits.getSubunitCount() > 3) {
 	if (maxFold%modelCount == 0 && modelCount > 1 && subunits.getSubunitCount() > 3) {
+//		System.out.println("calcRepeatUnitCenters case 1");
 		for (int i = 0; i < modelCount; i++) {
 			List<Integer> subunitIndices = new ArrayList<Integer>();
 			Point3d p = new Point3d();
 			int count = 0;
-			for (int j = 0; j < models.size(); j++)
+//			System.out.println("Models: " + models.size());
+			for (int j = 0; j < models.size(); j++) {
 				if (models.get(j) == i) {
 					p.add(centers.get(j));
 					subunitIndices.add(j);
 					count++;
 				}
+			}
+//			System.out.println("count: " + count);
 			p.scale(1.0/count);
 //			System.out.println("Orig Repeat unit: " + p);
 			repeatCenters.add(p);
 			repeatUnitIndices.add(subunitIndices);
 		}
 	} else {
+//		System.out.println("calcRepeatUnitCenters case21");
 		// TODO need to group subunits into repeating groups
 		// Case of 3B5U: A14, but seems to form (A2)*7 and symmetry related subunits don't have direct contact
 		List<Integer> sequenceClusterIds = subunits.getSequenceClusterIds();

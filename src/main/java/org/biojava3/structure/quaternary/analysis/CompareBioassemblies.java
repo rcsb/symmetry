@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Set;
 
 import org.biojava.bio.structure.Atom;
@@ -15,9 +16,11 @@ import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
+import org.biojava.bio.structure.io.mmcif.AllChemCompProvider;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava.bio.structure.quaternary.io.BioUnitDataProviderFactory;
+import org.biojava.bio.structure.quaternary.io.MmCifBiolAssemblyProvider;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
 
@@ -59,8 +62,8 @@ public class CompareBioassemblies {
 		boolean skip = false;
 		String restartId = "1A6S";
 
-//		for (String pdbId: pdbAll) {
-		for (String pdbId: testCases) {
+		for (String pdbId: pdbAll) {
+//		for (String pdbId: testCases) {
 			if (skip && pdbId.equals(restartId)) {
 				skip = false;
 			} 
@@ -139,7 +142,9 @@ public class CompareBioassemblies {
 		
 		String sb1 = getModelChainString(s1);
 		String sb2 = getModelChainString(s2);
+		System.out.println("Chain sequence: " + sb1 + " - " + sb2);
 		if (! sb1.equals(sb2)) {
+
 			return "Inconsistent chain sequence: " + sb1 + " - " + sb2;
 		}
 		
@@ -147,10 +152,11 @@ public class CompareBioassemblies {
 		for (Atom a1: ca1) {
 			boolean match = false;
 			for (Atom a2: ca2) {
-				if (a1.getGroup().getPDBName().equals(a2.getGroup().getPDBName()) &&
+				if (compareDoubleArray(a1.getCoords(), a2.getCoords())) {
+//				if (a1.getGroup().getPDBName().equals(a2.getGroup().getPDBName()) &&
 //						a1.getElement() == a2.getElement() && 
-						a1.getName().equals(a2.getName()) && 	
-						compareDoubleArray(a1.getCoords(), a2.getCoords())) {
+//						a1.getName().equals(a2.getName()) && 	
+//						compareDoubleArray(a1.getCoords(), a2.getCoords())) {
 					match = true;
 					break;
 				}
@@ -167,13 +173,13 @@ public class CompareBioassemblies {
 	      	return "Inconsistent number of models: " + s1.nrModels() + " - " + s2.nrModels();
 	    }
         
-//        for (int i = 0; i < s1.nrModels(); i++) {
-//        	List<Chain> chains1 = s1.getChains(i);
-//        	List<Chain> chains2 = s2.getChains(i);
-//        	if (chains1.size() != chains2.size()) {
-//        		return "Inconsistent number of chains: " + chains1.size() + " - " + chains2.size();
-//        	}
-//        	// System.out.println("Number of chains: " + chains1.size());
+        for (int i = 0; i < s1.nrModels(); i++) {
+        	List<Chain> chains1 = s1.getChains(i);
+        	List<Chain> chains2 = s2.getChains(i);
+        	if (chains1.size() != chains2.size()) {
+        		return "Inconsistent number of chains: " + chains1.size() + " - " + chains2.size();
+        	}
+        	// System.out.println("Number of chains: " + chains1.size());
 //        	for (int j = 0; j < chains1.size(); j++) {
 //        		Chain c1 = chains1.get(j);
 //        		Chain c2 = chains2.get(j);
@@ -211,7 +217,7 @@ public class CompareBioassemblies {
 //        			}
 //        		}
 //        	}
-//        }
+        }
         return "";
 	}
 	
@@ -245,8 +251,10 @@ public class CompareBioassemblies {
 		params.setAtomCaThreshold(Integer.MAX_VALUE);
 		params.setLoadChemCompInfo(true);
 		params.setMaxAtoms(Integer.MAX_VALUE);
-//		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
-		ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
+		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
+		MmCifBiolAssemblyProvider mmcifProvider = new MmCifBiolAssemblyProvider();
+		BioUnitDataProviderFactory.setBioUnitDataProvider(mmcifProvider.getClass().getCanonicalName());	
+//		ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
 	}
 	
 	private Structure createBioAssembly(PrintWriter error, String pdbId, int i) {
@@ -322,5 +330,5 @@ public class CompareBioassemblies {
 	
 	
 //	private static final String[] excludes = new String[]{"1M4X", "2BGJ" , "2J4Z", "2JBP","3HQV","3HR2", "2GSY","2DF7"};
-	private static final String[] testCases = new String[]{"1H35"};
+	private static final String[] testCases = new String[]{"4A1I"};
 }

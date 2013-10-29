@@ -21,6 +21,9 @@ import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
+import org.biojava3.structure.align.symm.order.OrderDetectionFailedException;
+import org.biojava3.structure.align.symm.order.OrderDetector;
+import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava3.structure.utils.SymmetryTools;
 
 
@@ -37,20 +40,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 	public static final String version = "1.0";
 
-	public static final float DEFAULT_MINIMUM_METRIC_CHANGE = 0.4f;
-	
-	public static final int DEFAULT_MAX_SYMMETRY_ORDER = 8;
-	
-	/**
-	 * Percentage change in RSSE required to improve score.
-	 * Avoids reporting slight improvements in favor of lower order.
-	 */
-	private float minimumMetricChange = 0.40f;
-	
-	/**
-	 * Maximum degree of rotational symmetry to consider.
-	 */
-	private int maxSymmetryOrder = 8;
+	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8, 0.4f); // TODO finish
 	
 	/**
 	 * The penalty x residues from the main diagonal is: (standard score) - GRADIENT_EXP_COEFF*e^(-x) - GRADIENT_POLY_COEFF[n]*x^(-n) - GRADIENT_POLY_COEFF[n-1]*x^(-n+1) - GRADIENT_POLY_COEFF[n-2]*x^(-n+2) - ... - GRADIENT_POLY_COEFF[0]*x^0
@@ -62,22 +52,6 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	 * An penalty that is exp(e, x), where x is the number of residues from the main diagonal.
 	 */
 	private double gradientExpCoeff = 0;
-
-	public float getMinimumMetricChange() {
-		return minimumMetricChange;
-	}
-
-	public void setMinimumMetricChange(float minimumMetricChange) {
-		this.minimumMetricChange = minimumMetricChange;
-	}
-
-	public int getMaxSymmetryOrder() {
-		return maxSymmetryOrder;
-	}
-
-	public void setMaxSymmetryOrder(int maxSymmetryOrder) {
-		this.maxSymmetryOrder = maxSymmetryOrder;
-	}
 
 	public double[] getGradientPolyCoeff() {
 		return gradientPolyCoeff;
@@ -93,6 +67,14 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 	public void setGradientExpCoeff(double gradientExpCoeff) {
 		this.gradientExpCoeff = gradientExpCoeff;
+	}
+
+	public OrderDetector getOrderDetector() {
+		return orderDetector;
+	}
+
+	public void setOrderDetector(OrderDetector orderDetector) {
+		this.orderDetector = orderDetector;
 	}
 
 	AFPChain afpChain;
@@ -472,7 +454,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			}
 
 			if(refineResult) {
-				int order = getSymmetryOrder(afpChain, maxSymmetryOrder, minimumMetricChange);
+				int order = getSymmetryOrder(afpChain);
 				afpChain = SymmRefiner.refineSymmetry(afpChain, ca1, ca2O, order);
 			}
 
@@ -527,7 +509,9 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	 * @param afpChain A CE-symm alignment, where one protein is compared to itself
 	 * @return The order of the alignment, or -1 if non-symmetric.
 	 * @throws StructureException If afpChain is not one-to-one
+	 * @deprecated See SequenceFunctionOrderDetector for an identical method
 	 */
+	@Deprecated
 	public static int getSymmetryOrder(AFPChain afpChain, int maxSymmetryOrder, float minimumMetricChange) throws StructureException {
 
 		Map<Integer,Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
@@ -537,13 +521,16 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 				maxSymmetryOrder, minimumMetricChange);
 	}
 
+	/**
+	 * @deprecated See SequenceFunctionOrderDetector for an identical method
+	 */
+	@Deprecated
 	public static int getSymmetryOrder(AFPChain afpChain) throws StructureException {
 
 		Map<Integer,Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
 
 		return AlignmentTools.getSymmetryOrder(alignment,
-				new AlignmentTools.IdentityMap<Integer>(),
-				DEFAULT_MAX_SYMMETRY_ORDER, DEFAULT_MINIMUM_METRIC_CHANGE);
+				new AlignmentTools.IdentityMap<Integer>(), 8, 0.4f);
 	}
 	
 	/**

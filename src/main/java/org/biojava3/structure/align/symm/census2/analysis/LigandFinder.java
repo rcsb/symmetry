@@ -22,11 +22,11 @@ import org.biojava.bio.structure.ResidueNumber;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.io.mmcif.chem.ResidueType;
 import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.Census;
 import org.biojava3.structure.align.symm.census2.CensusJob;
@@ -34,7 +34,6 @@ import org.biojava3.structure.align.symm.census2.CensusJob.FullInfo;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * Find ligands near the centroids of symmetric domains.
@@ -63,6 +62,12 @@ public class LigandFinder {
 	private File output;
 	private int printFrequency = 100;
 	private boolean useOnlyAligned = true;
+	private Significance significance;
+	
+
+	public void setSignificance(Significance significance) {
+		this.significance = significance;
+	}
 
 	public void setUseOnlyAligned(boolean useOnlyAligned) {
 		this.useOnlyAligned = useOnlyAligned;
@@ -110,7 +115,6 @@ public class LigandFinder {
 		}
 
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
-		Significance sig = SignificanceFactory.rotationallySymmetricSmart();
 		AtomCache cache = new AtomCache();
 		cache.setFetchFileEvenIfObsolete(true);
 
@@ -121,24 +125,27 @@ public class LigandFinder {
 			if (ligandList.contains(scopId)) continue; // don't redo domains
 			try {
 
-				ScopDomain domain = scop.getDomainByScopID(scopId);
-				if (domain == null) {
-					logger.error(result.getScopId() + " is null");
-					continue;
-				}
-				if (!sig.isSignificant(result)) {
+				if (!significance.isSignificant(result)) {
 					continue;
 				}
 
 				// we want to get all groups in the center that are NOT amino
 				// acids or water atoms
-				Structure structure = cache.getStructureForDomain(scopId, scop);
+//				Structure structure = cache.getStructureForDomain(scopId, scop);
+				Structure structure;
+				StructureName theName = new StructureName(scopId);
+				if (theName.isScopName()) {
+					if (scop == null) scop = ScopFactory.getSCOP();
+					structure = cache.getStructureForDomain(scopId, scop);
+				} else {
+					structure = cache.getStructure(scopId);
+				}
 				Atom[] ca = StructureTools.getAtomCAArray(structure);
 
 				Atom centroid;
 				if (useOnlyAligned) {
 					// run CE-Symm to get alignment
-					FullInfo info = CensusJob.runOn(scopId, Census.AlgorithmGiver.getDefault(), sig, cache, scop);
+					FullInfo info = CensusJob.runOn(scopId, Census.AlgorithmGiver.getDefault(), significance, cache, scop);
 					RotationAxis axis = new RotationAxis(info.getAfpChain());
 					centroid = axis.getRotationPos();
 				} else {

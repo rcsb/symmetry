@@ -49,6 +49,8 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.core.util.ConcurrencyTools;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.order.OrderDetector;
+import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava3.structure.utils.FileUtils;
 
 /**
@@ -97,6 +99,9 @@ public class Census {
 	private int numSymm;
 
 	private int numTotal;
+	
+	private boolean recordAlignmentMapping = false;
+	private boolean storeAfpChain = false;
 
 	private int printFrequency = 400;
 	private Map<String, Integer> symm = new TreeMap<String, Integer>();
@@ -104,6 +109,20 @@ public class Census {
 	private Map<String, Integer> total = new TreeMap<String, Integer>();
 
 	private AlgorithmGiver algorithm = null;
+
+	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
+	
+	public void setRecordAlignmentMapping(boolean recordAlignmentMapping) {
+		this.recordAlignmentMapping = recordAlignmentMapping;
+	}
+
+	public void setStoreAfpChain(boolean keepAfpChain) {
+		this.storeAfpChain = keepAfpChain;
+	}
+
+	public void setOrderDetector(OrderDetector orderDetector) {
+		this.orderDetector = orderDetector;
+	}
 
 	public static void buildDefault(File censusFile) {
 		try {
@@ -195,7 +214,9 @@ public class Census {
 				}
 				if (knownResults.contains(domain.getScopId())) continue;
 				logger.debug("Submitting new job for " + domain.getScopId() + " (job #" + count + ")");
-				CensusJob calc = CensusJob.forScopId(getAlgorithm(), significance, domain.getScopId(), count, cache, scop);
+				CensusJob calc = CensusJob.setUpJob(domain.getScopId(), count, getAlgorithm(), significance, cache, scop);
+				calc.setRecordAlignmentMapping(recordAlignmentMapping);
+				calc.setStoreAfpChain(storeAfpChain);
 				initializeJob(calc);
 				submittedJobs.add(calc);
 				Future<Result> result = ConcurrencyTools.submit(calc);

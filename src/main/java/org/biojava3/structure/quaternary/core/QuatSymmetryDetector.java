@@ -117,6 +117,7 @@ public class QuatSymmetryDetector {
 			QuatSymmetryResults gSymmetry = calcQuatSymmetry(globalSubunits);
 			gSymmetry.setSequenceIdentityThreshold(thresholds[index]);		
 			globalSymmetry.add(gSymmetry);
+//			SymmetryDeviation sd = new SymmetryDeviation(globalSubunits, gSymmetry.getRotationGroup());
 	
 
 			// determine local symmetry if global structure is 
@@ -126,13 +127,22 @@ public class QuatSymmetryDetector {
 			
 			// TODO example 2PT7: global C2, but local C6 symm., should that be included here ...?
 			// i.e., include all heteromers here, for example if higher symmetry is possible by stoichiometry? A6B2 -> local A6  can have higher symmetry
-			if (parameters.isLocalSymmetry()) {
+			if (parameters.isLocalSymmetry() && globalSubunits.getSubunitCount() <= parameters.getMaximumLocalSubunits()) {
 				if (gSymmetry.getSymmetry().equals("C1") && proteinChainCount > 2) {
 					List<QuatSymmetryResults> lSymmetry = new ArrayList<QuatSymmetryResults>();
+					
+					long start = System.nanoTime();
 
 					for (Subunits subunits: createLocalSubunits(chainClusterer)) {
 						QuatSymmetryResults result = calcQuatSymmetry(subunits);
 						addToLocalSymmetry(result, lSymmetry);
+						
+						double time = (System.nanoTime()- start)/1000000000;
+						if (time > ((QuatSymmetryParameters) parameters).getLocalTimeLimit()) {
+							System.out.println("Warning: QuatSymmetryDetector: Exceeded time limit for local symmetry calculations: " + time +
+									" seconds. Results may be incomplete");
+							break;
+						}
 					}
 					localSymmetries.add(lSymmetry);
 				}
@@ -143,6 +153,7 @@ public class QuatSymmetryDetector {
 			}
 		}
 		
+
 		trimGlobalSymmetryResults();
 		trimLocalSymmetryResults();
 		setPseudoSymmetry();
@@ -389,6 +400,69 @@ public class QuatSymmetryDetector {
 			
 			// avoid combinatorial explosion, i.e. for 1FNT
 			BigInteger maxCombinations = BigInteger.valueOf(parameters.getMaximumLocalCombinations());
+//			System.out.println("maxCombinations: " + generator.getTotal());
+		    if (generator.getTotal().compareTo(maxCombinations) > 0) {
+		    	continue;
+		    }
+			
+			while (generator.hasNext()) {
+				indices = generator.getNext();	
+				
+				
+				// only consider sub clusters that can have rotational symmetry based on the number of subunits
+				// TODO this however may exclude a few cases of helical symmetry. Checking all combinations for
+				// helical symmetry would be prohibitively slow.
+				for (int j = 0; j < indices.length; j++) {
+					subCluster[j] = clusterIds.get(indices[j]);
+				}	
+				List<Integer> folds = getFolds(subCluster, last);
+
+				if (folds.size() < 2) {
+					continue;
+				}
+				
+				List<Integer> subSet = new ArrayList<Integer>(indices.length);
+				for (int index: indices) {
+					subSet.add(index);
+				}
+
+				// check if this subset of subunits interact with each other
+				Graph<Integer> subGraph = graph.extractSubGraph(subSet);		
+				if (isConnectedGraph(subGraph)) {		
+					subClusters.add(subSet);
+					if (subClusters.size() > parameters.getMaximumLocalResults()) {
+						return subClusters;
+					}
+				}
+			}
+		}
+
+		return subClusters;
+	}
+	
+	private List<List<Integer>> decomposeClustersOld(List<Point3d[]> caCoords, List<Integer> clusterIds) {
+		List<List<Integer>> subClusters = new ArrayList<List<Integer>>();
+
+		int last = getLastMultiSubunit(clusterIds);
+		List<Point3d[]> subList = caCoords;
+		if (last < caCoords.size()) {
+			subList = caCoords.subList(0, last);
+		} else {
+			last = caCoords.size();
+		}
+
+		SubunitGraph subunitGraph = new SubunitGraph(subList);
+		Graph<Integer> graph = subunitGraph.getProteinGraph();
+//		System.out.println("Graph: " + graph);
+
+		for (int i = last; i > 1; i--) {
+			CombinationGenerator generator = new CombinationGenerator(last, i);
+			int[] indices = null;
+			Integer[] subCluster = new Integer[i];
+			
+			// avoid combinatorial explosion, i.e. for 1FNT
+			BigInteger maxCombinations = BigInteger.valueOf(parameters.getMaximumLocalCombinations());
+//			System.out.println("decomposeClusters:maxCombinations" + maxCombinations);
 		    if (generator.getTotal().compareTo(maxCombinations) > 0) {
 		    	continue;
 		    }
@@ -399,6 +473,7 @@ public class QuatSymmetryDetector {
 				for (int index: indices) {
 					subSet.add(index);
 				}
+				System.out.println("subSet: " + subSet);
 				Graph<Integer> subGraph = graph.extractSubGraph(subSet);		
 				//			System.out.println("Subgraph: " + subGraph);
 
@@ -409,10 +484,14 @@ public class QuatSymmetryDetector {
 					List<Integer> folds = getFolds(subCluster, last);
 					if (folds.size() > 1) {
 						subClusters.add(subSet);
+						if (subClusters.size() > parameters.getMaximumLocalResults()) {
+							return subClusters;
+						}
 					}
 				}
 			}
 		}
+		System.out.println("QuatSymmetryDetector: decomposeClusters: " + subClusters.size());
 
 		return subClusters;
 	}

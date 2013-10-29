@@ -14,6 +14,7 @@ import java.util.List;
  */
 public class HelixLayers {
 	private List<Helix> helices = new ArrayList<Helix>();
+	private double symmetryDeviation = 0;
 
 	public int size() {
 		return helices.size();
@@ -134,9 +135,32 @@ public class HelixLayers {
 			values[i] = helices.get(i).getScores().getRmsdCenters();
 		}
 		scores.setRmsdCenters(averageScores(values));
+	
+		// TmIntra
+		for (int i = 0; i < helices.size(); i++) {
+			values[i] = helices.get(i).getScores().getTmIntra();
+		}
+		scores.setTmIntra(averageScores(values));
+
+		// RmsdIntra
+		for (int i = 0; i < helices.size(); i++) {
+			values[i] = helices.get(i).getScores().getRmsdIntra();
+		}
+		scores.setRmsdIntra(averageScores(values));
+
+		// SymDeviation
+		scores.setSymDeviation(symmetryDeviation);
+		
 		return scores;
 	}
 	
+	/**
+	 * @param symmetryDeviation the symmetryDeviation to set
+	 */
+	public void setSymmetryDeviation(double symmetryDeviation) {
+		this.symmetryDeviation = symmetryDeviation;
+	}
+
 	private double averageScores(double[] scores) {
 		double sum = 0;
 		for (double s: scores) {
@@ -161,6 +185,10 @@ public class HelixLayers {
 		return score;
 	}
 	
+	public void clear() {
+		helices.clear();
+	}
+	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Helices: " + size() + "\n");
@@ -169,5 +197,7 @@ public class HelixLayers {
 		}
 		return sb.toString();
 	}
+
+	
 
 }

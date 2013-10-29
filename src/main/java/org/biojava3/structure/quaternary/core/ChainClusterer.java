@@ -125,6 +125,10 @@ public class ChainClusterer  {
 		return seqClusters.size();
 	}
 	
+	public List<SequenceAlignmentCluster> getSequenceAlignmentClusters() {
+		return seqClusters;
+	}
+	
 	public List<Boolean> getPseudoStoichiometry() {
 		run();
 		List<Boolean> list = new ArrayList<Boolean>();

@@ -41,10 +41,10 @@ public abstract class AxisAligner {
 	public abstract Vector3d getDimension();
 
 	/**
-	 * Returns the radius for drawing the minor rotation axis in the xy-plane
-	 * @return double radius in xy-plane
+	 * Returns the radius for drawing polyhedra
+	 * @return double radius
 	 */
-	public abstract double getXYRadius();
+	public abstract double getRadius();
 
 	/**
 	 * Returns a transformation matrix transform polyhedra for Cn structures.

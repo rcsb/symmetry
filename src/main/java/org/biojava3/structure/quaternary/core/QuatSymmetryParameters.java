@@ -20,11 +20,14 @@ public class QuatSymmetryParameters {
 	// A slightly positive value gives preference to helical, if the RMSDs for the two symmetries
 	// are almost identical
 	private double helixRmsdThreshold = 0.05;
-	private double helixRmsdToRiseRatio = 0.75; // rmsd must be < 0.75* abs(rise)
+	private double helixRmsdToRiseRatio = 0.5; // rmsd must be < 0.5 * abs(rise) (previously set to 0.75)
 	private double minimumHelixRise = 1.0;
 	private double minimumHelixAngle = 5.0; // min helix angle to differentiate it from a translational repeat
 	private int maximumLocalCombinations = 50000; // max number of combinations to try for local symmetry calculation
+	private int maximumLocalResults = 1000;
+	private int maximumLocalSubunits = 20; // maximum number of subunits for local symmetry calculations
 	private boolean localSymmetry = true;
+	private double localTimeLimit = 120; // time limit for local calculations in seconds
 	private boolean verbose = false;
 	private static final String n = System.getProperty("line.separator");
 	
@@ -156,11 +159,47 @@ public class QuatSymmetryParameters {
 	public void setMaximumLocalCombinations(int maximumLocalCombinations) {
 		this.maximumLocalCombinations = maximumLocalCombinations;
 	}
+	/**
+	 * @return the maximumLocalResults
+	 */
+	public int getMaximumLocalResults() {
+		return maximumLocalResults;
+	}
+	/**
+	 * @return the maximumLocalSubunits
+	 */
+	public int getMaximumLocalSubunits() {
+		return maximumLocalSubunits;
+	}
+	/**
+	 * @param maximumLocalSubunits the maximumLocalSubunits to set
+	 */
+	public void setMaximumLocalSubunits(int maximumLocalSubunits) {
+		this.maximumLocalSubunits = maximumLocalSubunits;
+	}
+	/**
+	 * @param maximumLocalResults the maximumLocalResults to set
+	 */
+	public void setMaximumLocalResults(int maximumLocalResults) {
+		this.maximumLocalResults = maximumLocalResults;
+	}
 	public boolean isLocalSymmetry() {
 		return localSymmetry;
 	}
 	public void setLocalSymmetry(boolean localSymmetry) {
 		this.localSymmetry = localSymmetry;
+	}
+	/**
+	 * @return the localTimeLimit
+	 */
+	public double getLocalTimeLimit() {
+		return localTimeLimit;
+	}
+	/**
+	 * @param localTimeLimit the localTimeLimit to set
+	 */
+	public void setLocalTimeLimit(double localTimeLimit) {
+		this.localTimeLimit = localTimeLimit;
 	}
 	public boolean isVerbose() {
 		return verbose;

@@ -7,12 +7,9 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Queue;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Color4f;
@@ -33,6 +30,7 @@ import org.biojava3.structure.quaternary.utils.ColorBrewer;
  */
 public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator { 
 	private static double AXIS_SCALE_FACTOR = 1.2;
+	private static double SIDE_CHAIN_EXTENSION = 6.0;
 	private HelixAxisAligner helixAxisAligner = null;
 	private String name = "";
 	private String defaultColoring = "";
@@ -153,24 +151,47 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 		StringBuilder s = new StringBuilder();
 		
 		// for now, return empty script until this has been implemented properly
-		if (s.length() == 0)
-			return s.toString();
+//		if (s.length() == 0)
+//			return s.toString();
 
-		Point3d[] vertices = getRepeatUnitCenters();
+//		Point3d[] vertices = getRepeatUnitCenters();
+		List<Point3d> vertices = helixAxisAligner.getSubunits().getOriginalCenters();
+		vertices = extendUnitCenters(vertices);
 		
 		int index = 0;
-		Color4f c = new Color4f(Color.YELLOW);
+		Color4f c = new Color4f(Color.MAGENTA);
 //		double width = getMaxExtension()*0.015;
 		double width = getMaxExtension()*0.007;
 
-		for (int[] lineLoop: getLayerLines()) {
-			s.append("draw line");
+//		List<List<Integer>> layerLines = helixAxisAligner.getHelixLayers().getByLargestContactsNotLowestAngle().getLayerLines();
+//		layerLines.addAll(helixAxisAligner.getHelixLayers().getByLowestAngle().getLayerLines());
+		List<List<Integer>> layerLines = helixAxisAligner.getHelixLayers().getByLargestContacts().getLayerLines();
+
+		
+		for (List<Integer> line : layerLines) {
+			s.append("draw polyhedron");
 			s.append(name);
 			s.append(index++);
 			s.append(" line");
-			for (int i: lineLoop) {
-				s.append(getJmolPoint(vertices[i]));
+			for (int i: line) {
+				s.append(getJmolPoint(vertices.get(i)));
 			}
+			s.append("width ");
+		    s.append(fDot2(width));
+			s.append(" color");
+			s.append(getJmolColor(c));
+			s.append(" off;");
+		}
+		
+		List<Point3d> interiorVertices = interiorCenters(vertices);
+		
+		for (int i = 0; i < vertices.size(); i++) {
+			s.append("draw polyhedron");
+			s.append(name);
+			s.append(index++);
+			s.append(" line");
+			s.append(getJmolPoint(vertices.get(i)));
+			s.append(getJmolPoint(interiorVertices.get(i)));
 			s.append("width ");
 		    s.append(fDot2(width));
 			s.append(" color");
@@ -265,7 +286,11 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 	 */
 	public String drawAxes() {
 		StringBuilder s = new StringBuilder();
-		Point3d centroid = helixAxisAligner.getCentroid();
+//		Point3d centroid = helixAxisAligner.getCentroid();
+		System.out.println("Centroid: " + helixAxisAligner.getCentroid());
+//		Point3d centroid = helixAxisAligner.getGeometricCenter();
+		Point3d centroid = helixAxisAligner.calcCenterOfRotation();
+		System.out.println("Geometric center: " + centroid);
 		AxisAngle4d axisAngle = helixAxisAligner.getHelixLayers().getByLowestAngle().getAxisAngle();
 		Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 
@@ -275,14 +300,14 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 		s.append(" ");
 		s.append("line");
 		Point3d v1 = new Point3d(axis);
-		v1.scale(AXIS_SCALE_FACTOR*helixAxisAligner.getDimension().z);
+		v1.scale(AXIS_SCALE_FACTOR*(helixAxisAligner.getDimension().y + SIDE_CHAIN_EXTENSION));
 		Point3d v2 = new Point3d(v1);
 		v2.negate();
 		v1.add(centroid);
 		v2.add(centroid);
 		s.append(getJmolPoint(v1));
 		s.append(getJmolPoint(v2));
-		s.append("width 1.0 "); // TODO  was 0.5
+		s.append("width 1.0 ");
 		s.append(" color red");
 		s.append(" off;");
 		return s.toString();
@@ -413,8 +438,7 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 	 * @return Jmol script
 	 */
 	public String colorBySymmetry() {
-		List<Integer> permutation = helixAxisAligner.getHelixLayers().getByLargestContacts().getPermutation();
-		List<List<Integer>> units = calcLayerLines(permutation);
+		List<List<Integer>> units = helixAxisAligner.getHelixLayers().getByLargestContacts().getLayerLines();
 		units = orientLayerLines(units);
 		Subunits subunits = helixAxisAligner.getSubunits();
 		List<Integer> modelNumbers = subunits.getModelNumbers();
@@ -429,7 +453,8 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 			maxLen = Math.max(maxLen,  unit.size());
 		}
 	
-		Color4f[] colors = getSymmetryColors(permutation.size()); 
+//		Color4f[] colors = getSymmetryColors(permutation.size()); 
+		Color4f[] colors = getSymmetryColors(subunits.getSubunitCount()); 
 		int count = 0;
 		
 		for (int i = 0; i < maxLen; i++) {
@@ -477,7 +502,7 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 			Point3d lastSubunit = new Point3d(centers.get(last));
 			transformation.transform(lastSubunit);
 			
-			// a layerline should start at the lowest y-value, so all layerlines have a consisten direction from -y value to +y value
+			// a layerline should start at the lowest y-value, so all layerlines have a consistent direction from -y value to +y value
 			if (firstSubunit.y > lastSubunit.y) {
 				System.out.println("reorienting layer line: " + layerLine);
 				Collections.reverse(layerLine);
@@ -485,80 +510,7 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 		}
 		return layerLines;
 	}
-	
-	private List<List<Integer>> calcLayerLines(List<Integer> permutation) {
-		List<List<Integer>> layerLines = new ArrayList<List<Integer>>();
 		
-		createLineSegments(permutation, layerLines);
-		
-//		System.out.println("Line segments: " + layerLines.size());
-//		for (List<Integer> lineSegment: layerLines) {
-//			System.out.println(lineSegment);
-//		}
-		
-		int count = layerLines.size();
-		
-		// iteratively join line segments
-		do {
-			count = layerLines.size();
-			joinLineSegments(layerLines);
-			// after joining line segments, get rid of the empty line segments left behind
-			trimEmptyLineSegments(layerLines);
-
-//			System.out.println("Line segments: " + count);
-//			for (List<Integer> lineSegment: layerLines) {
-//				System.out.println(lineSegment);
-//			}
-		} while (layerLines.size() < count);
-		
-		return layerLines;
-	}
-
-	private void createLineSegments(List<Integer> permutation,
-			List<List<Integer>> layerLines) {
-		for (int i = 0; i < permutation.size(); i++) {
-			if (permutation.get(i) != -1 ) {
-				List<Integer> lineSegment = new ArrayList<Integer>();
-				lineSegment.add(i);
-				lineSegment.add(permutation.get(i));
-				layerLines.add(lineSegment);
-			}
-		}
-	}
-	
-	private void joinLineSegments(List<List<Integer>> layerLines) {
-		for (int i = 0; i < layerLines.size()-1; i++) {
-			List<Integer> lineSegmentI = layerLines.get(i);
-			if (! lineSegmentI.isEmpty()) {
-				for (int j = i + 1; j < layerLines.size(); j++) {
-					List<Integer> lineSegmentJ = layerLines.get(j);
-					if (! lineSegmentJ.isEmpty()) {
-						if (lineSegmentI.get(lineSegmentI.size()-1).equals(lineSegmentJ.get(0))) {
-//							System.out.println("join right: " + lineSegmentI + " - " + lineSegmentJ);
-							lineSegmentI.addAll(lineSegmentJ.subList(1,  lineSegmentJ.size()));
-//							System.out.println("joned segment: " + lineSegmentI);
-							lineSegmentJ.clear();		
-						} else if ((lineSegmentI.get(0).equals(lineSegmentJ.get(lineSegmentJ.size()-1)))) {
-							lineSegmentI.addAll(0, lineSegmentJ.subList(0,  lineSegmentJ.size()-1));
-//							System.out.println("join left: " + lineSegmentJ + " - " + lineSegmentI);
-//							System.out.println("joned segment: " + lineSegmentI);
-							lineSegmentJ.clear();
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	private void trimEmptyLineSegments(List<List<Integer>> layerLines) {
-		for (Iterator<List<Integer>> iter = layerLines.iterator(); iter.hasNext();) {
-			if (iter.next().isEmpty()) {
-				iter.remove();
-			}
-		}
-	}
-	
-	
 	// --- protected methods ---
 	/**
 	 * Returns the maximum extension (length) of structure
@@ -571,90 +523,42 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 		return maxExtension;
 	}
 	
-	private Point3d[] getRepeatUnitCenters() {
-		List<List<Integer>> units = helixAxisAligner.getHelixLayers().getHelix(0).getRepeatUnits();
-		List<Point3d> centers = helixAxisAligner.getSubunits().getOriginalCenters();
-		
-		Point3d[] points = new Point3d[units.size()];
-		
-		for (int i = 0; i < units.size(); i++) {
-			Point3d center = new Point3d();
-			for (Integer j: units.get(i)) {
-				center.add(centers.get(j));
-			}
-			center.scale(1.0/units.get(i).size());
-			points[i] = center;
-		}
-		extendUnitCenters(points);
-		return points;
-	}
-	
-	private Point3d[] extendUnitCenters(Point3d[] points) {
+	private List<Point3d> extendUnitCenters(List<Point3d> points) {
 		Matrix4d transformation = helixAxisAligner.getTransformation();
 		Matrix4d reversetransformation = helixAxisAligner.getReverseTransformation();
-		double radius = helixAxisAligner.getXYRadius()*1.2;
-		radius += 4; // add space for side chains
-		System.out.println("XYRadius: " + radius);
+		double radius = helixAxisAligner.getRadius();
+		radius += SIDE_CHAIN_EXTENSION; // add space for side chains
+		System.out.println("XZRadius+: " + radius);
 		
-		Point3d q = new Point3d();
+
+		List<Point3d> ePoints = new ArrayList<Point3d>(points.size());
 		for (Point3d p: points) {
-			q.set(p);
-	//		q.sub(centroid);
+			Point3d q = new Point3d(p);
             transformation.transform(q);
-            double d = Math.sqrt(q.x*q.x + q.y*q.y);
+            double d = Math.sqrt(q.x*q.x + q.z*q.z);
             double scale = radius/d;
             q.x *= scale;
-            q.y *= scale;
+            q.z *= scale;
             reversetransformation.transform(q);
-   //         q.add(centroid);
-            p.set(q);
+            ePoints.add(q);
 		}
-		return points;
+		return ePoints;
 	}
 	
-	private List<int[]> getLayerLines() {
-		List<int[]> pairs = new ArrayList<int[]>();
-		if (helixAxisAligner.getSubunits().getSubunitCount() < 4) {
-			return pairs;
-		}
-		List<Integer> permutation = helixAxisAligner.getHelixLayers().getByLowestAngle().getPermutation();
-		System.out.println("getLayerLines: helix1: " + helixAxisAligner.getHelixLayers().getByLowestAngle());
+	private List<Point3d> interiorCenters(List<Point3d> points) {
+		Matrix4d transformation = helixAxisAligner.getTransformation();
+		Matrix4d reversetransformation = helixAxisAligner.getReverseTransformation();
 		
-		for (int i = 0; i < permutation.size(); i++) {
-			if (permutation.get(i) != -1) {
-				int[] pair = new int[2];
-				pair[0] = getRepeatUnitIndexFromSubunitIndex(i);
-				pair[1] = getRepeatUnitIndexFromSubunitIndex(permutation.get(i));
-				if (pair[0] != -1 && pair[1] != -1) {
-					pairs.add(pair);
-				}
-			}
+		List<Point3d> ePoints = new ArrayList<Point3d>(points.size());
+		for (Point3d p: points) {
+			Point3d q = new Point3d(p);
+            transformation.transform(q);
+            q.x = 0;
+            q.z = 0;
+            reversetransformation.transform(q);
+            ePoints.add(q);
 		}
-		if (helixAxisAligner.getHelixLayers().size() > 1) {
-			System.out.println("getLayerLines: helix2: " + helixAxisAligner.getHelixLayers().getByLargestContactsNotLowestAngle());
-			permutation = helixAxisAligner.getHelixLayers().getByLargestContactsNotLowestAngle().getPermutation();
-			for (int i = 0; i < permutation.size(); i++) {
-				if (permutation.get(i) != -1) {
-					int[] pair = new int[2];
-					pair[0] = getRepeatUnitIndexFromSubunitIndex(i);
-					pair[1] = getRepeatUnitIndexFromSubunitIndex(permutation.get(i));
-					if (pair[0] != -1 && pair[1] != -1) {
-						pairs.add(pair);
-					}
-				}
-			}
-		}
-		return pairs;
-	}
-	
-	private int getRepeatUnitIndexFromSubunitIndex(int subunitIndex) {
-		List<List<Integer>> units = helixAxisAligner.getHelixLayers().getHelix(0).getRepeatUnits();
-		for (int i = 0; i < units.size(); i++) {
-            if (units.get(i).contains(subunitIndex)) {
-            	return i;
-            }
-		}
-		return -1;
+		return ePoints;
 	}
 	
 	private String drawHeader(String text, String color) {
@@ -727,7 +631,8 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
  	private String setCentroid() {
 		// calculate center of rotation
 	//	Point3d centroid = axisTransformation.getGeometricCenter();
-		Point3d centroid = helixAxisAligner.getCentroid();
+	//	Point3d centroid = helixAxisAligner.getCentroid();
+		Point3d centroid = helixAxisAligner.calcCenterOfRotation();
 			
 		// set centroid
 		StringBuilder s = new StringBuilder();

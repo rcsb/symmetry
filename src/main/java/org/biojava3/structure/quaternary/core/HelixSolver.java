@@ -48,9 +48,14 @@ public class HelixSolver {
 
 		double minRise = parameters.getMinimumHelixRise() * fold;  // for n-start helix, the rise must be steeper
 		Map<Integer[], Integer> interactionMap = unit.getInteractingRepeatUnits();
+		
+		int maxLayerLineLength = 0;
 
 		for (Entry<Integer[], Integer> entry : interactionMap.entrySet()) {
 			Integer[] pair = entry.getKey();
+			if (parameters.isVerbose()) {
+				System.out.println("HelixSolver: pair: " + Arrays.toString(pair));
+			}
 			int contacts = entry.getValue();
 			Point3d[] h1 = null;
 			Point3d[] h2 = null;
@@ -64,12 +69,12 @@ public class HelixSolver {
 			double rise = getRise(transformation, repeatUnitCenters.get(pair[0]), repeatUnitCenters.get(pair[1]));
 			double angle = getAngle(transformation);
 
-//			if (parameters.isVerbose()) {
-//				System.out.println();
-//				System.out.println("Original rmsd: " + rmsd);
-//				System.out.println("Original rise: " + rise);
-//				System.out.println("Original angle: " + Math.toDegrees(angle));
-//			}
+			if (parameters.isVerbose()) {
+				System.out.println();
+				System.out.println("Original rmsd: " + rmsd);
+				System.out.println("Original rise: " + rise);
+				System.out.println("Original angle: " + Math.toDegrees(angle));
+			}
 
 			if (rmsd > parameters.getRmsdThreshold()) {
 				continue;
@@ -89,6 +94,9 @@ public class HelixSolver {
 				continue;
 			}
 			permutations.add(permutation);
+			if (parameters.isVerbose()) {
+				System.out.println("Permutation: " + permutation);
+			}
 
 			// keep track of which subunits are permuted
 			Set<Integer> permSet = new HashSet<Integer>();
@@ -109,11 +117,17 @@ public class HelixSolver {
 			
 			// a helix a repeat unit cannot map onto itself
 			if (! valid) {
+				if (parameters.isVerbose()) {
+					System.out.println("Invalid mapping");
+				}
 				continue;
 			}
 			
 			// all subunits must be involved in a permutation
 			if (permSet.size() != subunits.getSubunitCount()) {
+				if (parameters.isVerbose()) {
+					System.out.println("Not all subunits involved in permutation");
+				}
 				continue;
 			}
 			
@@ -147,11 +161,11 @@ public class HelixSolver {
 				rise = getRise(transformation, repeatUnitCenters.get(pair[0]), repeatUnitCenters.get(pair[1]));
 				angle = getAngle(transformation);
 				
-//				if (parameters.isVerbose()) {
-//					System.out.println("Subunit rmsd: " + subunitRmsd);
-//					System.out.println("Subunit rise: " + rise);
-//					System.out.println("Subunit angle: " + Math.toDegrees(angle));
-//				}
+				if (parameters.isVerbose()) {
+					System.out.println("Subunit rmsd: " + subunitRmsd);
+					System.out.println("Subunit rise: " + rise);
+					System.out.println("Subunit angle: " + Math.toDegrees(angle));
+				}
 
 				if (subunitRmsd > parameters.getRmsdThreshold()) {
 					continue;
@@ -186,21 +200,25 @@ public class HelixSolver {
 			h2 = new Point3d[point2.size()];
 			point1.toArray(h1);
 			point2.toArray(h2);
-
+            Point3d[] h3 = SuperPosition.clonePoint3dArray(h1);
 			transformation = SuperPosition.superposeWithTranslation(h1, h2);
+			
+			Point3d xtrans = SuperPosition.centroid(h3);
+	    	xtrans.negate();
+	    	
 
 			double traceRmsd = SuperPosition.rmsd(h1, h2);
 			
 			rise = getRise(transformation, repeatUnitCenters.get(pair[0]), repeatUnitCenters.get(pair[1]));
 			angle = getAngle(transformation);
 
-//			if (parameters.isVerbose()) {
-//				System.out.println("Trace rmsd: " + traceRmsd);
-//				System.out.println("Trace rise: " + rise);
-//				System.out.println("Trace angle: " + Math.toDegrees(angle));
-//				System.out.println("Permutation: " + permutation);
-//			}
-//	
+			if (parameters.isVerbose()) {
+				System.out.println("Trace rmsd: " + traceRmsd);
+				System.out.println("Trace rise: " + rise);
+				System.out.println("Trace angle: " + Math.toDegrees(angle));
+				System.out.println("Permutation: " + permutation);
+			}
+	
 			if (traceRmsd > parameters.getRmsdThreshold()) {
 				continue;
 			}
@@ -218,6 +236,9 @@ public class HelixSolver {
 				continue;
 			}
 
+			AxisAngle4d a1 = new AxisAngle4d();
+			a1.set(transformation);
+			
 			// save this helix rot-translation
 			Helix helix = new Helix();
 			helix.setTransformation(transformation);
@@ -232,12 +253,57 @@ public class HelixSolver {
 			helix.setFold(fold);
 			helix.setContacts(contacts);
 			helix.setRepeatUnits(unit.getRepeatUnitIndices());
+			if (parameters.isVerbose()) {
+				System.out.println("Layerlines: " + helix.getLayerLines());
+			}
+			for (List<Integer> line: helix.getLayerLines()) {
+				maxLayerLineLength = Math.max(maxLayerLineLength, line.size());
+			}
+			
+			// TODO
+	//		checkSelfLimitingHelix(helix);
+			
 			helixLayers.addHelix(helix);
+			
+		}
+		if (maxLayerLineLength < 3) {
+//			System.out.println("maxLayerLineLength: " + maxLayerLineLength);
+			helixLayers.clear();
 		}
 
 		return;
 	}
 
+	private void checkSelfLimitingHelix(Helix helix) {
+		HelixExtender he = new HelixExtender(subunits, helix);
+		Point3d[] extendedHelix = he.extendHelix(1);
+		
+		int overlap1 = 0;
+		for (Point3d[] trace: subunits.getTraces()) {
+			for (Point3d pt: trace) {
+				for (Point3d pe: extendedHelix) {
+					if (pt.distance(pe) < 5.0) {
+						overlap1++;
+					}
+				}
+			}
+		}
+
+		extendedHelix = he.extendHelix(-1);
+		
+		int overlap2 = 0;
+		for (Point3d[] trace: subunits.getTraces()) {
+			for (Point3d pt: trace) {
+				for (Point3d pe: extendedHelix) {
+					if (pt.distance(pe) < 3.0) {
+						overlap2++;
+					}
+				}
+			}
+		}
+		System.out.println("SelfLimiting helix: " + overlap1 + ", " + overlap2);
+	}
+	
 	private boolean preCheck() {
 		if (subunits.getSubunitCount() < 3) {
 			return false;

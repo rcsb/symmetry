@@ -15,6 +15,9 @@ public class QuatSymmetryScores {
 	private double maxTm = 1;
 	private double tm = 1;
 	private double rmsdCenters = 0;
+	private double rmsdIntra = 0;
+	private double tmIntra = 0;
+	private double symDeviation = 0;
 	
 	/**
 	 * @return the minRmsd
@@ -101,6 +104,42 @@ public class QuatSymmetryScores {
 		this.rmsdCenters = rmsdCenters;
 	}
 	
+	/**
+	 * @return the rmsdIntra
+	 */
+	public double getRmsdIntra() {
+		return rmsdIntra;
+	}
+	/**
+	 * @param rmsdIntra the rmsdIntra to set
+	 */
+	public void setRmsdIntra(double rmsdIntra) {
+		this.rmsdIntra = rmsdIntra;
+	}
+	/**
+	 * @return the tmIntra
+	 */
+	public double getTmIntra() {
+		return tmIntra;
+	}
+	/**
+	 * @param tmIntra the tmIntra to set
+	 */
+	public void setTmIntra(double tmIntra) {
+		this.tmIntra = tmIntra;
+	}
+	/**
+	 * @return the symDeviation
+	 */
+	public double getSymDeviation() {
+		return symDeviation;
+	}
+	/**
+	 * @param symDeviation the symDeviation to set
+	 */
+	public void setSymDeviation(double symDeviation) {
+		this.symDeviation = symDeviation;
+	}
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("minimum RMSD: ");

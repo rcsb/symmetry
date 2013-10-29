@@ -38,15 +38,19 @@ public class QuatSymmetryResults {
 	private boolean preferredResult = false;
 	
 	public QuatSymmetryResults(Subunits subunits, RotationGroup rotationGroup, String method) {
+	//	SymmetryDeviation sd = new SymmetryDeviation(subunits, rotationGroup);
+	//	rotationGroup.setSymmetryDeviation(sd.getSymmetryDeviation());
 		this.subunits = subunits;
 		this.rotationGroup = rotationGroup;
 		this.method = method;
 	}
 	
 	public QuatSymmetryResults(Subunits subunits, HelixLayers helixLayers, String method) {
+	//	SymmetryDeviation sd = new SymmetryDeviation(subunits, helixLayers);
+	//	helixLayers.setSymmetryDeviation(sd.getSymmetryDeviation());
 		this.subunits = subunits;
 		this.helixLayers = helixLayers;
-		this.method = method;
+		this.method = method;	
 	}
 	
 	/**
@@ -101,7 +105,7 @@ public class QuatSymmetryResults {
 	
 	
 	public QuatSymmetryScores getScores() {
-		if (helixLayers != null && helixLayers.size() > 0) {
+		if (helixLayers != null && helixLayers.size() > 0) {	
 			return helixLayers.getScores();
 		} else if (rotationGroup != null && rotationGroup.getOrder() > 0) {
 			return rotationGroup.getScores();

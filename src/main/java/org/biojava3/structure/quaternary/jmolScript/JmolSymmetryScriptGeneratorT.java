@@ -15,7 +15,7 @@ public class JmolSymmetryScriptGeneratorT extends JmolSymmetryScriptGeneratorPoi
 
 	public JmolSymmetryScriptGeneratorT(RotationAxisAligner axisTransformation, String name) {
 		super(axisTransformation, name);
-		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getXYRadius());
+		double radius = Math.max(axisTransformation.getDimension().z, axisTransformation.getRadius());
 		Tetrahedron t = new Tetrahedron();
 		t.setMidRadius(radius);
 		setPolyhedron(t);

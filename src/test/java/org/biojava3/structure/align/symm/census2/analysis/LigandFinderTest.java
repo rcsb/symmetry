@@ -1,14 +1,15 @@
 package org.biojava3.structure.align.symm.census2.analysis;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.io.FileParsingParameters;
+import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
+import org.biojava.bio.structure.io.mmcif.ChemCompProvider;
+import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.Census;
@@ -24,17 +25,52 @@ import org.junit.Test;
  * A test for {@link LigandFinder}.
  * @author dmyerstu
  */
-public class LigandFinderTest {
+public class LigandFinderTest extends TestCase{
 
 	private static int RADIUS = 5;
 	
 	private AtomCache cache = new AtomCache();
 	private ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
 
+	ChemCompProvider orig ;
+	
 	@Before
-	public void setUp() {
+	public void setUp() throws Exception{
+		super.setUp();
+		
 		cache.setFetchFileEvenIfObsolete(true);
+		cache.setAutoFetch(true);
+		
+		FileParsingParameters params = cache.getFileParsingParams();
+		
+		params.setLoadChemCompInfo(true);
+		
+		params.setCreateAtomBonds(true);
+		
+		orig =  ChemCompGroupFactory.getChemCompProvider();
+		
+		ChemCompProvider provider = new DownloadChemCompProvider();
+		
+		ChemCompGroupFactory.setChemCompProvider(provider);
+		
+		
+		
 	}
+	
+	
+
+	@Override
+	protected void tearDown() throws Exception {
+		// TODO Auto-generated method stub
+		super.tearDown();
+		
+		System.out.println("tear down");
+		ChemCompGroupFactory.setChemCompProvider(orig);
+	}
+	
+	
+
+
 
 	@Test
 	public void testInCenter1() {

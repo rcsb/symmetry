@@ -19,6 +19,7 @@ import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
@@ -84,18 +85,24 @@ public class InterfaceLigandFinder {
 	private double maxDistance = DEFAULT_MAX_DISTANCE;
 
 	private File output;
+	
+	private Significance significance;
 
 	private int printFrequency = 100;
+
+	public void setSignificance(Significance significance) {
+		this.significance = significance;
+	}
 
 	private double calcDistance(RotationAxis axis, Atom atom, double axisLength) {
 
 		Vector3D rotation = new Vector3D(axis.getRotationAxis().getCoords());
 		Vector3D origin = new Vector3D(axis.getRotationPos().getCoords());
 		Vector3D point = new Vector3D(atom.getCoords());
-		Vector3D origin0 = origin.subtract(rotation.scalarMultiply(axisLength / 2.0)); // segment
-																						// start
-		Vector3D origin1 = origin.add(rotation.scalarMultiply(axisLength / 2.0)); // segment
-																					// end
+		// segment start
+		Vector3D origin0 = origin.subtract(rotation.scalarMultiply(axisLength / 2.0));
+		// segment end
+		Vector3D origin1 = origin.add(rotation.scalarMultiply(axisLength / 2.0));
 
 		DistanceMeasure distance = new EuclideanDistance();
 
@@ -119,12 +126,14 @@ public class InterfaceLigandFinder {
 	private double calcMaxParallel(RotationAxis axis, Atom[] ca) {
 		double max = 0;
 		Vector3D rotation = new Vector3D(axis.getRotationAxis().getCoords());
+		System.err.println("ROTATION: " + rotation);
 		Vector3D position = new Vector3D(axis.getRotationPos().getCoords());
-		Vector3D x = position.add(rotation);
+		System.err.println("POSITION: " + position);
+		Vector3D x = position.add(rotation).normalize();
 		for (Atom atom : ca) {
 			if (exclusionMatcher.matches(atom.getGroup())) { // only amino acids
 				Vector3D v = new Vector3D(atom.getCoords());
-				double test = v.dotProduct(x);
+				double test = Math.abs(v.dotProduct(x));
 				if (test > max) {
 					max = test;
 				}
@@ -148,7 +157,6 @@ public class InterfaceLigandFinder {
 		}
 
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
-		Significance sig = SignificanceFactory.rotationallySymmetricSmart();
 		AtomCache cache = new AtomCache();
 		cache.setFetchFileEvenIfObsolete(true);
 
@@ -159,28 +167,29 @@ public class InterfaceLigandFinder {
 			if (ligandList.contains(scopId)) continue; // don't redo domains
 			try {
 
-				ScopDomain domain = scop.getDomainByScopID(scopId);
-				if (domain == null) {
-					logger.error(result.getScopId() + " is null");
-					continue;
-				}
-				if (!sig.isSignificant(result)) {
+				if (!significance.isSignificant(result)) {
 					continue;
 				}
 
 				// we want to get all groups in the center that are NOT amino
 				// acids or water atoms
-				Structure structure = cache.getStructureForDomain(scopId, scop);
-				Atom[] ca = StructureTools.getAtomCAArray(structure);
+				Structure structure;
+				StructureName theName = new StructureName(scopId);
+				if (theName.isScopName()) {
+					structure = cache.getStructureForDomain(scopId, scop);
+				} else {
+					structure = cache.getStructure(scopId);
+				}
+				Atom[] allAtoms = StructureTools.getAllAtomArray(structure);
 
 				// run CE-Symm to get alignment
-				FullInfo info = CensusJob.runOn(scopId, Census.AlgorithmGiver.getDefault(), sig, cache, scop);
+				FullInfo info = CensusJob.runOn(scopId, Census.AlgorithmGiver.getDefault(), significance, cache, scop);
 				AFPChain afpChain = info.getAfpChain();
 
 				/*
 				 * add ligands to list
 				 */
-				StructureLigands ligands = findAlongInterface(scopId, afpChain, ca);
+				StructureLigands ligands = findAlongInterface(scopId, afpChain, allAtoms);
 				ligandList.put(scopId, ligands);
 				if (!ligands.isEmpty()) {
 					logger.debug("Assigning " + ligands.size() + " ligands to " + scopId);
@@ -211,11 +220,13 @@ public class InterfaceLigandFinder {
 		RotationAxis axis = new RotationAxis(afpChain);
 		StructureLigands ligands = new StructureLigands(scopId);
 		double segmentLength = calcMaxParallel(axis, ca);
+		System.err.println("SEGMENT LENGTH: " + segmentLength);
 		HashSet<Group> groupsFound = new HashSet<Group>();
 		for (Atom atom : ca) {
-			if (!exclusionMatcher.matches(atom.getGroup()) && !groupsFound.contains(atom.getGroup())) { // only
-																										// heteroatoms
+			// only heteroatoms
+			if (!exclusionMatcher.matches(atom.getGroup()) && !groupsFound.contains(atom.getGroup())) {
 				double distance = calcDistance(axis, atom, segmentLength);
+				System.err.println(distance);
 				if (distance <= maxDistance) {
 					ligands.add(new Ligand(atom.getGroup().getAtoms(), distance));
 					groupsFound.add(atom.getGroup());

@@ -287,10 +287,10 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 	public String drawAxes() {
 		StringBuilder s = new StringBuilder();
 //		Point3d centroid = helixAxisAligner.getCentroid();
-		System.out.println("Centroid: " + helixAxisAligner.getCentroid());
+//		System.out.println("Centroid: " + helixAxisAligner.getCentroid());
 //		Point3d centroid = helixAxisAligner.getGeometricCenter();
 		Point3d centroid = helixAxisAligner.calcCenterOfRotation();
-		System.out.println("Geometric center: " + centroid);
+//		System.out.println("Geometric center: " + centroid);
 		AxisAngle4d axisAngle = helixAxisAligner.getHelixLayers().getByLowestAngle().getAxisAngle();
 		Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
 
@@ -504,7 +504,7 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 			
 			// a layerline should start at the lowest y-value, so all layerlines have a consistent direction from -y value to +y value
 			if (firstSubunit.y > lastSubunit.y) {
-				System.out.println("reorienting layer line: " + layerLine);
+//				System.out.println("reorienting layer line: " + layerLine);
 				Collections.reverse(layerLine);
 			}
 		}
@@ -528,7 +528,7 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 		Matrix4d reversetransformation = helixAxisAligner.getReverseTransformation();
 		double radius = helixAxisAligner.getRadius();
 		radius += SIDE_CHAIN_EXTENSION; // add space for side chains
-		System.out.println("XZRadius+: " + radius);
+//		System.out.println("XZRadius: " + radius);
 		
 
 		List<Point3d> ePoints = new ArrayList<Point3d>(points.size());

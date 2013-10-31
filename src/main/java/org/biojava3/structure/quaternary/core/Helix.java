@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix4d;
-import javax.vecmath.Quat4d;
 
 /**
  *

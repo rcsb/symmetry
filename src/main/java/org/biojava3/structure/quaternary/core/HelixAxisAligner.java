@@ -258,7 +258,7 @@ public class HelixAxisAligner extends AxisAligner {
 	    centerOfRotation.y = 0;
 	    // transform center of rotation to the original coordinate frame
 		reverseTransformationMatrix.transform(centerOfRotation);
-		System.out.println("center of rotation: " + centerOfRotation);
+//		System.out.println("center of rotation: " + centerOfRotation);
 		return centerOfRotation;
 	}
 
@@ -308,7 +308,7 @@ public class HelixAxisAligner extends AxisAligner {
 		// using the axis angle and the chord length, we can calculate the radius of the helix
 		// http://en.wikipedia.org/wiki/Chord_%28geometry%29
 		double radius = chord/Math.sin(angle/2)/2; // can this go to zero?
-		System.out.println("Radius: " + radius);
+//		System.out.println("Radius: " + radius);
 		
 		// project the radius onto the vector that points toward the helix axis
 		v3.scale(radius);
@@ -515,9 +515,9 @@ public class HelixAxisAligner extends AxisAligner {
 				xzRadiusMax = Math.max(xzRadiusMax, Math.sqrt(probe.x*probe.x + probe.z * probe.z));
 			}
 		}
-		System.out.println("MinBoundary: " + minBoundary);
-		System.out.println("MaxBoundary: " + maxBoundary);
-		System.out.println("zxRadius: " + xzRadiusMax);
+//		System.out.println("MinBoundary: " + minBoundary);
+//		System.out.println("MaxBoundary: " + maxBoundary);
+//		System.out.println("zxRadius: " + xzRadiusMax);
 	}
 	
 	/*

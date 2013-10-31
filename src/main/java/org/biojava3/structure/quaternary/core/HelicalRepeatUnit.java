@@ -150,6 +150,10 @@ private List<Point3d[]> calcRepeatUnits() {
 		}
 	}
 	
+//	for (int i = 0; i < repeatTraces.size(); i++) {
+//		System.out.println("Repeat " + i);
+//		System.out.println(Arrays.toString(repeatTraces.get(i)));
+//	}
 	return repeatTraces;
 }
 
@@ -174,6 +178,7 @@ private Map<Integer, List<Integer[]>> findClosestPairs(int maxNeighbors) {
 
 	Map<Integer, List<Integer[]>>  distanceMap = new TreeMap<Integer, List<Integer[]>>();
 	int nCenters = repeatUnitCenters.size();
+//	System.out.println("repeatUnitCenters: " + repeatUnitCenters);
 
 	for (int i = 0; i < nCenters-1; i++) {
 		for (int j = i+1; j < nCenters; j++) {

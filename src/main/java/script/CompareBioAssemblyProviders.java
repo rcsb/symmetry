@@ -13,7 +13,7 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.quaternary.ModelTransformationMatrix;
+import org.biojava.bio.structure.quaternary.BiologicalAssemblyTransformation;
 import org.biojava.bio.structure.quaternary.io.BioUnitDataProviderFactory;
 import org.biojava.bio.structure.quaternary.io.MmCifBiolAssemblyProvider;
 import org.biojava.bio.structure.quaternary.io.PDBBioUnitDataProvider;
@@ -94,8 +94,8 @@ public class CompareBioAssemblyProviders {
 			assertTrue(pHeader.getNrBioAssemblies() <= mHeader.getNrBioAssemblies());
 
 
-			Map<Integer, List<ModelTransformationMatrix>> pMap = pHeader.getBioUnitTranformationMap();
-			Map<Integer, List<ModelTransformationMatrix>> mMap = mHeader.getBioUnitTranformationMap();
+			Map<Integer, List<BiologicalAssemblyTransformation>> pMap = pHeader.getBioUnitTranformationMap();
+			Map<Integer, List<BiologicalAssemblyTransformation>> mMap = mHeader.getBioUnitTranformationMap();
 
 			//System.out.println("PDB: " + pMap);
 

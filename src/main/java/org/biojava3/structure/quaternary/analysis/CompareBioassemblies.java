@@ -4,12 +4,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Set;
 
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Chain;
+import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
@@ -60,7 +62,7 @@ public class CompareBioassemblies {
 
 		// set skip to true to restart calculation with a specified PDB ID
 		boolean skip = false;
-		String restartId = "1A6S";
+		String restartId = "3NTU";
 
 		for (String pdbId: pdbAll) {
 //		for (String pdbId: testCases) {
@@ -72,7 +74,7 @@ public class CompareBioassemblies {
 			}
 
 			if (pdbId.equals("1M4X")) {
-				continue;
+//				continue;
 			}
 
 			int bioAssemblyCount = StructureIO.getNrBiologicalAssemblies(pdbId);
@@ -129,8 +131,8 @@ public class CompareBioassemblies {
 		Atom[] ca1 = StructureTools.getAtomCAArray(s1);	
 		Atom[] ca2 = StructureTools.getAtomCAArray(s2);
 		
-//		System.out.println("ca1: " + Arrays.toString(ca1));
-//		System.out.println("ca2: " + Arrays.toString(ca2));
+//		System.out.println("ca1: " + ca1.length + ": " + Arrays.toString(ca1));
+//		System.out.println("ca2: " + ca2.length + ": " + Arrays.toString(ca2));
 		if (ca1.length != ca2.length && ! s1.isNmr()) {
 			return "Inconsistent number of Calpha atoms: " + ca1.length + " - " + ca2.length;
 		}
@@ -142,9 +144,8 @@ public class CompareBioassemblies {
 		
 		String sb1 = getModelChainString(s1);
 		String sb2 = getModelChainString(s2);
-		System.out.println("Chain sequence: " + sb1 + " - " + sb2);
+//		System.out.println("Chain sequence: " + sb1 + " - " + sb2);
 		if (! sb1.equals(sb2)) {
-
 			return "Inconsistent chain sequence: " + sb1 + " - " + sb2;
 		}
 		
@@ -152,11 +153,11 @@ public class CompareBioassemblies {
 		for (Atom a1: ca1) {
 			boolean match = false;
 			for (Atom a2: ca2) {
-				if (compareDoubleArray(a1.getCoords(), a2.getCoords())) {
-//				if (a1.getGroup().getPDBName().equals(a2.getGroup().getPDBName()) &&
-//						a1.getElement() == a2.getElement() && 
-//						a1.getName().equals(a2.getName()) && 	
-//						compareDoubleArray(a1.getCoords(), a2.getCoords())) {
+//				if (compareDoubleArray(a1.getCoords(), a2.getCoords())) {
+				if (a1.getGroup().getPDBName().equals(a2.getGroup().getPDBName()) &&
+						a1.getElement() == a2.getElement() && 
+						a1.getName().equals(a2.getName()) && 	
+						compareDoubleArray(a1.getCoords(), a2.getCoords())) {
 					match = true;
 					break;
 				}
@@ -179,44 +180,44 @@ public class CompareBioassemblies {
         	if (chains1.size() != chains2.size()) {
         		return "Inconsistent number of chains: " + chains1.size() + " - " + chains2.size();
         	}
-        	// System.out.println("Number of chains: " + chains1.size());
-//        	for (int j = 0; j < chains1.size(); j++) {
-//        		Chain c1 = chains1.get(j);
-//        		Chain c2 = chains2.get(j);
-//        		if (!c1.getChainID().equals(c2.getChainID())) {
-//        			return "Inconsistent chain ids: " + c1.getChainID() + " - " + c2.getChainID();
-//        		}
-//        		List<Group> groups1 = c1.getAtomGroups();
-//        		List<Group> groups2 = c2.getAtomGroups();
-//        		if (groups1.size() != groups2.size()) {
-//        			return "Inconsistent number of atom groups: " + groups1.size() + " - " + groups2.size();
-//        		}
-//        		for (int k = 0; k < groups1.size(); k++) {
-//        			Group g1 = groups1.get(k);
-//        			Group g2 = groups2.get(k);
-//        			if (!g1.getPDBName().equals(g2.getPDBName())) {
-//        				System.out.println("Group: " + g1);
-//   //     				return "Inconsistent PDB names: " + g1.getPDBName() + " - " + g2.getPDBName();
-//        			}
-//        			List<Atom> atoms1 = g1.getAtoms();
-//        			List<Atom> atoms2 = g2.getAtoms();
-//        			if (atoms1.size() !=atoms2.size()) {
-//        				return "Inconsistent number of atoms: " + atoms1.size() + " - " + atoms2.size();
-//        			}
-//        			for (int m = 0; m < atoms1.size(); m++) {
-//        				Atom a1 = atoms1.get(m);
-//        				Atom a2 = atoms2.get(m);
-//        				if (a1.getElement() != a2.getElement()) {
-//        					return "Inconsistent elements: " + a1.getElement() + " - " + a2.getElement();
-//        				}
-//        				if (!compareDoubleArray(a1.getCoords(), a2.getCoords())) {
-//        					return "Inconsistent coordinates: " + a1 + " - " + a2;
-//        				}
+        	 System.out.println("Number of chains: " + chains1.size());
+        	for (int j = 0; j < chains1.size(); j++) {
+        		Chain c1 = chains1.get(j);
+        		Chain c2 = chains2.get(j);
+        		if (!c1.getChainID().equals(c2.getChainID())) {
+        			return "Inconsistent chain ids: " + c1.getChainID() + " - " + c2.getChainID();
+        		}
+        		List<Group> groups1 = c1.getAtomGroups();
+        		List<Group> groups2 = c2.getAtomGroups();
+        		if (groups1.size() != groups2.size()) {
+        			return "Inconsistent number of atom groups: " + groups1.size() + " - " + groups2.size();
+        		}
+        		for (int k = 0; k < groups1.size(); k++) {
+        			Group g1 = groups1.get(k);
+        			Group g2 = groups2.get(k);
+        			if (!g1.getPDBName().equals(g2.getPDBName())) {
+  //      				System.out.println("Group: " + g1);
+        				return "Inconsistent PDB names: " + g1.getPDBName() + " - " + g2.getPDBName();
+        			}
+        			List<Atom> atoms1 = g1.getAtoms();
+        			List<Atom> atoms2 = g2.getAtoms();
+        			if (atoms1.size() !=atoms2.size()) {
+        				return "Inconsistent number of atoms: " + atoms1.size() + " - " + atoms2.size();
+        			}
+        			for (int m = 0; m < atoms1.size(); m++) {
+        				Atom a1 = atoms1.get(m);
+        				Atom a2 = atoms2.get(m);
+        				if (a1.getElement() != a2.getElement()) {
+        					return "Inconsistent elements: " + a1.getElement() + " - " + a2.getElement();
+        				}
+        				if (!compareDoubleArray(a1.getCoords(), a2.getCoords())) {
+        					return "Inconsistent coordinates: " + a1 + " - " + a2;
+        				}
 //        				// System.out.println(a1);
 //        				// System.out.println(a2);
-//        			}
-//        		}
-//        	}
+        			}
+       		}
+       	}
         }
         return "";
 	}
@@ -251,10 +252,10 @@ public class CompareBioassemblies {
 		params.setAtomCaThreshold(Integer.MAX_VALUE);
 		params.setLoadChemCompInfo(true);
 		params.setMaxAtoms(Integer.MAX_VALUE);
-		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
+//		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
 		MmCifBiolAssemblyProvider mmcifProvider = new MmCifBiolAssemblyProvider();
 		BioUnitDataProviderFactory.setBioUnitDataProvider(mmcifProvider.getClass().getCanonicalName());	
-//		ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
+		ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
 	}
 	
 	private Structure createBioAssembly(PrintWriter error, String pdbId, int i) {
@@ -330,5 +331,7 @@ public class CompareBioassemblies {
 	
 	
 //	private static final String[] excludes = new String[]{"1M4X", "2BGJ" , "2J4Z", "2JBP","3HQV","3HR2", "2GSY","2DF7"};
-	private static final String[] testCases = new String[]{"4A1I"};
+//	private static final String[] testCases = new String[]{"3NTU"};
+//	private static final String[] testCases = new String[]{"1M4X"};
+	private static final String[] testCases = new String[]{"2BFU"};
 }

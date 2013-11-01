@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.biojava.bio.structure.PDBCrystallographicInfo;
 import org.biojava.bio.structure.PDBHeader;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
@@ -17,6 +18,8 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.mmcif.AllChemCompProvider;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
+import org.biojava.bio.structure.quaternary.io.BioUnitDataProviderFactory;
+import org.biojava.bio.structure.quaternary.io.MmCifBiolAssemblyProvider;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
 import org.biojava3.structure.quaternary.core.AxisAligner;
@@ -27,6 +30,7 @@ import org.biojava3.structure.quaternary.core.Subunits;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava3.structure.quaternary.misc.ProteinComplexSignature;
 import org.biojava3.structure.quaternary.utils.BlastClustReader;
+import org.jmol.adapter.readers.xtal.CrystalReader;
 
 public class ScanSymmetry implements Runnable {
 	//	private static String PDB_PATH = "C:/Users/Peter/Documents/PDB/";
@@ -75,7 +79,7 @@ public class ScanSymmetry implements Runnable {
 
 		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 
-		parameters.setVerbose(true);
+//		parameters.setVerbose(true);
 //		parameters.setRmsdThreshold(7.0);
 //		parameters.setAngleThreshold(90);
 //		parameters.setHelixRmsdThreshold(2.0);
@@ -87,9 +91,9 @@ public class ScanSymmetry implements Runnable {
 		String restartId = "10MH";
 
 //		for (String pdbId: set) {
-			for (String pdbId: excludes) {
+//			for (String pdbId: excludes) {
 //		for (String pdbId: testCase) {
-//	    for (String pdbId: helix20130916) {
+	    for (String pdbId: helix20130916) {
 //					for (String pdbId: helixExamples) {
 //		for (String pdbId: collagenExamples) {
 			if (skip && pdbId.equals(restartId)) {
@@ -144,8 +148,10 @@ public class ScanSymmetry implements Runnable {
 				String spaceGroup = "";
 				float resolution = 0.0f;
 				if (structure != null) {
-					spaceGroup = structure.getCrystallographicInfo().getSpaceGroup();
-					 structure.getCrystallographicInfo().getA();
+					PDBCrystallographicInfo info = structure.getCrystallographicInfo();
+					if (info != null) {
+						spaceGroup = info.getSpaceGroup();
+					}
 					PDBHeader pdbHeader = structure.getPDBHeader();
 					resolution = pdbHeader.getResolution();	
 					System.out.println("resolution: " + resolution);
@@ -266,6 +272,8 @@ public class ScanSymmetry implements Runnable {
 		params.setStoreEmptySeqRes(true);
 		params.setAlignSeqRes(true);
 		params.setParseCAOnly(true);
+		MmCifBiolAssemblyProvider mmcifProvider = new MmCifBiolAssemblyProvider();
+		BioUnitDataProviderFactory.setBioUnitDataProvider(mmcifProvider.getClass().getCanonicalName());	
 		params.setLoadChemCompInfo(true);
 //		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
 		ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
@@ -510,5 +518,5 @@ public class ScanSymmetry implements Runnable {
 	
 //	private static final String[] excludes = new String[]{"1M4X", "2BGJ" , "2J4Z", "2JBP","3HQV","3HR2", "2GSY","2DF7"};
 //	private static final String[] excludes = new String[]{"3B0S"};
-	private static final String[] excludes = new String[]{"3J2U"};
+	private static final String[] excludes = new String[]{"1M4X"};
 }

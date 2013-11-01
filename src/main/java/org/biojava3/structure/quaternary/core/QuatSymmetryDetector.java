@@ -584,7 +584,7 @@ public class QuatSymmetryDetector {
 				// given to the helical symmetry by the helixRmsdThreshold parameter.
 				double cRmsd = rotationGroup.getScores().getRmsd();
 				double hRmsd = helixLayers.getScores().getRmsd();
-				System.out.println("cRMSD: " + cRmsd + " hRMSD: " + hRmsd);
+//				System.out.println("cRMSD: " + cRmsd + " hRMSD: " + hRmsd);
 				double deltaRmsd = hRmsd - cRmsd;
 				if (symmetry.equals("C1") || 
 						(!symmetry.equals("C1") && deltaRmsd <= parameters.getHelixRmsdThreshold())) {

@@ -133,8 +133,9 @@ public class LigandFinderTest extends TestCase{
 	@Test
 	public void testHybrid() {
 		// An organic sulfate is in the center, but a hydrocarbon is just outside
-		String scopId = "d3ejba1";
-		String ligand = find(scopId, RADIUS, false, SignificanceFactory.forCeSymmOrd());
+		String scopId = "3ejb.A";
+		
+		String ligand = find(scopId, 6, false, SignificanceFactory.forCeSymmOrd());
 		assertNotNull(ligand);
 		assertFalse(ligand.contains(","));
 		assertTrue(ligand.contains("C8O5S"));
@@ -142,7 +143,7 @@ public class LigandFinderTest extends TestCase{
 
 	@Test
 	public void testHybridOnlyAligned() {
-		String scopId = "d3ejba1";
+		String scopId = "3ejb.A";
 		String ligand = find(scopId, RADIUS, true, SignificanceFactory.forCeSymmOrd());
 		assertNull(ligand);
 	}

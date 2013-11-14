@@ -398,8 +398,8 @@ public class SymmRefiner {
 			name = "3jut.A"; // b-trefoil FGF-1, C3
 			name = "2jaj.A"; //C5
 
-			boolean writeSIF = true;
-			boolean displayStruct = false;
+			boolean writeSIF = false;
+			boolean displayStruct = true;
 
 			AtomCache cache = new AtomCache();
 			Atom[] ca1 = cache.getAtoms(name);

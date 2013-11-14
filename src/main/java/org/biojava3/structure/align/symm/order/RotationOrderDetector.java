@@ -178,6 +178,7 @@ public class RotationOrderDetector implements OrderDetector {
 //		name = "1MER";
 //		name = "1TIM.A";
 //		name = "d1h70a_";
+		name = "2YMS";
 		try {
 			
 			// Perform alignment to determine axis
@@ -186,8 +187,8 @@ public class RotationOrderDetector implements OrderDetector {
 			CeSymm ce = new CeSymm();
 			AFPChain alignment = ce.align(ca1, ca2);
 
-			// Search for orders up to 8
-			RotationOrderDetector detector = new RotationOrderDetector(8);
+			// Search for orders up to 9
+			RotationOrderDetector detector = new RotationOrderDetector(9);
 			
 			// Calculate order
 			int order = detector.calculateOrder(alignment, ca1);

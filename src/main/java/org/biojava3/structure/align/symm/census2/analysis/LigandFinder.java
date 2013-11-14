@@ -114,7 +114,7 @@ public class LigandFinder {
 			ligandList = new LigandList();
 		}
 
-		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
+		ScopDatabase scop = ScopFactory.getSCOP();
 		AtomCache cache = new AtomCache();
 		cache.setFetchFileEvenIfObsolete(true);
 

@@ -107,7 +107,7 @@
 		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>ava-core</artifactId>
-			<version>2012-05-21-SNAPSHOT</version>
+			<version>2013-11-1-SNAPSHOT</version>
 			
 		</dependency>
 		<dependency>

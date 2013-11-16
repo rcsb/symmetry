@@ -258,7 +258,7 @@ public class HelixAxisAligner extends AxisAligner {
 	    centerOfRotation.y = 0;
 	    // transform center of rotation to the original coordinate frame
 		reverseTransformationMatrix.transform(centerOfRotation);
-		System.out.println("center of rotation: " + centerOfRotation);
+//		System.out.println("center of rotation: " + centerOfRotation);
 		return centerOfRotation;
 	}
 
@@ -302,18 +302,18 @@ public class HelixAxisAligner extends AxisAligner {
 		double rise = p2.y - p1.y;
 		// use phythagorean theoremm to calculate chord length between two subunit centers
 		double chord = Math.sqrt(dTotal*dTotal - rise*rise);
-		System.out.println("Chord d: " + dTotal + " rise: " + rise + "chord: " + chord);
-		double angle = helixLayers.getByLargestContacts().getAxisAngle().getAngle();
+//		System.out.println("Chord d: " + dTotal + " rise: " + rise + "chord: " + chord);
+		double angle = helixLayers.getByLargestContacts().getAxisAngle().angle;
 		
 		// using the axis angle and the chord length, we can calculate the radius of the helix
 		// http://en.wikipedia.org/wiki/Chord_%28geometry%29
 		double radius = chord/Math.sin(angle/2)/2; // can this go to zero?
-		System.out.println("Radius: " + radius);
+//		System.out.println("Radius: " + radius);
 		
 		// project the radius onto the vector that points toward the helix axis
 		v3.scale(radius);
 		v3.add(p2);
-		System.out.println("Angle: " + Math.toDegrees(helixLayers.getByLowestAngle().getAxisAngle().getAngle()));
+//		System.out.println("Angle: " + Math.toDegrees(helixLayers.getByLowestAngle().getAxisAngle().angle));
 		Point3d cor = new Point3d(v3);
 		return cor;
 	}
@@ -515,9 +515,9 @@ public class HelixAxisAligner extends AxisAligner {
 				xzRadiusMax = Math.max(xzRadiusMax, Math.sqrt(probe.x*probe.x + probe.z * probe.z));
 			}
 		}
-		System.out.println("MinBoundary: " + minBoundary);
-		System.out.println("MaxBoundary: " + maxBoundary);
-		System.out.println("zxRadius: " + xzRadiusMax);
+//		System.out.println("MinBoundary: " + minBoundary);
+//		System.out.println("MaxBoundary: " + maxBoundary);
+//		System.out.println("zxRadius: " + xzRadiusMax);
 	}
 	
 	/*

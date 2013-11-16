@@ -6,20 +6,15 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import org.biojava.bio.structure.PDBCrystallographicInfo;
 import org.biojava.bio.structure.PDBHeader;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.io.mmcif.AllChemCompProvider;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
-import org.biojava.bio.structure.quaternary.io.BioUnitDataProviderFactory;
-import org.biojava.bio.structure.quaternary.io.MmCifBiolAssemblyProvider;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
 import org.biojava3.structure.quaternary.core.AxisAligner;
@@ -28,22 +23,25 @@ import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 import org.biojava3.structure.quaternary.core.Subunits;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
+import org.biojava3.structure.quaternary.misc.BioassemblyCheck;
+import org.biojava3.structure.quaternary.misc.PdbBlastHit;
+import org.biojava3.structure.quaternary.misc.FindPdbRepresentatives;
 import org.biojava3.structure.quaternary.misc.ProteinComplexSignature;
 import org.biojava3.structure.quaternary.utils.BlastClustReader;
-import org.jmol.adapter.readers.xtal.CrystalReader;
 
-public class ScanSymmetry implements Runnable {
+public class BioAssemblyAnalyzer implements Runnable {
 	//	private static String PDB_PATH = "C:/Users/Peter/Documents/PDB/";
+	public static final String SERVICELOCATION="http://www.rcsb.org/pdb/rest/postBLAST";
 	private AtomCache cache = null;
 	private static String RESULT_DIR = "C:/Users/Peter/Documents/QuatStructureComparison/";
 
 
-	public ScanSymmetry () {
+	public BioAssemblyAnalyzer () {
 		initializeCache();
 	}
 
 	public static void main(String[] args) {
-		new ScanSymmetry().run();
+		new BioAssemblyAnalyzer().run();
 	}
 
 	public void run() {
@@ -91,9 +89,8 @@ public class ScanSymmetry implements Runnable {
 		String restartId = "10MH";
 
 //		for (String pdbId: set) {
-//			for (String pdbId: excludes) {
-//		for (String pdbId: testCase) {
-	    for (String pdbId: helix20130916) {
+		for (String pdbId: testCase) {
+//	    for (String pdbId: helix20130916) {
 //					for (String pdbId: helixExamples) {
 //		for (String pdbId: collagenExamples) {
 			if (skip && pdbId.equals(restartId)) {
@@ -148,24 +145,35 @@ public class ScanSymmetry implements Runnable {
 				String spaceGroup = "";
 				float resolution = 0.0f;
 				if (structure != null) {
-					PDBCrystallographicInfo info = structure.getCrystallographicInfo();
-					if (info != null) {
-						spaceGroup = info.getSpaceGroup();
-					}
+					spaceGroup = structure.getCrystallographicInfo().getSpaceGroup();
+					 structure.getCrystallographicInfo().getA();
 					PDBHeader pdbHeader = structure.getPDBHeader();
 					resolution = pdbHeader.getResolution();	
 					System.out.println("resolution: " + resolution);
 					System.out.println("space group: " + spaceGroup);
+					;
 				}
+				FindPdbRepresentatives finder = new FindPdbRepresentatives(structure);
+				List<PdbBlastHit> representatives = finder.findBestBlastHits();
+				
+				
 				QuatSymmetryDetector detector = new QuatSymmetryDetector(structure, parameters);
 
 				if (detector.hasProteinSubunits()) {	
 					long ts2 = System.nanoTime();
-
 					int time = Math.round((float)(ts2-ts1)/1000000.0f);
 					
 					// save global symmetry results
-					List<QuatSymmetryResults> globalResults = detector.getGlobalSymmetry();
+					List<QuatSymmetryResults> globalResults = detector.getGlobalSymmetry();			
+					BioassemblyCheck check = new BioassemblyCheck();
+
+					for (QuatSymmetryResults result: globalResults) {
+						if (! result.isLocal() && ! result.getSubunits().isPseudoStoichiometric()) {
+							check.BioassemblyCheck(representatives, result.getSubunits().getStoichiometry(), result.getSymmetry());
+						}
+					}
+					
+//					
 					printToCsv(reader95, reader30, out, pdbId,
 							bioAssemblyId, time, globalResults, spaceGroup);
 					
@@ -272,251 +280,11 @@ public class ScanSymmetry implements Runnable {
 		params.setStoreEmptySeqRes(true);
 		params.setAlignSeqRes(true);
 		params.setParseCAOnly(true);
-		MmCifBiolAssemblyProvider mmcifProvider = new MmCifBiolAssemblyProvider();
-		BioUnitDataProviderFactory.setBioUnitDataProvider(mmcifProvider.getClass().getCanonicalName());	
 		params.setLoadChemCompInfo(true);
 //		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
 		ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
 	}
 	
-	private static String[] testCase = {"1NMT"}; //1JI7, 1NMT, 1HGV
-//	private static String[] testCase = {"4HHB","4J7H","2A6M","3K12","2WPR","2YKQ","2QTS","1A68","4DCI","1J1J","1HGV","2HIL","3BYH","3DTP","3B0S"};
-	// global helix examples from ccquickly
-	
-	private static String[] helix20130916 = {
-		"1HGV",
-		"3J2U",
-			"4IBU",
-			"3J4F",
-			"4BS1",
-			"4BT0",
-			"4BT1",
-			"3J2U",
-			"4DYS",
-			"2YMN",
-			"4GHL",
-			"4A6J",
-			"4GYX",
-			"4FZH",
-			"4GHA",
-			"4AXY",
-			"4A7N",
-			"3J1R",
-			"4DG7",
-			"2LLP",
-			"3B0S",
-			"2LPZ",
-			"3RNU",
-			"3B2C",
-			"4DMT",
-			"4E2H",
-			"3J0R",
-			"3U29",
-			"3J0S",
-			"3T98",
-			"3OPM",
-			"3R8F",
-			"3POD",
-			"3PON",
-			"3OB8",
-			"3OBA",
-			"3NTU",
-			"3PTZ"
-	};
+	private static String[] testCase = {"3W5A","1B4F","1A0J","4G2N","3TDK","4JIB","3ZRY","3O9V","1NMT","3HP3","1NF4","3R8R","1F33","1YG8"};
 
-	private static String[] helixExamples = {
-	"1B47",
-	"1BKV",
-	"1C09",
-	"1CGD",
-	"1CGM",
-	"1CR0",
-	"1CR1",
-	"1CR2",
-	"1CR4",
-	"1FC3",
-	"1FFX",
-	"1G9F",
-	"1HGV",
-	"1HGZ",
-	"1HH0",
-	"1IFD",
-	"1IFI",
-	"1IFJ",
-	"1IFK",
-	"1IFL",
-	"1IFM",
-	"1IFN",
-	"1IFP",
-	"1JI7",
-	"1K6F",
-	"1L5A",
-	"1MM9",
-	"1MOY",
-	"1N03",
-	"1NMT",
-	"1PFI",
-	"1PV4",
-	"1PVO",
-	"1Q7D",
-	"1QL1",
-	"1QL2",
-	"1QSU",
-	"1R6Z",
-	"1RIR",
-	"1RMV",
-	"1RQ0",
-	"1SZP",
-	"1T5E",
-	"1U94",
-	"1U98",
-	"1U99",
-	"1VF7",
-	"1VTM",
-	"1VZJ",
-	"1WUD",
-	"1WZB",
-	"1XMS",
-	"1XMV",
-	"1XP8",
-	"1YJ7",
-	"1YM8",
-	"1YS3",
-	"1YSR",
-	"1Z0B",
-	"1Z0C",
-	"1Z0W",
-	"1Z4V",
-	"1Z4W",
-	"1Z4X",
-	"1Z4Y",
-	"1Z4Z",
-	"1Z50",
-	"1ZKK",
-	"2AVP",
-	"2C0W",
-	"2CUO",
-	"2D3F",
-	"2D3H",
-	"2DRT",
-	"2FKJ",
-	"2FUF",
-	"2G66",
-	"2HCB",
-	"2HI5",
-	"2HIL",
-	"2HY6",
-	"2IEF",
-	"2IFM",
-	"2IFN",
-	"2IFO",
-	"2KJ3",
-	"2LBU",
-	"2LPZ",
-	"2OM3",
-	"2QU4",
-	"2R19",
-	"2R1A",
-	"2TMV",
-	"2V4D",
-	"2V6L",
-	"2VE9",
-	"2WYY",
-	"2XEA",
-	"2Y83",
-	"3A08",
-	"3A0A",
-	"3A0M",
-	"3A19",
-	"3A1H",
-	"3ABN",
-	"3ADM",
-	"3AH9",
-	"3AI6",
-	"3B0S",
-	"3B2C",
-	"3BQ7",
-	"3BYH",
-	"3DMW",
-	"3DTP",
-	"3EDL",
-	"3F4Z",
-	"3G37",
-	"3HP3",
-	"3IFM",
-	"3IKU",
-	"3IKY",
-	"3IPN",
-	"3J06",
-	"3J0R",
-	"3J0S",
-	"3J1R",
-	"3J2U",
-	"3JQH",
-	"3KQU",
-	"3KZE",
-	"3LG7",
-	"3LUE",
-	"3LVH",
-	"3M6A",
-	"3MFP",
-	"3MOP",
-	"3NTU",
-	"3OQ9",
-	"3P46",
-	"3PDM",
-	"3POD",
-	"3PON",
-	"3PXI",
-	"3QIL",
-	"3R8F",
-	"3RD4",
-	"3T98",
-	"3U29",
-	"4A6J",
-	"4A7N",
-	"4AXY",
-	"4BS1",
-	"4BT0",
-	"4DG7",
-	"4DMT",
-	"4E2H",
-	"4GHA",
-	"4GHL",
-	"4GYX",
-	"4IFM"
-	};
-
-
-	private static String[] helixExamples2 = {
-		"1B47","1BKV","1C09","1CGD","1CGM","1CR0","1CR1","1CR2","1CR4","1FC3","1FFX","1FZD","1GL2","1HGV","1HGZ","1HH0","1IFD","1IFI",
-		"1IFJ","1IFK","1IFL","1IFM","1IFN","1IFP","1JI7","1K6F","1L5A","1M8Q","1MM9","1MOY","1MVW","1MVW","1N03","1NMT","1O18",
-		"1O19","1O1A","1O1B","1O1C","1O1D","1O1E","1O1F","1O1G","1PFI","1PV4","1PVO","1QL1","1QL2","1QSU","1QVR","1R6Z","1RHG","1RIR",
-		"1RMV","1RQ0","1SA0","1SA1","1SZP","1T5E","1U94","1U98","1U99","1VF7","1VTM","1VZJ","1WUD","1XMS","1XMV","1XP8","1YJ7","1YS3",
-		"1YSR","1Z0B","1Z0C","1Z0W","1Z2B","1Z4V","1Z4W","1Z4X","1Z4Y"};
-
-	private static String[] collagenExamples = {
-		"1A3I","1A3J","1BKV","1CAG","1CGD","1DZI","1EAK","1EI8","1G9W","1ITT",
-		"1K6F","1NAY","1Q7D","1QSU","1V4F","1V6Q","1V7H","1WZB","1X1K","1YM8",
-		"2CUO","2D3F","2D3H","2DRT","2DRX","2F6A","2G66","2KLW","2LLP","2V53",
-		"2WUH","2Y5T","3A08","3A0A","3A0M","3A19","3A1H","3ABN","3ADM","3AH9",
-		"3AI6","3B0S","3B2C","3DMW","3IPN","3P46","3POB","3POD","3PON","3T4F",
-		"3U29","3ZHA","4AU2","4AU3","4AUO","4AXY","4DMT","4DMU","4GYX"
-	};
-	
-//	private static final String[] excludes = new String[]{"1M4X", "2BGJ" , "2J4Z", "2JBP","3HQV","3HR2", "2GSY","2DF7"};
-	// 1M4X 540 subunits, WARNING ID 1000> 100, 2081520 atoms, problem with reading BIOMT
-	// 2BGJ, small protein, subunits 1, atoms 260 (OK)
-	// 2J4Z, small protein, subunits 1, atoms 263 (OK)
-	// 2JBP, WARNING ID 3 > 1, 1st BA is single chain: subunits 1, atoms 283
-	// 3HQV, 27 subunits, 26865 atoms (OK, local/helical sym. exceeds time limit)
-	// 3HR2, 27 subunits, 26757 atoms (sub clusters: 24507, exceeds time limit)
-	// 2GSY, 60 subunits, 25680 atoms, made up of 3 AUs, A60/I 7300 ms, AU is asymmetric, exceeds time limit
-	// 2DF7, 60 subunits, 24480 atoms, made up of 3 AUs, A60/I 7500 ms
-	
-	
-	
-//	private static final String[] excludes = new String[]{"1M4X", "2BGJ" , "2J4Z", "2JBP","3HQV","3HR2", "2GSY","2DF7"};
-//	private static final String[] excludes = new String[]{"3B0S"};
-	private static final String[] excludes = new String[]{"1M4X"};
 }

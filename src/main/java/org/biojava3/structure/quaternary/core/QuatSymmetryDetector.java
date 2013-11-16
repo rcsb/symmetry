@@ -114,11 +114,10 @@ public class QuatSymmetryDetector {
 			
 			// determine global symmetry
 			Subunits globalSubunits = createGlobalSubunits(chainClusterer, nucleicAcidChainCount);
-			System.out.println("QuatSymmetryDetector: subunits: " + globalSubunits.getSubunitCount() + " CA atoms: " + globalSubunits.getCalphaCount());
 			QuatSymmetryResults gSymmetry = calcQuatSymmetry(globalSubunits);
 			gSymmetry.setSequenceIdentityThreshold(thresholds[index]);		
 			globalSymmetry.add(gSymmetry);
-			SymmetryDeviation sd = new SymmetryDeviation(globalSubunits, gSymmetry.getRotationGroup());
+//			SymmetryDeviation sd = new SymmetryDeviation(globalSubunits, gSymmetry.getRotationGroup());
 	
 
 			// determine local symmetry if global structure is 
@@ -401,7 +400,7 @@ public class QuatSymmetryDetector {
 			
 			// avoid combinatorial explosion, i.e. for 1FNT
 			BigInteger maxCombinations = BigInteger.valueOf(parameters.getMaximumLocalCombinations());
-			System.out.println("maxCombinations: " + generator.getTotal());
+//			System.out.println("maxCombinations: " + generator.getTotal());
 		    if (generator.getTotal().compareTo(maxCombinations) > 0) {
 		    	continue;
 		    }
@@ -463,7 +462,7 @@ public class QuatSymmetryDetector {
 			
 			// avoid combinatorial explosion, i.e. for 1FNT
 			BigInteger maxCombinations = BigInteger.valueOf(parameters.getMaximumLocalCombinations());
-			System.out.println("decomposeClusters:maxCombinations" + maxCombinations);
+//			System.out.println("decomposeClusters:maxCombinations" + maxCombinations);
 		    if (generator.getTotal().compareTo(maxCombinations) > 0) {
 		    	continue;
 		    }
@@ -585,7 +584,7 @@ public class QuatSymmetryDetector {
 				// given to the helical symmetry by the helixRmsdThreshold parameter.
 				double cRmsd = rotationGroup.getScores().getRmsd();
 				double hRmsd = helixLayers.getScores().getRmsd();
-				System.out.println("cRMSD: " + cRmsd + " hRMSD: " + hRmsd);
+//				System.out.println("cRMSD: " + cRmsd + " hRMSD: " + hRmsd);
 				double deltaRmsd = hRmsd - cRmsd;
 				if (symmetry.equals("C1") || 
 						(!symmetry.equals("C1") && deltaRmsd <= parameters.getHelixRmsdThreshold())) {

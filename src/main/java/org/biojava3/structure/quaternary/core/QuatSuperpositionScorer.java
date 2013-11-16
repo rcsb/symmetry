@@ -1,9 +1,6 @@
 
 package org.biojava3.structure.quaternary.core;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.vecmath.Matrix4d;
@@ -105,7 +102,6 @@ public class QuatSuperpositionScorer {
         double totalSumDsq = 0;
     	double totalLength = 0;
         
-        Point3d t = new Point3d();
         List<Point3d[]> traces = subunits.getTraces();
         
         // loop over the Calpha atoms of all subunits

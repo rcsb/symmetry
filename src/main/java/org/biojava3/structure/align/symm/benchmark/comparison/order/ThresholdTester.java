@@ -16,11 +16,13 @@ import org.biojava3.structure.align.symm.census2.NamesCensus;
 /**
  * Finds optimal minMetricChange.
  * @author dmyersturnbull
+ * @deprecated The parameter was found to do little if nothing
  */
+@Deprecated
 public class ThresholdTester {
 
 	public static void main(String[] args) throws FileNotFoundException {
-		run(0.1f, 0.8f, 0.1f);
+		run(0.1f, 0.1f, 0.1f);
 	}
 
 	private static final String DIR = "/home/dmyersturnbull/data/Bourne Lab/min_metric_change/";
@@ -72,7 +74,7 @@ public class ThresholdTester {
 			@Override
 			public StructureAlignment getAlgorithm() {
 				CeSymm ceSymm = new CeSymm();
-				ceSymm.setMinimumMetricChange(value);
+//				ceSymm.setMinimumMetricChange(value);
 				return ceSymm;
 			}
 		});

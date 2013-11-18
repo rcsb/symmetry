@@ -22,5 +22,26 @@ public class OrderDeterminationFactory {
 			}
 		};
 	}
-	
+
+	/**
+	 * 
+	 * @param theta
+	 * @param threshold
+	 * @return
+	 */
+	@Deprecated
+	public int guessOrderFromAngle(double theta, double threshold) {
+		final int maxOrder = 8;
+		double bestDelta = threshold;
+		int bestOrder = 1;
+		for (int order = 2; order < maxOrder; order++) {
+			double delta = Math.abs(2 * Math.PI / order - theta);
+			System.out.println(delta);
+			if (delta < bestDelta) {
+				bestOrder = order;
+				bestDelta = delta;
+			}
+		}
+		return bestOrder;
+	}
 }

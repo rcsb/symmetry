@@ -7,6 +7,11 @@ import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.align.symm.benchmark.Sample;
 import org.biojava3.structure.align.symm.census2.stats.StatUtils;
 
+/**
+ * Test the <em>performance</em> of order-detection methods.
+ * @author dmyersturnbull
+ * TODO Improve for new functionality/tests
+ */
 public class OrderDeterminationTester {
 
 	public static void main(String[] args) throws IOException {

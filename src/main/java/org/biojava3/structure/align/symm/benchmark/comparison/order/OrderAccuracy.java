@@ -38,6 +38,9 @@ public class OrderAccuracy {
 	private int correct = 0;
 	private int total = 0;
 
+	/**
+	 * TODO This does not belong here
+	 */
 	public int guessOrderFromAngle(double theta, double threshold) {
 		final int maxOrder = 8;
 		double bestDelta = threshold;
@@ -71,6 +74,18 @@ public class OrderAccuracy {
 		}
 	}
 
+	public int getCorrect() {
+		return correct;
+	}
+
+	public int getTotal() {
+		return total;
+	}
+
+	public double getAccuracy() {
+		return (double) correct / (double) (total);
+	}
+	
 	@Override
 	public String toString() {
 		NumberFormat nf = new DecimalFormat();

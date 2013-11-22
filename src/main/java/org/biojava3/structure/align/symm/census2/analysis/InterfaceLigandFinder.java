@@ -7,9 +7,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-import org.apache.commons.math3.ml.distance.DistanceMeasure;
-import org.apache.commons.math3.ml.distance.EuclideanDistance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
@@ -25,7 +22,6 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.io.mmcif.chem.ResidueType;
 import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.Census;
 import org.biojava3.structure.align.symm.census2.CensusJob;
@@ -33,7 +29,6 @@ import org.biojava3.structure.align.symm.census2.CensusJob.FullInfo;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * Finds ligands near symmetric interfaces.
@@ -92,54 +87,6 @@ public class InterfaceLigandFinder {
 
 	public void setSignificance(Significance significance) {
 		this.significance = significance;
-	}
-
-	private double calcDistance(RotationAxis axis, Atom atom, double axisLength) {
-
-		Vector3D rotation = new Vector3D(axis.getRotationAxis().getCoords());
-		Vector3D origin = new Vector3D(axis.getRotationPos().getCoords());
-		Vector3D point = new Vector3D(atom.getCoords());
-		// segment start
-		Vector3D origin0 = origin.subtract(rotation.scalarMultiply(axisLength / 2.0));
-		// segment end
-		Vector3D origin1 = origin.add(rotation.scalarMultiply(axisLength / 2.0));
-
-		DistanceMeasure distance = new EuclideanDistance();
-
-		// closest to start of segment
-		double dot0 = point.subtract(origin0).dotProduct(origin1.subtract(origin0));
-		if (dot0 <= 0) {
-			return distance.compute(origin0.toArray(), point.toArray());
-		}
-
-		// closest to end of segment
-		double dot1 = origin1.subtract(origin0).dotProduct(origin1.subtract(origin0));
-		if (dot1 <= dot0) {
-			return distance.compute(origin1.toArray(), point.toArray());
-		}
-
-		// normal vector is closest
-		Vector3D toVector = origin0.add(point.scalarMultiply(dot1 / dot0));
-		return distance.compute(toVector.toArray(), point.toArray());
-	}
-
-	private double calcMaxParallel(RotationAxis axis, Atom[] ca) {
-		double max = 0;
-		Vector3D rotation = new Vector3D(axis.getRotationAxis().getCoords());
-		System.err.println("ROTATION: " + rotation);
-		Vector3D position = new Vector3D(axis.getRotationPos().getCoords());
-		System.err.println("POSITION: " + position);
-		Vector3D x = position.add(rotation).normalize();
-		for (Atom atom : ca) {
-			if (exclusionMatcher.matches(atom.getGroup())) { // only amino acids
-				Vector3D v = new Vector3D(atom.getCoords());
-				double test = Math.abs(v.dotProduct(x));
-				if (test > max) {
-					max = test;
-				}
-			}
-		}
-		return max;
 	}
 
 	public void find(Results census) {
@@ -219,14 +166,11 @@ public class InterfaceLigandFinder {
 	private StructureLigands findAlongInterface(String scopId, AFPChain afpChain, Atom[] ca) throws StructureException {
 		RotationAxis axis = new RotationAxis(afpChain);
 		StructureLigands ligands = new StructureLigands(scopId);
-		double segmentLength = calcMaxParallel(axis, ca);
-		System.err.println("SEGMENT LENGTH: " + segmentLength);
 		HashSet<Group> groupsFound = new HashSet<Group>();
 		for (Atom atom : ca) {
 			// only heteroatoms
 			if (!exclusionMatcher.matches(atom.getGroup()) && !groupsFound.contains(atom.getGroup())) {
-				double distance = calcDistance(axis, atom, segmentLength);
-				System.err.println(distance);
+				double distance = axis.getProjectedDistance(atom);
 				if (distance <= maxDistance) {
 					ligands.add(new Ligand(atom.getGroup().getAtoms(), distance));
 					groupsFound.add(atom.getGroup());

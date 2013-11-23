@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -106,9 +108,18 @@ public class SampleBuilder {
 		}
 		File input = new File(args[0]);
 		File output = new File(args[1]);
-		File ordersFile = new File("src/main/resources/domain_symm_benchmark.tsv");
+		File ordersFile;
 		if (args.length > 2) {
 			ordersFile = new File(args[2]);
+		} else {
+			URL filename = SampleBuilder.class.getResource("/domain_symm_benchmark.tsv");
+			try {
+				ordersFile = new File(filename.toURI());
+			} catch (URISyntaxException e) {
+				logger.fatal("Unable to locate groups file",e);
+				System.exit(1);
+				return;
+			}
 		}
 		Map<String, KnownInfo> infos = getOrders(ordersFile);
 		buildSample(input, output, infos);

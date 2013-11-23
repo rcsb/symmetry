@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration status="OFF">
+<configuration status="ERROR">
 	<appenders>
 		<Console name="Console" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d{HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/>
@@ -9,8 +9,8 @@
 		<root level="debug">
 			<appender-ref ref="Console"/>
 		</root>
-		<logger name="org.biojava3" level="debug">
-			<appender-ref ref="Console"/>
-		</logger>
+<!-- 		<logger name="org.biojava3" level="debug"> -->
+<!-- 			<appender-ref ref="Console"/> -->
+<!-- 		</logger> -->
 	</loggers>
 </configuration>

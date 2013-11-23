@@ -37,6 +37,10 @@ public class RotationOrderDetector implements OrderDetector {
 
 			RotationAxis axis = new RotationAxis(afpChain);
 
+			// Use C1 order if the axis is undefined
+			if(!axis.isDefined()) {
+				return 1;
+			}
 			// Calculate weights for each order
 			//TODO only use aligned residues, rather than the whole ca
 			double[] coefficients = fitHarmonics(ca,axis);

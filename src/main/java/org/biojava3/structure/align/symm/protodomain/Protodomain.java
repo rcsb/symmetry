@@ -344,6 +344,28 @@ public class Protodomain {
 		return fromAfpChain(afpChain.getName1(), afpChain, ca, 2, 0, cache);
 	}
 
+	public static Protodomain append(AtomPositionMap map, AtomCache cache, Protodomain... protodomains) {
+		if (protodomains.length == 0) return null;
+		if (protodomains.length == 1) return new Protodomain(protodomains[0]);
+		String scopId = protodomains[0].getScopId();
+		List<ResidueRange> ranges = new ArrayList<ResidueRange>();
+		int previousEnd = 0;
+		for (Protodomain p : protodomains) {
+			if (!p.getScopId().equalsIgnoreCase(scopId)) {
+				throw new IllegalArgumentException("Protodomains do not belong to the same enclosing structure");
+			}
+			int start = map.getPosition(p.getRanges().get(p.getRanges().size()-1).getStart());
+			if (start < previousEnd) {
+				throw new IllegalArgumentException("Protodomains must be in order");
+			}
+			previousEnd = map.getPosition(p.getRanges().get(p.getRanges().size()-1).getEnd());
+			ranges.addAll(p.getRanges());
+		}
+		int length = ResidueRange.calcLength(ranges);
+		Protodomain protodomain = new Protodomain(scopId, protodomains[0].getPdbId(), ranges, length, cache);
+		return protodomain;		
+	}
+	
 	/**
 	 * From a list of residue ranges {@code residueRanges} and a number of residues wanted {@code numResiduesWant} (
 	 * <em>which includes any alignment gaps</em>), returns a new list of residue ranges that contains the first
@@ -361,6 +383,8 @@ public class Protodomain {
 	private static List<ResidueRange> calcSubstruct(List<ResidueRange> residueRanges, AtomPositionMap map, int order,
 			int index) {
 
+		if (order < 1) throw new IllegalArgumentException("Can't compute substructure if order is " + order);
+		
 		List<ResidueRange> part = new ArrayList<ResidueRange>(); // the parts we want to keep
 
 		int numResiduesHave = 0;
@@ -369,13 +393,14 @@ public class Protodomain {
 		int numResiduesWant = ResidueRange.calcLength(residueRanges) / order;
 
 		int numResiduesWantToSkip = numResiduesWant * index;
+		if (index > 0) numResiduesWantToSkip++; // this is because we don't want overlap
 
 		final NavigableMap<ResidueNumber, Integer> navMap = map.getNavMap();
 
 		outer: for (ResidueRange rr : residueRanges) {
 
-			// TODO Test this!
 			if (numResiduesSkipped + rr.getLength() <= numResiduesWantToSkip) {
+				numResiduesSkipped += rr.getLength();
 				continue; // skip all of it
 			} else if (numResiduesSkipped <= numResiduesWantToSkip) {
 				// we only want part
@@ -383,9 +408,10 @@ public class Protodomain {
 				// but before doing this, we'll redefine rr to remove the unwanted residues
 				ResidueNumber redefStart = rr.getStart();
 				for (int j = 0; j < numResiduesWantToSkip - numResiduesSkipped; j++) {
-					redefStart = navMap.lowerEntry(redefStart).getKey();
+					redefStart = navMap.higherEntry(redefStart).getKey();
 				}
-				rr = new ResidueRange(rr.getChainId(), redefStart, rr.getEnd(), numResiduesWantToSkip - numResiduesSkipped);
+				rr = new ResidueRange(rr.getChainId(), redefStart, rr.getEnd(), rr.getLength() - (numResiduesWantToSkip - numResiduesSkipped));
+				numResiduesSkipped += rr.getLength();
 			}
 			
 			// note that getLength() here DOES INCLUDE gaps (and it should)
@@ -611,6 +637,17 @@ public class Protodomain {
 		ranges = sb.toString();
 	}
 
+	public Protodomain(Protodomain protodomain) {
+		this.cache = protodomain.cache;
+		this.enclosingName = protodomain.enclosingName;
+		this.length = protodomain.length;
+		this.list = protodomain.list;
+		this.pdbId = protodomain.pdbId;
+		this.structure = protodomain.structure;
+		this.ranges = protodomain.ranges;
+	}
+
+
 	/**
 	 * Builds the structure of this Protodomain so that it can be returned by {@link #getStructure()}.
 	 * 
@@ -637,7 +674,7 @@ public class Protodomain {
 	 * @throws ProtodomainCreationException
 	 */
 	public Protodomain createSubstruct(int order) throws ProtodomainCreationException {
-		return createSubstruct(order, 1);
+		return createSubstruct(order, 0);
 	}
 
 	/**

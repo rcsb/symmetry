@@ -181,9 +181,6 @@ public class RotationOrderDetector implements OrderDetector {
 
 		Matrix y = new Matrix(distances);
 		Matrix M = new Matrix(harmonics);
-		//y=y.getMatrix(1, steps-1, 0, 0);
-		//M=M.getMatrix(1, steps-1, 1, maxOrder-1);
-
 
 		Matrix A = M.transpose().times(M).times(2);
 		Matrix b = M.transpose().times(y).times(2);
@@ -192,8 +189,6 @@ public class RotationOrderDetector implements OrderDetector {
 		// f(x) = x'Ax/2-bx+c
 		// f'(x) = Ax-b = 0
 		// Ax = b
-
-		//A.inverse();
 
 		Matrix harmonicWeights = A.solve(b);
 
@@ -258,22 +253,168 @@ public class RotationOrderDetector implements OrderDetector {
 
 		Matrix y = new Matrix(distances);
 		Matrix M = new Matrix(harmonics);
-		//y=y.getMatrix(1, steps-1, 0, 0);
-		//M=M.getMatrix(1, steps-1, 1, maxOrder-1);
-
 
 		Matrix A = M.transpose().times(M).times(2);
 		Matrix b = M.transpose().times(y).times(2);
-		Matrix c = y.transpose().times(y);
+		//Matrix c = y.transpose().times(y);
 
 		// f(x) = x'Ax/2-bx+c
 		// f'(x) = Ax-b = 0
 		// Ax = b
-		//A.inverse();
 
 		Matrix harmonicWeights = A.solve(b);
 
 		return harmonicWeights.transpose().getArray()[0];
+	}
+
+	/**
+	 * Like fitHarmonics, but adds an intercept term and ignores points too close
+	 * to angle 0, which artificially is forced to zero.
+	 * 
+	 *  f(angle) = a0 + a1*sin(angle/2)^2 + a2*sin(2*angle/2)^2 + a3*sin(3*angle/2)^2 + ...
+	 *  
+	 * Performs a best-fit to find coefficients a1,a2,...,aMaxOrder.
+	 * These give the relative contribution of each order to the overall function.
+	 * @param ca Aligned residues from the protein structure
+	 * @param axis The rotaton axis about which to rotate
+	 * @return an array of length maxOrder+1 giving the coefficients a0...a_maxOrder
+	 *  (intercept is element 0)
+	 * @throws StructureException
+	 */
+	double[] trySingleHarmonicsFloatingByAmp(Atom[] ca, RotationAxis axis) throws StructureException {
+		// Range of angles to use for training
+		final double minAngle = Math.floor(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
+		final double maxAngle = Math.PI;
+		// Number of angle steps
+		final int steps = (int)Math.floor((maxAngle-minAngle)/angleIncr);
+
+		// Fit (angle,distance) points to the following equation
+		// f(angle) = a0 + a1*sin^2(1*angle/2) + a2*sin^2(2*angle/2) +...+ a*sin2(maxOrder*angle/2)
+		// goal is to find a_1...a_maxOrder
+
+		double[][] distances = new double[steps][1];//preserve matrix dimensions
+		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		if(minAngle != 0.) {
+			axis.rotate(ca2, minAngle);
+		}
+		for (int step=0; step<steps;step++) {
+			double dist = superpositionDistance(ca, ca2);
+			distances[step][0] = dist;
+			// Rotate for next step
+			axis.rotate(ca2, angleIncr);
+		}
+
+		double[] amplitudes = new double[maxOrder];
+
+		for( int order=1;order <= maxOrder; order++) {
+
+			// holds the sin2(i*angle/2) terms
+			double[][] harmonics = new double[steps][2];
+
+			for (int step=0; step<steps;step++) {
+
+				//initialize intercept column
+				harmonics[step][0] = 1.;
+
+				//order-dependent column
+				double angle = minAngle+angleIncr*step;
+				double x = Math.sin( order*angle/2);
+				harmonics[step][1] = x*x;
+			}
+
+			Matrix y = new Matrix(distances);
+			Matrix M = new Matrix(harmonics);
+
+			Matrix A = M.transpose().times(M).times(2);
+			Matrix b = M.transpose().times(y).times(2);
+			//Matrix c = y.transpose().times(y);
+
+			// f(x) = x'Ax/2-bx+c
+			// f'(x) = Ax-b = 0
+			// Ax = b
+
+			Matrix harmonicWeights = A.solve(b);
+
+			amplitudes[order-1] = harmonicWeights.get(1, 0);
+		}
+		
+		return amplitudes;
+		//return sses;
+		
+//		int bestOrder = 1;
+//		double minScore = amplitudes[0];
+//		for(int order=2;order<maxOrder;order++) {
+//			if(amplitudes[order-1] < minScore) {
+//				minScore = amplitudes[order-1];
+//				bestOrder = order;
+//			}
+//		}
+//		return bestOrder;
+	}
+
+	double[] trySingleHarmonicsFloatingBySSE(Atom[] ca, RotationAxis axis) throws StructureException {
+		// Range of angles to use for training
+		final double minAngle = Math.floor(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
+		final double maxAngle = Math.PI;
+		// Number of angle steps
+		final int steps = (int)Math.floor((maxAngle-minAngle)/angleIncr);
+
+		// Fit (angle,distance) points to the following equation
+		// f(angle) = a0 + a1*sin^2(1*angle/2) + a2*sin^2(2*angle/2) +...+ a*sin2(maxOrder*angle/2)
+		// goal is to find a_1...a_maxOrder
+
+		double[][] distances = new double[steps][1];//preserve matrix dimensions
+		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		if(minAngle != 0.) {
+			axis.rotate(ca2, minAngle);
+		}
+		for (int step=0; step<steps;step++) {
+			double dist = superpositionDistance(ca, ca2);
+			distances[step][0] = dist;
+			// Rotate for next step
+			axis.rotate(ca2, angleIncr);
+		}
+
+		double[] sses = new double[maxOrder];
+
+		for( int order=1;order <= maxOrder; order++) {
+
+			// holds the sin2(i*angle/2) terms
+			double[][] harmonics = new double[steps][2];
+
+			for (int step=0; step<steps;step++) {
+
+				//initialize intercept column
+				harmonics[step][0] = 1.;
+
+				//order-dependent column
+				double angle = minAngle+angleIncr*step;
+				double x = Math.sin( order*angle/2);
+				harmonics[step][1] = x*x;
+			}
+
+			Matrix y = new Matrix(distances);
+			Matrix M = new Matrix(harmonics);
+
+			Matrix A = M.transpose().times(M).times(2);
+			Matrix b = M.transpose().times(y).times(2);
+			//Matrix c = y.transpose().times(y);
+
+			// f(x) = x'Ax/2-bx+c
+			// f'(x) = Ax-b = 0
+			// Ax = b
+
+			Matrix harmonicWeights = A.solve(b);
+
+			Matrix predictions = M.times(harmonicWeights);
+			predictions.minusEquals(y);//errors
+			Matrix sse = predictions.transpose().times(predictions);
+
+			// Calculate RSSE (could save some arithmetic, but this is easier to compare)
+			sses[order-1] = Math.sqrt(sse.get(0, 0)/steps);
+		}
+
+		return sses;
 	}
 
 	public static void main(String[] args) {

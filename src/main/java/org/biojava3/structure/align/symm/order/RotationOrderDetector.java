@@ -3,6 +3,7 @@ package org.biojava3.structure.align.symm.order;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.commons.math3.util.Pair;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.StructureException;
@@ -58,6 +59,34 @@ public class RotationOrderDetector implements OrderDetector {
 	}
 
 	/**
+	 * Returns an array of {@link #superpositionDistance(Atom[], Atom[]) superposition distances} of rotations of {@code ca}.
+	 * The {@code n}th element in the array corresponds to a rotation by {@code degreesIncrement * n} degrees.
+	 */
+	public static Pair<double[],double[]> sampleRotations(Atom[] ca, RotationAxis axis, double degreesIncrement) throws StructureException {
+		
+		final double angleIncr = 5*Calc.radiansPerDegree;
+		final int steps = (int)Math.floor(2*Math.PI/angleIncr);
+
+		double[] angles = new double[steps];
+		double[] distances = new double[steps];
+
+		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		double angle = 0;
+
+		for (int step=0; step<steps;step++) {
+			angles[step] = angle;
+			double dist = superpositionDistance(ca, ca2);
+			distances[step] = dist;
+			// Rotate for next step
+			axis.rotate(ca2, angleIncr);
+			angle += angleIncr;
+		}
+		
+		return new Pair<double[], double[]>(angles, distances);
+		
+	}
+	
+	/**
 	 * Provide a rough alignment-free metric for the similarity between two
 	 * superimposed structures.
 	 *
@@ -68,7 +97,7 @@ public class RotationOrderDetector implements OrderDetector {
 	 * @return the average distance to the closest atom
 	 * @throws StructureException if an error occurs finding distances between atoms
 	 */
-	public double superpositionDistance(Atom[] ca1, Atom[] ca2) throws StructureException {
+	public static double superpositionDistance(Atom[] ca1, Atom[] ca2) throws StructureException {
 
 		// Store the closest distance yet found
 		double[] bestDist1 = new double[ca1.length];

@@ -29,34 +29,26 @@ import java.util.List;
 
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.StructureAlignment;
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
-import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.gui.AlignmentCalcDB;
-import org.biojava.bio.structure.align.gui.AlignmentGui;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava3.core.util.ConcurrencyTools;
 import org.biojava3.structure.align.symm.census.CensusResult;
 import org.biojava3.structure.align.symm.census.CensusResults;
 import org.biojava3.structure.utils.FileUtils;
-import org.jmol.adapter.smarter.Atom;
-import org.rcsb.fatcat.server.util.ResourceManager;
 
 /** Do Database Searches for all Protodomains
  * 
  * @author Andreas Prlic
- *
+ * @deprecated
  */
+@Deprecated
 public class ScanProtodomainsDB {
 
 	public static void main(String[] args){
-		String path =  ResourceManager.getString("pdbFilePath");
-		System.out.println("PDB file path:" +  path);
-
-		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
-
+		
 		ScanProtodomainsDB me = new ScanProtodomainsDB();
 
 		me.run();

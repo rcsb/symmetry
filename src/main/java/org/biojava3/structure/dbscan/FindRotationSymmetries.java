@@ -9,18 +9,22 @@ import org.biojava.bio.structure.align.ce.CECalculator;
 import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.utils.SimpleLog;
 import org.biojava3.structure.utils.SymmetryTools;
-import org.rcsb.fatcat.server.PdbChainKey;
 
+/**
+ * 
+ * @deprecated
+ */
 @Deprecated
 public class FindRotationSymmetries {
 	public static void main(String[] args){
-		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives(40);
+		SortedSet<StructureName> reps = GetRepresentatives.getRepresentatives(40);
 		AtomCache cache = new AtomCache();
 		
 		SimpleLog.setLogFilename(cache.getPath()+System.getProperty("file.seperator")
@@ -28,9 +32,9 @@ public class FindRotationSymmetries {
 		
 		int total = 0;
 		int symmetric = 0;
-		for ( PdbChainKey r : reps){
+		for ( StructureName r : reps){
 			try {
-				String name = r.toName();
+				String name = r.getName();
 				Atom[] ca1 = cache.getAtoms(name);
 				Atom[] ca2 = cache.getAtoms(name);
 

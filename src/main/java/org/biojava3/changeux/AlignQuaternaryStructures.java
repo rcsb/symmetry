@@ -10,7 +10,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.SortedSet;
 import java.util.zip.GZIPOutputStream;
@@ -22,21 +21,14 @@ import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.ce.CeMain;
-import org.biojava.bio.structure.align.ce.CeParameters;
-import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.align.xml.AFPChainXMLParser;
 import org.biojava3.core.util.InputStreamProvider;
-
-import org.rcsb.fatcat.server.PdbChainKey;
-import org.rcsb.fatcat.server.dao.PdbDAO;
-import org.rcsb.fatcat.server.dao.SequenceClusterDAO;
-import org.rcsb.fatcat.server.util.SetupJNDIDataSource;
 
 public class AlignQuaternaryStructures {
 
@@ -54,7 +46,7 @@ public class AlignQuaternaryStructures {
 		//for ( PdbChainKey repre: representatives) {
 
 		//PdbChainKey repre =  PdbChainKey.fromName("3KFK.A");
-		PdbChainKey repre =  PdbChainKey.fromName("4HHB.A");
+		StructureName repre =  new StructureName("4HHB.A");
 
 		try {
 			alignCluster(repre,clusterCutoff);
@@ -65,14 +57,14 @@ public class AlignQuaternaryStructures {
 
 	}
 
-	private static void alignCluster(PdbChainKey repre,int clusterCutoff) 
+	private static void alignCluster(StructureName repre,int clusterCutoff) 
 	throws IOException, StructureException {
 
 
 
 		SequenceClusterDAO dao = new SequenceClusterDAO();
 		int clusterId = dao.getClusterNumber(clusterCutoff,repre);
-		SortedSet<PdbChainKey> members = dao.getClusterMembers(clusterCutoff,clusterId);
+		SortedSet<StructureName> members = dao.getClusterMembers(clusterCutoff,clusterId);
 
 		System.out.println("### cluster " + clusterCutoff + " has " + members.size() + " members");
 
@@ -84,7 +76,7 @@ public class AlignQuaternaryStructures {
 
 		File  logFile = new File("/tmp/repre_" + repre.getPdbId()+".txt");
 		
-		for (PdbChainKey member : members){
+		for (StructureName member : members){
 			String xml = null;
 			String outputFileName = "/Users/ap3/WORK/PDB/bio/"+ repre.getPdbId() + "_" + member.getPdbId()+".xml.gz";
 			File f = new File(outputFileName);
@@ -122,8 +114,8 @@ public class AlignQuaternaryStructures {
 		}
 	}
 
-	private static String showPrecalcResult(PdbChainKey repre,
-			PdbChainKey member, File target, File logFile) throws StructureException {
+	private static String showPrecalcResult(StructureName repre,
+			StructureName member, File target, File logFile) throws StructureException {
 		
 		String xml = null;
 		try {
@@ -156,7 +148,7 @@ public class AlignQuaternaryStructures {
 		return xml;
 	}
 
-	private static String getXMLFromFile(PdbChainKey repre, PdbChainKey member, File target) throws IOException {
+	private static String getXMLFromFile(StructureName repre, StructureName member, File target) throws IOException {
 		  
 		InputStreamProvider prov = new InputStreamProvider();
 		InputStream in = prov.getInputStream(target);
@@ -173,8 +165,8 @@ public class AlignQuaternaryStructures {
 		return sw.toString();
 	}
 
-	public static String align(PdbChainKey repre,
-			PdbChainKey member, StructureAlignment algo,
+	public static String align(StructureName repre,
+			StructureName member, StructureAlignment algo,
 			File logFile, boolean showAlignment
 	) throws StructureException, IOException {
 		Structure s1 = cache.getBiologicalUnit(repre.getPdbId());
@@ -246,7 +238,7 @@ public class AlignQuaternaryStructures {
 		out.close();
 	}
 
-	private static SortedSet<PdbChainKey> getSequenceClusters(int i) {
+	private static SortedSet<StructureName> getSequenceClusters(int i) {
 
 		PdbDAO dao = new PdbDAO();
 

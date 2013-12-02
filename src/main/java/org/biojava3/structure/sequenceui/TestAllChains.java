@@ -2,21 +2,24 @@ package org.biojava3.structure.sequenceui;
 
 import java.util.SortedSet;
 
-
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava3.structure.dbscan.GetRepresentatives;
-import org.rcsb.fatcat.server.PdbChainKey;
 
-
+/**
+ * 
+ * @deprecated
+ */
+@Deprecated
 public class TestAllChains {
 
 	public static void main(String[] args){
 
 		//initBioJavaView();
 
-		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
+		SortedSet<StructureName> reps = GetRepresentatives.getRepresentatives();
 
 		int counter = 0;
-		for (PdbChainKey rep : reps){
+		for (StructureName rep : reps){
 			counter++;
 			try {
 				System.out.println("#"  + counter + " " + rep);

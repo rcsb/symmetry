@@ -6,12 +6,11 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.ce.CeMain;
-
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava3.structure.align.symm.CEMirrorSymm;
 import org.biojava3.structure.utils.SimpleLog;
-import org.rcsb.fatcat.server.PdbChainKey;
 
 /**
  * A quick class to find mirror symmetries.
@@ -25,7 +24,7 @@ public class FindMirrorSymmetries {
 
 	
 	public static void main(String[] args){
-		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives(40);
+		SortedSet<StructureName> reps = GetRepresentatives.getRepresentatives(40);
 		AtomCache cache = new AtomCache();
 		
 		String filename = cache.getPath()+System.getProperty("file.seperator")
@@ -34,9 +33,9 @@ public class FindMirrorSymmetries {
 		
 		int total = 0;
 		int symmetric = 0;
-		for ( PdbChainKey r : reps){
+		for ( StructureName r : reps){
 			try {
-				String name = r.toName();
+				String name = r.getName();
 				Atom[] ca1 = cache.getAtoms(name);
 				Atom[] ca2 = cache.getAtoms(name);
 

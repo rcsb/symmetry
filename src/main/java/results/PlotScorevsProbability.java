@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.webstart.JNLPProxy;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
@@ -18,18 +19,12 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.entity.ChartEntity;
 import org.jfree.chart.labels.CustomXYToolTipGenerator;
-
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.urls.CustomXYURLGenerator;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
-
-import org.rcsb.fatcat.server.PdbChainKey;
-import org.rcsb.fatcat.server.dao.DBAlignment;
-import org.rcsb.fatcat.server.dao.SplitDatabase;
 
 public class PlotScorevsProbability {
 
@@ -41,14 +36,14 @@ public class PlotScorevsProbability {
 	public static void main(String[] args){
 		String name = "12AS.B";
 
-		PdbChainKey repre = PdbChainKey.fromName(name);
+		StructureName repre = new StructureName(name);
 
 		PlotScorevsProbability me = new PlotScorevsProbability();
 
 		me.showData(repre);
 	}
 
-	public void showData(PdbChainKey repre){
+	public void showData(StructureName repre){
 
 		XYDataset series = getData4Repre(repre);
 		JFreeChart chart = createChart(series);
@@ -95,7 +90,7 @@ public class PlotScorevsProbability {
 
 	}
 
-	private  XYDataset getData4Repre(PdbChainKey repre) {
+	private  XYDataset getData4Repre(StructureName repre) {
 
 
 		DefaultXYDataset datas = new DefaultXYDataset();
@@ -129,8 +124,8 @@ public class PlotScorevsProbability {
 
 			toolTips.add(toolTip);
 
-			PdbChainKey n1 = PdbChainKey.fromName(alig.getName1());
-			PdbChainKey n2 = PdbChainKey.fromName(alig.getName2());
+			StructureName n1 = new StructureName(alig.getName1());
+			StructureName n2 = new StructureName(alig.getName2());
 
 			String url = String.format(BASE_URL,n1.getPdbId(),n1.getChainId(),n2.getPdbId(),n2.getChainId());
 			

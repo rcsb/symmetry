@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import org.biojava.bio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava3.core.util.ConcurrencyTools;
 import org.biojava3.structure.align.symm.census.CallableProtodomainComparison;
@@ -13,8 +12,12 @@ import org.biojava3.structure.align.symm.census.CensusResult;
 import org.biojava3.structure.align.symm.census.CensusResults;
 import org.biojava3.structure.align.symm.census.ProtoDomainDBSearchResults;
 import org.biojava3.structure.align.symm.census.ScanSCOPForSymmetry;
-import org.rcsb.fatcat.server.util.ResourceManager;
 
+/**
+ * 
+ * @deprecated
+ */
+@Deprecated
 public class AlignProtodomains {
 	
 	static {
@@ -30,11 +33,6 @@ public class AlignProtodomains {
 	
 	
 	public static void main(String[] args){
-		String path =  ResourceManager.getString("pdbFilePath");
-		System.out.println(path);
-
-		System.setProperty(AbstractUserArgumentProcessor.PDB_DIR,path);
-
 
 		AlignProtodomains me = new AlignProtodomains();
 

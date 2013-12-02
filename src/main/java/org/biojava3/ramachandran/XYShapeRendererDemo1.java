@@ -1,12 +1,9 @@
 package org.biojava3.ramachandran;
 
 import java.awt.Color;
-import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -14,22 +11,18 @@ import javax.swing.JPanel;
 
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.client.JFatCatClient;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.secstruc.SecStruc;
 import org.biojava.bio.structure.secstruc.SecStrucGroup;
 import org.biojava.bio.structure.secstruc.SecStrucState;
 import org.biojava3.structure.StructureIO;
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.GrayPaintScale;
 import org.jfree.chart.renderer.LookupPaintScale;
-import org.jfree.chart.renderer.xy.XYDotRenderer;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.renderer.xy.XYItemRendererState;
 import org.jfree.chart.renderer.xy.XYShapeRenderer;
 import org.jfree.chart.title.PaintScaleLegend;
 import org.jfree.data.Range;
@@ -38,7 +31,6 @@ import org.jfree.data.xy.XYZDataset;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RefineryUtilities;
-import org.rcsb.fatcat.server.PdbChainKey;
 
 /**
  * A simple demo for the {@link XYShapeRenderer} class.
@@ -175,7 +167,7 @@ public class XYShapeRendererDemo1 extends ApplicationFrame {
 			System.out.println("#" +count + "/" + repres.size() + " " + repre + " " + knownStructures.size());
 
 			try {
-				PdbChainKey key = PdbChainKey.fromName(repre);
+				StructureName key = new StructureName(repre);
 				if ( knownStructures.contains(key.getPdbId()))
 					continue;
 				knownStructures.add(key.getPdbId());

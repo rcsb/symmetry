@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.Future;
 
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
 import org.biojava.bio.structure.domain.DomainProvider;
@@ -23,7 +24,6 @@ import org.biojava3.structure.align.symm.census2.AstralScopDescriptionCensus;
 import org.biojava3.structure.align.symm.census2.PdbClusteringScopDescriptionCensus;
 import org.biojava3.structure.align.symm.census2.ScopDescriptionCensus;
 import org.biojava3.structure.utils.FileUtils;
-import org.rcsb.fatcat.server.PdbChainKey;
 
 /**
  * @deprecated See {@link ScopDescriptionCensus}, {@link PdbClusteringScopDescriptionCensus}, or {@link AstralScopDescriptionCensus} instead
@@ -93,7 +93,7 @@ public class ScanRepresentativesForSymmetry {
 
 			for (String name: representatives){
 
-				PdbChainKey key = PdbChainKey.fromName(name);
+				StructureName key = new StructureName(name);
 
 
 				count++;

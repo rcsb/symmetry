@@ -11,6 +11,7 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.PDBHeader;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.quaternary.BiologicalAssemblyTransformation;
@@ -18,8 +19,6 @@ import org.biojava.bio.structure.quaternary.io.BioUnitDataProviderFactory;
 import org.biojava.bio.structure.quaternary.io.MmCifBiolAssemblyProvider;
 import org.biojava.bio.structure.quaternary.io.PDBBioUnitDataProvider;
 import org.biojava3.structure.StructureIO;
-import org.rcsb.fatcat.server.PdbChainKey;
-import org.rcsb.fatcat.server.dao.SequenceClusterDAO;
 
 public class CompareBioAssemblyProviders {
 	public static void main(String[] args){
@@ -39,13 +38,13 @@ public class CompareBioAssemblyProviders {
 
 		SequenceClusterDAO dao = new SequenceClusterDAO();
 
-		SortedSet<PdbChainKey> representatives = dao.getClusterEntities(90);
+		SortedSet<StructureName> representatives = dao.getClusterEntities(90);
 
 		System.out.println("got " + representatives.size() + " representatives...");
 
 		List<String> testedIds = new ArrayList<String>();
 		int count = 0;
-		for ( PdbChainKey key : representatives){
+		for ( StructureName key : representatives){
 
 			String pdbID = key.getPdbId();
 

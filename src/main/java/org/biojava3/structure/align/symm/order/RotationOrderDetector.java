@@ -1,8 +1,21 @@
 package org.biojava3.structure.align.symm.order;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
+import javax.swing.JOptionPane;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.StructureException;
@@ -18,23 +31,62 @@ import org.biojava3.structure.align.symm.CeSymm;
  * @author Spencer Bliven
  */
 public class RotationOrderDetector implements OrderDetector {
+	public static enum RotationOrderMethod {
+		HARMONICS,
+		HARMONICS_FLOATING,
+		SINGLE_HARMONIC_AMP,
+		SINGLE_HARMONIC_SSE,
+		SINGLE_CUSP_AMP,
+		SINGLE_CUSP_SSE
+	}
 
 	private int maxOrder;
 
-	private final double angleIncr = 5*Calc.radiansPerDegree; // angular resolution
+	private static final double DEFAULT_ANGLE_INCR = 5*Calc.radiansPerDegree;
+	private final double angleIncr = DEFAULT_ANGLE_INCR; // angular resolution
 
+	private RotationOrderMethod method;
 	public RotationOrderDetector() {
 		this(8);
 	}
 
 	public RotationOrderDetector(int maxOrder) {
-		super();
+		this(maxOrder,RotationOrderMethod.SINGLE_HARMONIC_SSE);
+	}
+
+	public RotationOrderDetector(int maxOrder, RotationOrderMethod method) {
 		this.maxOrder = maxOrder;
+		this.method= method;
+	}
+
+	public String toString() {
+		return getClass().getSimpleName()+"[method="+method+",maxOrder="+maxOrder+"]";
+	}
+	public void setMethod(RotationOrderMethod m) {
+		method = m;
+	}
+	public RotationOrderMethod getMethod() {
+		return method;
 	}
 
 	@Override
 	public int calculateOrder(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
-		return calculateOrderHarmonics(afpChain,ca);
+		//TODO only use aligned residues, rather than the whole ca
+		switch(method) {
+		case HARMONICS:
+			return calculateOrderHarmonics(afpChain,ca);
+		case HARMONICS_FLOATING:
+			return calculateOrderHarmonicsFloating(afpChain,ca);
+		case SINGLE_HARMONIC_AMP:
+			return calculateOrderSingleHarmonicsByAmp(afpChain,ca);
+		case SINGLE_HARMONIC_SSE:
+			return calculateOrderSingleHarmonicsBySSE(afpChain,ca);
+		case SINGLE_CUSP_AMP:
+			return calculateOrderSingleCuspByAmp(afpChain,ca);
+		case SINGLE_CUSP_SSE:
+		default:
+			return calculateOrderSingleCuspBySSE(afpChain,ca);
+		}
 	}
 
 	int calculateOrderHarmonics(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
@@ -48,7 +100,6 @@ public class RotationOrderDetector implements OrderDetector {
 				return 1;
 			}
 			// Calculate weights for each order
-			//TODO only use aligned residues, rather than the whole ca
 			double[] coefficients = fitHarmonics(ca,axis);
 
 			// Find order with maximum weight
@@ -78,7 +129,6 @@ public class RotationOrderDetector implements OrderDetector {
 				return 1;
 			}
 			// Calculate weights for each order
-			//TODO only use aligned residues, rather than the whole ca
 			double[] coefficients = fitHarmonicsFloating(ca,axis);
 
 			// Find order with maximum weight
@@ -89,6 +139,122 @@ public class RotationOrderDetector implements OrderDetector {
 				if(coefficients[order] > bestScore ) {
 					maxorder = order;
 					bestScore = coefficients[order];
+				}
+			}
+			return maxorder;
+
+		} catch (Exception e) {
+			throw new OrderDetectionFailedException(e);
+		}
+	}
+	int calculateOrderSingleHarmonicsByAmp(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+
+		try {
+
+			RotationAxis axis = new RotationAxis(afpChain);
+
+			// Use C1 order if the axis is undefined
+			if(!axis.isDefined()) {
+				return 1;
+			}
+			// Calculate weights for each order
+			double[] coefficients = trySingleHarmonicsFloatingByAmp(ca,axis);
+
+			// Find order with maximum weight
+			// ignore initial intercept term
+			double bestScore = coefficients[0];
+			int maxorder = 1;
+			for(int order=2;order<coefficients.length;order++) {
+				if(coefficients[order-1] > bestScore ) {
+					maxorder = order;
+					bestScore = coefficients[order-1];
+				}
+			}
+			return maxorder;
+
+		} catch (Exception e) {
+			throw new OrderDetectionFailedException(e);
+		}
+	}
+	int calculateOrderSingleHarmonicsBySSE(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+
+		try {
+
+			RotationAxis axis = new RotationAxis(afpChain);
+
+			// Use C1 order if the axis is undefined
+			if(!axis.isDefined()) {
+				return 1;
+			}
+			// Calculate weights for each order
+			double[] coefficients = trySingleHarmonicsFloatingBySSE(ca,axis);
+
+			// Find order with maximum weight
+			// ignore initial intercept term
+			double bestScore = coefficients[0];
+			int maxorder = 1;
+			for(int order=2;order<coefficients.length;order++) {
+				if(coefficients[order-1] < bestScore ) {
+					maxorder = order;
+					bestScore = coefficients[order-1];
+				}
+			}
+			return maxorder;
+
+		} catch (Exception e) {
+			throw new OrderDetectionFailedException(e);
+		}
+	}
+	int calculateOrderSingleCuspByAmp(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+
+		try {
+
+			RotationAxis axis = new RotationAxis(afpChain);
+
+			// Use C1 order if the axis is undefined
+			if(!axis.isDefined()) {
+				return 1;
+			}
+			// Calculate weights for each order
+			double[] coefficients = trySingleCuspByAmp(ca,axis);
+
+			// Find order with maximum weight
+			// ignore initial intercept term
+			double bestScore = coefficients[0];
+			int maxorder = 1;
+			for(int order=2;order<coefficients.length;order++) {
+				if(coefficients[order-1] > bestScore ) {
+					maxorder = order;
+					bestScore = coefficients[order-1];
+				}
+			}
+			return maxorder;
+
+		} catch (Exception e) {
+			throw new OrderDetectionFailedException(e);
+		}
+	}
+	int calculateOrderSingleCuspBySSE(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+
+		try {
+
+			RotationAxis axis = new RotationAxis(afpChain);
+
+			// Use C1 order if the axis is undefined
+			if(!axis.isDefined()) {
+				return 1;
+			}
+			// Calculate weights for each order
+			double[] coefficients = trySingleCuspBySSE(ca,axis);
+
+			// Find order with maximum weight
+			// ignore initial intercept term
+			double bestScore = coefficients[0];
+			int maxorder = 1;
+			for(int order=2;order<coefficients.length;order++) {
+				if(coefficients[order-1] < bestScore ) {
+					maxorder = order;
+					bestScore = coefficients[order-1];
 				}
 			}
 			return maxorder;
@@ -138,6 +304,24 @@ public class RotationOrderDetector implements OrderDetector {
 
 		double dist = total/(ca1.length+ca2.length);
 		return dist;
+	}
+	public static void printSuperpositionDistance(Atom[] ca, RotationAxis axis, PrintStream out) throws StructureException {
+		printSuperpositionDistance(ca, axis, DEFAULT_ANGLE_INCR, out);
+	}
+	public static void printSuperpositionDistance(Atom[] ca, RotationAxis axis,double angleIncr, PrintStream out) throws StructureException {
+		final int steps = (int)Math.floor(Math.PI/angleIncr);
+
+		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+
+		for (int step=0; step<steps;step++) {
+			double dist = superpositionDistance(ca, ca2);
+			double angle = angleIncr*step;
+
+			// Rotate for next step
+			axis.rotate(ca2, angleIncr);
+
+			out.format("%f\t%f%n",angle,dist);
+		}
 	}
 
 	/**
@@ -337,19 +521,19 @@ public class RotationOrderDetector implements OrderDetector {
 
 			amplitudes[order-1] = harmonicWeights.get(1, 0);
 		}
-		
+
 		return amplitudes;
 		//return sses;
-		
-//		int bestOrder = 1;
-//		double minScore = amplitudes[0];
-//		for(int order=2;order<maxOrder;order++) {
-//			if(amplitudes[order-1] < minScore) {
-//				minScore = amplitudes[order-1];
-//				bestOrder = order;
-//			}
-//		}
-//		return bestOrder;
+
+		//		int bestOrder = 1;
+		//		double minScore = amplitudes[0];
+		//		for(int order=2;order<maxOrder;order++) {
+		//			if(amplitudes[order-1] < minScore) {
+		//				minScore = amplitudes[order-1];
+		//				bestOrder = order;
+		//			}
+		//		}
+		//		return bestOrder;
 	}
 
 	double[] trySingleHarmonicsFloatingBySSE(Atom[] ca, RotationAxis axis) throws StructureException {
@@ -472,7 +656,7 @@ public class RotationOrderDetector implements OrderDetector {
 
 			amplitudes[order-1] = harmonicWeights.get(1, 0);
 		}
-		
+
 		return amplitudes;
 	}
 	double[] trySingleCuspBySSE(Atom[] ca, RotationAxis axis) throws StructureException {
@@ -540,15 +724,117 @@ public class RotationOrderDetector implements OrderDetector {
 		return sses;
 	}
 
+	@SuppressWarnings("static-access")
 	public static void main(String[] args) {
+		//argument parsing
+		final String usage = "[OPTIONS] [structure]";
+		final String header = "Determine the order for <structure>, which may " +
+				"be a PDB ID, SCOP domain, or file path. If none is given, the " +
+				"user will be prompted at startup.";
+		Options options = new Options();
+		options.addOption("h","help",false,"print help");
+		options.addOption(OptionBuilder.withArgName("maxorder")
+				.hasArg()
+				.withLongOpt("max-order")
+				.withType(Number.class)
+				.withDescription("maximum order to consider [default 8]")
+				.create("x") );
+		StringBuilder descr = new StringBuilder("Method to use. May be specified multiple times. [");
+		RotationOrderMethod[] availableMethods = RotationOrderMethod.values();
+		descr.append(availableMethods[0]);
+		for(int i=1;i<availableMethods.length;i++) {
+			descr.append(" | ");
+			descr.append(availableMethods[i]);
+		}
+		descr.append(']');
+		options.addOption(OptionBuilder.withArgName("method")
+				.hasArg()
+				.withLongOpt("method")
+				.withType(RotationOrderMethod.class)
+				.withDescription(descr.toString())
+				.create('M') );
+		options.addOption("o","output",true,"tab delimited output file containing angle and distance columns");
+		CommandLineParser parser = new GnuParser();
+		HelpFormatter help = new HelpFormatter();
+
+		CommandLine cli;
+		try {
+			cli = parser.parse(options,args,false);
+			if(cli.hasOption('h')) {
+				help.printHelp(usage, header, options, "");
+				System.exit(1);
+				return;
+			}
+		} catch (ParseException e) {
+			System.err.println("Error: "+e.getMessage());
+			help.printHelp(usage, header, options, "");
+			System.exit(1);
+			return;
+		}
+
+		args = cli.getArgs();
+
+
 		String name;
-		name = "d1ijqa1";
-		//		name = "1G6S";
-		name = "1MER.A";
-		//		name = "1MER";
-		//		name = "1TIM.A";
-		//		name = "d1h70a_";
-		name = "2YMS";
+		if(args.length == 0) {
+			// default name
+			name = "d1ijqa1";
+			//		name = "1G6S";
+			name = "1MER.A";
+			//		name = "1MER";
+			//		name = "1TIM.A";
+			//		name = "d1h70a_";
+			name = "2YMS";
+
+			name = (String)JOptionPane.showInputDialog(
+					null,
+					"Structure ID (PDB, SCOP, etc):",
+					"Input Structure",
+					JOptionPane.PLAIN_MESSAGE,
+					null,
+					null,
+					name);
+
+			if( name == null) {
+				//cancel
+				return;
+			}
+		} else if(args.length == 1) {
+			name = args[0];
+		} else {
+			help.printHelp(usage, header, options, "");
+			System.exit(1);
+			return;
+		}
+
+		int maxorder = 8;
+		if(cli.hasOption('x') ) {
+			maxorder = Integer.parseInt(cli.getOptionValue('x'));
+		}
+
+		String outfile = null;
+		if(cli.hasOption('o')) {
+			outfile = cli.getOptionValue('o');
+		}
+
+		List<RotationOrderDetector> methods = new ArrayList<RotationOrderDetector>();
+		if(cli.hasOption('M')) {
+			for(String method: cli.getOptionValues('M')) {
+				RotationOrderMethod m = RotationOrderMethod.valueOf(method);
+				methods.add(new RotationOrderDetector(maxorder,m) );
+			}
+		}
+
+//		System.out.println("Name:" + name);
+//		System.out.println("order:" + maxorder);
+//		System.out.println("output:" + outfile);
+//		for(RotationOrderDetector m: methods) {
+//			System.out.println("method:"+m);
+//		}
+
+		// Done parsing arguments
+
+
 		try {
 
 			// Perform alignment to determine axis
@@ -556,19 +842,30 @@ public class RotationOrderDetector implements OrderDetector {
 			Atom[] ca2 = StructureTools.cloneCAArray(ca1);
 			CeSymm ce = new CeSymm();
 			AFPChain alignment = ce.align(ca1, ca2);
-
-			// Search for orders up to 9
-			RotationOrderDetector detector = new RotationOrderDetector(9);
-
-			// Calculate order
-			int order = detector.calculateOrder(alignment, ca1);
-			System.out.println("Order: "+order);
-
-			// Print weights for each order, for comparison
 			RotationAxis axis = new RotationAxis(alignment);
-			double[] harmonics = detector.fitHarmonics(ca1,axis);
-			System.out.println("Order Weights: "+Arrays.toString(harmonics));
 
+			// Output raw data
+			if(outfile != null) {
+				PrintStream out = null;
+				try {
+					out = new PrintStream(outfile);
+					out.println("Angle\tDistance");
+					printSuperpositionDistance(ca1,axis,out);
+				} catch(FileNotFoundException e) {
+					e.printStackTrace();
+				} finally {
+					if(out != null) {
+						out.close();
+					}
+				}
+			}
+
+			// Print orders
+			for( OrderDetector detector: methods) {
+				// Calculate order
+				int order = detector.calculateOrder(alignment, ca1);
+				System.out.format("%s\t%d%n",detector,order);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (StructureException e) {

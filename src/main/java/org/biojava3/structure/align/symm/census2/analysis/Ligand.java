@@ -18,11 +18,12 @@ public class Ligand implements Serializable {
 
 	private static final long serialVersionUID = -3803769618055243227L;
 
-	private double distance;
+	private double distanceToCentroid;
+	private double distanceToAxis;
 	private String formula;
 	private boolean isMetallic;
 
-	public Ligand(List<Atom> atoms, double distance) {
+	public Ligand(List<Atom> atoms, double distance, double distanceToAxis) {
 		SortedMap<String, Integer> letters = new TreeMap<String, Integer>();
 		for (Atom atom : atoms) {
 			String name = atom.getElement().name();
@@ -37,7 +38,8 @@ public class Ligand implements Serializable {
 				sb.append(entry.getValue());
 		}
 		this.formula = sb.toString();
-		this.distance = distance;
+		this.distanceToCentroid = distance;
+		this.distanceToAxis = distanceToAxis;
 	}
 	
 	public Ligand() {
@@ -48,7 +50,21 @@ public class Ligand implements Serializable {
 		super();
 		this.formula = formula;
 		this.isMetallic = isMetal;
-		this.distance = distance;
+		this.distanceToCentroid = distance;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		long temp;
+		temp = Double.doubleToLongBits(distanceToAxis);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		temp = Double.doubleToLongBits(distanceToCentroid);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		result = prime * result + ((formula == null) ? 0 : formula.hashCode());
+		result = prime * result + (isMetallic ? 1231 : 1237);
+		return result;
 	}
 
 	@Override
@@ -60,33 +76,32 @@ public class Ligand implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		Ligand other = (Ligand) obj;
-		if (Double.doubleToLongBits(distance) != Double.doubleToLongBits(other.distance))
+		if (Double.doubleToLongBits(distanceToAxis) != Double
+				.doubleToLongBits(other.distanceToAxis))
+			return false;
+		if (Double.doubleToLongBits(distanceToCentroid) != Double
+				.doubleToLongBits(other.distanceToCentroid))
 			return false;
 		if (formula == null) {
 			if (other.formula != null)
 				return false;
 		} else if (!formula.equals(other.formula))
 			return false;
+		if (isMetallic != other.isMetallic)
+			return false;
 		return true;
 	}
 
-	public double getDistance() {
-		return distance;
+	public double getDistanceToCentroid() {
+		return distanceToCentroid;
+	}
+
+	public double getDistanceToAxis() {
+		return distanceToAxis;
 	}
 
 	public String getFormula() {
 		return formula;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		long temp;
-		temp = Double.doubleToLongBits(distance);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		result = prime * result + ((formula == null) ? 0 : formula.hashCode());
-		return result;
 	}
 
 	public boolean isMetallic() {
@@ -94,7 +109,7 @@ public class Ligand implements Serializable {
 	}
 
 	public void setDistance(double distance) {
-		this.distance = distance;
+		this.distanceToCentroid = distance;
 	}
 
 	public void setFormula(String formula) {
@@ -107,7 +122,7 @@ public class Ligand implements Serializable {
 
 	@Override
 	public String toString() {
-		return (isMetallic() ? "*" : "") + formula + " (" + StatUtils.formatD(distance) + "Å" + ")";
+		return (isMetallic() ? "(metallic)" : "") + formula + " (" + StatUtils.formatD(distanceToCentroid) + "Å" + "to centroid;" + StatUtils.formatD(distanceToAxis) + "Å" + "to axis)";
 	}
 
 }

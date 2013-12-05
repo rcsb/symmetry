@@ -2,12 +2,8 @@ package org.biojava3.structure.align.symm.census2.analysis;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,21 +12,20 @@ import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.AtomPositionMap;
 import org.biojava.bio.structure.AtomPositionMap.GroupMatcher;
-import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.ResidueNumber;
 import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.client.StructureName;
+import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.io.mmcif.chem.ResidueType;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.census2.AlignmentMapping;
 import org.biojava3.structure.align.symm.census2.Census;
 import org.biojava3.structure.align.symm.census2.CensusJob;
-import org.biojava3.structure.align.symm.census2.CensusJob.FullInfo;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
@@ -42,7 +37,7 @@ import org.biojava3.structure.align.symm.census2.Significance;
  */
 public class LigandFinder {
 
-	public static int DEFAULT_RADIUS = 5;
+	public static double DEFAULT_RADIUS = Double.POSITIVE_INFINITY;
 
 	private static final Logger logger = LogManager.getLogger(LigandFinder.class.getName());
 
@@ -58,10 +53,10 @@ public class LigandFinder {
 					|| type == ResidueType.dPeptideCarboxyTerminus;
 		}
 	};
-	private int radius = DEFAULT_RADIUS;
+	private double radius = DEFAULT_RADIUS;
 	private File output;
 	private int printFrequency = 100;
-	private boolean useOnlyAligned = true;
+	private boolean rebuildMissingAlignments = false;
 	private Significance significance;
 	
 
@@ -69,8 +64,8 @@ public class LigandFinder {
 		this.significance = significance;
 	}
 
-	public void setUseOnlyAligned(boolean useOnlyAligned) {
-		this.useOnlyAligned = useOnlyAligned;
+	public void setRebuildMissingAlignments(boolean useOnlyAligned) {
+		this.rebuildMissingAlignments = useOnlyAligned;
 	}
 
 	public void setPrintFrequency(int printFrequency) {
@@ -79,11 +74,11 @@ public class LigandFinder {
 
 	private LigandList ligandList;
 
-	public LigandFinder(int radius) {
+	public LigandFinder(double radius) {
 		this.radius = radius;
 	}
 
-	public LigandFinder(int radius, GroupMatcher exclusionMatcher) {
+	public LigandFinder(double radius, GroupMatcher exclusionMatcher) {
 		this.radius = radius;
 		this.exclusionMatcher = exclusionMatcher;
 	}
@@ -92,7 +87,7 @@ public class LigandFinder {
 		this.exclusionMatcher = exclusionMatcher;
 	}
 
-	public void setRadius(int radius) {
+	public void setRadius(double radius) {
 		this.radius = radius;
 	}
 
@@ -102,8 +97,13 @@ public class LigandFinder {
 
 	public void find(Results census) {
 
+		// do this to get a better distribution while still running
 		Collections.shuffle(census.getData());
 		
+		/*
+		 * include all previous results in the file;
+		 * don't redo them
+		 */
 		if (output != null && output.exists()) {
 			try {
 				ligandList = LigandList.fromXml(output);
@@ -129,9 +129,9 @@ public class LigandFinder {
 					continue;
 				}
 
-				// we want to get all groups in the center that are NOT amino
-				// acids or water atoms
-//				Structure structure = cache.getStructureForDomain(scopId, scop);
+				/*
+				 * Get the structure.
+				 */
 				Structure structure;
 				StructureName theName = new StructureName(scopId);
 				if (theName.isScopName()) {
@@ -142,42 +142,74 @@ public class LigandFinder {
 				}
 				Atom[] ca = StructureTools.getAtomCAArray(structure);
 
+				/*
+				 * Find the axis and centroid of the aligned residues
+				 */
 				Atom centroid;
-				if (useOnlyAligned) {
+				RotationAxis axis;
+				AlignmentMapping mapping = result.getAlignmentMapping();
+				if (mapping != null) {
+					AFPChain afpChain = mapping.buildAfpChain(StructureTools.getAtomCAArray(structure), StructureTools.getAtomCAArray(structure));
+					axis = new RotationAxis(afpChain);
+				} else if (rebuildMissingAlignments) {
 					// run CE-Symm to get alignment
-					FullInfo info = CensusJob.runOn(scopId, Census.AlgorithmGiver.getDefault(), significance, cache, scop);
-					RotationAxis axis = new RotationAxis(info.getAfpChain());
-					centroid = axis.getRotationPos();
+					CensusJob job = CensusJob.setUpJob(scopId, 0, Census.AlgorithmGiver.getDefault(), significance, cache, scop);
+					job.setStoreAfpChain(true);
+					job.call();
+					axis = new RotationAxis(job.getAfpChain());
 				} else {
-					centroid = Calc.getCentroid(ca);
+					logger.warn("Skipping " + scopId + " because the axis could not be found");
+					continue;
 				}
-
-				AtomPositionMap atomPositions = new AtomPositionMap(ca, exclusionMatcher);
-				Set<ResidueNumber> excluded = atomPositions.getNavMap().keySet();
-				// Set<Group> ligands =
-				// StructureTools.getGroupsWithinShell(structure, centroid,
-				// residues, radius, false);
-				Map<Group, Double> ligandDistances = StructureTools.getGroupDistancesWithinShell(structure, centroid,
-						excluded, radius, false, false);
+				centroid = axis.getRotationPos();
 
 				/*
-				 *  add ligands to list
+				 *  We want to get all groups near the center that are NOT amino acids or water atoms.
+				 *  These are all within the radius of the center.
 				 */
-				if (!ligandDistances.isEmpty()) {
-					logger.debug("Assigning " + ligandDistances.size() + " ligands to " + scopId);
-					for (Group group : ligandDistances.keySet()) {
-						ligandList.add(scopId, new Ligand(group.getAtoms(), ligandDistances.get(group)));
+				AtomPositionMap atomPositions = new AtomPositionMap(ca, exclusionMatcher);
+				Set<ResidueNumber> excluded = atomPositions.getNavMap().keySet();
+				Map<Group, Double> distancesToCentroid = StructureTools.getGroupDistancesWithinShell(structure, centroid,
+						excluded, radius, false, false);
+
+
+				/*
+				 * Calculate the distance of every group to the axis.
+				 */
+				Map<Group,Double> distancesToAxis = new HashMap<Group,Double>();
+				for (Group group : distancesToCentroid.keySet()) {
+					double minDistance = Double.POSITIVE_INFINITY;
+					for (Atom atom : group.getAtoms()) {
+						double distance = axis.getProjectedDistance(atom);
+						if (distance < minDistance) {
+							minDistance = distance;
+						}
+					}
+					distancesToAxis.put(group, minDistance);
+				}
+				
+				/*
+				 *  Add all the ligands to list.
+				 */
+				if (!distancesToCentroid.isEmpty()) {
+					logger.debug("Assigning " + distancesToCentroid.size() + " ligands to " + scopId);
+					for (Group group : distancesToCentroid.keySet()) {
+						Ligand ligand = new Ligand(group.getAtoms(), distancesToCentroid.get(group), distancesToAxis.get(group));
+						ligandList.add(scopId, ligand);
 					}
 				} else {
 					logger.debug("Found no center ligands for " + scopId);
 					ligandList.put(scopId, new StructureLigands(scopId));
 				}
-
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 				logger.error(e.getClass().getSimpleName() + " on " + scopId);
 			} finally {
 				i++;
+				/*
+				 * Print all the results to the file periodically.
+				 */
 				if (i % printFrequency == 0 && i > 0 && output != null) {
 					logger.info("Printing to " + output.getPath());
 					try {
@@ -192,48 +224,6 @@ public class LigandFinder {
 	}
 
 	/**
-	 * Removes unaligned groups from {@code ligandDistances}.
-	 * @param ligandDistances The map to remove from
-	 * @param alignment A map from group position numbers to group position numbers
-	 * @param ca All atoms of the structure
-	 * @throws StructureException
-	 * @throws IOException
-	 * @deprecated Irrelevant
-	 */
-	@Deprecated
-	private void removeUnaligned(Map<Group, Double> ligandDistances, Map<Integer,Integer> alignment, Atom[] ca) throws StructureException, IOException {
-
-		// get a list of all of the groups in the domain
-		// the index of the list is critical
-		List<Group> groupsInStructure = new ArrayList<Group>();
-		HashSet<WeakReference<Group>> groupsInStructureSet = new HashSet<WeakReference<Group>>(); // so we don't have to iterate thru in liear time
-		for (Atom atom : ca) {
-			Group group = atom.getGroup();
-			if (!groupsInStructureSet.contains(group)) {
-				groupsInStructure.add(group);
-				groupsInStructureSet.add(new WeakReference<Group>(group));
-			}
-		}
-
-		// now find aligned residues
-		HashSet<Group> alignedGroups = new HashSet<Group>();
-		for (Integer key : alignment.keySet()) {
-			alignedGroups.add(groupsInStructure.get(key));
-		}
-
-		// now remove any group that's not on the list
-		List<Group> toRemove = new ArrayList<Group>();
-		for (Group group : ligandDistances.keySet()) {
-			if (!alignedGroups.contains(group)) {
-				toRemove.add(group);
-			}
-		}
-		for (Group group : toRemove) {
-			ligandDistances.remove(group);
-		}
-	}
-
-	/**
 	 * @param args
 	 * @throws IOException
 	 */
@@ -243,7 +233,7 @@ public class LigandFinder {
 			.println("Usage: " + LigandFinder.class.getSimpleName() + " census-file.xml output-file [radius]");
 			return;
 		}
-		int radius = LigandFinder.DEFAULT_RADIUS;
+		double radius = LigandFinder.DEFAULT_RADIUS;
 		if (args.length > 2) {
 			radius = Integer.parseInt(args[2]);
 		}

@@ -26,14 +26,14 @@ import org.junit.Test;
  * A test for {@link LigandFinder}.
  * @author dmyerstu
  */
-public class LigandFinderTest extends TestCase{
+public class LigandFinderTest extends TestCase {
 
 	private static int RADIUS = 5;
 	
 	private AtomCache cache = new AtomCache();
-	private ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75B);
+	private static ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
 
-	ChemCompProvider orig ;
+	ChemCompProvider orig;
 	
 	@Before
 	public void setUp() throws Exception{
@@ -48,30 +48,24 @@ public class LigandFinderTest extends TestCase{
 		
 		params.setCreateAtomBonds(true);
 		
-		orig =  ChemCompGroupFactory.getChemCompProvider();
+		orig = ChemCompGroupFactory.getChemCompProvider();
 		
 		ChemCompProvider provider = new DownloadChemCompProvider();
 		
 		ChemCompGroupFactory.setChemCompProvider(provider);
 		
-		
-		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
+		ScopFactory.setScopDatabase(scop);
 	}
 	
-	
-
 	@Override
 	protected void tearDown() throws Exception {
-		// TODO Auto-generated method stub
 		super.tearDown();
 		
 		System.out.println("tear down");
 		ChemCompGroupFactory.setChemCompProvider(orig);
 	}
 	
-	
-
-
+	// TODO Add tests for the distance to the axis of symmetry
 
 	@Test
 	public void testInCenter1() {
@@ -169,7 +163,7 @@ public class LigandFinderTest extends TestCase{
 		Results results = new Results();
 		results.add(result);
 		LigandFinder finder = new LigandFinder(radius);
-		finder.setUseOnlyAligned(useOnlyAligned);
+		finder.setRebuildMissingAlignments(useOnlyAligned);
 		finder.setSignificance(sig);
 		finder.find(results);
 		Map<String,String> formulas = finder.getFormulas();

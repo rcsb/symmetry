@@ -33,7 +33,9 @@ import org.biojava3.structure.align.symm.census2.Significance;
 /**
  * Finds ligands near symmetric interfaces.
  * @author dmyersturnbull
+ * @deprecated Use {@link LigandFinder} instead
  */
+@Deprecated
 public class InterfaceLigandFinder {
 
 	private static final double DEFAULT_MAX_DISTANCE = 4;
@@ -50,7 +52,7 @@ public class InterfaceLigandFinder {
 					+ " census-file.xml output-file [max-distance]");
 			return;
 		}
-		int radius = LigandFinder.DEFAULT_RADIUS;
+		double radius = InterfaceLigandFinder.DEFAULT_MAX_DISTANCE;
 		if (args.length > 2) {
 			radius = Integer.parseInt(args[2]);
 		}
@@ -172,7 +174,7 @@ public class InterfaceLigandFinder {
 			if (!exclusionMatcher.matches(atom.getGroup()) && !groupsFound.contains(atom.getGroup())) {
 				double distance = axis.getProjectedDistance(atom);
 				if (distance <= maxDistance) {
-					ligands.add(new Ligand(atom.getGroup().getAtoms(), distance));
+					ligands.add(new Ligand(atom.getGroup().getAtoms(), -1, distance));
 					groupsFound.add(atom.getGroup());
 				}
 			}

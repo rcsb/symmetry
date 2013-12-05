@@ -19,7 +19,9 @@ import org.junit.Test;
 /**
  * A test for {@link InterfaceLigandFinder}.
  * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class InterfaceLigandFinderTest {
 
 	private AtomCache cache = new AtomCache();

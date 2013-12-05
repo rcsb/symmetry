@@ -28,16 +28,17 @@ public class AlignmentMappingTest {
 		Results census = Results.fromXML(new File("src/test/resources/census2/expected1_with_map.xml"));
 		Result result = census.getData().get(0);
 		AlignmentMapping mapping = result.getAlignmentMapping();
-		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75);
-//		ScopFactory.setScopDatabase(scop);
+		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_2_0_2);
+		ScopFactory.setScopDatabase(scop);
 //		ScopDatabase scop = new BerkeleyScopInstallation();
 //		scop.setScopVersion("1.75B");
 		ScopDomain domain = scop.getDomainByScopID("d2c35e1");
 		System.out.println(domain);
 		AtomCache cache = new AtomCache();
-		Structure structure = cache.getStructureForDomain(domain);
-		Atom[] ca = StructureTools.getAtomCAArray(structure);
-		AFPChain afpChain = mapping.buildAfpChain(ca, StructureTools.cloneCAArray(ca));
+		Structure structure = cache.getStructureForDomain(domain, scop);
+		Atom[] ca1 = StructureTools.getAtomCAArray(structure);
+		Atom[] ca2 = StructureTools.getAtomCAArray(structure);
+		AFPChain afpChain = mapping.buildAfpChain(ca1, ca2);
 		assertEquals("Wrong TM-score", 0.24488482, afpChain.getTMScore(), 0.00000001);
 	}
 

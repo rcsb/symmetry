@@ -50,8 +50,10 @@ public class ProtodomainTest {
 	}
 
 	@Test
-	public void testConcat() {
-		// TODO
+	public void testConcat() throws Exception {
+		AFPChainAndAtoms storedAcaa = ResourceList.get().loadSymm("1ngk.B");
+		Protodomain protodomain = Protodomain.fromSymmetryAlignment(storedAcaa.getAfpChain(), storedAcaa.getCa1(), 2, cache);
+		
 	}
 	
 	@Test

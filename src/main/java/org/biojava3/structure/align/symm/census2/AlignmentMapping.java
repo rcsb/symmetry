@@ -78,7 +78,7 @@ public class AlignmentMapping implements Serializable {
 	 */
 	public AFPChain buildAfpChain(Atom[] ca1, Atom[] ca2) throws StructureException {
 		AFPChain afpChain = AlignmentTools.createAFPChain(ca1, ca2, new ResidueNumber[] {}, new ResidueNumber[] {});
-		AlignmentTools.replaceOptAln(afpChain, ca1, ca2, getSimpleFunction());
+		afpChain = AlignmentTools.replaceOptAln(afpChain, ca1, ca2, getSimpleFunction());
 		return afpChain;
 	}
 	

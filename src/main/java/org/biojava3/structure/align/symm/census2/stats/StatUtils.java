@@ -47,10 +47,20 @@ public class StatUtils {
 		nf.setMinimumFractionDigits(1);
 	}
 
+	/**
+	 * Format as double
+	 * @param d
+	 * @return
+	 */
 	public static String formatD(double d) {
 		return nf.format(d);
 	}
 
+	/**
+	 * Format as percentage
+	 * @param p
+	 * @return
+	 */
 	public static String formatP(double p) {
 		return nf.format(p*100.0) + "%";
 	}

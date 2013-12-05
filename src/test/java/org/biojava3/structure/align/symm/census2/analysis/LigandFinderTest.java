@@ -55,7 +55,7 @@ public class LigandFinderTest extends TestCase{
 		ChemCompGroupFactory.setChemCompProvider(provider);
 		
 		
-		
+		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
 	}
 	
 	

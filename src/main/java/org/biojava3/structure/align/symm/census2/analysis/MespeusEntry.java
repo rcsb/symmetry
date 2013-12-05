@@ -45,7 +45,7 @@ public class MespeusEntry {
 	}
 	public CoordinationGeometry getShape() {
 		return shape;
-	}
+	}  
 	public String getMetalName() {
 		return metalName;
 	}

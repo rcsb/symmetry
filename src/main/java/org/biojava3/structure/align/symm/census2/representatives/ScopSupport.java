@@ -74,6 +74,37 @@ public class ScopSupport {
 	}
 
 	/**
+	 * General-use method that does not attempt to fetch a diverse set.
+	 * @param sunId
+	 * @param domains
+	 */
+	public void getAllDomainsUnder(int[] sunIds, List<ScopDomain> domains) {
+		for (int sunId : sunIds) {
+			getAllDomainsUnder(sunId, domains);
+		}
+	}
+	
+	/**
+	 * General-use method that does not attempt to fetch a diverse set.
+	 * @param sunId
+	 * @param domains
+	 */
+	public void getAllDomainsUnder(int sunId, List<ScopDomain> domains) {
+		
+		final ScopDatabase scop = ScopFactory.getSCOP();
+		final ScopDescription description = scop.getScopDescriptionBySunid(sunId);
+		
+		if (description.getCategory().equals(ScopCategory.Domain)) { // base case
+			domains.addAll(scop.getScopDomainsBySunid(sunId));
+		} else { // recurse
+			final ScopNode node = scop.getScopNode(sunId);
+			for (int s : node.getChildren()) {
+				getAllDomainsUnder(s, domains);
+			}
+		}
+	}
+	
+	/**
 	 * Returns a list of all domains (in SCOP hierarchy, {@code dm}) that are descendants of the SCOP node corresponding
 	 * to the Sun Id {@code sunId}. Unless {@code includeAllProteins} is set to true, only the <em>first</em> {@code Sp}
 	 * and {@code Px} is chosen. When {@code repsPerSf} is less than the number of domains in a superfamily, this method
@@ -82,7 +113,7 @@ public class ScopSupport {
 	 * <em>Warning: because this method looks over the entire SCOP subtree under the given node, it is very slow.</em>
 	 * 
 	 * @param sunId
-	 *            The Sun Id of the ancenstor node
+	 *            The Sun Id of the ancestor node
 	 * @param domains
 	 *            A list of SCOP domains that will be appended to
 	 * @param repsPerSf

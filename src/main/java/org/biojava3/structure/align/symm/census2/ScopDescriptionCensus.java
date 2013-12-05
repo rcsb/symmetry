@@ -29,12 +29,8 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.ScopCategory;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava.bio.structure.scop.ScopNode;
 import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 
 /**
@@ -87,32 +83,8 @@ public class ScopDescriptionCensus extends Census {
 	@Override
 	protected List<ScopDomain> getDomains() {
 		List<ScopDomain> domains = new ArrayList<ScopDomain>();
-		ScopDatabase scop = ScopFactory.getSCOP();
-		for (int sunId : sunIds) {
-			domains.addAll(scop.getScopDomainsBySunid(sunId));
-			getDomainsUnder(sunId, domains);
-		}
+		ScopSupport.getInstance().getAllDomainsUnder(sunIds, domains);
 		return domains;
 	}
 
-	/**
-	 * @deprecated Use {@link ScopSupport} instead
-	 * TODO Swap out with ScopSupport, and verify that everything (particularly in CLI) still works.
-	 */
-	@Deprecated
-	public static void getDomainsUnder(int sunId, List<ScopDomain> domains) {
-		
-		final ScopDatabase scop = ScopFactory.getSCOP();
-		final ScopDescription description = scop.getScopDescriptionBySunid(sunId);
-		
-		if (description.getCategory().equals(ScopCategory.Domain)) { // base case
-			domains.addAll(scop.getScopDomainsBySunid(sunId));
-		} else { // recurse
-			final ScopNode node = scop.getScopNode(sunId);
-			for (int s : node.getChildren()) {
-				getDomainsUnder(s, domains);
-			}
-		}
-	}
-	
 }

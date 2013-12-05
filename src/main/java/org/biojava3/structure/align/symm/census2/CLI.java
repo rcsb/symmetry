@@ -44,6 +44,7 @@ import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.scop.ScopInstallation;
+import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 
 /**
  * Decent command-line interface to Census. Combines aspects of many of the other census subclasses.
@@ -156,7 +157,7 @@ public class CLI {
 	public static void run(final String pdbDir, final String censusFile, final Integer pNThreads,
 			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] pSunIds,
 			final String[] superfamilies, final String[] folds, final boolean randomize, final boolean restart,
-			boolean prefetch, final boolean storeMapping, final String scopVersion, String sigClass, String sigMethod) {
+			boolean prefetch, final boolean storeMapping, String scopVersion, String sigClass, String sigMethod) {
 
 		// get a significance object
 		final Significance sig;
@@ -199,7 +200,7 @@ public class CLI {
 				sunIds.addAll(getSunIds(superfamilies, ScopCategory.Superfamily));
 				sunIds.addAll(getSunIds(folds, ScopCategory.Fold));
 				if (sunIds.isEmpty()) {
-					int[] ppSunIds = new int[] { 46456, 48724, 51349, 53931, 56572, 56835 };
+					int[] ppSunIds = ScopSupport.TRUE_SCOP_CLASSES;
 					for (Integer sunId : ppSunIds) {
 						sunIds.add(sunId);
 					}
@@ -227,7 +228,8 @@ public class CLI {
 
 					// first, let putative contain all the domains under our sun id
 					List<ScopDomain> putative = new ArrayList<ScopDomain>();
-					ScopDescriptionCensus.getDomainsUnder(sunId, putative);
+					ScopSupport.getInstance().getAllDomainsUnder(sunId, putative);
+//					ScopSupport.getInstance().getDomainsUnder(sunId, putative, number, false);
 
 					// randomize if we need to
 					if (randomize) {
@@ -281,6 +283,7 @@ public class CLI {
 		};
 
 		// set SCOP version
+		if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
 		ScopFactory.setScopDatabase(scopVersion);
 		
 		// set final options

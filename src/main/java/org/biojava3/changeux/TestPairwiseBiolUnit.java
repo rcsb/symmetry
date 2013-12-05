@@ -3,15 +3,17 @@ package org.biojava3.changeux;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
-import org.biojava.bio.structure.align.client.StructureName;
+import org.biojava.bio.structure.align.ce.CeMain;
+import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
+import org.rcsb.fatcat.server.PdbChainKey;
 
 public class TestPairwiseBiolUnit {
 
 	public static void main(String[] args){
 
-		StructureName repre = new StructureName("3KFK.A");
-		StructureName member = new StructureName("3LOS.A");
+		PdbChainKey repre = PdbChainKey.fromName("3KFK.A");
+		PdbChainKey member =PdbChainKey.fromName("3LOS.A");
 
 		try {
 			Structure s1 = AlignQuaternaryStructures.cache.getBiologicalUnit(repre.getPdbId());

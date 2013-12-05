@@ -31,6 +31,8 @@ import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava3.structure.StructureIO;
+import org.rcsb.ava.dbsearch.domainassign.DomainAssigner;
+import org.rcsb.fatcat.server.PdbChainKey;
 
 public class FetchPDPDomain {
 	public static void main(String[] args){
@@ -61,7 +63,7 @@ public class FetchPDPDomain {
 			//2UV8Ag	A:345-343,A:983-1092,A:1182-1452,A:1505-1701
 			StructureName key  = new StructureName(pdpId);
 			try {
-				System.out.println(DomainAssigner.getDomainRangesForName(key));
+				System.out.println(DomainAssigner.getDomainRangesForName((PdbChainKey) key));
 			} catch (Exception e){
 				e.printStackTrace();
 			}

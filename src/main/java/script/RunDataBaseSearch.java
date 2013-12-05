@@ -30,17 +30,25 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.biojava.bio.structure.Atom;
+
 import org.biojava.bio.structure.align.CallableStructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.ce.CeMain;
+import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.client.PdbPair;
-import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.SynchronizedOutFile;
 import org.biojava.bio.structure.align.util.UserConfiguration;
+import org.biojava3.alignment.SubstitutionMatrixHelper;
 import org.biojava3.core.util.ConcurrencyTools;
+import org.biojava3.structure.align.symm.CeSymm;
+import org.rcsb.fatcat.server.PdbChainKey;
+import org.rcsb.fatcat.server.dao.SequenceClusterDAO;
+
+import org.biojava3.alignment.template.SubstitutionMatrix;
+import org.biojava3.core.sequence.compound.AminoAcidCompound;
 
 /** a Utility method to run a multi-threaded database search
  * 
@@ -51,7 +59,7 @@ public class RunDataBaseSearch implements Runnable{
 
 	
 	UserConfiguration config;
-	StructureName query ;
+	PdbChainKey query ;
 	StructureAlignment algorithm;
 	int nrCPUs;
 	File outPutDir;
@@ -60,7 +68,7 @@ public class RunDataBaseSearch implements Runnable{
 
 
 	
-	public RunDataBaseSearch(StructureName key, StructureAlignment algorithm) {
+	public RunDataBaseSearch(PdbChainKey key, StructureAlignment algorithm) {
 		query = key;
 		this.algorithm = algorithm;
 		config = new UserConfiguration();
@@ -69,7 +77,7 @@ public class RunDataBaseSearch implements Runnable{
 		if (nrCPUs < 1)
 			nrCPUs = 1;
 
-		outPutDir = new File(config.getPdbFilePath() + "dbsearch_" + query.getName() + "_" + algorithm.getAlgorithmName()) ;
+		outPutDir = new File(config.getPdbFilePath() + "dbsearch_" + query.toName() + "_" + algorithm.getAlgorithmName()) ;
 		if ( ! outPutDir.exists());
 		outPutDir.mkdir();
 
@@ -80,13 +88,13 @@ public class RunDataBaseSearch implements Runnable{
 
 		SequenceClusterDAO dao = new SequenceClusterDAO();
 
-		SortedSet<StructureName> representatives = dao.getClusterEntities(DEFAULT_CLUSTER_CUTOFF);
+		SortedSet<PdbChainKey> representatives = dao.getClusterEntities(DEFAULT_CLUSTER_CUTOFF);
 
 		AtomCache cache = new AtomCache(config);
 
 		cache.getFileParsingParams().setUpdateRemediatedFiles(true);
 		
-		String outFile = outPutDir+File.separator+query.getName()+".results.out";
+		String outFile = outPutDir+File.separator+query.toName()+".results.out";
 		
 		System.out.println("writing results to " + outFile);
 		File outFileF = new File(outFile);
@@ -104,15 +112,15 @@ public class RunDataBaseSearch implements Runnable{
 		
 		try {
 			SynchronizedOutFile outF = new SynchronizedOutFile(outFileF);
-			Atom[] ca1 = cache.getAtoms( query.getName() );
+			Atom[] ca1 = cache.getAtoms( query.toName() );
 
 			
-			for (StructureName representative : representatives){
+			for (PdbChainKey representative : representatives){
 
 				CallableStructureAlignment ali = new CallableStructureAlignment();
 
 				
-				PdbPair pair = new PdbPair(query.getName(), representative.getName());
+				PdbPair pair = new PdbPair(query.toName(), representative.toName());
 				try {
 					ali.setCa1(ca1);
 				} catch (Exception e){
@@ -199,7 +207,7 @@ public class RunDataBaseSearch implements Runnable{
 
 		String name1 = "1hiv.A";
 
-		StructureName key = new StructureName(name1);
+		PdbChainKey key = new PdbChainKey(name1);
 
 
 		try {

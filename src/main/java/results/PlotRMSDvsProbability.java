@@ -8,7 +8,6 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
-import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.webstart.JNLPProxy;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
@@ -25,6 +24,10 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.urls.CustomXYURLGenerator;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
+import org.rcsb.fatcat.server.PdbChainKey;
+import org.rcsb.fatcat.server.dao.DBAlignment;
+import org.rcsb.fatcat.server.dao.SequenceClusterDAO;
+import org.rcsb.fatcat.server.dao.SplitDatabase;
 
 public class PlotRMSDvsProbability {
 	private static final String BASE_URL="http://beta.rcsb.org/pdb/workbench/showPrecalcAlignment.do?action=pw_fatcat&pdb1=%s&chain1=%s&pdb2=%s&chain2=%s";
@@ -37,13 +40,13 @@ public class PlotRMSDvsProbability {
 	public static void main(String[] args){
 		String name = "4HHB.A";
 		
-		StructureName repre = new StructureName(name);
+		PdbChainKey repre = PdbChainKey.fromName(name);
 		
 		PlotRMSDvsProbability me = new PlotRMSDvsProbability();
 		me.showData(repre);
 	}
 	
-	public void showData(StructureName repre){
+	public void showData(PdbChainKey repre){
 		
 		XYDataset series = getData4Repre(repre);
 		
@@ -85,7 +88,7 @@ public class PlotRMSDvsProbability {
 		});
 		
 		
-		JFrame f = new JFrame("Results for " + repre.getName());
+		JFrame f = new JFrame("Results for " + repre.toName());
 		
 		f.setContentPane(chartPanel);
 		f.pack();
@@ -95,7 +98,7 @@ public class PlotRMSDvsProbability {
 	
 	}
 	
-	private  XYDataset getData4Repre(StructureName repre) {
+	private  XYDataset getData4Repre(PdbChainKey repre) {
 		
 		
 		DefaultXYDataset datas = new DefaultXYDataset();
@@ -137,8 +140,8 @@ public class PlotRMSDvsProbability {
 
 			toolTips.add(toolTip);
 
-			StructureName n1 = new StructureName(alig.getName1());
-			StructureName n2 = new StructureName(alig.getName2());
+			PdbChainKey n1 = PdbChainKey.fromName(alig.getName1());
+			PdbChainKey n2 = PdbChainKey.fromName(alig.getName2());
 			String url = String.format(BASE_URL,n1.getPdbId(),n1.getChainId(),n2.getPdbId(),n2.getChainId());
 			urls.add(url);
 	    }

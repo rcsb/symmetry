@@ -128,6 +128,7 @@ public class CLI {
 			final boolean randomize = cmd.hasOption("randomize");
 			final boolean restart = cmd.hasOption("restart");
 			final boolean prefetch = cmd.hasOption("prefetch");
+			final boolean storeMapping = cmd.hasOption("storemapping");
 			final String scopVersion = cmd.getOptionValue("scopversion");
 
 
@@ -135,7 +136,7 @@ public class CLI {
 			final String sigMethod = cmd.getOptionValue("sigmethod");
 
 			run(pdbDir, censusFile, nThreads, writeEvery, number, clustering, sunIds, superfamilies, folds, randomize,
-					restart, prefetch, scopVersion, sigClass, sigMethod);
+					restart, prefetch, storeMapping, scopVersion, sigClass, sigMethod);
 
 		} catch (RuntimeException e) {
 			printError(e);
@@ -155,7 +156,7 @@ public class CLI {
 	public static void run(final String pdbDir, final String censusFile, final Integer pNThreads,
 			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] pSunIds,
 			final String[] superfamilies, final String[] folds, final boolean randomize, final boolean restart,
-			boolean prefetch, final String scopVersion, String sigClass, String sigMethod) {
+			boolean prefetch, final boolean storeMapping, final String scopVersion, String sigClass, String sigMethod) {
 
 		// get a significance object
 		final Significance sig;
@@ -280,17 +281,7 @@ public class CLI {
 		};
 
 		// set SCOP version
-		if (scopVersion != null) {
-			if (scopVersion.endsWith("A")) {
-				BerkeleyScopInstallation inst = new BerkeleyScopInstallation();
-				inst.setScopVersion(scopVersion);
-				ScopFactory.setScopDatabase(inst);
-			} else {
-				ScopInstallation inst = new ScopInstallation();
-				inst.setScopVersion(scopVersion);
-				ScopFactory.setScopDatabase(inst);
-			}
-		}
+		ScopFactory.setScopDatabase(scopVersion);
 		
 		// set final options
 		if (writeEvery != null) census.setPrintFrequency(writeEvery);
@@ -305,6 +296,7 @@ public class CLI {
 		} else {
 			census.setCache(new AtomCache(pdbDir, false));
 		}
+		census.setRecordAlignmentMapping(storeMapping);
 
 		// now run
 		census.run();
@@ -334,6 +326,8 @@ public class CLI {
 				.create("scopversion"));
 		options.addOption(OptionBuilder.hasArg(false).withDescription("Prefetch all PDB files.").isRequired(false)
 				.create("prefetch"));
+		options.addOption(OptionBuilder.hasArg(false).withDescription("Record the alignment mapping in the XML. Can be used to reconstruct an AFPChain quickly").isRequired(false)
+				.create("storemapping"));
 		options.addOption(OptionBuilder.hasArg(true).withDescription("Write to file every n jobs.").isRequired(false)
 				.create("every"));
 		options.addOption(OptionBuilder

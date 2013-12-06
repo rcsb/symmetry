@@ -17,11 +17,15 @@
  */
 package org.biojava3.structure.align.symm.census2.representatives;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,6 +47,7 @@ public class ScopSupport {
 	public static final int[] TRUE_SCOP_CLASSES = new int[] { 46456, 48724, 51349, 53931, 56572, 56835 };
 	
 	private static ScopSupport instance;
+	private Map<ScopCategory, SoftReference<List<ScopDescription>>> categories = new HashMap<ScopCategory, SoftReference<List<ScopDescription>>>();
 
 	private static final Logger logger = LogManager.getLogger(ScopSupport.class.getPackage().getName());
 
@@ -51,6 +56,18 @@ public class ScopSupport {
 	public static ScopSupport getInstance() {
 		if (instance == null) instance = new ScopSupport();
 		return instance;
+	}
+
+	public ScopDescription getByIndex(ScopCategory category, int index) {
+		ScopDatabase scop = ScopFactory.getSCOP();
+		List<ScopDescription> list = null;
+		if (!categories.containsKey(category) || categories.get(category).get() == null) {
+			list = scop.getByCategory(category);
+			categories.put(category, new SoftReference<List<ScopDescription>>(list));
+		} else {
+			list = categories.get(categories.get(category)).get();
+		}
+		return list.get(index);
 	}
 
 	/**
@@ -230,6 +247,14 @@ public class ScopSupport {
 			sunId = descriptionsToSunIds.get(s);
 		}
 		return sunId;
+	}
+	
+	public Set<Integer> getSunIds(String[] strings) {
+		Set<Integer> set = new HashSet<Integer>();
+		for (String s : strings) {
+			set.add(getSunId(s));
+		}
+		return set;
 	}
 
 	private void putDomainsFromFamilies(int repsPerSf, int totalDomains, List<ScopDomain> domains,

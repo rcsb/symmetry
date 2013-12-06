@@ -104,7 +104,7 @@ public class LigandStats {
 		int n = 0;
 		for (StructureLigands inStruct : list.getData().values()) {
 			for (Ligand ligand : inStruct.getLigands()) {
-				if (ligand.getDistance() <= minRadius) {
+				if (ligand.getDistanceToCentroid() <= minRadius) {
 					if (matcher.matches(ligand)) {
 						n++;
 						break;
@@ -119,7 +119,7 @@ public class LigandStats {
 		int n = 0;
 		for (StructureLigands inStruct : list.getData().values()) {
 			for (Ligand ligand : inStruct.getLigands()) {
-				if (ligand.getDistance() <= minRadius) {
+				if (ligand.getDistanceToCentroid() <= minRadius) {
 					if (matcher.matches(ligand)) {
 						n++;
 					}
@@ -139,7 +139,7 @@ public class LigandStats {
 			String sf = normalizer.group(domain);
 			if (sfs.contains(sf)) continue; // don't double-count SFs
 			for (Ligand ligand : inStruct.getLigands()) {
-				if (ligand.getDistance() <= minRadius) {
+				if (ligand.getDistanceToCentroid() <= minRadius) {
 					sfs.add(sf);
 					if (matcher.matches(ligand)) {
 						containingSfs.add(sf);
@@ -161,7 +161,7 @@ public class LigandStats {
 			boolean foundOne = false;
 			boolean foundMetal = false;
 			for (Ligand ligand : inStruct.getLigands()) {
-				if (ligand.getDistance() <= minRadius) {
+				if (ligand.getDistanceToCentroid() <= minRadius) {
 					if (ligand.isMetallic()) foundMetal = true;
 					foundOne = true;
 				}

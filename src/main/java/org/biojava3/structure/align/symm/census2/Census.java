@@ -182,6 +182,8 @@ public class Census {
 
 	public final void run() {
 
+		Results census;
+		
 		try {
 
 			if (file == null) throw new IllegalStateException("Must set file first");
@@ -189,7 +191,7 @@ public class Census {
 
 			ScopDatabase scop = ScopFactory.getSCOP();
 			List<Future<Result>> futures = new ArrayList<Future<Result>>();
-			Results census = getStartingResults();
+			census = getStartingResults();
 			Significance significance = getSignificance();
 			List<String> knownResults = getKnownResults(census);
 			logger.info("There are " + knownResults.size() + " known results");
@@ -207,7 +209,7 @@ public class Census {
 
 			// submit jobs
 			for (ScopDomain domain : domains) {
-				if (count % 1000 == 0) logger.info("Working on " + count + " / " + domains.size());
+				if (count % 1000 == 0) logger.info("Submitting " + count + " / " + domains.size());
 				if (domain.getRanges() == null || domain.getRanges().isEmpty()) {
 					logger.debug("Skipping " + domain.getScopId() + " because SCOP ranges for it are not defined");
 					continue;
@@ -217,6 +219,7 @@ public class Census {
 				CensusJob calc = CensusJob.setUpJob(domain.getScopId(), count, getAlgorithm(), significance, cache, scop);
 				calc.setRecordAlignmentMapping(recordAlignmentMapping);
 				calc.setStoreAfpChain(storeAfpChain);
+				calc.setOrderDetector(orderDetector);
 				initializeJob(calc);
 				submittedJobs.add(calc);
 				Future<Result> result = ConcurrencyTools.submit(calc);
@@ -255,7 +258,7 @@ public class Census {
 				}
 			}
 			logger.debug("Printing leftover results to stream");
-			print(census);
+			print(census); // should be redundant
 			logger.info("Finished!");
 
 			long timeTaken = 0;
@@ -269,8 +272,9 @@ public class Census {
 			avgTimeTaken = (double) timeTaken / (double) nSuccess;
 
 		} finally {
-			ConcurrencyTools.shutdown();
+			ConcurrencyTools.shutdownAndAwaitTermination();
 		}
+		print(census);
 	}
 
 	/**

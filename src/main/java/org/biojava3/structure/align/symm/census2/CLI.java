@@ -38,8 +38,6 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.Astral;
 import org.biojava.bio.structure.scop.Astral.AstralSet;
 import org.biojava.bio.structure.scop.ScopCategory;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
@@ -52,8 +50,6 @@ import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 public class CLI {
 
 	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
-
-	private static final String NEWLINE = "\n";
 
 	/**
 	 * See {@link #run(String, String, String, String, String, PrintStream)}.
@@ -123,22 +119,14 @@ public class CLI {
 					restart, prefetch, storeMapping, scopVersion, diverse, allProteins, sigClass, sigMethod);
 
 		} catch (RuntimeException e) {
-			printError(e);
+			logger.fatal(e);
 		}
 	}
 
 	/**
-	 * Prints an error message for {@code e} that shows causes and suppressed messages recursively. Just a little more
-	 * useful than {@code e.printStackTrace()}.
-	 * 
-	 * @param e
+	 * Returns the best Significance object.
 	 */
-	private static void printError(Exception e) {
-		System.err.println(printError(e, ""));
-	}
-
-	private static Significance getSig(String sigClass, String sigMethod) {
-		// get a significance object
+	private static Significance getSignificance(String sigClass, String sigMethod) {
 		final Significance sig;
 		if (sigClass != null) {
 			if (sigMethod != null) {
@@ -156,41 +144,44 @@ public class CLI {
 		return sig;
 	}
 	
-	private static int getThreads(Integer pNThreads) {
+	/**
+	 * Returns the best number of threads.
+	 */
+	private static int getNThreads(Integer inputNThreads) {
 		// set the number of threads
 		final int nThreads;
-		if (pNThreads == null) {
+		if (inputNThreads == null) {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			if (maxThreads < 1) maxThreads = 1;
 			nThreads = maxThreads;
 		} else {
-			nThreads = pNThreads;
+			nThreads = inputNThreads;
 		}
 		return nThreads;
 	}
 	
-	private static List<Integer> getSunIdsToUse(int[] pSunIds, String[] classifications, AstralSet clustering) {
-
-		// first we make a list of sun IDs to use
+	/**
+	 * Gets an <em>initial</em> list of sun ids to use, without clustering.
+	 */
+	private static List<Integer> getSunIdsToUse(int[] inputSunIds, String[] inputClassIds, AstralSet clustering) {
 		List<Integer> sunIds = new ArrayList<Integer>();
-		if (pSunIds != null) {
-			for (Integer pSunId : pSunIds) {
-				sunIds.add(pSunId);
-			}
-		}
-		sunIds.addAll(ScopSupport.getInstance().getSunIds(classifications));
-		if (sunIds.isEmpty()) {
-			int[] ppSunIds = ScopSupport.TRUE_SCOP_CLASSES;
-			for (Integer sunId : ppSunIds) {
+		if (inputSunIds != null) {
+			for (Integer sunId : inputSunIds) {
 				sunIds.add(sunId);
 			}
 		}
-		
+		if (sunIds.isEmpty()) {
+			for (Integer sunId : ScopSupport.TRUE_SCOP_CLASSES) {
+				sunIds.add(sunId);
+			}
+		}
 		return sunIds;
-
 	}
 
-	private static List<ScopDomain> getDomainsFromSunIds(List<Integer> sunIds, AstralSet clustering, Integer number, boolean diverse, boolean allProteins, boolean randomize) {
+	/**
+	 * Returns a <em>clustered and truncated</em> list of ScopDomains from the list of sun ids.
+	 */
+	private static List<ScopDomain> getDomainsFromSunIds(List<Integer> sunIds, AstralSet clustering, Integer limit, boolean diverse, boolean allProteins, boolean randomize) {
 
 		// get sequence clusters
 		Set<String> clusterRepresentatives = null;
@@ -209,16 +200,16 @@ public class CLI {
 			if (diverse) {
 				ScopSupport.getInstance().getAllDomainsUnder(sunId, putative, allProteins);
 			} else {
-				ScopSupport.getInstance().getDomainsUnder(sunId, putative, number, false);
+				ScopSupport.getInstance().getDomainsUnder(sunId, putative, limit, false);
 			}
 
 			// randomize if we need to
 			if (randomize) {
 				Collections.shuffle(putative);
-				logger.debug("Taking " + (number == null ? "all" : number) + " ids in random order out of "
+				logger.debug("Taking " + (limit == null ? "all" : limit) + " ids in random order out of "
 						+ putative.size());
 			} else {
-				logger.debug("Taking " + (number == null ? "all" : number) + " ids in sequential order out of "
+				logger.debug("Taking " + (limit == null ? "all" : limit) + " ids in sequential order out of "
 						+ putative.size());
 			}
 
@@ -235,7 +226,7 @@ public class CLI {
 				}
 				if (contains) { // if we want to include the domain
 					// don't add more than we're allowed to
-					if (number != null && numForId >= number) break; // number == null means no limit
+					if (limit != null && numForId >= limit) break; // number == null means no limit
 					domains.add(domain);
 					numForId++;
 				}
@@ -246,14 +237,14 @@ public class CLI {
 		
 	}
 	
-	public static void run(final String pdbDir, final String censusFile, final Integer pNThreads,
-			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] pSunIds,
-			final String[] classifications, final boolean randomize, final boolean restart,
+	public static void run(final String pdbDir, final String censusFile, final Integer inputNThreads,
+			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] inputSunIds,
+			final String[] inputClassIds, final boolean randomize, final boolean restart,
 			boolean prefetch, final boolean storeMapping, String scopVersion, final boolean diverse, final boolean allProteins, String sigClass, String sigMethod) {
 
-		final Significance sig = getSig(sigClass, sigMethod);
+		final Significance significance = getSignificance(sigClass, sigMethod);
 		
-		final int nThreads = getThreads(pNThreads);
+		final int nThreads = getNThreads(inputNThreads);
 		
 		logger.info("Using " + nThreads + " threads");
 
@@ -262,7 +253,7 @@ public class CLI {
 			protected List<ScopDomain> getDomains() {
 
 				// get list of sun Ids
-				List<Integer> sunIds = getSunIdsToUse(pSunIds, classifications, clustering);
+				List<Integer> sunIds = getSunIdsToUse(inputSunIds, inputClassIds, clustering);
 				
 				// print the sun IDs we're using
 				StringBuilder sb = new StringBuilder();
@@ -280,7 +271,7 @@ public class CLI {
 
 			@Override
 			protected Significance getSignificance() {
-				return sig;
+				return significance;
 			}
 
 			@Override
@@ -289,6 +280,15 @@ public class CLI {
 				return super.getStartingResults();
 			}
 		};
+
+		// set PDB dir
+		// this actually gets called first
+		if (pdbDir == null) {
+			census.setCache(new AtomCache());
+		} else {
+			census.setCache(new AtomCache(pdbDir, false));
+		}
+		census.setRecordAlignmentMapping(storeMapping);
 
 		// set SCOP version
 		if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
@@ -302,13 +302,7 @@ public class CLI {
 		} else {
 			census.setOutputWriter(new File("census.xml"));
 		}
-		if (pdbDir == null) {
-			census.setCache(new AtomCache());
-		} else {
-			census.setCache(new AtomCache(pdbDir, false));
-		}
-		census.setRecordAlignmentMapping(storeMapping);
-
+		
 		// now run
 		census.run();
 		System.out.println(census);
@@ -384,45 +378,6 @@ public class CLI {
 						"The name of a factory method that returns a Significance object. If sigclass is also set, expects the factory method to be in that class; otherwise, checks in SignificanceFactory.")
 						.isRequired(false).create("sigmethod"));
 		return options;
-	}
-
-//	private static List<Integer> getSunIds(String[] superfamilies, ScopCategory category) {
-//		List<Integer> sunIds = new ArrayList<Integer>();
-//		if (superfamilies == null) return sunIds;
-//		final ScopDatabase scop = ScopFactory.getSCOP();
-//		List<ScopDescription> allSfs = scop.getByCategory(category);
-//		for (ScopDescription superfamily : allSfs) {
-//			for (String superfamilie : superfamilies) {
-//				if (superfamilie.equals(superfamily.getClassificationId())) {
-//					sunIds.add(superfamily.getSunID());
-//					break;
-//				}
-//			}
-//		}
-//		return sunIds;
-//	}
-
-	/**
-	 * @see #printError(Exception)
-	 */
-	private static String printError(Exception e, String tabs) {
-		StringBuilder sb = new StringBuilder();
-		Throwable prime = e;
-		while (prime != null) {
-			if (tabs.length() > 0) sb.append(tabs + "Cause:" + NEWLINE);
-			sb.append(tabs + prime.getClass().getSimpleName() + NEWLINE);
-			if (prime.getMessage() != null) sb.append(tabs + prime.getMessage() + NEWLINE);
-			if (prime instanceof Exception) {
-				StackTraceElement[] trace = ((Exception) prime).getStackTrace();
-				for (StackTraceElement element : trace) {
-					sb.append(tabs + element.toString() + NEWLINE);
-				}
-			}
-			prime = prime.getCause();
-			tabs += "\t";
-			sb.append(NEWLINE);
-		}
-		return sb.toString();
 	}
 
 	private static void printUsage(String note, Options options) {

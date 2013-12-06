@@ -6,7 +6,6 @@ import java.io.IOException;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava3.alignment.Alignments;
 import org.biojava3.alignment.Alignments.PairwiseSequenceAlignerType;
@@ -28,12 +27,16 @@ import org.biojava3.structure.align.symm.protodomain.ProtodomainCreationExceptio
 public class ConservedSequenceFinder {
 
 	public static void main(String[] args) throws IOException {
-		if (args.length != 1) {
-			System.err.println("Usage: " + ConservedSequenceFinder.class.getSimpleName() + " input-census-file.xml");
+		if (args.length < 1 || args.length > 2) {
+			System.err.println("Usage: " + ConservedSequenceFinder.class.getSimpleName() + " input-census-file.xml [min-score]");
 			return;
 		}
+		float minScore = 0.8f;
+		if (args.length > 1) {
+			minScore = Float.parseFloat(args[1]);
+		}
 		ConservedSequenceFinder finder = new ConservedSequenceFinder(new AtomCache());
-		finder.find(Results.fromXML(new File(args[0])));
+		finder.find(Results.fromXML(new File(args[0])), minScore);
 	}
 	
 	private AtomCache cache;
@@ -43,7 +46,7 @@ public class ConservedSequenceFinder {
 		this.cache = cache;
 	}
 
-	public void find(Results results) {
+	public void find(Results results, float maxDistance) {
 		for (Result result : results.getData()) {
 			if (result.getOrder() != 2) continue;
 			Protodomain wholeAligned, protodomain1, protodomain2;
@@ -75,9 +78,9 @@ public class ConservedSequenceFinder {
 			ProteinSequence seq2 = new ProteinSequence(StructureTools.convertAtomsToSeq(ca2));
 			PairwiseSequenceAligner<ProteinSequence, AminoAcidCompound> aligner = Alignments.getPairwiseAligner(seq1, seq2, PairwiseSequenceAlignerType.LOCAL, new SimpleGapPenalty(), SubstitutionMatrixHelper.getBlosum62());
 			SequencePair<ProteinSequence, AminoAcidCompound> pair = aligner.getPair();
-			if (aligner.getDistance() < 0.8) continue; // TODO
+			if (aligner.getDistance() < maxDistance) continue;
 			// TODO we are really only interested in motifs in the equivalent residues in the protodomains
-			System.out.println(pair.toString(60));
+			System.out.println(pair.toString(80));
 		}
 	}
 	

@@ -35,6 +35,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.scop.Astral;
 import org.biojava.bio.structure.scop.Astral.AstralSet;
 import org.biojava.bio.structure.scop.ScopCategory;
@@ -287,8 +288,8 @@ public class CLI {
 			census.setCache(new AtomCache());
 		} else {
 			census.setCache(new AtomCache(pdbDir, false));
+			System.setProperty(UserConfiguration.PDB_DIR, pdbDir);
 		}
-		census.setRecordAlignmentMapping(storeMapping);
 
 		// set SCOP version
 		if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
@@ -302,6 +303,7 @@ public class CLI {
 		} else {
 			census.setOutputWriter(new File("census.xml"));
 		}
+		census.setRecordAlignmentMapping(storeMapping);
 		
 		// now run
 		census.run();

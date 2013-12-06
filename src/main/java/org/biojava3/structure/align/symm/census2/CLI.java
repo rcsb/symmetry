@@ -228,7 +228,7 @@ public class CLI {
 
 					// first, let putative contain all the domains under our sun id
 					List<ScopDomain> putative = new ArrayList<ScopDomain>();
-					ScopSupport.getInstance().getAllDomainsUnder(sunId, putative);
+					ScopSupport.getInstance().getAllDomainsUnder(sunId, putative, false);
 //					ScopSupport.getInstance().getDomainsUnder(sunId, putative, number, false);
 
 					// randomize if we need to

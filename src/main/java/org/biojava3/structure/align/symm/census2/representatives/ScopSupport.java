@@ -78,9 +78,9 @@ public class ScopSupport {
 	 * @param sunId
 	 * @param domains
 	 */
-	public void getAllDomainsUnder(int[] sunIds, List<ScopDomain> domains) {
+	public void getAllDomainsUnder(int[] sunIds, List<ScopDomain> domains, boolean includeAllProteins) {
 		for (int sunId : sunIds) {
-			getAllDomainsUnder(sunId, domains);
+			getAllDomainsUnder(sunId, domains, includeAllProteins);
 		}
 	}
 	
@@ -89,17 +89,25 @@ public class ScopSupport {
 	 * @param sunId
 	 * @param domains
 	 */
-	public void getAllDomainsUnder(int sunId, List<ScopDomain> domains) {
+	public void getAllDomainsUnder(int sunId, List<ScopDomain> domains, boolean includeAllProteins) {
 		
 		final ScopDatabase scop = ScopFactory.getSCOP();
 		final ScopDescription description = scop.getScopDescriptionBySunid(sunId);
 		
+		if (description == null) {
+			throw new IllegalArgumentException("Couldn't find id " + sunId);
+		}
+		
 		if (description.getCategory().equals(ScopCategory.Domain)) { // base case
-			domains.addAll(scop.getScopDomainsBySunid(sunId));
+			if (includeAllProteins) {
+				domains.addAll(scop.getScopDomainsBySunid(sunId));
+			} else {
+				domains.add(scop.getScopDomainsBySunid(sunId).get(0));
+			}
 		} else { // recurse
 			final ScopNode node = scop.getScopNode(sunId);
 			for (int s : node.getChildren()) {
-				getAllDomainsUnder(s, domains);
+				getAllDomainsUnder(s, domains, includeAllProteins);
 			}
 		}
 	}

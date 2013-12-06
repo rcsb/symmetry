@@ -133,7 +133,7 @@ public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 		for (int sunId : sunIds) {
 
 			List<ScopDomain> putative = new ArrayList<ScopDomain>();
-			ScopSupport.getInstance().getAllDomainsUnder(sunId, putative);
+			ScopSupport.getInstance().getAllDomainsUnder(sunId, putative, false);
 
 			for (ScopDomain domain : putative) {
 				if (isDomainOverChain(domain, clusterRepresentatives)) domains.add(domain);

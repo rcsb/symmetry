@@ -83,7 +83,7 @@ public class ScopDescriptionCensus extends Census {
 	@Override
 	protected List<ScopDomain> getDomains() {
 		List<ScopDomain> domains = new ArrayList<ScopDomain>();
-		ScopSupport.getInstance().getAllDomainsUnder(sunIds, domains);
+		ScopSupport.getInstance().getAllDomainsUnder(sunIds, domains, false);
 		return domains;
 	}
 

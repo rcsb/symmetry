@@ -61,7 +61,7 @@ import org.biojava3.structure.utils.FileUtils;
  */
 public class Census {
 
-	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger("org.biojava3");
 
 	/**
 	 * A class that creates a new {@link StructureAlignment StructureAlignments} for each {@link CensusJob}, to avoid
@@ -305,15 +305,16 @@ public class Census {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		double totalPercent = (double) numSymm / (double) numTotal * 100.0;
-		sb.append("overall" + "\t" + totalPercent);
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(3);
+		String newline = System.getProperty("line.separator");
+		double totalPercent = (double) numSymm / (double) numTotal * 100.0;
+		sb.append("overall" + "\t" + df.format(totalPercent) + "%" + newline);
 		for (Map.Entry<String, Integer> entry : total.entrySet()) {
 			Integer nSymm = symm.get(entry.getKey());
 			if (nSymm == null) nSymm = 0;
 			double percent = (double) nSymm / (double) entry.getValue() * 100.0;
-			sb.append(entry.getKey() + "\t" + df.format(percent) + "%\n");
+			sb.append(entry.getKey() + "\t" + df.format(percent) + "%" + newline);
 		}
 		return sb.toString();
 	}
@@ -420,10 +421,10 @@ public class Census {
 		try {
 			String[] parts = result.getClassification().split("\\.");
 			plus(total, parts[0]);
-			plus(total, parts[1]);
+			plus(total, parts[0] + "." + parts[1]);
 			if (result.getIsSignificant()) {
 				plus(symm, parts[0]);
-				plus(symm, parts[1]);
+				plus(symm, parts[0] + "." + parts[1]);
 				numSymm++;
 			}
 			numTotal++;

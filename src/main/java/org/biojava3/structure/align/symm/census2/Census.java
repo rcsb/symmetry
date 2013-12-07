@@ -270,6 +270,7 @@ public class Census {
 				}
 			}
 			avgTimeTaken = (double) timeTaken / (double) nSuccess;
+			census.setMeanSecondsTaken(avgTimeTaken);
 
 		} finally {
 			ConcurrencyTools.shutdownAndAwaitTermination();
@@ -308,6 +309,7 @@ public class Census {
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(3);
 		String newline = System.getProperty("line.separator");
+		sb.append("time taken: " + avgTimeTaken + newline);
 		double totalPercent = (double) numSymm / (double) numTotal * 100.0;
 		sb.append("overall" + "\t" + df.format(totalPercent) + "%" + newline);
 		for (Map.Entry<String, Integer> entry : total.entrySet()) {

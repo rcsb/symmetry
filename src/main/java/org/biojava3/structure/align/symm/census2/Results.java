@@ -62,6 +62,7 @@ public class Results implements Serializable {
 	private List<Result> data = new ArrayList<Result>();
 
 	private String timestamp;
+	private double meanSecondsTaken;
 
 	static {
 		try {
@@ -160,6 +161,14 @@ public class Results implements Serializable {
 
 	public void setTimestamp(String timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public double getMeanSecondsTaken() {
+		return meanSecondsTaken;
+	}
+
+	public void setMeanSecondsTaken(double meanSecondsTaken) {
+		this.meanSecondsTaken = meanSecondsTaken;
 	}
 
 	public String toHTML() {

@@ -207,9 +207,6 @@ public class Protodomain {
 		// PLUS from the start of block 2 to the end of block 2
 
 
-		System.out.println("ranges:" + domainRanges);
-
-
 		// we rely on the fact that SCOP won't give us a range that contains multiple chains
 		// instead, any residues from another chain will be in a different range
 		// however, CE-Symm CAN give us single blocks containing residues from different chains

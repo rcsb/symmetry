@@ -4,10 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Element;
@@ -30,8 +34,8 @@ public class LigandStats {
 
 	private static final LigandMatcher INTERESTING = LigandMatcher.and(LigandMatcher.hasPeriod(3), LigandMatcher
 			.hasPeriod(8).not(), LigandMatcher.or(LigandMatcher.hasElementType(ElementType.TRANSITION_METAL),
-			LigandMatcher.hasElementType(ElementType.POST_TRANSITION_METAL),
-			LigandMatcher.hasElementType(ElementType.METALLOID)));
+					LigandMatcher.hasElementType(ElementType.POST_TRANSITION_METAL),
+					LigandMatcher.hasElementType(ElementType.METALLOID)));
 
 	private static final Logger logger = LogManager.getLogger(LigandStats.class.getName());
 
@@ -39,9 +43,13 @@ public class LigandStats {
 			.isTrueSalt().not());
 
 	private static String formatP(double x) {
+		return formatD(x * 100) + "%";
+	}
+
+	private static String formatD(double x) {
 		NumberFormat nf = new DecimalFormat();
 		nf.setMaximumFractionDigits(0);
-		return nf.format(x * 100) + "%";
+		return nf.format(x);
 	}
 
 	/**
@@ -55,36 +63,49 @@ public class LigandStats {
 		}
 		LigandList list = LigandList.fromXml(new File(args[0]));
 
+		System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+		System.out.println("+++++++++++++++++++++++NEAR CENTROID+++++++++++++++++++++++");
+		System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 		for (int i = 10; i > 0; i--) {
-			LigandStats.printNormalizedStats(list, i);
+			LigandStats.printNormalizedStats(list, i, Double.POSITIVE_INFINITY);
+		}
+		System.out.println();
+
+		System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+		System.out.println("++++++++++++++++++++++ALONG INTERFACE++++++++++++++++++++++");
+		System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+		for (int i = 10; i > 0; i--) {
+			LigandStats.printNormalizedStats(list, Double.POSITIVE_INFINITY, i);
 		}
 
 	}
 
-	public static void printNormalizedStats(LigandList list, int radius) {
+	private static void printLine(String description, DescriptiveStatistics stats) {
+		System.out.println(String.format("%-30s", description + ": ") + String.format("%8.1f", stats.getMean()) + "\t(stddev=" + String.format("%3.1f", stats.getStandardDeviation()) + ")");
+	}
+	
+	public static void printNormalizedStats(LigandList list, double maxRadius, double maxAxisDistance) {
 		LigandStats stats = new LigandStats();
-		stats.setMinRadius(radius);
-		System.out.println("===========================radius=" + radius + "=================================");
-		System.out.println("Has iron: "
-				+ formatP(stats.getNormalizedFractionMatching(list, LigandMatcher.hasElement(Element.Fe))));
-		System.out.println("Metallic: " + formatP(stats.getNormalizedFractionMatching(list, LigandMatcher.hasMetal())));
-		System.out.println("High-oxidation: "
-				+ formatP(stats.getNormalizedFractionMatching(list, LigandMatcher.hasOxidationMagnitude(6))));
-		System.out.println("High-oxidation single-element: "
-				+ formatP(stats.getNormalizedFractionMatching(list, LigandMatcher.and(LigandMatcher
-						.hasOxidationMagnitude(6), LigandMatcher.nElements(1), LigandMatcher.hasElectronegativity(3.0f)
-						.not()))));
-		System.out.println("Non-salt metallic: "
-				+ formatP(stats.getNormalizedFractionMatching(list, METALLIC_NON_SALT)));
-		System.out.println("Interesting: " + formatP(stats.getNormalizedFractionMatching(list, INTERESTING)));
-		System.out.println("High-oxidation metallic: "
-				+ formatP(stats.getNormalizedFractionMatching(list, HIGH_OX_METALLIC_MATCHER)));
+		stats.setMaxRadius(maxRadius);
+		stats.setMaxAxisDistance(maxAxisDistance);
+		System.out.println("===============radius=" + maxRadius + "===============distance_to_axis=" + maxAxisDistance + "===============");
+		System.out.println(String.format("%-30s", "!total superfamilies: ") + String.format("%8d", stats.getNSuperfamiliesTotal(list)));
+		DescriptiveStatistics totalStats = stats.getNormalizedFractionMatching(list, LigandMatcher.everything());
+		printLine("within constraints", totalStats);
+		printLine("contains iron", stats.getNormalizedFractionMatching(list, LigandMatcher.hasElement(Element.Fe)));
+		printLine("contains metal", stats.getNormalizedFractionMatching(list, LigandMatcher.hasMetal()));
+		printLine("total |oxidation state| > 6",  stats.getNormalizedFractionMatching(list, LigandMatcher.hasTotalOxidationMagnitude(6)));
+		printLine("any |oxidation state| > 6",  stats.getNormalizedFractionMatching(list, LigandMatcher.hasOxidationMagnitude(6)));
+		printLine("contains non-salt metal",  stats.getNormalizedFractionMatching(list, METALLIC_NON_SALT));
+		printLine("high-oxidation metallic",  stats.getNormalizedFractionMatching(list, HIGH_OX_METALLIC_MATCHER));
+		printLine("is interesting",  stats.getNormalizedFractionMatching(list, INTERESTING));
 	}
 
-	public static void printPerLigandStats(LigandList list, int radius) {
+	public static void printPerLigandStats(LigandList list, double maxRadius, double maxAxisDistance) {
 		LigandStats stats = new LigandStats();
-		stats.setMinRadius(radius);
-		System.out.println("===========================radius=" + radius + "=================================");
+		stats.setMaxRadius(maxRadius);
+		stats.setMaxAxisDistance(maxAxisDistance);
+		System.out.println("===========================radius=" + maxRadius + "=================================");
 		System.out.println("All: " + stats.getNLigandsMatching(list, LigandMatcher.everything()));
 		System.out.println("Metallic: " + stats.getNLigandsMatching(list, LigandMatcher.hasMetal()));
 		System.out.println("Metal: " + stats.getNLigandsMatching(list, LigandMatcher.isOnlyMetal()));
@@ -92,11 +113,15 @@ public class LigandStats {
 		System.out.println("Organic metal: " + stats.getNLigandsMatching(list, LigandMatcher.isOrganicMetal()));
 		System.out.println("Has iron: " + stats.getNLigandsMatching(list, LigandMatcher.hasElement(Element.Fe)));
 		System.out
-				.println("High oxidation: " + stats.getNLigandsMatching(list, LigandMatcher.hasOxidationMagnitude(6)));
+		.println("High oxidation: " + stats.getNLigandsMatching(list, LigandMatcher.hasOxidationMagnitude(6)));
 		System.out.println("High oxidation metallic: " + stats.getNLigandsMatching(list, HIGH_OX_METALLIC_MATCHER));
 	}
 
-	private int minRadius = 5;
+	private double maxRadius = 5;
+
+	private double maxAxisDistance = Double.POSITIVE_INFINITY;
+	
+	private int robustnessIterations = 600;
 
 	private Grouping normalizer = Grouping.superfamily();
 
@@ -104,7 +129,7 @@ public class LigandStats {
 		int n = 0;
 		for (StructureLigands inStruct : list.getData().values()) {
 			for (Ligand ligand : inStruct.getLigands()) {
-				if (ligand.getDistanceToCentroid() <= minRadius) {
+				if (ligand.getDistanceToCentroid() <= maxRadius) {
 					if (matcher.matches(ligand)) {
 						n++;
 						break;
@@ -119,7 +144,7 @@ public class LigandStats {
 		int n = 0;
 		for (StructureLigands inStruct : list.getData().values()) {
 			for (Ligand ligand : inStruct.getLigands()) {
-				if (ligand.getDistanceToCentroid() <= minRadius) {
+				if (ligand.getDistanceToCentroid() <= maxRadius) {
 					if (matcher.matches(ligand)) {
 						n++;
 					}
@@ -129,26 +154,113 @@ public class LigandStats {
 		return n;
 	}
 
-	public double getNormalizedFractionMatching(LigandList list, LigandMatcher matcher) {
-		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
+	public int getNSuperfamiliesTotal(LigandList list) {
+		ScopDatabase scop = ScopFactory.getSCOP();
 		Set<String> sfs = new HashSet<String>();
-		Set<String> containingSfs = new HashSet<String>();
 		for (Map.Entry<String, StructureLigands> entry : list.getData().entrySet()) {
-			StructureLigands inStruct = entry.getValue();
 			ScopDomain domain = scop.getDomainByScopID(entry.getKey());
-			String sf = normalizer.group(domain);
+			if (domain == null) {
+				logger.warn("Couldn't find domain " + domain);
+				continue;
+			}
+			String sf;
+			try {
+				sf = normalizer.group(domain);
+			} catch (RuntimeException e) {
+				throw new RuntimeException("Failed to get superfamily from domain " + domain, e);
+			}
 			if (sfs.contains(sf)) continue; // don't double-count SFs
-			for (Ligand ligand : inStruct.getLigands()) {
-				if (ligand.getDistanceToCentroid() <= minRadius) {
-					sfs.add(sf);
-					if (matcher.matches(ligand)) {
-						containingSfs.add(sf);
-						break;
+			sfs.add(sf);
+		}
+		return sfs.size();
+	}
+
+//	public int getNSuperfamilies(LigandList list) {
+//		ScopDatabase scop = ScopFactory.getSCOP();
+//		Set<String> sfs = new HashSet<String>();
+//		for (Map.Entry<String, StructureLigands> entry : list.getData().entrySet()) {
+//			StructureLigands inStruct = entry.getValue();
+//			ScopDomain domain = scop.getDomainByScopID(entry.getKey());
+//			if (domain == null) {
+//				logger.warn("Couldn't find domain " + domain);
+//				continue;
+//			}
+//			String sf;
+//			try {
+//				sf = normalizer.group(domain);
+//			} catch (RuntimeException e) {
+//				throw new RuntimeException("Failed to get superfamily from domain " + domain, e);
+//			}
+//			if (sfs.contains(sf)) continue; // don't double-count SFs
+//			for (Ligand ligand : inStruct.getLigands()) {
+//				if (ligand.getDistanceToCentroid() <= maxRadius && ligand.getDistanceToAxis() <= maxAxisDistance) {
+//					sfs.add(sf);
+//				}
+//			}
+//		}
+//		logger.info("Standard deviation for superfamily size is " + stats.getStandardDeviation());
+//		return sfs.size();
+//	}
+
+	public DescriptiveStatistics getNormalizedFractionMatching(LigandList ligandList, LigandMatcher matcher) {
+		
+		ScopDatabase scop = ScopFactory.getSCOP();
+		
+		DescriptiveStatistics stats = new DescriptiveStatistics();
+		
+		// shuffle the order of domains
+		List<String> shuffledKeyList = new ArrayList<String>(ligandList.size());
+		for (String s : ligandList.getData().keySet()) shuffledKeyList.add(s);
+		
+		// do this repeatedly with different orders of domains each time
+		for (int iter = 0; iter < robustnessIterations; iter++) {
+			Collections.shuffle(shuffledKeyList);
+			
+			Set<String> sfs = new HashSet<String>();
+			
+			Set<String> containingSfs = new HashSet<String>();
+			
+			// make sure to loop over shuffledKeyList
+			for (String domainKey : shuffledKeyList) {
+				
+				// get the domain and superfamily
+				StructureLigands inStruct = ligandList.get(domainKey);
+				ScopDomain domain = scop.getDomainByScopID(domainKey);
+				if (domain == null) {
+					logger.warn("Couldn't find domain " + domain);
+					continue;
+				}
+				String sf;
+				try {
+					sf = normalizer.group(domain);
+				} catch (RuntimeException e) {
+					throw new RuntimeException("Failed to get superfamily from domain " + domain, e);
+				}
+				
+				// don't double-count SFs
+				if (sfs.contains(sf)) continue;
+				
+				/*
+				 * Now increment containingSfs UP TO MULTIPLICITY.
+				 * Do this if even one Ligand in this structure matches.
+				 */
+				for (Ligand ligand : inStruct.getLigands()) {
+					if (ligand.getDistanceToCentroid() <= maxRadius && ligand.getDistanceToAxis() <= maxAxisDistance) {
+						sfs.add(sf);
+						if (matcher.matches(ligand)) {
+							containingSfs.add(sf);
+							break;
+						}
 					}
 				}
 			}
+			
+			// record this into stats
+			stats.addValue(containingSfs.size());
+			
 		}
-		return (double) containingSfs.size() / sfs.size();
+//		logger.info("Standard deviation for " + matcher.toString() + " is " + stats.getStandardDeviation());
+		return stats;
 	}
 
 	public int getNTotal(LigandList list) {
@@ -161,7 +273,7 @@ public class LigandStats {
 			boolean foundOne = false;
 			boolean foundMetal = false;
 			for (Ligand ligand : inStruct.getLigands()) {
-				if (ligand.getDistanceToCentroid() <= minRadius) {
+				if (ligand.getDistanceToCentroid() <= maxRadius) {
 					if (ligand.isMetallic()) foundMetal = true;
 					foundOne = true;
 				}
@@ -172,8 +284,20 @@ public class LigandStats {
 		System.out.println(nMetallic + " / " + n + "\t" + StatUtils.formatP((double) nMetallic / n));
 	}
 
-	public void setMinRadius(int minRadius) {
-		this.minRadius = minRadius;
+	public void setMaxRadius(double maxRadius) {
+		this.maxRadius = maxRadius;
+	}
+
+	public void setMaxAxisDistance(double maxAxisDistance) {
+		this.maxAxisDistance = maxAxisDistance;
+	}
+
+	public void setNormalizer(Grouping normalizer) {
+		this.normalizer = normalizer;
+	}
+
+	public void setRobustnessIterations(int robustnessIterations) {
+		this.robustnessIterations = robustnessIterations;
 	}
 
 }

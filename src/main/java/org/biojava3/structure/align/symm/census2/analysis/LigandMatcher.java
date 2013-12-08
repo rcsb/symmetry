@@ -93,6 +93,24 @@ public abstract class LigandMatcher {
 		};
 	}
 
+	public static LigandMatcher hasTotalOxidationMagnitude(final int min) {
+		return new LigandMatcher() {
+			@Override
+			public boolean matches(Ligand ligand) {
+				Map<Element, Integer> elements = parse(ligand);
+				for (Element e : elements.keySet()) {
+					if (e.equals(Element.R)) continue;
+					int sum = 0;
+					for (int o : e.getAllOxidationStates()) {
+						sum += o;
+					}
+					if (Math.abs(sum) >= min) return true;
+				}
+				return false;
+			}
+		};
+	}
+
 	public static LigandMatcher hasOxidationMagnitude(final int min) {
 		return new LigandMatcher() {
 			@Override

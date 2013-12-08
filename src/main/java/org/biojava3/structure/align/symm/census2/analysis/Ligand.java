@@ -92,14 +92,6 @@ public class Ligand implements Serializable {
 		return true;
 	}
 
-	public double getDistanceToCentroid() {
-		return distanceToCentroid;
-	}
-
-	public double getDistanceToAxis() {
-		return distanceToAxis;
-	}
-
 	public String getFormula() {
 		return formula;
 	}
@@ -108,16 +100,28 @@ public class Ligand implements Serializable {
 		return isMetallic;
 	}
 
-	public void setDistance(double distance) {
-		this.distanceToCentroid = distance;
-	}
-
 	public void setFormula(String formula) {
 		this.formula = formula;
 	}
 
 	public void setMetallic(boolean isMetallic) {
 		this.isMetallic = isMetallic;
+	}
+
+	public double getDistanceToCentroid() {
+		return distanceToCentroid;
+	}
+
+	public void setDistanceToCentroid(double distanceToCentroid) {
+		this.distanceToCentroid = distanceToCentroid;
+	}
+
+	public double getDistanceToAxis() {
+		return distanceToAxis;
+	}
+
+	public void setDistanceToAxis(double distanceToAxis) {
+		this.distanceToAxis = distanceToAxis;
 	}
 
 	@Override

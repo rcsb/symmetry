@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.AtomPositionMap;
 import org.biojava.bio.structure.AtomPositionMap.GroupMatcher;
+import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.ResidueNumber;
 import org.biojava.bio.structure.Structure;
@@ -29,6 +30,7 @@ import org.biojava3.structure.align.symm.census2.CensusJob;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
+import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * Find ligands near the centroids of symmetric domains.
@@ -56,8 +58,8 @@ public class LigandFinder {
 	private double radius = DEFAULT_RADIUS;
 	private File output;
 	private int printFrequency = 100;
-	private boolean rebuildMissingAlignments = false;
-	private Significance significance;
+	private boolean rebuildMissingAlignments = true;
+	private Significance significance = SignificanceFactory.rotationallySymmetricSmart();
 	
 
 	public void setSignificance(Significance significance) {
@@ -95,6 +97,21 @@ public class LigandFinder {
 		this.output = output;
 	}
 
+	private static Atom calcCentroidFromAfpChain(AFPChain afpChain, Atom[] ca) {
+		Atom[] alignedAtoms = new Atom[afpChain.getAlnLength()];
+		int j = 0;
+		for (int pos1 : afpChain.getOptAln()[0][0]) {
+			alignedAtoms[j] = ca[pos1];
+			j++;
+		}
+		for (int pos1 : afpChain.getOptAln()[1][0]) {
+			alignedAtoms[j] = ca[pos1];
+			j++;
+		}
+		if (alignedAtoms.length == 0) return null;
+		return Calc.getCentroid(alignedAtoms);
+	}
+	
 	public void find(Results census) {
 
 		// do this to get a better distribution while still running
@@ -140,7 +157,7 @@ public class LigandFinder {
 				} else {
 					structure = cache.getStructure(scopId);
 				}
-				Atom[] ca = StructureTools.getAtomCAArray(structure);
+				Atom[] ca = cache.getAtoms(result.getScopId());
 
 				/*
 				 * Find the axis and centroid of the aligned residues
@@ -148,20 +165,32 @@ public class LigandFinder {
 				Atom centroid;
 				RotationAxis axis;
 				AlignmentMapping mapping = result.getAlignmentMapping();
+				boolean failed = true;
 				if (mapping != null) {
-					AFPChain afpChain = mapping.buildAfpChain(StructureTools.getAtomCAArray(structure), StructureTools.getAtomCAArray(structure));
-					axis = new RotationAxis(afpChain);
-				} else if (rebuildMissingAlignments) {
+					try {
+						AFPChain afpChain = mapping.buildAfpChain(ca, StructureTools.getAtomCAArray(structure));
+						axis = new RotationAxis(afpChain);
+						centroid = calcCentroidFromAfpChain(afpChain, ca);
+						failed = false;
+					} catch (Exception e) {
+						logger.error("Couldn't use alignment mapping to reconstruct AFPChain", e);
+						e.printStackTrace(); // keep failed=true
+					}
+				}
+				if (failed && rebuildMissingAlignments) {
 					// run CE-Symm to get alignment
 					CensusJob job = CensusJob.setUpJob(scopId, 0, Census.AlgorithmGiver.getDefault(), significance, cache, scop);
 					job.setStoreAfpChain(true);
-					job.call();
+					Result r = job.call();
+					if (!significance.isSignificant(r)) {
+						continue;
+					}
 					axis = new RotationAxis(job.getAfpChain());
+					centroid = calcCentroidFromAfpChain(job.getAfpChain(), ca);
 				} else {
 					logger.warn("Skipping " + scopId + " because the axis could not be found");
 					continue;
 				}
-				centroid = axis.getRotationPos();
 
 				/*
 				 *  We want to get all groups near the center that are NOT amino acids or water atoms.
@@ -193,7 +222,7 @@ public class LigandFinder {
 				 */
 				if (!distancesToCentroid.isEmpty()) {
 					logger.debug("Assigning " + distancesToCentroid.size() + " ligands to " + scopId);
-					for (Group group : distancesToCentroid.keySet()) {
+					for (Group group : distancesToCentroid.keySet()) { // constrained by radius
 						Ligand ligand = new Ligand(group.getAtoms(), distancesToCentroid.get(group), distancesToAxis.get(group));
 						ligandList.add(scopId, ligand);
 					}

@@ -16,9 +16,11 @@ import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.ResidueNumber;
 import org.biojava.bio.structure.Structure;
+import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.io.mmcif.chem.ResidueType;
@@ -97,18 +99,14 @@ public class LigandFinder {
 		this.output = output;
 	}
 
-	private static Atom calcCentroidFromAfpChain(AFPChain afpChain, Atom[] ca) {
-		Atom[] alignedAtoms = new Atom[afpChain.getAlnLength()];
+	private static Atom calcCentroidFromAfpChain(AFPChain afpChain, Atom[] ca) throws StructureException {
+		Map<Integer,Integer> map = AlignmentTools.alignmentAsMap(afpChain);
+		Atom[] alignedAtoms = new Atom[map.size()];
 		int j = 0;
-		for (int pos1 : afpChain.getOptAln()[0][0]) {
-			alignedAtoms[j] = ca[pos1];
+		for (int x : map.keySet()) {
+			alignedAtoms[j] = ca[x];
 			j++;
 		}
-		for (int pos1 : afpChain.getOptAln()[1][0]) {
-			alignedAtoms[j] = ca[pos1];
-			j++;
-		}
-		if (alignedAtoms.length == 0) return null;
 		return Calc.getCentroid(alignedAtoms);
 	}
 	
@@ -179,14 +177,20 @@ public class LigandFinder {
 				}
 				if (failed && rebuildMissingAlignments) {
 					// run CE-Symm to get alignment
-					CensusJob job = CensusJob.setUpJob(scopId, 0, Census.AlgorithmGiver.getDefault(), significance, cache, scop);
+					CensusJob job = CensusJob.setUpJob(scopId, 0, Census.AlgorithmGiver.getDefault(), SignificanceFactory.ultraLiberal(), cache, scop);
 					job.setStoreAfpChain(true);
 					Result r = job.call();
 					if (!significance.isSignificant(r)) {
 						continue;
 					}
 					axis = new RotationAxis(job.getAfpChain());
-					centroid = calcCentroidFromAfpChain(job.getAfpChain(), ca);
+					try {
+						centroid = calcCentroidFromAfpChain(job.getAfpChain(), ca);
+					} catch (Exception e) {
+						e.printStackTrace();
+						logger.error("Failed to calculate centroid for " + scopId);
+						continue;
+					}
 				} else {
 					logger.warn("Skipping " + scopId + " because the axis could not be found");
 					continue;

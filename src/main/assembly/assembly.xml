@@ -12,8 +12,6 @@
 			<outputDirectory>.</outputDirectory>
 			<includes>
 				<include>*.sh</include>
-				<include>db.out</include>
-				<include>example.lst</include>
 				<include>LICENSE</include>
 			</includes>
 		</fileSet>

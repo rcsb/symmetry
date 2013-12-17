@@ -18,17 +18,12 @@ import org.biojava.bio.structure.ResidueNumber;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.io.mmcif.chem.ResidueType;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.AlignmentMapping;
-import org.biojava3.structure.align.symm.census2.Census;
-import org.biojava3.structure.align.symm.census2.CensusJob;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
@@ -40,8 +35,6 @@ import org.biojava3.structure.align.symm.census2.SignificanceFactory;
  * @author dmyerstu
  */
 public class LigandFinder {
-
-	public static double DEFAULT_RADIUS = Double.POSITIVE_INFINITY;
 
 	private static final Logger logger = LogManager.getLogger(LigandFinder.class.getName());
 
@@ -57,19 +50,12 @@ public class LigandFinder {
 					|| type == ResidueType.dPeptideCarboxyTerminus;
 		}
 	};
-	private double radius = DEFAULT_RADIUS;
 	private File output;
 	private int printFrequency = 100;
-	private boolean rebuildMissingAlignments = true;
 	private Significance significance = SignificanceFactory.rotationallySymmetricSmart();
-	
 
 	public void setSignificance(Significance significance) {
 		this.significance = significance;
-	}
-
-	public void setRebuildMissingAlignments(boolean useOnlyAligned) {
-		this.rebuildMissingAlignments = useOnlyAligned;
 	}
 
 	public void setPrintFrequency(int printFrequency) {
@@ -78,21 +64,11 @@ public class LigandFinder {
 
 	private LigandList ligandList;
 
-	public LigandFinder(double radius) {
-		this.radius = radius;
-	}
-
-	public LigandFinder(double radius, GroupMatcher exclusionMatcher) {
-		this.radius = radius;
-		this.exclusionMatcher = exclusionMatcher;
+	public LigandFinder() {
 	}
 
 	public void setExclusionMatcher(GroupMatcher exclusionMatcher) {
 		this.exclusionMatcher = exclusionMatcher;
-	}
-
-	public void setRadius(double radius) {
-		this.radius = radius;
 	}
 
 	public void setOutput(File output) {
@@ -109,12 +85,12 @@ public class LigandFinder {
 		}
 		return Calc.getCentroid(alignedAtoms);
 	}
-	
+
 	public void find(Results census) {
 
-		// do this to get a better distribution while still running
+		// do this to get a better distribution before we've finished
 		Collections.shuffle(census.getData());
-		
+
 		/*
 		 * include all previous results in the file;
 		 * don't redo them
@@ -129,7 +105,6 @@ public class LigandFinder {
 			ligandList = new LigandList();
 		}
 
-		ScopDatabase scop = ScopFactory.getSCOP();
 		AtomCache cache = new AtomCache();
 		cache.setFetchFileEvenIfObsolete(true);
 
@@ -138,8 +113,12 @@ public class LigandFinder {
 
 			String scopId = result.getScopId();
 			if (ligandList.contains(scopId)) continue; // don't redo domains
+
 			try {
 
+				/*
+				 * Don't even output these.
+				 */
 				if (!significance.isSignificant(result)) {
 					continue;
 				}
@@ -147,14 +126,7 @@ public class LigandFinder {
 				/*
 				 * Get the structure.
 				 */
-				Structure structure;
-				StructureName theName = new StructureName(scopId);
-				if (theName.isScopName()) {
-					if (scop == null) scop = ScopFactory.getSCOP();
-					structure = cache.getStructureForDomain(scopId, scop);
-				} else {
-					structure = cache.getStructure(scopId);
-				}
+				Structure structure = cache.getStructure(scopId);
 				Atom[] ca = cache.getAtoms(result.getScopId());
 
 				/*
@@ -163,36 +135,15 @@ public class LigandFinder {
 				Atom centroid;
 				RotationAxis axis;
 				AlignmentMapping mapping = result.getAlignmentMapping();
-				boolean failed = true;
-				if (mapping != null) {
-					try {
-						AFPChain afpChain = mapping.buildAfpChain(ca, StructureTools.getAtomCAArray(structure));
-						axis = new RotationAxis(afpChain);
-						centroid = calcCentroidFromAfpChain(afpChain, ca);
-						failed = false;
-					} catch (Exception e) {
-						logger.error("Couldn't use alignment mapping to reconstruct AFPChain", e);
-						e.printStackTrace(); // keep failed=true
-					}
+				if (result.getAxis() == null) {
+					logger.error("Alignment mapping does not exist");
 				}
-				if (failed && rebuildMissingAlignments) {
-					// run CE-Symm to get alignment
-					CensusJob job = CensusJob.setUpJob(scopId, 0, Census.AlgorithmGiver.getDefault(), SignificanceFactory.ultraLiberal(), cache, scop);
-					job.setStoreAfpChain(true);
-					Result r = job.call();
-					if (!significance.isSignificant(r)) {
-						continue;
-					}
-					axis = new RotationAxis(job.getAfpChain());
-					try {
-						centroid = calcCentroidFromAfpChain(job.getAfpChain(), ca);
-					} catch (Exception e) {
-						e.printStackTrace();
-						logger.error("Failed to calculate centroid for " + scopId);
-						continue;
-					}
-				} else {
-					logger.warn("Skipping " + scopId + " because the axis could not be found");
+				try {
+					AFPChain afpChain = mapping.buildAfpChain(ca, StructureTools.getAtomCAArray(structure));
+					axis = new RotationAxis(afpChain);
+					centroid = calcCentroidFromAfpChain(afpChain, ca);
+				} catch (Exception e) {
+					logger.error("Couldn't use alignment mapping to reconstruct AFPChain", e);
 					continue;
 				}
 
@@ -203,7 +154,7 @@ public class LigandFinder {
 				AtomPositionMap atomPositions = new AtomPositionMap(ca, exclusionMatcher);
 				Set<ResidueNumber> excluded = atomPositions.getNavMap().keySet();
 				Map<Group, Double> distancesToCentroid = StructureTools.getGroupDistancesWithinShell(structure, centroid,
-						excluded, radius, false, false);
+						excluded, Double.POSITIVE_INFINITY, false, false);
 
 
 				/*
@@ -220,7 +171,7 @@ public class LigandFinder {
 					}
 					distancesToAxis.put(group, minDistance);
 				}
-				
+
 				/*
 				 *  Add all the ligands to list.
 				 */
@@ -234,10 +185,9 @@ public class LigandFinder {
 					logger.debug("Found no center ligands for " + scopId);
 					ligandList.put(scopId, new StructureLigands(scopId));
 				}
-				
+
 			} catch (Exception e) {
-				e.printStackTrace();
-				logger.error(e.getClass().getSimpleName() + " on " + scopId);
+				logger.error(e.getClass().getSimpleName() + " on " + scopId, e);
 			} finally {
 				i++;
 				/*
@@ -261,28 +211,14 @@ public class LigandFinder {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		if (args.length < 2 || args.length > 3) {
-			System.err
-			.println("Usage: " + LigandFinder.class.getSimpleName() + " census-file.xml output-file [radius]");
+		if (args.length < 1 || args.length > 2) {
+			System.err.println("Usage: " + LigandFinder.class.getSimpleName() + " census-file.xml output-file");
 			return;
 		}
-		double radius = LigandFinder.DEFAULT_RADIUS;
-		if (args.length > 2) {
-			radius = Integer.parseInt(args[2]);
-		}
-		LigandFinder finder = new LigandFinder(radius);
+		LigandFinder finder = new LigandFinder();
 		finder.setOutput(new File(args[1]));
 		Results census = Results.fromXML(new File(args[0]));
 		finder.find(census);
-		System.out.println(finder);
-	}
-
-	public Map<String, String> getFormulas() {
-		Map<String, String> formulas = new HashMap<String, String>();
-		for (StructureLigands ligands : ligandList.values()) {
-			formulas.put(ligands.getStructureName(), ligands.toString());
-		}
-		return formulas;
 	}
 
 }

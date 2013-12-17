@@ -101,6 +101,10 @@ public class LigandStats {
 		printLine("is interesting",  stats.getNormalizedFractionMatching(list, INTERESTING));
 	}
 
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
 	public static void printPerLigandStats(LigandList list, double maxRadius, double maxAxisDistance) {
 		LigandStats stats = new LigandStats();
 		stats.setMaxRadius(maxRadius);
@@ -121,10 +125,14 @@ public class LigandStats {
 
 	private double maxAxisDistance = Double.POSITIVE_INFINITY;
 	
-	private int robustnessIterations = 600;
+	private int robustnessIterations = 200;
 
 	private Grouping normalizer = Grouping.superfamily();
 
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
 	public int getNDomainsMatching(LigandList list, LigandMatcher matcher) {
 		int n = 0;
 		for (StructureLigands inStruct : list.getData().values()) {
@@ -140,6 +148,10 @@ public class LigandStats {
 		return n;
 	}
 
+	/**
+	 * @deprecated
+	 */
+	@Deprecated
 	public int getNLigandsMatching(LigandList list, LigandMatcher matcher) {
 		int n = 0;
 		for (StructureLigands inStruct : list.getData().values()) {
@@ -163,6 +175,9 @@ public class LigandStats {
 				logger.warn("Couldn't find domain " + domain);
 				continue;
 			}
+			if (entry.getValue().isEmpty()) {
+				continue;
+			}
 			String sf;
 			try {
 				sf = normalizer.group(domain);
@@ -175,33 +190,6 @@ public class LigandStats {
 		return sfs.size();
 	}
 
-//	public int getNSuperfamilies(LigandList list) {
-//		ScopDatabase scop = ScopFactory.getSCOP();
-//		Set<String> sfs = new HashSet<String>();
-//		for (Map.Entry<String, StructureLigands> entry : list.getData().entrySet()) {
-//			StructureLigands inStruct = entry.getValue();
-//			ScopDomain domain = scop.getDomainByScopID(entry.getKey());
-//			if (domain == null) {
-//				logger.warn("Couldn't find domain " + domain);
-//				continue;
-//			}
-//			String sf;
-//			try {
-//				sf = normalizer.group(domain);
-//			} catch (RuntimeException e) {
-//				throw new RuntimeException("Failed to get superfamily from domain " + domain, e);
-//			}
-//			if (sfs.contains(sf)) continue; // don't double-count SFs
-//			for (Ligand ligand : inStruct.getLigands()) {
-//				if (ligand.getDistanceToCentroid() <= maxRadius && ligand.getDistanceToAxis() <= maxAxisDistance) {
-//					sfs.add(sf);
-//				}
-//			}
-//		}
-//		logger.info("Standard deviation for superfamily size is " + stats.getStandardDeviation());
-//		return sfs.size();
-//	}
-
 	public DescriptiveStatistics getNormalizedFractionMatching(LigandList ligandList, LigandMatcher matcher) {
 		
 		ScopDatabase scop = ScopFactory.getSCOP();
@@ -210,7 +198,12 @@ public class LigandStats {
 		
 		// shuffle the order of domains
 		List<String> shuffledKeyList = new ArrayList<String>(ligandList.size());
-		for (String s : ligandList.getData().keySet()) shuffledKeyList.add(s);
+//		for (String s : ligandList.getData().keySet()) shuffledKeyList.add(s);
+		for (Map.Entry<String, StructureLigands> entry : ligandList.getData().entrySet()) {
+			if (!entry.getValue().isEmpty()) {
+				shuffledKeyList.add(entry.getKey());
+			}
+		}
 		
 		// do this repeatedly with different orders of domains each time
 		for (int iter = 0; iter < robustnessIterations; iter++) {

@@ -20,10 +20,10 @@ import org.biojava3.structure.align.symm.CeSymm;
 public class CalcAlignmentCentroid {
 
 	public static void main(String[] args) throws Exception {
-		String name = "d1ao6a1";
+		String name = "d1srdb_";
 		display(name);
 	}
-		
+	
 	public static void display(String name) throws Exception {
 		AtomCache cache = new AtomCache();
 		Atom[] ca1 = cache.getAtoms(name);
@@ -34,11 +34,11 @@ public class CalcAlignmentCentroid {
 		RotationAxis axis = new RotationAxis(afpChain);
 		StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
 		Atom domainCentroid = Calc.getCentroid(ca1);
-		String centroidCmd = "draw diameter 3.0 CIRCLE {" + alignedCentroid.getX() + " " + alignedCentroid.getY() + " " + alignedCentroid.getZ() + "}";
-		String domainCmd = "draw color red diameter 3.0 CIRCLE {" + domainCentroid.getX() + " " + domainCentroid.getY() + " " + domainCentroid.getZ() + "}";
-		jmolPanel.evalString(centroidCmd);
+		String centroidCmd = "draw ID alignCentroid color green diameter 3.0 CIRCLE {" + alignedCentroid.getX() + " " + alignedCentroid.getY() + " " + alignedCentroid.getZ() + "}";
+		String domainCmd = "draw ID structCentroid color red diameter 3.0 CIRCLE {" + domainCentroid.getX() + " " + domainCentroid.getY() + " " + domainCentroid.getZ() + "}";
 		String axisCmd = axis.getJmolScript(ca1);
 		jmolPanel.evalString(domainCmd);
+		jmolPanel.evalString(centroidCmd);
 		jmolPanel.evalString(axisCmd);
 	}
 
@@ -48,7 +48,6 @@ public class CalcAlignmentCentroid {
 		Atom[] alignedAtoms = new Atom[map.size()];
 		int j = 0;
 		for (int x : map.keySet()) {
-			
 			alignedAtoms[j] = ca[x];
 			j++;
 		}

@@ -115,7 +115,7 @@ public class ScopSupport {
 			throw new IllegalArgumentException("Couldn't find id " + sunId);
 		}
 		
-		if (description.getCategory().equals(ScopCategory.Domain)) { // base case
+		if (description.getCategory().equals(ScopCategory.Species)) { // base case
 			if (includeAllProteins) {
 				domains.addAll(scop.getScopDomainsBySunid(sunId));
 			} else {

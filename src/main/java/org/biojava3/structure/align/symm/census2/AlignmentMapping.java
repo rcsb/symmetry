@@ -25,6 +25,7 @@ public class AlignmentMapping implements Serializable {
 	private Map<Integer, Integer> simpleFunction;
 
 	public AlignmentMapping() {
+		simpleFunction = new HashMap<Integer, Integer>();
 	}
 
 	public AlignmentMapping(AFPChain afpChain) {
@@ -47,28 +48,17 @@ public class AlignmentMapping implements Serializable {
 	/**
 	 * Writes and read the alignment to and from XML.
 	 * @author dmyersturnbull
-	 * TODO Should use {@link AlignmentTools#toConciseAlignmentString(Map)}
 	 */
 	static class AlignmentFunctionAdapter extends XmlAdapter<String, Map<Integer, Integer>> {
 
 		@Override
 		public Map<Integer, Integer> unmarshal(String v) throws Exception {
-			Map<Integer, Integer> map = new HashMap<Integer, Integer>();
-			String[] comps = v.split(";");
-			for (String comp : comps) {
-				String[] parts = comp.split("=");
-				map.put(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
-			}
-			return map;
+			return AlignmentTools.fromConciseAlignmentString(v);
 		}
 
 		@Override
 		public String marshal(Map<Integer, Integer> v) throws Exception {
-			StringBuilder sb = new StringBuilder();
-			for (Map.Entry<Integer, Integer> entry : v.entrySet()) {
-				sb.append(entry.getKey() + "=" + entry.getValue() + ";");
-			}
-			return sb.toString();
+			return AlignmentTools.toConciseAlignmentString(v);
 		}
 		
 	}

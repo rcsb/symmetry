@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis;
+package org.biojava3.structure.align.symm.census2.analysis.mespeus;
 
 /**
  * An ideal coordination geometry, such as trigonal planar or pentagonal bipyramidal. Also stores a type called "none" with a coordination number of 1.

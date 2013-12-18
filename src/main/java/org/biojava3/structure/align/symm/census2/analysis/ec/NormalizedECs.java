@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis;
+package org.biojava3.structure.align.symm.census2.analysis.ec;
 
 import java.io.File;
 import java.io.IOException;

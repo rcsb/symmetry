@@ -254,23 +254,14 @@ public class Census {
 				updateStats(result);
 				if (census.size() % printFrequency == 0) {
 					logger.debug("Printing to stream ");
+					setTimeTaken(census, submittedJobs);
 					print(census);
 				}
 			}
 			logger.debug("Printing leftover results to stream");
+			setTimeTaken(census, submittedJobs);
 			print(census); // should be redundant
 			logger.info("Finished!");
-
-			long timeTaken = 0;
-			int nSuccess = 0;
-			for (CensusJob job : submittedJobs) {
-				if (job.getTimeTaken() != null) {
-					timeTaken += job.getTimeTaken();
-					nSuccess++;
-				}
-			}
-			avgTimeTaken = (double) timeTaken / (double) nSuccess;
-			census.setMeanSecondsTaken(avgTimeTaken);
 
 		} finally {
 			ConcurrencyTools.shutdownAndAwaitTermination();
@@ -278,6 +269,19 @@ public class Census {
 		print(census);
 	}
 
+	private void setTimeTaken(Results census, List<CensusJob> submittedJobs) {
+		long timeTaken = 0;
+		int nSuccess = 0;
+		for (CensusJob job : submittedJobs) {
+			if (job.getTimeTaken() != null) {
+				timeTaken += job.getTimeTaken();
+				nSuccess++;
+			}
+		}
+		avgTimeTaken = (double) timeTaken / (double) nSuccess;
+		census.setMeanSecondsTaken(avgTimeTaken);
+	}
+	
 	/**
 	 * Do anything else to the {@link CensusJob} object before it is run.
 	 * @param calc

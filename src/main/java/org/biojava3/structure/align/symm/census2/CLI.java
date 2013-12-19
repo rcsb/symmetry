@@ -201,7 +201,7 @@ public class CLI {
 			if (diverse) {
 				ScopSupport.getInstance().getAllDomainsUnder(sunId, putative, allProteins);
 			} else {
-				ScopSupport.getInstance().getDomainsUnder(sunId, putative, limit, false);
+				ScopSupport.getInstance().getDomainsUnder(sunId, putative, limit, allProteins);
 			}
 
 			// randomize if we need to

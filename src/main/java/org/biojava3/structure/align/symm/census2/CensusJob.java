@@ -54,37 +54,6 @@ public class CensusJob implements Callable<Result> {
 
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
 	
-	/**
-	 * @deprecated
-	 */
-	@Deprecated
-	public static class FullInfo {
-		private AFPChain afpChain;
-		private Result result;
-
-		public FullInfo(AFPChain afpChain, Result result) {
-			super();
-			this.afpChain = afpChain;
-			this.result = result;
-		}
-
-		public AFPChain getAfpChain() {
-			return afpChain;
-		}
-
-		public Result getResult() {
-			return result;
-		}
-
-		public void setAfpChain(AFPChain afpChain) {
-			this.afpChain = afpChain;
-		}
-
-		public void setResult(Result result) {
-			this.result = result;
-		}
-	}
-
 	private static final Logger logger = LogManager.getLogger(CensusJob.class.getPackage().getName());
 
 	private AlgorithmGiver algorithm;
@@ -104,15 +73,6 @@ public class CensusJob implements Callable<Result> {
 	
 	private AFPChain afpChain;
 
-	/**
-	 * @deprecated
-	 */
-	@Deprecated
-	public static CensusJob forScopId(AlgorithmGiver algorithm, Significance significance, String name, int count,
-			AtomCache cache, ScopDatabase scop) {
-		return setUpJob(name, count, algorithm, significance, cache, scop);
-	}
-
 	public static Result runJob(String name, int count, AlgorithmGiver algorithm, Significance significance, AtomCache cache,
 			ScopDatabase scop) {
 		return setUpJob(name, count, algorithm, significance, cache, scop).call();
@@ -126,22 +86,6 @@ public class CensusJob implements Callable<Result> {
 		job.setName(name);
 		job.setCount(count);
 		return job;
-	}
-
-	/**
-	 * @deprecated
-	 */
-	@Deprecated
-	public static FullInfo runOn(String name, AlgorithmGiver algorithm, Significance sig, AtomCache cache,
-			ScopDatabase scop) {
-		CensusJob job = new CensusJob(algorithm, sig);
-		job.setScop(scop);
-		job.setCache(cache);
-		job.setStoreAfpChain(true);
-		job.setName(name);
-		job.setCount(0);
-		Result r = job.call();
-		return new FullInfo(job.getAfpChain(), r);
 	}
 
 	private static boolean sanityCheckPreAlign(Atom[] ca1, Atom[] ca2) {

@@ -23,9 +23,8 @@ import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.io.mmcif.chem.ResidueType;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.census2.Census;
+import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.census2.CensusJob;
-import org.biojava3.structure.align.symm.census2.CensusJob.FullInfo;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
@@ -132,8 +131,10 @@ public class InterfaceLigandFinder {
 				Atom[] allAtoms = StructureTools.getAllAtomArray(structure);
 
 				// run CE-Symm to get alignment
-				FullInfo info = CensusJob.runOn(scopId, Census.AlgorithmGiver.getDefault(), significance, cache, scop);
-				AFPChain afpChain = info.getAfpChain();
+				CensusJob job = CensusJob.setUpJob(scopId, 0, AlgorithmGiver.getDefault(), significance, cache, scop);
+				job.setStoreAfpChain(true);
+				job.call();
+				AFPChain afpChain = job.getAfpChain();
 
 				/*
 				 * add ligands to list

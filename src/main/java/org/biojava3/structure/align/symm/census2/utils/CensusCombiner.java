@@ -47,6 +47,10 @@ public class CensusCombiner {
 	}
 
 	public static void main(String[] args) {
+		if (args.length < 2) {
+			System.err.println("Usage: " + CensusCombiner.class.getSimpleName() + " combined-output-file.xml input-file-1.xml [input-file-2.xml ...]");
+			return;
+		}
 		File combined = new File(args[0]);
 		File[] files = new File[args.length-1];
 		for (int i = 1; i < args.length; i++) {

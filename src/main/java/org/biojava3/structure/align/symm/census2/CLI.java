@@ -17,7 +17,10 @@
  */
 package org.biojava3.structure.align.symm.census2;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -39,6 +42,7 @@ import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.scop.Astral;
 import org.biojava.bio.structure.scop.Astral.AstralSet;
 import org.biojava.bio.structure.scop.ScopCategory;
+import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
@@ -74,7 +78,10 @@ public class CLI {
 				return;
 			}
 
-			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
+			// set SCOP version
+			String scopVersion = cmd.getOptionValue("scopversion");
+			if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
+			ScopFactory.setScopDatabase(scopVersion);
 
 			final String pdbDir = cmd.getOptionValue("pdb");
 			final String censusFile = cmd.getOptionValue("file");
@@ -100,6 +107,34 @@ public class CLI {
 				for (int i = 0; i < parts.length; i++) {
 					sunIds[i] = Integer.parseInt(parts[i]);
 				}
+			} else if (cmd.getOptionValue("names") != null) {
+				// get sun ids from the SCOP ids
+				// this is pretty stupid, since we'll do the opposite in a bit
+				ScopDatabase scop = ScopFactory.getSCOP();
+				BufferedReader br = null;
+				try {
+					br = new BufferedReader(new FileReader(new File(cmd.getOptionValue("names"))));
+					String line = "";
+					List<Integer> list = new ArrayList<Integer>();
+					while ((line = br.readLine()) != null) {
+						ScopDomain domain = scop.getDomainByScopID(line.trim());
+						list.add(domain.getSunid());
+					}
+					sunIds = new int[list.size()];
+					for (int i = 0; i < list.size(); i++) {
+						sunIds[i] = list.get(i);
+					}
+				} catch (IOException e) {
+					throw new RuntimeException("Couldn't parse list of SCOP Ids", e);
+				} finally {
+					if (br != null) {
+						try {
+							br.close();
+						} catch (IOException e) {
+							logger.warn("Couldn't close file " + cmd.getOptionValue("names"), e);
+						}
+					}
+				}
 			}
 			final int start = cmd.getOptionValue("start") == null ? 0 : Integer.parseInt(cmd
 					.getOptionValue("start"));
@@ -114,14 +149,14 @@ public class CLI {
 			final boolean storeMapping = cmd.hasOption("storemapping");
 			final boolean diverse = cmd.hasOption("diverse");
 			final boolean allProteins = cmd.hasOption("allproteins");
-			final String scopVersion = cmd.getOptionValue("scopversion");
+			final boolean reverse = cmd.hasOption("reverse");
 
 
 			final String sigClass = cmd.getOptionValue("sigclass");
 			final String sigMethod = cmd.getOptionValue("sigmethod");
 
 			run(pdbDir, censusFile, nThreads, writeEvery, number, clustering, sunIds, classifications, randomize,
-					restart, prefetch, storeMapping, scopVersion, diverse, allProteins, sigClass, sigMethod, start, stop);
+					restart, prefetch, storeMapping, scopVersion, diverse, allProteins, sigClass, sigMethod, start, stop, reverse);
 
 		} catch (RuntimeException e) {
 			logger.fatal(e);
@@ -245,7 +280,7 @@ public class CLI {
 	public static void run(final String pdbDir, final String censusFile, final Integer inputNThreads,
 			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] inputSunIds,
 			final String[] inputClassIds, final boolean randomize, final boolean restart,
-			boolean prefetch, final boolean storeMapping, String scopVersion, final boolean diverse, final boolean allProteins, String sigClass, String sigMethod, final int start, final int stop) {
+			boolean prefetch, final boolean storeMapping, String scopVersion, final boolean diverse, final boolean allProteins, String sigClass, String sigMethod, final int start, final int stop, final boolean reverse) {
 
 		Census census;
 
@@ -278,6 +313,9 @@ public class CLI {
 						restrictedList.add(domains.get(i));
 					}
 					logger.info("Found " + domains.size() + " domains and using " + restrictedList.size());
+					if (reverse) {
+						Collections.reverse(restrictedList);
+					}
 					return restrictedList;
 
 				}
@@ -302,10 +340,6 @@ public class CLI {
 				census.setCache(new AtomCache(pdbDir, false));
 				System.setProperty(UserConfiguration.PDB_DIR, pdbDir);
 			}
-
-			// set SCOP version
-			if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
-			ScopFactory.setScopDatabase(scopVersion);
 
 			// set final options
 			if (writeEvery != null) census.setPrintFrequency(writeEvery);
@@ -347,6 +381,8 @@ public class CLI {
 				.create("storemapping"));
 		options.addOption(OptionBuilder.hasArg(false).withDescription("Use all \"px\"s under every domain. If not set, uses only the first \"px\" of each domain.").isRequired(false)
 				.create("allproteins"));
+		options.addOption(OptionBuilder.hasArg(false).withDescription("Reverses the direction in which the jobs are run.").isRequired(false)
+				.create("reverse"));
 		options.addOption(OptionBuilder.hasArg(false).withDescription("If -number is less than the total number of domains for a SCOP category, tries to spread the selection over the category. Currently only works with SCOP superfamilies.").isRequired(false)
 				.create("diverse"));
 		options.addOption(OptionBuilder.hasArg(true).withDescription("Write to file every n jobs.").isRequired(false)
@@ -354,7 +390,9 @@ public class CLI {
 		options.addOption(OptionBuilder.hasArg(true).withDescription("Start writing on the nth domain selected. Defaults to 0.").isRequired(false)
 				.create("start"));
 		options.addOption(OptionBuilder.hasArg(true).withDescription("Stop writing on the nth domains selected. Defaults to +infinity.").isRequired(false)
-				.create("every"));
+				.create("stop"));
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Use a file containing a line-by-line list of SCOP Ids to run on").isRequired(false)
+				.create("names"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(

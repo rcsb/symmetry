@@ -101,6 +101,10 @@ public class CLI {
 					sunIds[i] = Integer.parseInt(parts[i]);
 				}
 			}
+			final int start = cmd.getOptionValue("start") == null ? 0 : Integer.parseInt(cmd
+					.getOptionValue("start"));
+			final int stop = cmd.getOptionValue("stop") == null ? Integer.MAX_VALUE : Integer.parseInt(cmd
+					.getOptionValue("stop"));
 
 			final String[] classifications = cmd.getOptionValue("classids") == null ? null : cmd.getOptionValue(
 					"classids").split(" ");
@@ -117,7 +121,7 @@ public class CLI {
 			final String sigMethod = cmd.getOptionValue("sigmethod");
 
 			run(pdbDir, censusFile, nThreads, writeEvery, number, clustering, sunIds, classifications, randomize,
-					restart, prefetch, storeMapping, scopVersion, diverse, allProteins, sigClass, sigMethod);
+					restart, prefetch, storeMapping, scopVersion, diverse, allProteins, sigClass, sigMethod, start, stop);
 
 		} catch (RuntimeException e) {
 			logger.fatal(e);
@@ -144,7 +148,7 @@ public class CLI {
 		}
 		return sig;
 	}
-	
+
 	/**
 	 * Returns the best number of threads.
 	 */
@@ -160,7 +164,7 @@ public class CLI {
 		}
 		return nThreads;
 	}
-	
+
 	/**
 	 * Gets an <em>initial</em> list of sun ids to use, without clustering.
 	 */
@@ -233,79 +237,90 @@ public class CLI {
 				}
 			}
 		}
-		
+
 		return domains;
-		
+
 	}
-	
+
 	public static void run(final String pdbDir, final String censusFile, final Integer inputNThreads,
 			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] inputSunIds,
 			final String[] inputClassIds, final boolean randomize, final boolean restart,
-			boolean prefetch, final boolean storeMapping, String scopVersion, final boolean diverse, final boolean allProteins, String sigClass, String sigMethod) {
+			boolean prefetch, final boolean storeMapping, String scopVersion, final boolean diverse, final boolean allProteins, String sigClass, String sigMethod, final int start, final int stop) {
 
-		final Significance significance = getSignificance(sigClass, sigMethod);
-		
-		final int nThreads = getNThreads(inputNThreads);
-		
-		logger.info("Using " + nThreads + " threads");
+		Census census;
 
-		Census census = new Census(nThreads) {
-			@Override
-			protected List<ScopDomain> getDomains() {
+		{
 
-				// get list of sun Ids
-				List<Integer> sunIds = getSunIdsToUse(inputSunIds, inputClassIds, clustering);
-				
-				// print the sun IDs we're using
-				StringBuilder sb = new StringBuilder();
-				for (int i = 0; i < sunIds.size(); i++) {
-					sb.append(sunIds.get(i));
-					if (i < sunIds.size() - 1) sb.append(", ");
+			final Significance significance = getSignificance(sigClass, sigMethod);
+
+			final int nThreads = getNThreads(inputNThreads);
+
+			logger.info("Using " + nThreads + " threads");
+
+			census = new Census(nThreads) {
+				@Override
+				protected List<ScopDomain> getDomains() {
+
+					// get list of sun Ids
+					List<Integer> sunIds = getSunIdsToUse(inputSunIds, inputClassIds, clustering);
+
+					// print the sun IDs we're using
+					StringBuilder sb = new StringBuilder();
+					for (int i = 0; i < sunIds.size(); i++) {
+						sb.append(sunIds.get(i));
+						if (i < sunIds.size() - 1) sb.append(", ");
+					}
+					logger.info("Using sun IDs " + sb.toString());
+
+					List<ScopDomain> domains = getDomainsFromSunIds(sunIds, clustering, number, diverse, allProteins, randomize);
+					List<ScopDomain> restrictedList = new ArrayList<ScopDomain>(Math.min(domains.size(), stop - start));
+					for (int i = start; i < Math.min(domains.size(), stop); i++) {
+						restrictedList.add(domains.get(i));
+					}
+					logger.info("Found " + domains.size() + " domains and using " + restrictedList.size());
+					return restrictedList;
+
 				}
-				logger.info("Using sun IDs " + sb.toString());
 
-				List<ScopDomain> domains = getDomainsFromSunIds(sunIds, clustering, number, diverse, allProteins, randomize);
-				logger.info("Found " + domains.size() + " domains");
-				return domains;
+				@Override
+				protected Significance getSignificance() {
+					return significance;
+				}
 
+				@Override
+				protected Results getStartingResults() {
+					if (restart) return new Results();
+					return super.getStartingResults();
+				}
+			};
+
+			// set PDB dir
+			// this actually gets called first
+			if (pdbDir == null) {
+				census.setCache(new AtomCache());
+			} else {
+				census.setCache(new AtomCache(pdbDir, false));
+				System.setProperty(UserConfiguration.PDB_DIR, pdbDir);
 			}
 
-			@Override
-			protected Significance getSignificance() {
-				return significance;
-			}
+			// set SCOP version
+			if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
+			ScopFactory.setScopDatabase(scopVersion);
 
-			@Override
-			protected Results getStartingResults() {
-				if (restart) return new Results();
-				return super.getStartingResults();
+			// set final options
+			if (writeEvery != null) census.setPrintFrequency(writeEvery);
+			census.setDoPrefetch(prefetch);
+			if (censusFile != null) {
+				census.setOutputWriter(new File(censusFile));
+			} else {
+				census.setOutputWriter(new File("census.xml"));
 			}
-		};
+			census.setRecordAlignmentMapping(storeMapping);
 
-		// set PDB dir
-		// this actually gets called first
-		if (pdbDir == null) {
-			census.setCache(new AtomCache());
-		} else {
-			census.setCache(new AtomCache(pdbDir, false));
-			System.setProperty(UserConfiguration.PDB_DIR, pdbDir);
 		}
 
-		// set SCOP version
-		if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
-		ScopFactory.setScopDatabase(scopVersion);
-		
-		// set final options
-		if (writeEvery != null) census.setPrintFrequency(writeEvery);
-		census.setDoPrefetch(prefetch);
-		if (censusFile != null) {
-			census.setOutputWriter(new File(censusFile));
-		} else {
-			census.setOutputWriter(new File("census.xml"));
-		}
-		census.setRecordAlignmentMapping(storeMapping);
-		
 		// now run
+		ScopSupport.nullifyInstance();
 		census.run();
 		System.out.println(census);
 	}
@@ -335,6 +350,10 @@ public class CLI {
 		options.addOption(OptionBuilder.hasArg(false).withDescription("If -number is less than the total number of domains for a SCOP category, tries to spread the selection over the category. Currently only works with SCOP superfamilies.").isRequired(false)
 				.create("diverse"));
 		options.addOption(OptionBuilder.hasArg(true).withDescription("Write to file every n jobs.").isRequired(false)
+				.create("every"));
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Start writing on the nth domain selected. Defaults to 0.").isRequired(false)
+				.create("start"));
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Stop writing on the nth domains selected. Defaults to +infinity.").isRequired(false)
 				.create("every"));
 		options.addOption(OptionBuilder
 				.hasArg(true)

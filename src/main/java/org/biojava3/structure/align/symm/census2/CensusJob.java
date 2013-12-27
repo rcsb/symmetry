@@ -54,7 +54,7 @@ public class CensusJob implements Callable<Result> {
 
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
 	
-	private static final Logger logger = LogManager.getLogger(CensusJob.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(CensusJob.class.getSimpleName());
 
 	private AlgorithmGiver algorithm;
 	private Significance significance;

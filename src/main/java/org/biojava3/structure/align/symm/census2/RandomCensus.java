@@ -42,7 +42,7 @@ import org.biojava.bio.structure.scop.ScopFactory;
  */
 public class RandomCensus extends Census {
 
-	private static final Logger logger = LogManager.getLogger(RandomCensus.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(RandomCensus.class.getName());
 
 	private final int domainsPerSf;
 	private final boolean shuffle;

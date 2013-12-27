@@ -45,7 +45,7 @@ import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
  */
 public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 
-	private static final Logger logger = LogManager.getLogger(PdbClusteringScopDescriptionCensus.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(PdbClusteringScopDescriptionCensus.class.getName());
 
 	private static final String SERVER_LOCATION = FarmJobParameters.DEFAULT_SERVER_URL;
 

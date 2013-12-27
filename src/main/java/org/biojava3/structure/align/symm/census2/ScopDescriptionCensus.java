@@ -39,7 +39,7 @@ import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
  */
 public class ScopDescriptionCensus extends Census {
 
-	private static final Logger logger = LogManager.getLogger(ScopDescriptionCensus.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(ScopDescriptionCensus.class.getName());
 
 	protected int[] sunIds;
 

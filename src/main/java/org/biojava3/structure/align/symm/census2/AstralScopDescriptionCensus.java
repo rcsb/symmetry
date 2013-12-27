@@ -43,7 +43,7 @@ import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
  */
 public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 
-	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(Census.class.getName());
 
 	public static void buildDefault(File censusFile, AstralSet astral, int[] sunIds) {
 		try {

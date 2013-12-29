@@ -53,12 +53,12 @@ public class AlignmentMapping implements Serializable {
 
 		@Override
 		public Map<Integer, Integer> unmarshal(String v) throws Exception {
-			return AlignmentTools.fromConciseAlignmentString(v);
+			return AlignmentTools.fromConciseAlignmentString(v.replaceAll("-", ">"));
 		}
 
 		@Override
 		public String marshal(Map<Integer, Integer> v) throws Exception {
-			return AlignmentTools.toConciseAlignmentString(v);
+			return AlignmentTools.toConciseAlignmentString(v).replaceAll("<", "-");
 		}
 		
 	}

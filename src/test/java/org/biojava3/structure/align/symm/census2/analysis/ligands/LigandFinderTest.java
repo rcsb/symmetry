@@ -11,6 +11,7 @@ import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.junit.Before;
+import org.junit.Test;
 
 
 /**
@@ -44,6 +45,11 @@ public class LigandFinderTest extends TestCase {
 		ChemCompGroupFactory.setChemCompProvider(provider);
 		
 		ScopFactory.setScopDatabase(scop);
+	}
+	
+	@Test
+	public void test() {
+		
 	}
 	
 	@Override

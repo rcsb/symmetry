@@ -335,9 +335,13 @@ public class CLI {
 			// set PDB dir
 			// this actually gets called first
 			if (pdbDir == null) {
-				census.setCache(new AtomCache());
+				AtomCache cache = new AtomCache();
+				cache.setFetchFileEvenIfObsolete(true);
+				census.setCache(cache);
 			} else {
-				census.setCache(new AtomCache(pdbDir, false));
+				AtomCache cache = new AtomCache(pdbDir, false);
+				cache.setFetchFileEvenIfObsolete(true);
+				census.setCache(cache);
 				System.setProperty(UserConfiguration.PDB_DIR, pdbDir);
 			}
 

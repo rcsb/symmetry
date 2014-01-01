@@ -50,7 +50,9 @@ public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			AstralScopDescriptionCensus census = new AstralScopDescriptionCensus(maxThreads, astral, sunIds);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache());
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {

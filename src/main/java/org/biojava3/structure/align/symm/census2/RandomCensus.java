@@ -52,7 +52,9 @@ public class RandomCensus extends Census {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			RandomCensus census = new RandomCensus(maxThreads, domainsPerSf, shuffle);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache());
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {

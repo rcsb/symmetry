@@ -56,7 +56,9 @@ public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			PdbClusteringScopDescriptionCensus census = new PdbClusteringScopDescriptionCensus(maxThreads, identityCutoff, sunIds);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache());
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {

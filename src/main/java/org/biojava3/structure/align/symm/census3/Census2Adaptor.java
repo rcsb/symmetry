@@ -12,7 +12,6 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava3.core.sequence.io.util.IOUtils;
 import org.biojava3.structure.align.symm.census2.Alignment;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
@@ -62,23 +61,37 @@ public class Census2Adaptor {
 		}
 
 		CensusResultList newResults = makeEmptyResultList(census2);
+
+		int start = 0;
+//		while (getFile(outputDir, every, start, 1).exists()) {
+//			start += every;
+//		}
+		File file = getFile(outputDir, every, start, 0);
 		
-		int i = 0;
-		for (Result result : census2.getData()) {
-			if (i > 0 && i % every == 0) {
-				File file = new File(outputDir + (i / every) + ".xml");
-				logger.info("Printing " + every + " results to " + file.getPath());
-				print(newResults.toXML(), file);
-				newResults = makeEmptyResultList(census2);
-			}
+		for (int i = start; i < census2.size(); i++) {
+			
+			Result result = census2.getData().get(i);
+
 			try {
 				CensusResult newResult = convertResult(result, cache);
 				newResults.add(newResult);
 			} catch (RuntimeException e) {
 				logger.error("Encountered an error for " + result.getScopId(), e);
 			}
-			i++;
+			
+			if (i > start && i % every == 0) {
+				logger.info("Printing " + every + " results to " + file.getPath());
+				print(newResults.toXML(), file);
+				newResults = makeEmptyResultList(census2);
+//				while (getFile(outputDir, every, i, 1).exists()) {
+//					i += every;
+//				}
+				file = getFile(outputDir, every, i, 0);
+			}
 		}
+		
+		file = new File(outputDir + ((census2.size() / every) + 1) + ".xml");
+		print(newResults.toXML(), file);
 	}
 		
 	public static CensusResultList convertResults(Results census2, AtomCache cache) {
@@ -120,6 +133,10 @@ public class Census2Adaptor {
 			newResult.setAxis(convertAxis(newResult.getId(), newResult.getAlignment(), cache));
 		}
 		return newResult;
+	}
+	
+	private static File getFile(String outputDir, int every, int i, int offset) {
+		return  new File(outputDir + ((i / every) + offset) + ".xml");
 	}
 
 	private static CensusScoreList convertScores(Alignment alignment) {

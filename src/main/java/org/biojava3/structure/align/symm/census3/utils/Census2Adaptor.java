@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census3;
+package org.biojava3.structure.align.symm.census3.utils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -15,6 +15,12 @@ import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava3.structure.align.symm.census2.Alignment;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
+import org.biojava3.structure.align.symm.census3.CensusAlignment;
+import org.biojava3.structure.align.symm.census3.CensusAxis;
+import org.biojava3.structure.align.symm.census3.CensusResult;
+import org.biojava3.structure.align.symm.census3.CensusResultList;
+import org.biojava3.structure.align.symm.census3.CensusScoreList;
+import org.biojava3.structure.align.symm.census3.CensusSymmetryGroup;
 
 /**
  * Converts a census2 XML file to a census3 one.

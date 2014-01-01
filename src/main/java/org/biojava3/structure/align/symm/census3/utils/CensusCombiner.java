@@ -20,12 +20,13 @@
  * Created on 2013-02-20
  *
  */
-package org.biojava3.structure.align.symm.census3;
+package org.biojava3.structure.align.symm.census3.utils;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.biojava3.core.sequence.io.util.IOUtils;
+import org.biojava3.structure.align.symm.census3.CensusResultList;
 
 /**
  * A utility that combines multiple census files into one census file.

@@ -11,6 +11,7 @@ import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.junit.Before;
+import org.junit.Test;
 
 
 /**
@@ -53,4 +54,8 @@ public class LigandFinderTest extends TestCase {
 		ChemCompGroupFactory.setChemCompProvider(orig);
 	}
 	
+	@Test
+	public void testNothing(){
+		assertTrue(true);
+	}
 }

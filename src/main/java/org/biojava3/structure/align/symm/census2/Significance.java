@@ -27,8 +27,10 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 /**
  * Determines whether a result is significant.
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public interface Significance {
 	boolean isPossiblySignificant(AFPChain afpChain);
 

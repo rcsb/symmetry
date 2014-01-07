@@ -1,10 +1,7 @@
 package org.biojava3.structure.align.symm.census3.utils;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,6 +9,7 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava3.core.sequence.io.util.IOUtils;
 import org.biojava3.structure.align.symm.census2.Alignment;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
@@ -87,7 +85,7 @@ public class Census2Adaptor {
 			
 			if (i > start && i % every == 0) {
 				logger.info("Printing " + every + " results to " + file.getPath());
-				print(newResults.toXML(), file);
+				IOUtils.print(newResults.toXML(), file);
 				newResults = makeEmptyResultList(census2);
 //				while (getFile(outputDir, every, i, 1).exists()) {
 //					i += every;
@@ -97,7 +95,7 @@ public class Census2Adaptor {
 		}
 		
 		file = new File(outputDir + ((census2.size() / every) + 1) + ".xml");
-		print(newResults.toXML(), file);
+		IOUtils.print(newResults.toXML(), file);
 	}
 		
 	public static CensusResultList convertResults(Results census2, AtomCache cache) {
@@ -167,23 +165,6 @@ public class Census2Adaptor {
 		} catch (Exception e) {
 			logger.error("Couldn't create axis for " + scopId, e);
 			return null;
-		}
-	}
-
-	/**
-	 * Prints {@code string} to {@code file}.
-	 * @throws IOException If any I/O exception occurs while printing; this method does not catch any exceptions
-	 * @deprecated Replace with IOUtils.print.
-	 */
-	public static void print(String string, File file) throws IOException {
-		PrintWriter out = null;
-		try {
-			out = new PrintWriter(new BufferedWriter(new FileWriter(file)));
-			out.print(string);
-			out.flush();
-			out.close();
-		} finally {
-			if (out != null) out.close();
 		}
 	}
 

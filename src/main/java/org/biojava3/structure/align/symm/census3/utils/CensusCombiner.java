@@ -60,7 +60,7 @@ public class CensusCombiner {
 
 	public void print(File combined) {
 		try {
-			Census2Adaptor.print(results.toXML(), combined);
+			IOUtils.print(results.toXML(), combined);
 		} catch (IOException e) {
 			throw new RuntimeException("Couldn't print to file " + combined.getPath(), e);
 		}

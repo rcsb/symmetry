@@ -30,8 +30,10 @@ import org.biojava.bio.structure.align.model.AFPChain;
  * The results of a symmetry alignment. Includes information for CE-Symm or
  * SymD.
  * 
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class Alignment implements Serializable {
 
 	private static final long serialVersionUID = 5560951230435020821L;

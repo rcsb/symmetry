@@ -188,7 +188,6 @@ public class ResourceList {
 	static {
 		StructureAlignmentFactory.addAlgorithm(new CeMain());
 		StructureAlignmentFactory.addAlgorithm(new CeCPMain());
-		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
 	}
 
 	// notice the side effects here

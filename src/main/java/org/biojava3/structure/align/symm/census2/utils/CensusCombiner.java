@@ -32,7 +32,7 @@ import org.biojava3.structure.align.symm.census2.Results;
 
 /**
  * A utility that combines multiple census files into one census file.
- * @author dmyerstu
+ * @author dmyersturnbull
  */
 public class CensusCombiner {
 

@@ -38,8 +38,10 @@ import org.biojava.bio.structure.scop.ScopFactory;
 
 /**
  * A census that runs on some specified number of domains in each superfamily, optionally randomized.
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class RandomCensus extends Census {
 
 	private static final Logger logger = LogManager.getLogger(RandomCensus.class.getName());

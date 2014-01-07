@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
-import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
+import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
 
 /**
  * Finds missing and extra SCOP Ids in a census file.

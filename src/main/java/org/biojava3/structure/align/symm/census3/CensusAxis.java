@@ -223,6 +223,10 @@ public class CensusAxis implements Serializable {
 	 *         less than {@code threshold} is found
 	 */
 	public int guessOrder(double threshold, int maxOrder) {
+		return guessOrder(angle, threshold, maxOrder);
+	}
+	
+	public static int guessOrder(double angle, double threshold, int maxOrder) {
 		double bestDelta = threshold;
 		int bestOrder = 1;
 		for (int order = 2; order < maxOrder; order++) {

@@ -16,7 +16,7 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
 
 /**
- * @deprecated Use {@link census2.Census} instead.
+ * @deprecated Use {@link org.biojava3.structure.align.symm.census3.run.Census} instead.
  */
 @Deprecated
 public class ScanDBForSymmetry {

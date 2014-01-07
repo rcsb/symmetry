@@ -15,7 +15,7 @@ import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * Just makes the census fit for distribution by removing unnecessary information such as align-score and classification.
- * @author dmyerstu
+ * @author dmyersturnbull
  */
 public class SimplifyCensusXML {
 

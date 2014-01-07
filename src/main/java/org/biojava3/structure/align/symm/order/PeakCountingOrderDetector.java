@@ -7,7 +7,7 @@ import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.census2.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.StatUtils;
 
 /**
  * Determines order by smoothing and counting the number of peaks.

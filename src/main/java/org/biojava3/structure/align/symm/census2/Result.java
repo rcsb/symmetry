@@ -31,7 +31,9 @@ import java.io.Serializable;
  * 
  * @author Andreas Prlic
  * 
+ * @deprecated
  */
+@Deprecated
 public class Result implements Serializable {
 
 	private static final long serialVersionUID = 2282745910618366982L;

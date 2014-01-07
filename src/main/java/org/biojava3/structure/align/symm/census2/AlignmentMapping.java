@@ -17,7 +17,9 @@ import org.biojava.bio.structure.align.util.AlignmentTools;
  * An alignment function.
  * In future versions, may be able to handle different mappings between different symmetry subunits.
  * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class AlignmentMapping implements Serializable {
 
 	private static final long serialVersionUID = -7879437940997148046L;
@@ -53,12 +55,12 @@ public class AlignmentMapping implements Serializable {
 
 		@Override
 		public Map<Integer, Integer> unmarshal(String v) throws Exception {
-			return AlignmentTools.fromConciseAlignmentString(v.replaceAll("-", ">"));
+			return AlignmentTools.fromConciseAlignmentString(v);
 		}
 
 		@Override
 		public String marshal(Map<Integer, Integer> v) throws Exception {
-			return AlignmentTools.toConciseAlignmentString(v).replaceAll("<", "-");
+			return AlignmentTools.toConciseAlignmentString(v);
 		}
 		
 	}
@@ -70,6 +72,11 @@ public class AlignmentMapping implements Serializable {
 		AFPChain afpChain = AlignmentTools.createAFPChain(ca1, ca2, new ResidueNumber[] {}, new ResidueNumber[] {});
 		afpChain = AlignmentTools.replaceOptAln(afpChain, ca1, ca2, getSimpleFunction());
 		return afpChain;
+	}
+
+	@Override
+	public String toString() {
+		return AlignmentTools.toConciseAlignmentString(simpleFunction);
 	}
 	
 }

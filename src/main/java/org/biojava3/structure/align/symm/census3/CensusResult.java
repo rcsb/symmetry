@@ -28,7 +28,6 @@ import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlValue;
 
 /**
  * An entry in a symmetry census.
@@ -88,15 +87,12 @@ public class CensusResult implements Serializable {
 		return id;
 	}
 
-	public String getProtodomain() {
-		return alignedUnit;
-	}
-
 	public String getAlignedUnit() {
 		return alignedUnit;
 	}
 
-	public Integer getOrder() {
+	public int getOrder() {
+		if (group == null) return 1;
 		return group.getOrder();
 	}
 	

@@ -59,4 +59,8 @@ public class LigandFinderTest extends TestCase {
 		ChemCompGroupFactory.setChemCompProvider(orig);
 	}
 	
+	@Test
+	public void testNothing(){
+		assertTrue(true);
+	}
 }

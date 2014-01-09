@@ -9,6 +9,7 @@ import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.SymmRefiner;
+import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 
 
 public class DemoCeSymm {
@@ -40,7 +41,7 @@ public class DemoCeSymm {
 			RotationAxis axis = new RotationAxis(afpChain);
 			jmol.evalString(axis.getJmolScript(ca1));
 			
-			int symmNr = CeSymm.getSymmetryOrder(afpChain);
+			int symmNr = new SequenceFunctionOrderDetector().calculateOrder(afpChain, ca1);
 			System.out.println("Symmetry order of: " + symmNr);
 			
 		} catch (Exception e){

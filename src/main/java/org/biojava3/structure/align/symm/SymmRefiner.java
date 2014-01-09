@@ -24,6 +24,7 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 
 /**
  * A utility class for refining symmetric alignments
@@ -429,7 +430,7 @@ public class SymmRefiner {
 			System.out.format("Alignment took %dms%n", alignTime);
 
 			startTime = System.currentTimeMillis();
-			int symm = CeSymm.getSymmetryOrder(afpChain);
+			int symm = new SequenceFunctionOrderDetector().calculateOrder(afpChain, ca1);
 			long orderTime = System.currentTimeMillis()-startTime;
 			System.out.println("Symmetry="+symm);
 

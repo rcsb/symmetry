@@ -3,13 +3,11 @@ package org.biojava3.structure.quaternary.misc;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Set;
 
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava3.structure.dbscan.GetRepresentatives;
 
 public class BAFileReaderTest {
 

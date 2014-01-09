@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis;
+package org.biojava3.structure.align.symm.census2.analysis.mespeus;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

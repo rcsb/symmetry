@@ -20,27 +20,25 @@
  * Created on 2013-02-20
  *
  */
-package org.biojava3.structure.align.symm.census2.utils;
+package org.biojava3.structure.align.symm.census3.utils;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 
-import org.biojava3.structure.align.symm.census2.Results;
+import org.biojava3.core.sequence.io.util.IOUtils;
+import org.biojava3.structure.align.symm.census3.CensusResultList;
 
 /**
  * A utility that combines multiple census files into one census file.
- * @author dmyerstu
+ * @author dmyersturnbull
  */
 public class CensusCombiner {
 
-	private Results results;
+	private CensusResultList results;
 
 	public CensusCombiner(File[] files) {
 		try {
-			results = Results.fromXML(files);
+			results = CensusResultList.fromXML(files);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -61,18 +59,10 @@ public class CensusCombiner {
 	}
 
 	public void print(File combined) {
-		PrintWriter out = null;
 		try {
-			out = new PrintWriter(new BufferedWriter(new FileWriter(combined)));
-			String xml;
-			xml = results.toXML();
-			out.print(xml);
-			out.flush();
-			out.close();
+			Census2Adaptor.print(results.toXML(), combined);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
-		} finally {
-			out.close();
+			throw new RuntimeException("Couldn't print to file " + combined.getPath(), e);
 		}
 	}
 

@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis;
+package org.biojava3.structure.align.symm.census2.analysis.ligands;
 
 import java.io.Serializable;
 import java.util.ArrayList;

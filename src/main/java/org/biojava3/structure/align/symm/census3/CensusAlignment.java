@@ -1,9 +1,10 @@
-package org.biojava3.structure.align.symm.census2;
+package org.biojava3.structure.align.symm.census3;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
@@ -18,24 +19,29 @@ import org.biojava.bio.structure.align.util.AlignmentTools;
  * In future versions, may be able to handle different mappings between different symmetry subunits.
  * @author dmyersturnbull
  */
-public class AlignmentMapping implements Serializable {
+public class CensusAlignment implements Serializable {
 
 	private static final long serialVersionUID = -7879437940997148046L;
 
 	private Map<Integer, Integer> simpleFunction;
 
-	public AlignmentMapping() {
+	public CensusAlignment() {
 		simpleFunction = new HashMap<Integer, Integer>();
 	}
 
-	public AlignmentMapping(AFPChain afpChain) {
+	public CensusAlignment(AFPChain afpChain) {
 		try {
 			this.simpleFunction = AlignmentTools.alignmentAsMap(afpChain);
 		} catch (StructureException e) {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
+	public CensusAlignment(Map<Integer, Integer> simpleFunction) {
+		this.simpleFunction = simpleFunction;
+	}
+
+	@XmlValue
 	@XmlJavaTypeAdapter(AlignmentFunctionAdapter.class)
 	public Map<Integer, Integer> getSimpleFunction() {
 		return simpleFunction;
@@ -53,12 +59,12 @@ public class AlignmentMapping implements Serializable {
 
 		@Override
 		public Map<Integer, Integer> unmarshal(String v) throws Exception {
-			return AlignmentTools.fromConciseAlignmentString(v.replaceAll("-", ">"));
+			return AlignmentTools.fromConciseAlignmentString(v.replaceAll("=", ">"));
 		}
 
 		@Override
 		public String marshal(Map<Integer, Integer> v) throws Exception {
-			return AlignmentTools.toConciseAlignmentString(v).replaceAll("<", "-");
+			return AlignmentTools.toConciseAlignmentString(v).replaceAll(">", "=");
 		}
 		
 	}

@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis;
+package org.biojava3.structure.align.symm.census2.analysis.mespeus;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,7 +9,7 @@ import java.util.Map;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
-import org.biojava3.structure.align.symm.census2.analysis.SymmetryInMespeus.MespeusEntryMatcher;
+import org.biojava3.structure.align.symm.census2.analysis.mespeus.SymmetryInMespeus.MespeusEntryMatcher;
 import org.junit.Test;
 
 /**

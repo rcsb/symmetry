@@ -22,7 +22,7 @@
  *
  * @since 3.0.2
  */
-package org.biojava3.structure.align.symm.census2;
+package org.biojava3.structure.align.symm.census3;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -44,52 +44,53 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava3.structure.align.symm.census2.utils.ResultConverter;
 
 /**
- * A census (list of census {@link Result Results}).
- * @author dmyerstu
+ * A census of symmetry; that is, a list of {@link CensusResult CensusResults}.
+ * @author dmyersturnbull
  */
-@XmlRootElement(name = "CensusResults", namespace = "http://source.rcsb.org")
+@XmlRootElement(name = "CensusResultList", namespace = "http://source.rcsb.org")
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
-public class Results implements Serializable {
+public class CensusResultList implements Serializable {
 
-	private static final Logger logger = LogManager.getLogger(Results.class.getSimpleName());
+	private static final Logger logger = LogManager.getLogger(CensusResultList.class.getSimpleName());
 
 	private static final long serialVersionUID = -5517546595033480440L;
 	private static JAXBContext jaxbContext;
-	private List<Result> data = new ArrayList<Result>();
+	
+	private List<CensusResult> entries = new ArrayList<CensusResult>();
 
-	private String timestamp;
-	private double meanSecondsTaken;
+	private String startingTime;
+	private float meanSecondsTaken;
 
 	static {
 		try {
-			jaxbContext = JAXBContext.newInstance(Results.class);
+			jaxbContext = JAXBContext.newInstance(CensusResultList.class);
 		} catch (Exception e) {
 			throw new RuntimeException(e); // fatal
 		}
 	}
 
-	public static Results fromXML(File file) throws IOException {
+	public static CensusResultList fromXML(File file) throws IOException {
 
 		try {
 
 			Unmarshaller un = jaxbContext.createUnmarshaller();
 			FileInputStream fis = new FileInputStream(file);
-			Results results = (Results) un.unmarshal(fis);
+			CensusResultList results = (CensusResultList) un.unmarshal(fis);
 
 			// due to a side effect by JAXB
-			List<Result> newData = new ArrayList<Result>(results.getData().size());
+			List<CensusResult> newData = new ArrayList<CensusResult>(results.getEntries().size());
 			
-			for (Result result : results.getData()) {
+			for (CensusResult result : results.getEntries()) {
 				if (result != null) newData.add(result);
 			}
-			results.setData(newData);
+			results.setEntries(newData);
 
 			return results;
 
@@ -99,29 +100,21 @@ public class Results implements Serializable {
 
 	}
 	
-	public static List<SimpleResult> convertResults(List<Result> data){
-		List<SimpleResult> results = new ArrayList<SimpleResult>();
-		for ( Result r : data){
-			results.add(new SimpleResult(r));
-		}
-		return results;
-	}
-
-	public static Results fromXML(File[] files) throws IOException {
-		Results results = new Results();
+	public static CensusResultList fromXML(File[] files) throws IOException {
+		CensusResultList results = new CensusResultList();
 		// don't keep duplicate SCOP Ids
 		Set<String> scopIds = new HashSet<String>();
-		double meanSecondsTaken = 0;
+		float meanSecondsTaken = 0f;
 		for (File file : files) {
-			Results old = fromXML(file);
+			CensusResultList old = fromXML(file);
 			logger.debug("Taking " + old.size() + " results from " + file.getName());
 			meanSecondsTaken += old.getMeanSecondsTaken();
-			for (Result result : old.getData()) {
-				if (!scopIds.contains(result.getScopId())) {
-					scopIds.add(result.getScopId());
+			for (CensusResult result : old.getEntries()) {
+				if (!scopIds.contains(result.getId())) {
+					scopIds.add(result.getId());
 					results.add(result);
 				} else {
-					logger.warn("Found duplicate " + result.getScopId() + " in file " + file.getName());
+					logger.warn("Found duplicate " + result.getId() + " in file " + file.getName());
 				}
 			}
 		}
@@ -129,75 +122,64 @@ public class Results implements Serializable {
 		return results;
 	}
 
-	public static Results getExistingResults(File file) throws IOException {
+	public static CensusResultList getExistingResults(File file) throws IOException {
 		if (file.exists()) {
-			return Results.fromXML(file);
+			return CensusResultList.fromXML(file);
 		}
 		return null;
 	}
 
-	public static Results getExistingResults(String file) throws IOException {
+	public static CensusResultList getExistingResults(String file) throws IOException {
 		return getExistingResults(new File(file));
 	}
 
-	public Results() {
-		timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+	public CensusResultList() {
+		startingTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 	}
 
-	public boolean add(Result e) {
-		return data.add(e);
+	public boolean add(CensusResult e) {
+		return entries.add(e);
 	}
 
-	public boolean addAll(Collection<? extends Result> c) {
-		return data.addAll(c);
+	public boolean addAll(Collection<? extends CensusResult> c) {
+		return entries.addAll(c);
 	}
 
 	public int size() {
-		return data.size();
+		return entries.size();
 	}
 
 	public boolean contains(Object o) {
-		return data.contains(o);
+		return entries.contains(o);
 	}
 
 	public boolean containsAll(Collection<?> c) {
-		return data.containsAll(c);
+		return entries.containsAll(c);
 	}
 
-	public List<Result> getData() {
-		return data;
+	@XmlElement(name = "entry")
+	public List<CensusResult> getEntries() {
+		return entries;
 	}
 
-	public String getTimestamp() {
-		return timestamp;
+	public String getStartingTime() {
+		return startingTime;
 	}
 
-	public void setData(List<Result> data) {
-		this.data = data;
+	public void setEntries(List<CensusResult> entries) {
+		this.entries = entries;
 	}
 
-	public void setTimestamp(String timestamp) {
-		this.timestamp = timestamp;
+	public void setStartingTime(String timestamp) {
+		this.startingTime = timestamp;
 	}
 
-	public double getMeanSecondsTaken() {
+	public float getMeanSecondsTaken() {
 		return meanSecondsTaken;
 	}
 
-	public void setMeanSecondsTaken(double meanSecondsTaken) {
+	public void setMeanSecondsTaken(float meanSecondsTaken) {
 		this.meanSecondsTaken = meanSecondsTaken;
-	}
-
-	public String toHTML() {
-		StringBuilder sb = new StringBuilder();
-
-		sb.append(ResultConverter.getHTMLHeader());
-		for (Result d : data) {
-			sb.append(ResultConverter.toHTML(d));
-		}
-
-		sb.append(ResultConverter.getHTMLFooter());
-		return sb.toString();
 	}
 
 	public String toXML() throws IOException {
@@ -215,10 +197,6 @@ public class Results implements Serializable {
 
 		return baos.toString();
 
-	}
-
-	public static Results fromXML(String queryFile) throws IOException {
-		return fromXML(new File(queryFile));
 	}
 
 }

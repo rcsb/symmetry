@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis;
+package org.biojava3.structure.align.symm.census2.analysis.ligands;
 
 
 import junit.framework.TestCase;
@@ -11,6 +11,7 @@ import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.junit.Before;
+import org.junit.Test;
 
 
 /**
@@ -46,6 +47,11 @@ public class LigandFinderTest extends TestCase {
 		ScopFactory.setScopDatabase(scop);
 	}
 	
+	@Test
+	public void test() {
+		
+	}
+	
 	@Override
 	protected void tearDown() throws Exception {
 		super.tearDown();
@@ -53,4 +59,8 @@ public class LigandFinderTest extends TestCase {
 		ChemCompGroupFactory.setChemCompProvider(orig);
 	}
 	
+	@Test
+	public void testNothing(){
+		assertTrue(true);
+	}
 }

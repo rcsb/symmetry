@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:CensusResults xmlns:ns2="http://source.rcsb.org">
+    <data>
+        <alignment>
+            <alignLength>153</alignLength>
+            <alignScore>114.24775</alignScore>
+            <block1Length>29</block1Length>
+            <block2Length>33</block2Length>
+            <coverage>42</coverage>
+            <gapLength>91</gapLength>
+            <identity>0.019607844</identity>
+            <rmsd>4.595799</rmsd>
+            <similarity>0.078431375</similarity>
+            <tmScore>0.24091585</tmScore>
+            <zScore>1.99</zScore>
+        </alignment>
+        <axis>
+            <orthogonal>138.79875</orthogonal>
+            <screw>0.7654455</screw>
+            <theta>3.079014</theta>
+            <x>0.71869856</x>
+            <y>0.5946005</y>
+            <z>0.36044785</z>
+        </axis>
+        <classification>b.6.1</classification>
+        <description>Cupredoxins</description>
+        <isSignificant>true</isSignificant>
+        <order>1</order>
+        <protodomain>1kcw.A_938-977,A_997-1026</protodomain>
+        <rank>0</rank>
+        <scopId>d1kcwa6</scopId>
+        <sunId>23156</sunId>
+    </data>
+    <meanSecondsTaken>2039.0</meanSecondsTaken>
+    <timestamp>2013-12-18 17:00:54</timestamp>
+</ns2:CensusResults>

@@ -17,6 +17,13 @@
  */
 package org.biojava3.structure.align.symm.census2.representatives;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,8 +51,30 @@ import org.biojava.bio.structure.scop.ScopNode;
  */
 public class ScopSupport {
 
+	public static final int[] ALL_SCOP_CLASSES = new int[] { 46456, 48724, 51349, 53931, 56572, 56835, 56992, 57942, 58117, 58231, 58788 };
 	public static final int[] TRUE_SCOP_CLASSES = new int[] { 46456, 48724, 51349, 53931, 56572, 56835 };
-	
+
+	public static void main(String[] args) throws IOException {
+		ScopFactory.setScopDatabase(ScopFactory.LATEST_VERSION);
+		for (int sunId : ALL_SCOP_CLASSES) {
+			List<ScopDomain> domains = new ArrayList<ScopDomain>();
+			ScopSupport.getInstance().getAllDomainsUnder(sunId, domains, true);
+			String classId = ScopFactory.getSCOP().getScopDescriptionBySunid(sunId).getClassificationId();
+			File file = new File("src/main/resources/scop_domains/" + classId + ".list");
+			if (!file.exists()) {
+				PrintWriter pw = null;
+				try {
+					pw = new PrintWriter(new BufferedWriter(new FileWriter(file)));
+					for (ScopDomain domain : domains) {
+						pw.println(domain.getScopId());
+					}
+				} finally {
+					if (pw != null) pw.close();
+				}
+			}
+		}
+	}
+
 	private static ScopSupport instance;
 	private Map<ScopCategory, SoftReference<List<ScopDescription>>> categories = new HashMap<ScopCategory, SoftReference<List<ScopDescription>>>();
 
@@ -90,6 +119,7 @@ public class ScopSupport {
 		logger.info("Finished creating ScopSupport");
 	}
 
+
 	/**
 	 * General-use method that does not attempt to fetch a diverse set.
 	 * @param sunId
@@ -100,22 +130,26 @@ public class ScopSupport {
 			getAllDomainsUnder(sunId, domains, includeAllProteins);
 		}
 	}
-	
+
 	/**
 	 * General-use method that does not attempt to fetch a diverse set.
 	 * @param sunId
 	 * @param domains
 	 */
 	public void getAllDomainsUnder(int sunId, List<ScopDomain> domains, boolean includeAllProteins) {
-		
+
+		// first just try to read from a file
+		boolean success = readDomainsUnder(sunId, domains, includeAllProteins);
+		if (success) return;
+
 		final ScopDatabase scop = ScopFactory.getSCOP();
 		final ScopDescription description = scop.getScopDescriptionBySunid(sunId);
-		
+
 		if (description == null) {
 			throw new IllegalArgumentException("Couldn't find id " + sunId);
 		}
-		
-		if (description.getCategory().equals(ScopCategory.Species)) { // base case
+
+		if (description.getCategory().equals(ScopCategory.Px)) { // base case
 			if (includeAllProteins) {
 				domains.addAll(scop.getScopDomainsBySunid(sunId));
 			} else {
@@ -128,7 +162,7 @@ public class ScopSupport {
 			}
 		}
 	}
-	
+
 	/**
 	 * Returns a list of all domains (in SCOP hierarchy, {@code dm}) that are descendants of the SCOP node corresponding
 	 * to the Sun Id {@code sunId}. Unless {@code includeAllProteins} is set to true, only the <em>first</em> {@code Sp}
@@ -248,13 +282,43 @@ public class ScopSupport {
 		}
 		return sunId;
 	}
-	
+
 	public Set<Integer> getSunIds(String[] strings) {
 		Set<Integer> set = new HashSet<Integer>();
 		for (String s : strings) {
 			set.add(getSunId(s));
 		}
 		return set;
+	}
+
+	private boolean readDomainsUnder(int sunId, List<ScopDomain> domains, boolean includeAllProteins) {
+		String classId = ScopFactory.getSCOP().getScopDescriptionBySunid(sunId).getClassificationId();
+		File file = new File("src/main/resources/scop_domains/" + classId + ".list");
+		if (!file.exists()) return false;
+		logger.debug("Attempting to read " + file.getPath());
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(file));
+			String line = "";
+			while ((line = br.readLine()) != null) {
+				ScopDomain domain = ScopFactory.getSCOP().getDomainByScopID(line.trim());
+				if (domain == null) {
+					logger.warn("Didn't find " + line.trim() + " in SCOP " + ScopFactory.getSCOP().getScopVersion() + "; perhaps the version is different?");
+				} else {
+					domains.add(domain);
+				}
+			}
+		} catch (IOException e) {
+			logger.warn("Couldn't read " + file.getPath() + "; re-constructing");
+			return false;
+		} finally {
+			if (br != null) try {
+				br.close();
+			} catch (IOException e) {
+				logger.warn("Couldn't close reader to " + file, e);
+			}
+		}
+		return true;
 	}
 
 	private void putDomainsFromFamilies(int repsPerSf, int totalDomains, List<ScopDomain> domains,

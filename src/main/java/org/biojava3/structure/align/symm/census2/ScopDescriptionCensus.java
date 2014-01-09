@@ -39,7 +39,7 @@ import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
  */
 public class ScopDescriptionCensus extends Census {
 
-	private static final Logger logger = LogManager.getLogger(ScopDescriptionCensus.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(ScopDescriptionCensus.class.getName());
 
 	protected int[] sunIds;
 
@@ -48,7 +48,9 @@ public class ScopDescriptionCensus extends Census {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			ScopDescriptionCensus census = new ScopDescriptionCensus(maxThreads, sunIds);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache());
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {

@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis;
+package org.biojava3.structure.align.symm.census2.analysis.mespeus;
 
 /**
  * A metalloprotein from <a href="http://mespeus.bch.ed.ac.uk/MESPEUS">MESPEUS</a>.

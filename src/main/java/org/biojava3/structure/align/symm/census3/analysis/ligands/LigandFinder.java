@@ -178,12 +178,12 @@ public class LigandFinder {
 				if (!distancesToCentroid.isEmpty()) {
 					logger.debug("Assigning " + distancesToCentroid.size() + " ligands to " + scopId);
 					for (Group group : distancesToCentroid.keySet()) { // constrained by radius
-						Ligand ligand = new Ligand(group.getAtoms(), distancesToCentroid.get(group), distancesToAxis.get(group));
+						CensusLigand ligand = new CensusLigand(group.getAtoms(), distancesToCentroid.get(group), distancesToAxis.get(group));
 						ligandList.add(scopId, ligand);
 					}
 				} else {
 					logger.debug("Found no center ligands for " + scopId);
-					ligandList.put(scopId, new StructureLigands(scopId));
+					ligandList.put(scopId, new LigandsOfStructure(scopId));
 				}
 
 			} catch (Exception e) {

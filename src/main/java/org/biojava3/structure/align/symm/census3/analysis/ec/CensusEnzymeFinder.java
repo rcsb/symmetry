@@ -37,9 +37,9 @@ import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
  * A hyphen-minus means the EC class could not be found.
  * @author dmyersturnbull
  */
-public class ECFinder {
+public class CensusEnzymeFinder {
 
-	private static final Logger logger = LogManager.getLogger(ECFinder.class.getName());
+	private static final Logger logger = LogManager.getLogger(CensusEnzymeFinder.class.getName());
 
 	private Set<String> ecsByUnknownDomain = new HashSet<String>();
 	private Map<String,String> ecsBySymmDomain = new HashMap<String,String>();
@@ -69,7 +69,7 @@ public class ECFinder {
 	/**
 	 * Creates a new ECFinder from a tab-delimited file.
 	 */
-	public static ECFinder fromTabbed(File file) throws IOException {
+	public static CensusEnzymeFinder fromTabbed(File file) throws IOException {
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader(file));
@@ -79,8 +79,8 @@ public class ECFinder {
 		}
 	}
 
-	public static ECFinder fromTabbed(BufferedReader br) throws IOException {
-		ECFinder corr = new ECFinder();
+	public static CensusEnzymeFinder fromTabbed(BufferedReader br) throws IOException {
+		CensusEnzymeFinder corr = new CensusEnzymeFinder();
 		String line = "";
 		boolean onSymm = true;
 		while ((line = br.readLine()) != null) {
@@ -226,18 +226,18 @@ public class ECFinder {
 	 */
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
-			System.err.println("Usage: " + ECFinder.class.getSimpleName() + " census-file.xml ecs-file.tsv");
+			System.err.println("Usage: " + CensusEnzymeFinder.class.getSimpleName() + " census-file.xml ecs-file.tsv");
 			return;
 		}
-		ECFinder ecs;
+		CensusEnzymeFinder ecs;
 		if (new File(args[1]).exists()) {
-			ecs = ECFinder.fromTabbed(new File(args[1]));
+			ecs = CensusEnzymeFinder.fromTabbed(new File(args[1]));
 		} else {
-			ecs = new ECFinder();
+			ecs = new CensusEnzymeFinder();
 		}
 		ecs.rebuild(new File(args[0]), new File(args[1]));
-		NormalizedECs.printComparisonUnnormalized(1, 10, ecs.ecsBySymmDomain, ecs.ecsBySymmDomain);
-		NormalizedECs.printComparisonUnnormalized(2, 10, ecs.ecsBySymmDomain, ecs.ecsBySymmDomain);
+		CensusEnzymeStats.printComparisonUnnormalized(1, 10, ecs.ecsBySymmDomain, ecs.ecsBySymmDomain);
+		CensusEnzymeStats.printComparisonUnnormalized(2, 10, ecs.ecsBySymmDomain, ecs.ecsBySymmDomain);
 	}
 
 }

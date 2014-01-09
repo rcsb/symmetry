@@ -21,7 +21,7 @@ import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusSignificance;
 import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
-import org.biojava3.structure.align.symm.census3.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * Tabulate symmetry by order.
@@ -123,19 +123,19 @@ public class SymmetryOrder {
 			ScopDescription famDesc = scop.getScopDescriptionBySunid(familyId);
 			String family = famDesc.getClassificationId();
 
-			StatUtils.plus(nDomainsInFolds, fold);
+			CensusStatUtils.plus(nDomainsInFolds, fold);
 
 			// plus superfamilies
-			StatUtils.plusSet(superfamilies, fold, sf);
+			CensusStatUtils.plusSet(superfamilies, fold, sf);
 
 			// plus families
-			StatUtils.plusSet(families, fold, family);
-			StatUtils.plusSet(families, sf, family);
+			CensusStatUtils.plusSet(families, fold, family);
+			CensusStatUtils.plusSet(families, sf, family);
 
 			// plus domains
-			StatUtils.plusSet(domains, fold, scopId);
-			StatUtils.plusSet(domains, sf, scopId);
-			StatUtils.plusSet(domains, family, scopId);
+			CensusStatUtils.plusSet(domains, fold, scopId);
+			CensusStatUtils.plusSet(domains, sf, scopId);
+			CensusStatUtils.plusSet(domains, family, scopId);
 		}
 
 		@Override
@@ -151,13 +151,13 @@ public class SymmetryOrder {
 		public String toString(int limit) {
 			SortedMap<String,Integer> counts = getnDomainsInFold();
 			StringBuilder sb = new StringBuilder();
-			sb.append(getDomainSet().size() + " domains, " + getFamilySet().size() + " families, " + getSuperfamilySet().size() + " superfamilies, " + getFoldSet().size() + " folds for order=" + order + ":" + StatUtils.NEWLINE);
+			sb.append(getDomainSet().size() + " domains, " + getFamilySet().size() + " families, " + getSuperfamilySet().size() + " superfamilies, " + getFoldSet().size() + " folds for order=" + order + ":" + CensusStatUtils.NEWLINE);
 			int i = 0;
-			sb.append("fold\tN domains\tN SFs" + StatUtils.NEWLINE);
+			sb.append("fold\tN domains\tN SFs" + CensusStatUtils.NEWLINE);
 			for (Map.Entry<String, Integer> entry : counts.entrySet()) {
 				if (i < limit) {
 					sb.append(entry.getKey() + "\t" + entry.getValue() + "\t" + superfamilies.get(entry.getKey()).size()
-							+ StatUtils.NEWLINE);
+							+ CensusStatUtils.NEWLINE);
 				}
 				i++;
 			}
@@ -178,7 +178,7 @@ public class SymmetryOrder {
 		}
 		SymmetryOrder orders = new SymmetryOrder(CensusResultList.fromXML(new File(args[0])));
 		System.out.println(orders);
-		System.out.println(orders.toTable(ExampleType.SUPERFAMILY, 16, "\t", "" + StatUtils.NEWLINE, "\t"));
+		System.out.println(orders.toTable(ExampleType.SUPERFAMILY, 16, "\t", "" + CensusStatUtils.NEWLINE, "\t"));
 	}
 
 	private Map<Integer, OrderInfo> orderInfos = new TreeMap<Integer, OrderInfo>();
@@ -246,9 +246,9 @@ public class SymmetryOrder {
 		StringBuilder sb = new StringBuilder();
 		for (OrderInfo result : orderInfos.values()) {
 			sb.append("====================== " + result.getOrder() + " ============================"
-					+ StatUtils.NEWLINE);
+					+ CensusStatUtils.NEWLINE);
 			sb.append(result.toString(10));
-			sb.append("=====================================================" + StatUtils.NEWLINE + StatUtils.NEWLINE);
+			sb.append("=====================================================" + CensusStatUtils.NEWLINE + CensusStatUtils.NEWLINE);
 		}
 		return sb.toString();
 	}

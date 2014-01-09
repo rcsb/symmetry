@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * A collection (map) of {@link StructureLigands}.
+ * A collection (map) of {@link LigandsOfStructure}.
  * 
  * @author dmyersturnbull
  */
@@ -36,7 +36,7 @@ public class LigandList implements Serializable {
 	private static final long serialVersionUID = -6669870731175460575L;
 
 	private static JAXBContext jaxbContext;
-	private Map<String, StructureLigands> ligands;
+	private Map<String, LigandsOfStructure> ligands;
 
 	private String timestamp;
 
@@ -65,7 +65,7 @@ public class LigandList implements Serializable {
 	}
 
 	public LigandList() {
-		ligands = new HashMap<String, StructureLigands>();
+		ligands = new HashMap<String, LigandsOfStructure>();
 		timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 	}
 
@@ -73,15 +73,15 @@ public class LigandList implements Serializable {
 		return ligands.containsKey(o);
 	}
 
-	public Set<Entry<String, StructureLigands>> entrySet() {
+	public Set<Entry<String, LigandsOfStructure>> entrySet() {
 		return ligands.entrySet();
 	}
 
-	public StructureLigands get(String key) {
+	public LigandsOfStructure get(String key) {
 		return ligands.get(key);
 	}
 
-	public Map<String, StructureLigands> getData() {
+	public Map<String, LigandsOfStructure> getData() {
 		return ligands;
 	}
 
@@ -97,24 +97,24 @@ public class LigandList implements Serializable {
 		return ligands.keySet();
 	}
 
-	public void put(String key, StructureLigands value) {
+	public void put(String key, LigandsOfStructure value) {
 		ligands.put(key, value);
 	}
 
-	public void add(String key, Ligand value) {
+	public void add(String key, CensusLigand value) {
 		if (!ligands.containsKey(key)) {
-			ligands.put(key, new StructureLigands(key));
+			ligands.put(key, new LigandsOfStructure(key));
 		}
 		ligands.get(key).add(value);
 	}
 
-	public void putAll(Map<? extends String, ? extends Ligand> m) {
-		for (Map.Entry<? extends String, ? extends Ligand> entry : m.entrySet()) {
+	public void putAll(Map<? extends String, ? extends CensusLigand> m) {
+		for (Map.Entry<? extends String, ? extends CensusLigand> entry : m.entrySet()) {
 			add(entry.getKey(), entry.getValue());
 		}
 	}
 
-	public void setData(Map<String, StructureLigands> data) {
+	public void setData(Map<String, LigandsOfStructure> data) {
 		this.ligands = data;
 	}
 
@@ -150,7 +150,7 @@ public class LigandList implements Serializable {
 
 	}
 
-	public Collection<StructureLigands> values() {
+	public Collection<LigandsOfStructure> values() {
 		return ligands.values();
 	}
 

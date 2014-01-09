@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.biojava3.structure.align.symm.census3.CensusResult;
-import org.biojava3.structure.align.symm.census3.stats.Grouping;
-import org.biojava3.structure.align.symm.census3.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.StructureClassificationGrouping;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * A helper class that can decide the order of a fold based on consensus of the domains.
@@ -19,11 +19,11 @@ public class OrderHelper {
 	private Map<String, Float> tmScoreMap = new HashMap<String, Float>();
 	private Map<String, Integer> counts = new HashMap<String, Integer>();
 
-	private Grouping normalizer;
+	private StructureClassificationGrouping normalizer;
 	private double tmScoreCutoff;
 	private ConsensusDecider consensusDecider;
 	
-	public OrderHelper(Grouping normalizer, double tmScoreCutoff, ConsensusDecider consensusDecider) {
+	public OrderHelper(StructureClassificationGrouping normalizer, double tmScoreCutoff, ConsensusDecider consensusDecider) {
 		super();
 		this.normalizer = normalizer;
 		this.tmScoreCutoff = tmScoreCutoff;
@@ -36,14 +36,14 @@ public class OrderHelper {
 
 		String fold = normalizer.group(result);
 
-		StatUtils.plus(counts, fold);
+		CensusStatUtils.plus(counts, fold);
 
-		StatUtils.plusF(tmScoreMap, fold, result.getScoreList().getTmScore());
+		CensusStatUtils.plusF(tmScoreMap, fold, result.getScoreList().getTmScore());
 
 		// also note it would be unfair to decrease the hasOrder score with -1
 		Integer order = result.getOrder();
 		if (order == null || result.getOrder() < 2) order = 1;
-		StatUtils.plus(hasOrderMap, fold, order > 1 ? 1 : 0);
+		CensusStatUtils.plus(hasOrderMap, fold, order > 1 ? 1 : 0);
 
 		// do this AFTER we do hasOrderMap, but before ordersMap
 //		if (!sig.isSignificant(result)) order = 1;
@@ -51,7 +51,7 @@ public class OrderHelper {
 		if (ordersMap.get(fold) == null) {
 			ordersMap.put(fold, new HashMap<Integer,Integer>(7));
 		}
-		StatUtils.plus(ordersMap.get(fold), order);
+		CensusStatUtils.plus(ordersMap.get(fold), order);
 
 	}
 

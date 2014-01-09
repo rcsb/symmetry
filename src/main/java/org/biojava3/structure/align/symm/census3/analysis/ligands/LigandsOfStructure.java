@@ -13,26 +13,26 @@ import javax.xml.bind.annotation.XmlTransient;
  * 
  * @author dmyersturnbull
  */
-public class StructureLigands implements Serializable {
+public class LigandsOfStructure implements Serializable {
 
 	private static final long serialVersionUID = 8844385971743419028L;
-	private List<Ligand> ligands = new ArrayList<Ligand>();
+	private List<CensusLigand> ligands = new ArrayList<CensusLigand>();
 	private String structureName;
 
-	public StructureLigands() {
+	public LigandsOfStructure() {
 		super();
 	}
 
-	public StructureLigands(String structureName) {
+	public LigandsOfStructure(String structureName) {
 		super();
 		this.structureName = structureName;
 	}
 
-	public boolean add(Ligand e) {
+	public boolean add(CensusLigand e) {
 		return ligands.add(e);
 	}
 
-	public boolean addAll(Collection<? extends Ligand> c) {
+	public boolean addAll(Collection<? extends CensusLigand> c) {
 		return ligands.addAll(c);
 	}
 
@@ -40,11 +40,11 @@ public class StructureLigands implements Serializable {
 		return ligands.contains(o);
 	}
 
-	public Ligand get(int index) {
+	public CensusLigand get(int index) {
 		return ligands.get(index);
 	}
 
-	public List<Ligand> getLigands() {
+	public List<CensusLigand> getLigands() {
 		return ligands;
 	}
 
@@ -57,11 +57,11 @@ public class StructureLigands implements Serializable {
 		return ligands.isEmpty();
 	}
 
-	public Iterator<Ligand> iterator() {
+	public Iterator<CensusLigand> iterator() {
 		return ligands.iterator();
 	}
 
-	public void setLigands(List<Ligand> ligands) {
+	public void setLigands(List<CensusLigand> ligands) {
 		this.ligands = ligands;
 	}
 

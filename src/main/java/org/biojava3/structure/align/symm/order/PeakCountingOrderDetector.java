@@ -7,7 +7,7 @@ import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.census3.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * Determines order by smoothing and counting the number of peaks.
@@ -40,12 +40,12 @@ public class PeakCountingOrderDetector implements OrderDetector {
 			double[] smoothed = loess.smooth(pair.getKey(), pair.getValue());
 
 			for (double d : pair.getKey()) {
-				System.out.print(StatUtils.formatD(d) + "\t");
+				System.out.print(CensusStatUtils.formatD(d) + "\t");
 			}
 			System.out.println();
 
 			for (double d : smoothed) {
-				System.out.print(StatUtils.formatD(d) + "\t");
+				System.out.print(CensusStatUtils.formatD(d) + "\t");
 			}
 			System.out.println();
 			

@@ -32,33 +32,6 @@ public class CeSymmTest extends TestCase {
 		super.setUp();
 	}
 
-	public void testGetSymmetryOrder() throws IOException, StructureException {
-		// List of alignments to try, along with proper symmetry
-		Map<String,Integer> orderMap = new HashMap<String,Integer>();
-		orderMap.put("1itb.A",3); // b-trefoil, C3
-		orderMap.put("1tim.A",2); // tim-barrel, C8
-		//orderMap.put("d1p9ha_",-1); // not rotational symmetry
-		orderMap.put("3HKE.A",2); // very questionable alignment
-		orderMap.put("d1jlya1",3); // a very nice trefoil
-		
-		AtomCache cache = new AtomCache();
-		//StructureAlignmentFactory.addAlgorithm(new CeSymm());
-		//CeSymm ce = (CeSymm) StructureAlignmentFactory.getAlgorithm(CeSymm.algorithmName);
-		
-		for(String name : orderMap.keySet()) {
-			CeSymm ce = new CeSymm();
-			
-			Atom[] ca1 = cache.getAtoms(name);
-			Atom[] ca2 = cache.getAtoms(name);
-			
-			AFPChain afpChain = ce.align(ca1, ca2);
-			
-			int order = CeSymm.getSymmetryOrder(afpChain);
-			
-			assertEquals("Wrong order for "+name,orderMap.get(name).intValue(), order);
-		}
-	}
-	
 	
 	/**
 	 * CeSymm and CeCalculator both use some internal variables, which should

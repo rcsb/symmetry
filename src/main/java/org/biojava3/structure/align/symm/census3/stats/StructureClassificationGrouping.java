@@ -30,7 +30,7 @@ import org.biojava3.structure.align.symm.census3.CensusResult;
  * A unit by which to report statistics. Particularly: family, superfamily, or fold.
  * @author dmyersturnbull
  */
-public abstract class Grouping {
+public abstract class StructureClassificationGrouping {
 
 	@Override
 	public abstract String toString();
@@ -39,16 +39,16 @@ public abstract class Grouping {
 	
 	public abstract String group(ScopDomain domain);
 
-	public static Grouping byName(String name) {
+	public static StructureClassificationGrouping byName(String name) {
 		try {
-			return (Grouping) Grouping.class.getMethod(name, new Class[]{}).invoke(null, new Object[]{});
+			return (StructureClassificationGrouping) StructureClassificationGrouping.class.getMethod(name, new Class[]{}).invoke(null, new Object[]{});
 		} catch (Exception e) {
 			throw new RuntimeException("Could not get a Grouping object from the method " + name, e);
 		}
 	}
 	
-	public static Grouping domain() {
-		return new Grouping() {
+	public static StructureClassificationGrouping domain() {
+		return new StructureClassificationGrouping() {
 			@Override
 			public String group(CensusResult result) {
 				return result.getId();
@@ -63,8 +63,8 @@ public abstract class Grouping {
 			}
 		};
 	}
-	public static Grouping superfamily() {
-		return new Grouping() {
+	public static StructureClassificationGrouping superfamily() {
+		return new StructureClassificationGrouping() {
 			@Override
 			public String group(CensusResult result) {
 				String classification = ScopFactory.getSCOP().getDomainByScopID(result.getId()).getClassificationId();
@@ -87,8 +87,8 @@ public abstract class Grouping {
 		};
 	}
 
-	public static Grouping family() {
-		return new Grouping() {
+	public static StructureClassificationGrouping family() {
+		return new StructureClassificationGrouping() {
 			@Override
 			public String group(CensusResult result) {
 				String classification = ScopFactory.getSCOP().getDomainByScopID(result.getId()).getClassificationId();
@@ -111,8 +111,8 @@ public abstract class Grouping {
 		};
 	}
 
-	public static Grouping fold() {
-		return new Grouping() {
+	public static StructureClassificationGrouping fold() {
+		return new StructureClassificationGrouping() {
 			@Override
 			public String group(CensusResult result) {
 				String classification = ScopFactory.getSCOP().getDomainByScopID(result.getId()).getClassificationId();

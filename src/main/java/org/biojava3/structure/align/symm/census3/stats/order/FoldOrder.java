@@ -12,8 +12,8 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
-import org.biojava3.structure.align.symm.census3.stats.Grouping;
-import org.biojava3.structure.align.symm.census3.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.StructureClassificationGrouping;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * Tabulate symmetry by order, where symmetry order is determined by consensus over domains in a SCOP category.
@@ -45,7 +45,7 @@ public class FoldOrder {
 		}
 		FoldOrder orders = new FoldOrder();
 		if (args.length > 1) {
-			orders.setNormalizer(Grouping.byName(args[1]));
+			orders.setNormalizer(StructureClassificationGrouping.byName(args[1]));
 		}
 		orders.run(CensusResultList.fromXML(new File(args[0])));
 		System.out.println(orders);
@@ -54,11 +54,11 @@ public class FoldOrder {
 	private Map<Integer, Integer> nFoldsByOrder = new HashMap<Integer, Integer>();
 
 	// just always call this "fold" in the code
-	private Grouping normalizer = Grouping.fold();
+	private StructureClassificationGrouping normalizer = StructureClassificationGrouping.fold();
 	
-	private Grouping exampler = Grouping.superfamily();
+	private StructureClassificationGrouping exampler = StructureClassificationGrouping.superfamily();
 
-	public void setExampler(Grouping exampler) {
+	public void setExampler(StructureClassificationGrouping exampler) {
 		this.exampler = exampler;
 	}
 
@@ -81,11 +81,11 @@ public class FoldOrder {
 				}
 				String fold = normalizer.group(result);
 				String superfamily = exampler.group(result);
-				StatUtils.plus(nDomainsInFolds, fold);
+				CensusStatUtils.plus(nDomainsInFolds, fold);
 				if (!examplesByFold.containsKey(fold)) {
 					examplesByFold.put(fold, new HashMap<String, Integer>());
 				}
-				StatUtils.plus(examplesByFold.get(fold), superfamily);
+				CensusStatUtils.plus(examplesByFold.get(fold), superfamily);
 				decider.add(result);
 			} catch (RuntimeException e) {
 				logger.warn("Failed on " + result.getId(), e);
@@ -94,7 +94,7 @@ public class FoldOrder {
 
 		for (String fold : nDomainsInFolds.keySet()) {
 			int order = decider.getConsensusOrder(fold);
-			StatUtils.plus(nFoldsByOrder, order);
+			CensusStatUtils.plus(nFoldsByOrder, order);
 		}
 
 	}
@@ -103,7 +103,7 @@ public class FoldOrder {
 		return nFoldsByOrder;
 	}
 
-	public void setNormalizer(Grouping normalizer) {
+	public void setNormalizer(StructureClassificationGrouping normalizer) {
 		this.normalizer = normalizer;
 	}
 
@@ -114,9 +114,9 @@ public class FoldOrder {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("order\tN " + normalizer + StatUtils.NEWLINE);
+		sb.append("order\tN " + normalizer + CensusStatUtils.NEWLINE);
 		for (Map.Entry<Integer, Integer> entry : nFoldsByOrder.entrySet()) {
-			sb.append(entry.getKey() + "\t" + entry.getValue() + StatUtils.NEWLINE);
+			sb.append(entry.getKey() + "\t" + entry.getValue() + CensusStatUtils.NEWLINE);
 		}
 		return sb.toString();
 	}

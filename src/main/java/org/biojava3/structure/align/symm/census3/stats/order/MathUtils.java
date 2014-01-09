@@ -12,7 +12,7 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.biojava3.structure.align.symm.census3.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * Static utilities related to math, particularly linear algebra.
@@ -73,7 +73,7 @@ public class MathUtils {
 				sb.append(nf.format(matrix.getEntry(i, j)));
 				if (j < matrix.getColumnDimension() - 1) sb.append("\t");
 			}
-			if (i < matrix.getRowDimension() - 1) sb.append(StatUtils.NEWLINE);
+			if (i < matrix.getRowDimension() - 1) sb.append(CensusStatUtils.NEWLINE);
 		}
 	}
 

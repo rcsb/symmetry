@@ -8,7 +8,7 @@ import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
 import org.biojava3.structure.align.symm.census2.SignificanceFactory;
-import org.biojava3.structure.align.symm.census2.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * Find differences between two census files.
@@ -62,12 +62,12 @@ public class CensusDifferences {
 						changed += r.getAlignment().getTmScore() - m1.get(r.getScopId());
 						nChanged++;
 						if (sig.isSignificant(r) &&  m1.get(r.getScopId()) < 0.4 && Math.abs(a1.get(r.getScopId()) - a2.get(r.getScopId())) < 0.0001) {
-							System.out.println(r.getScopId() + "\t" + nTriviallyAligned + "\t" + StatUtils.formatD(m1.get(r.getScopId())) + "\t" + StatUtils.formatD(r.getAlignment().getTmScore()) + "\t" + a1.get(r.getScopId()) + "\t" + a2.get(r.getScopId()));
+							System.out.println(r.getScopId() + "\t" + nTriviallyAligned + "\t" + CensusStatUtils.formatD(m1.get(r.getScopId())) + "\t" + CensusStatUtils.formatD(r.getAlignment().getTmScore()) + "\t" + a1.get(r.getScopId()) + "\t" + a2.get(r.getScopId()));
 						}
 					}
 				}
 			}
-			System.out.println("Changed: " + StatUtils.formatD(changed / nChanged) + "\t" + nChanged);
+			System.out.println("Changed: " + CensusStatUtils.formatD(changed / nChanged) + "\t" + nChanged);
 		}
 
 		// added
@@ -80,7 +80,7 @@ public class CensusDifferences {
 					nAdded++;
 				}
 			}
-			System.out.println("Added: " + StatUtils.formatD(added / nAdded) + "\t" + nAdded);
+			System.out.println("Added: " + CensusStatUtils.formatD(added / nAdded) + "\t" + nAdded);
 		}
 
 		// removed
@@ -93,7 +93,7 @@ public class CensusDifferences {
 					nRemoved++;
 				}
 			}
-			System.out.println("Removed: " + StatUtils.formatD(removed / nRemoved) + "\t" + nRemoved);
+			System.out.println("Removed: " + CensusStatUtils.formatD(removed / nRemoved) + "\t" + nRemoved);
 		}
 	}
 	

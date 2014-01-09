@@ -32,7 +32,7 @@ import java.util.Set;
  * Static utilities for statistics.
  * @author dmyersturnbull
  */
-public class StatUtils {
+public class CensusStatUtils {
 
 	public static final String NEWLINE;
 	private static final int MAX_FRACTION_DIGITS = 3;

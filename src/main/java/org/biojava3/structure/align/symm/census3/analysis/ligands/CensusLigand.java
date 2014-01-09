@@ -7,14 +7,14 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.biojava.bio.structure.Atom;
-import org.biojava3.structure.align.symm.census3.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * A ligand that somehow relates to a symmetric structure.
  * 
  * @author dmyersturnbull
  */
-public class Ligand implements Serializable {
+public class CensusLigand implements Serializable {
 
 	private static final long serialVersionUID = -3803769618055243227L;
 
@@ -23,13 +23,13 @@ public class Ligand implements Serializable {
 	private String formula;
 	private boolean isMetallic;
 
-	public Ligand(List<Atom> atoms, double distance, double distanceToAxis) {
+	public CensusLigand(List<Atom> atoms, double distance, double distanceToAxis) {
 		SortedMap<String, Integer> letters = new TreeMap<String, Integer>();
 		for (Atom atom : atoms) {
 			String name = atom.getElement().name();
 			if (atom.getElement().getElementType().isMetal())
 				isMetallic = true;
-			StatUtils.plus(letters, name);
+			CensusStatUtils.plus(letters, name);
 		}
 		StringBuilder sb = new StringBuilder();
 		for (Map.Entry<String, Integer> entry : letters.entrySet()) {
@@ -42,11 +42,11 @@ public class Ligand implements Serializable {
 		this.distanceToAxis = distanceToAxis;
 	}
 	
-	public Ligand() {
+	public CensusLigand() {
 		super();
 	}
 
-	public Ligand(String formula, boolean isMetal, double distance) {
+	public CensusLigand(String formula, boolean isMetal, double distance) {
 		super();
 		this.formula = formula;
 		this.isMetallic = isMetal;
@@ -75,7 +75,7 @@ public class Ligand implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Ligand other = (Ligand) obj;
+		CensusLigand other = (CensusLigand) obj;
 		if (Double.doubleToLongBits(distanceToAxis) != Double
 				.doubleToLongBits(other.distanceToAxis))
 			return false;
@@ -126,7 +126,7 @@ public class Ligand implements Serializable {
 
 	@Override
 	public String toString() {
-		return (isMetallic() ? "(metallic)" : "") + formula + " (" + StatUtils.formatD(distanceToCentroid) + "Å" + "to centroid;" + StatUtils.formatD(distanceToAxis) + "Å" + "to axis)";
+		return (isMetallic() ? "(metallic)" : "") + formula + " (" + CensusStatUtils.formatD(distanceToCentroid) + "Å" + "to centroid;" + CensusStatUtils.formatD(distanceToAxis) + "Å" + "to axis)";
 	}
 
 }

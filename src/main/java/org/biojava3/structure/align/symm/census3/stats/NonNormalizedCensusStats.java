@@ -19,9 +19,9 @@ import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
  * 
  * @author dmyersturnbull
  */
-public class TrivialStats {
+public class NonNormalizedCensusStats {
 
-	private static final Logger logger = LogManager.getLogger(TrivialStats.class.getName());
+	private static final Logger logger = LogManager.getLogger(NonNormalizedCensusStats.class.getName());
 
 	private static CensusSignificance ord = CensusSignificanceFactory.forCeSymmOrd();
 
@@ -37,16 +37,16 @@ public class TrivialStats {
 	 */
 	public static void main(String[] args) throws IOException {
 		if (args.length == 0) {
-			System.err.println("Usage: " + TrivialStats.class.getSimpleName() + " file-1 [file-2 ...]");
+			System.err.println("Usage: " + NonNormalizedCensusStats.class.getSimpleName() + " file-1 [file-2 ...]");
 		}
 		File[] files = new File[args.length];
 		for (int i = 0; i < args.length; i++)
 			files[i] = new File(args[i]);
-		TrivialStats stats = new TrivialStats(files);
+		NonNormalizedCensusStats stats = new NonNormalizedCensusStats(files);
 		System.out.println(stats);
 	}
 
-	public TrivialStats(File... files) throws IOException {
+	public NonNormalizedCensusStats(File... files) throws IOException {
 		for (File file : files) {
 			CensusResultList results = CensusResultList.fromXML(file);
 			int nTm = 0, nOrd = 0;
@@ -64,12 +64,12 @@ public class TrivialStats {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		Formatter formatter = new Formatter(sb);
-		sb.append("file-name\tord\tTM\tN" + StatUtils.NEWLINE);
+		sb.append("file-name\tord\tTM\tN" + CensusStatUtils.NEWLINE);
 		for (String file : tmStats.keySet()) {
 			// formatter.format("%-8s %8.2f%% %8.2f%% %n", file, tmStats.get(file).doubleValue()*100.0,
 			// ordStats.get(file).doubleValue()*100.0, counts.get(file).intValue());
-			sb.append(file + "\t" + StatUtils.formatP(ordStats.get(file)) + "\t" + StatUtils.formatP(tmStats.get(file))
-					+ "\t" + counts.get(file) + StatUtils.NEWLINE);
+			sb.append(file + "\t" + CensusStatUtils.formatP(ordStats.get(file)) + "\t" + CensusStatUtils.formatP(tmStats.get(file))
+					+ "\t" + counts.get(file) + CensusStatUtils.NEWLINE);
 		}
 		formatter.close();
 		return sb.toString();

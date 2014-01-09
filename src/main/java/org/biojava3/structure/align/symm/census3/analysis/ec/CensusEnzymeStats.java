@@ -20,18 +20,18 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
-import org.biojava3.structure.align.symm.census3.stats.Grouping;
-import org.biojava3.structure.align.symm.census3.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.StructureClassificationGrouping;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 import org.biojava3.structure.align.symm.census3.stats.order.ConsensusDecider;
 import org.biojava3.structure.align.symm.census3.stats.order.OrderHelper;
 /**
  * Finds statistics for the relationship(s) between symmetry and Enzyme Commission (EC) number.
- * Statistics are normalized using {@link Grouping Groupings}. For brevity and concreteness, the
+ * Statistics are normalized using {@link StructureClassificationGrouping Groupings}. For brevity and concreteness, the
  * normalization group is simply called "superfamily", and the group used to report examples is
  * called "fold".
  * @author dmyersturnbull
  */
-public class NormalizedECs {
+public class CensusEnzymeStats {
 
 	/**
 	 * A helper class that collects potential examples as determined by {@code exampler}.
@@ -70,7 +70,7 @@ public class NormalizedECs {
 			int i = 0;
 			for (Map.Entry<String, Integer> example : examples.entrySet()) {
 				double fractionOfEc = (double) example.getValue() / symmSfsInLabel.size();
-				sb.append("\t" + example.getKey() + "(" + StatUtils.formatP(fractionOfEc) + ")");
+				sb.append("\t" + example.getKey() + "(" + CensusStatUtils.formatP(fractionOfEc) + ")");
 				i++;
 				if (i >= maxExamples) {
 					break;
@@ -121,16 +121,16 @@ public class NormalizedECs {
 		}
 	}
 
-	private static final Logger logger = LogManager.getLogger(NormalizedECs.class.getName());
+	private static final Logger logger = LogManager.getLogger(CensusEnzymeStats.class.getName());
 	
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
-			System.err.println("Usage: " + ECFinder.class.getSimpleName() + " census-file.xml ecs-file.tsv");
+			System.err.println("Usage: " + CensusEnzymeFinder.class.getSimpleName() + " census-file.xml ecs-file.tsv");
 			return;
 		}
 		CensusResultList census = CensusResultList.fromXML(new File(args[0]));
-		ECFinder finder = ECFinder.fromTabbed(new File(args[1]));
-		NormalizedECs ecer = new NormalizedECs();
+		CensusEnzymeFinder finder = CensusEnzymeFinder.fromTabbed(new File(args[1]));
+		CensusEnzymeStats ecer = new CensusEnzymeStats();
 		Map<String, String> ecs = new HashMap<String, String>();
 		ecs.putAll(finder.getEcsBySymmDomain());
 		ecs.putAll(finder.getEcsByAsymmDomain());
@@ -179,9 +179,9 @@ public class NormalizedECs {
 			ScopDomain domain = scop.getDomainByScopID(scopId);
 			ScopDescription desc = scop.getScopDescriptionBySunid(domain.getFoldId());
 			String fold = desc.getClassificationId();
-			StatUtils.plus(symmFoldsByEcs.get(label), fold);
+			CensusStatUtils.plus(symmFoldsByEcs.get(label), fold);
 
-			StatUtils.plus(nSymmDomainsByEc, label);
+			CensusStatUtils.plus(nSymmDomainsByEc, label);
 			labels.add(label);
 		}
 
@@ -194,7 +194,7 @@ public class NormalizedECs {
 			if (label == null) {
 				continue;
 			}
-			StatUtils.plus(nAsymmDomainsByEc, label);
+			CensusStatUtils.plus(nAsymmDomainsByEc, label);
 			labels.add(label);
 		}
 
@@ -211,7 +211,7 @@ public class NormalizedECs {
 			if (nAsymmDomainsByEc.containsKey(label)) {
 				fractionAsymm = nAsymmDomainsByEc.get(label);
 			}
-			System.out.print(label + "\t" + StatUtils.formatP(fractionSymm / (fractionSymm + fractionAsymm)) + "\t"
+			System.out.print(label + "\t" + CensusStatUtils.formatP(fractionSymm / (fractionSymm + fractionAsymm)) + "\t"
 					+ (fractionSymm + fractionAsymm));
 
 			/*
@@ -238,7 +238,7 @@ public class NormalizedECs {
 					// now we have some examples, so we can print them out
 					int i = 0;
 					for (Map.Entry<String, Integer> entry : sortedFoldExamples.entrySet()) {
-						String percentageOfEc = StatUtils.formatP(((double) entry.getValue())
+						String percentageOfEc = CensusStatUtils.formatP(((double) entry.getValue())
 								/ nSymmDomainsByEc.get(label));
 						System.out.print("\t" + entry.getKey() + "(" + percentageOfEc + ")");
 						i++;
@@ -269,14 +269,14 @@ public class NormalizedECs {
 		return label;
 	}
 
-	private Grouping exampler;
+	private StructureClassificationGrouping exampler;
 
-	private Grouping normalizer;
+	private StructureClassificationGrouping normalizer;
 
 	private OrderHelper orderHelper;
 
-	public NormalizedECs() {
-		this(Grouping.superfamily(), Grouping.fold(), new OrderHelper(Grouping.superfamily(), 0.4,
+	public CensusEnzymeStats() {
+		this(StructureClassificationGrouping.superfamily(), StructureClassificationGrouping.fold(), new OrderHelper(StructureClassificationGrouping.superfamily(), 0.4,
 				new ConsensusDecider() {
 					@Override
 					public int decide(Map<Integer, Integer> orders) {
@@ -291,7 +291,7 @@ public class NormalizedECs {
 		}));
 	}
 
-	public NormalizedECs(Grouping normalizer, Grouping exampler, OrderHelper orderHelper) {
+	public CensusEnzymeStats(StructureClassificationGrouping normalizer, StructureClassificationGrouping exampler, OrderHelper orderHelper) {
 		this.normalizer = normalizer;
 		this.exampler = exampler;
 		this.orderHelper = orderHelper;
@@ -376,7 +376,7 @@ public class NormalizedECs {
 			double mean = stats.getMean();
 			double stddev = stats.getStandardDeviation();
 			
-			System.out.print(label + "\t" + nSymm + "\t" + nTotal + "\t" + StatUtils.formatP(mean) + "\t" + StatUtils.formatP(stddev));
+			System.out.print(label + "\t" + nSymm + "\t" + nTotal + "\t" + CensusStatUtils.formatP(mean) + "\t" + CensusStatUtils.formatP(stddev));
 
 			/*
 			 * now we want to list example domains for this, we want the top most common folds so we need a new map

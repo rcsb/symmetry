@@ -24,6 +24,7 @@ import java.util.TreeMap;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 
@@ -35,17 +36,17 @@ import org.biojava3.structure.align.symm.census3.CensusResultList;
  * the symmetry of a fold is decided on the basis of mean values of its constituent superfamilies.
  * 
  * @author dmyersturnbull
- * @see {@link BasicStats}, which uses majority voting instead
+ * @see {@link MajorityVotedCensusStats}, which uses majority voting instead
  */
-public class SmartStats {
+public class AveragedCensusStats {
 
 	private static double DEFAULT_ORDER_THRESHOLD = 0.5;
 
 	private static double DEFAULT_TM_SCORE_THRESHOLD = 0.4;
 
-	private static final Logger logger = LogManager.getLogger(SmartStats.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(AveragedCensusStats.class.getPackage().getName());
 
-	private Property property;
+	private CensusResultProperty property;
 
 	Map<String, Integer> nDomainsInFolds = new TreeMap<String, Integer>();
 
@@ -62,38 +63,37 @@ public class SmartStats {
 		double orderTreshold = DEFAULT_ORDER_THRESHOLD;
 		if (args.length > 1) tmScoreTreshold = Double.parseDouble(args[1]);
 		if (args.length > 2) orderTreshold = Double.parseDouble(args[2]);
-		SmartStats stats = new SmartStats(census, tmScoreTreshold, orderTreshold);
+		AveragedCensusStats stats = new AveragedCensusStats(census, tmScoreTreshold, orderTreshold);
 		System.out.println(stats);
 	}
 
-	public SmartStats(File census, double tmScoreTreshold, double orderTreshold) throws IOException {
-		this(Property.tmScore(), CensusResultList.fromXML(census), tmScoreTreshold, orderTreshold);
+	public AveragedCensusStats(File census, double tmScoreTreshold, double orderTreshold) throws IOException {
+		this(CensusResultProperty.tmScore(), CensusResultList.fromXML(census), tmScoreTreshold, orderTreshold);
 	}
 
-	public SmartStats(Property property, CensusResultList census, double tmScoreTreshold, double orderTreshold) {
+	public AveragedCensusStats(CensusResultProperty property, CensusResultList census, double tmScoreTreshold, double orderTreshold) {
 
 		this.property = property;
 
-		final Grouping sfGrouping = Grouping.superfamily();
 		Map<String, Double> tmInSfs = new TreeMap<String, Double>();
 		Map<String, Integer> nInSfs = new TreeMap<String, Integer>();
 		Map<String, Integer> nWithOrderInSfs = new TreeMap<String, Integer>();
 
 		for (CensusResult result : census.getEntries()) {
-			final String sf = sfGrouping.group(result);
+			String classification = ScopFactory.getSCOP().getDomainByScopID(result.getId()).getClassificationId();
 			double tmScore = 0;
 			int order = 0;
-			StatUtils.plus(nInSfs, sf);
-			final String fold;
-			final String clas;
+			final String clas, fold, sf;
 			try {
-				String[] parts = sf.split("\\.");
-				fold = parts[0] + "." + parts[1];
+				String[] parts = classification.split("\\.");
 				clas = parts[0];
+				fold = parts[0] + "." + parts[1];
+				sf = parts[0] + "." + parts[1] + "." + parts[2];
 			} catch (ArrayIndexOutOfBoundsException e) {
-				logger.error("Bad classification: " + sf, e);
+				logger.error("Bad classification: " + classification, e);
 				continue;
 			}
+			CensusStatUtils.plus(nInSfs, sf);
 			try {
 				tmScore = property.getProperty(result);
 			} catch (PropertyUndefinedException e) {
@@ -101,24 +101,24 @@ public class SmartStats {
 			}
 			int theOrder = 0;
 			try {
-				theOrder = (int) Property.hasOrder().getProperty(result);
+				theOrder = (int) CensusResultProperty.hasOrder().getProperty(result);
 			} catch (PropertyUndefinedException e) {
 				// okay, just leave as 0
 			}
 			int guessedOrder = 0;
 			try {
-				guessedOrder =  (int) Property.hasGuessedOrder().getProperty(result);
+				guessedOrder =  (int) CensusResultProperty.hasGuessedOrder().getProperty(result);
 			} catch (PropertyUndefinedException e) {
 				// okay, just leave as 0
 			}
 			if (theOrder == 1 || guessedOrder == 1) {
 				order = 1; // otherwise, order = 0
 			}
-			StatUtils.plus(nDomainsInFolds, fold);
-			StatUtils.plus(nDomainsInFolds, clas);
-			StatUtils.plus(nDomainsInFolds, "overall");
-			StatUtils.plusD(tmInSfs, sf, tmScore);
-			StatUtils.plus(nWithOrderInSfs, sf, order);
+			CensusStatUtils.plus(nDomainsInFolds, fold);
+			CensusStatUtils.plus(nDomainsInFolds, clas);
+			CensusStatUtils.plus(nDomainsInFolds, "overall");
+			CensusStatUtils.plusD(tmInSfs, sf, tmScore);
+			CensusStatUtils.plus(nWithOrderInSfs, sf, order);
 		}
 
 		for (Map.Entry<String, Integer> entry : nInSfs.entrySet()) {
@@ -138,18 +138,18 @@ public class SmartStats {
 			final double fracWithOrder = nWithOrderInSfs.get(sf).doubleValue() / nInSf;
 			final double meanTmScore = tmInSfs.get(sf) / nInSf;
 			if (fracWithOrder >= orderTreshold && meanTmScore >= tmScoreTreshold) {
-				StatUtils.plus(nSymmInFolds, fold);
-				StatUtils.plus(nSymmInFolds, clas);
-				StatUtils.plus(nSymmInFolds, "overall");
+				CensusStatUtils.plus(nSymmInFolds, fold);
+				CensusStatUtils.plus(nSymmInFolds, clas);
+				CensusStatUtils.plus(nSymmInFolds, "overall");
 			}
-			StatUtils.plus(nInFoldsTotal, fold);
-			StatUtils.plus(nInFoldsTotal, clas);
-			StatUtils.plus(nInFoldsTotal, "overall");
+			CensusStatUtils.plus(nInFoldsTotal, fold);
+			CensusStatUtils.plus(nInFoldsTotal, clas);
+			CensusStatUtils.plus(nInFoldsTotal, "overall");
 		}
 
 	}
 
-	public Property getProperty() {
+	public CensusResultProperty getProperty() {
 		return property;
 	}
 
@@ -167,7 +167,7 @@ public class SmartStats {
 			}
 			if (nDomainsInFolds.get(fold) >= 10 && fractionSymm >= 0.3 || fold.length() < 3 || fold.equals("overall")) {
 				sb.append(fold + "\t" + nInFoldsTotal.get(fold) + "\t" + nDomainsInFolds.get(fold) + "\t"
-						+ StatUtils.formatP(fractionSymm) + StatUtils.NEWLINE);
+						+ CensusStatUtils.formatP(fractionSymm) + CensusStatUtils.NEWLINE);
 			}
 		}
 		return sb.toString();

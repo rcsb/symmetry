@@ -42,12 +42,12 @@ import org.biojava3.structure.align.symm.census3.CensusSignificance;
 import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
 
 /**
- * Prints out the values of a certain {@link Property} in a {@link CensusResult}.
+ * Prints out the values of a certain {@link CensusResultProperty} in a {@link CensusResult}.
  * @author dmyersturnbull
  */
-public class PropertyDistribution {
+public class CensusPropertyDistribution {
 
-	private static final Logger logger = LogManager.getLogger(PropertyDistribution.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(CensusPropertyDistribution.class.getPackage().getName());
 
 	public static final String NEWLINE;
 	private static final int MAX_FRACTION_DIGITS = 5;
@@ -65,23 +65,23 @@ public class PropertyDistribution {
 
 	public static void main(String[] args) {
 		if (args.length != 2) {
-			System.err.println("Usage: " + PropertyDistribution.class.getSimpleName() + " census-file significance-method");
+			System.err.println("Usage: " + CensusPropertyDistribution.class.getSimpleName() + " census-file significance-method");
 			return;
 		}
 		File censusFile = new File(args[0]);
 		CensusSignificance sig = CensusSignificanceFactory.fromMethod(CensusSignificanceFactory.class.getName(), args[1]);
-		List<Property> properties = new ArrayList<Property>();
-		properties.add(Property.tmScore());
+		List<CensusResultProperty> properties = new ArrayList<CensusResultProperty>();
+		properties.add(CensusResultProperty.tmScore());
 		printBasicStats(System.out, censusFile, properties, sig);
 	}
 
-	public static void printBasicStats(PrintStream ps, File censusFile, List<Property> properties, CensusSignificance sig) {
+	public static void printBasicStats(PrintStream ps, File censusFile, List<CensusResultProperty> properties, CensusSignificance sig) {
 		printBasicStats(new PrintWriter(ps, true), censusFile, properties, sig);
 	}
 
-	public static void printBasicStats(PrintWriter pw, File censusFile, List<Property> properties, CensusSignificance sig) {
-		Grouping normalizingGrouping = Grouping.superfamily();
-		Grouping reportGrouping = Grouping.fold();
+	public static void printBasicStats(PrintWriter pw, File censusFile, List<CensusResultProperty> properties, CensusSignificance sig) {
+		StructureClassificationGrouping normalizingGrouping = StructureClassificationGrouping.superfamily();
+		StructureClassificationGrouping reportGrouping = StructureClassificationGrouping.fold();
 		CensusResultList census;
 		logger.info("Reading census file " + censusFile);
 		try {
@@ -94,19 +94,19 @@ public class PropertyDistribution {
 			if (sig.isSignificant(r)) filtered.add(r);
 		}
 		logger.info("Done reading census file");
-		for (Property property : properties) {
-			PropertyDistribution dist = new PropertyDistribution(normalizingGrouping, reportGrouping, filtered, property);
+		for (CensusResultProperty property : properties) {
+			CensusPropertyDistribution dist = new CensusPropertyDistribution(normalizingGrouping, reportGrouping, filtered, property);
 			pw.println(dist.toString());
 			pw.println();
 		}
 	}
 
-	private Grouping normalizingGrouping;
-	private Grouping reportGrouping;
+	private StructureClassificationGrouping normalizingGrouping;
+	private StructureClassificationGrouping reportGrouping;
 	private NavigableMap<String,List<Double>> map;
-	private Property property;
+	private CensusResultProperty property;
 
-	public PropertyDistribution(Grouping normalizingGrouping, Grouping reportGrouping, CensusResultList census, Property property) {
+	public CensusPropertyDistribution(StructureClassificationGrouping normalizingGrouping, StructureClassificationGrouping reportGrouping, CensusResultList census, CensusResultProperty property) {
 
 		this.property = property;
 		this.normalizingGrouping = normalizingGrouping;
@@ -123,8 +123,8 @@ public class PropertyDistribution {
 			String reportKey = reportGrouping.group(result);
 			try {
 				double value = property.getProperty(result);
-				StatUtils.plusD(values, normalizingKey, value);
-				StatUtils.plus(counts, normalizingKey);
+				CensusStatUtils.plusD(values, normalizingKey, value);
+				CensusStatUtils.plus(counts, normalizingKey);
 			} catch (PropertyUndefinedException e) {
 				continue; // okay
 			}
@@ -138,7 +138,7 @@ public class PropertyDistribution {
 			final String normalizingKey = entry.getKey();
 			final Double value = entry.getValue();
 			final double fraction = value / (double) counts.get(normalizingKey);
-			StatUtils.plusD(means, normalizingKey, fraction);
+			CensusStatUtils.plusD(means, normalizingKey, fraction);
 		}
 
 		// okay, now record normalized stats

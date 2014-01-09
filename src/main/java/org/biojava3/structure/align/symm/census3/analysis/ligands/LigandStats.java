@@ -19,8 +19,8 @@ import org.biojava.bio.structure.ElementType;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.census3.stats.Grouping;
-import org.biojava3.structure.align.symm.census3.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.StructureClassificationGrouping;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * Prints statistics about {@link LigandList LigandLists}.
@@ -127,7 +127,7 @@ public class LigandStats {
 	
 	private int robustnessIterations = 200;
 
-	private Grouping normalizer = Grouping.superfamily();
+	private StructureClassificationGrouping normalizer = StructureClassificationGrouping.superfamily();
 
 	/**
 	 * @deprecated
@@ -135,8 +135,8 @@ public class LigandStats {
 	@Deprecated
 	public int getNDomainsMatching(LigandList list, LigandMatcher matcher) {
 		int n = 0;
-		for (StructureLigands inStruct : list.getData().values()) {
-			for (Ligand ligand : inStruct.getLigands()) {
+		for (LigandsOfStructure inStruct : list.getData().values()) {
+			for (CensusLigand ligand : inStruct.getLigands()) {
 				if (ligand.getDistanceToCentroid() <= maxRadius) {
 					if (matcher.matches(ligand)) {
 						n++;
@@ -154,8 +154,8 @@ public class LigandStats {
 	@Deprecated
 	public int getNLigandsMatching(LigandList list, LigandMatcher matcher) {
 		int n = 0;
-		for (StructureLigands inStruct : list.getData().values()) {
-			for (Ligand ligand : inStruct.getLigands()) {
+		for (LigandsOfStructure inStruct : list.getData().values()) {
+			for (CensusLigand ligand : inStruct.getLigands()) {
 				if (ligand.getDistanceToCentroid() <= maxRadius) {
 					if (matcher.matches(ligand)) {
 						n++;
@@ -169,7 +169,7 @@ public class LigandStats {
 	public int getNSuperfamiliesTotal(LigandList list) {
 		ScopDatabase scop = ScopFactory.getSCOP();
 		Set<String> sfs = new HashSet<String>();
-		for (Map.Entry<String, StructureLigands> entry : list.getData().entrySet()) {
+		for (Map.Entry<String, LigandsOfStructure> entry : list.getData().entrySet()) {
 			ScopDomain domain = scop.getDomainByScopID(entry.getKey());
 			if (domain == null) {
 				logger.warn("Couldn't find domain " + domain);
@@ -199,7 +199,7 @@ public class LigandStats {
 		// shuffle the order of domains
 		List<String> shuffledKeyList = new ArrayList<String>(ligandList.size());
 //		for (String s : ligandList.getData().keySet()) shuffledKeyList.add(s);
-		for (Map.Entry<String, StructureLigands> entry : ligandList.getData().entrySet()) {
+		for (Map.Entry<String, LigandsOfStructure> entry : ligandList.getData().entrySet()) {
 			if (!entry.getValue().isEmpty()) {
 				shuffledKeyList.add(entry.getKey());
 			}
@@ -217,7 +217,7 @@ public class LigandStats {
 			for (String domainKey : shuffledKeyList) {
 				
 				// get the domain and superfamily
-				StructureLigands inStruct = ligandList.get(domainKey);
+				LigandsOfStructure inStruct = ligandList.get(domainKey);
 				ScopDomain domain = scop.getDomainByScopID(domainKey);
 				if (domain == null) {
 					logger.warn("Couldn't find domain " + domain);
@@ -237,7 +237,7 @@ public class LigandStats {
 				 * Now increment containingSfs UP TO MULTIPLICITY.
 				 * Do this if even one Ligand in this structure matches.
 				 */
-				for (Ligand ligand : inStruct.getLigands()) {
+				for (CensusLigand ligand : inStruct.getLigands()) {
 					if (ligand.getDistanceToCentroid() <= maxRadius && ligand.getDistanceToAxis() <= maxAxisDistance) {
 						sfs.add(sf);
 						if (matcher.matches(ligand)) {
@@ -262,10 +262,10 @@ public class LigandStats {
 
 	public void printStats(LigandList list) {
 		int n = 0, nMetallic = 0;
-		for (StructureLigands inStruct : list.getData().values()) {
+		for (LigandsOfStructure inStruct : list.getData().values()) {
 			boolean foundOne = false;
 			boolean foundMetal = false;
-			for (Ligand ligand : inStruct.getLigands()) {
+			for (CensusLigand ligand : inStruct.getLigands()) {
 				if (ligand.getDistanceToCentroid() <= maxRadius) {
 					if (ligand.isMetallic()) foundMetal = true;
 					foundOne = true;
@@ -274,7 +274,7 @@ public class LigandStats {
 			if (foundOne) n++;
 			if (foundMetal) nMetallic++;
 		}
-		System.out.println(nMetallic + " / " + n + "\t" + StatUtils.formatP((double) nMetallic / n));
+		System.out.println(nMetallic + " / " + n + "\t" + CensusStatUtils.formatP((double) nMetallic / n));
 	}
 
 	public void setMaxRadius(double maxRadius) {
@@ -285,7 +285,7 @@ public class LigandStats {
 		this.maxAxisDistance = maxAxisDistance;
 	}
 
-	public void setNormalizer(Grouping normalizer) {
+	public void setNormalizer(StructureClassificationGrouping normalizer) {
 		this.normalizer = normalizer;
 	}
 

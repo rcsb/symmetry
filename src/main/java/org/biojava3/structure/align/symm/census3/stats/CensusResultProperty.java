@@ -29,7 +29,7 @@ import org.biojava3.structure.align.symm.census3.CensusResult;
  * A property about a {@link CensusResult}. Usually from {@link CensusResult#getScoreList()}.
  * @author dmyersturnbull
  */
-public abstract class Property {
+public abstract class CensusResultProperty {
 
 	public abstract double getProperty(CensusResult result) throws PropertyUndefinedException;
 	
@@ -40,8 +40,8 @@ public abstract class Property {
 		return getName();
 	}
 
-	public static Property identity() {
-		return new Property() {
+	public static CensusResultProperty identity() {
+		return new CensusResultProperty() {
 			@Override
 			public double getProperty(CensusResult result) throws PropertyUndefinedException {
 				try {
@@ -57,8 +57,8 @@ public abstract class Property {
 		};
 	}
 	
-	public static Property similarity() {
-		return new Property() {
+	public static CensusResultProperty similarity() {
+		return new CensusResultProperty() {
 			@Override
 			public double getProperty(CensusResult result) throws PropertyUndefinedException {
 				try {
@@ -74,8 +74,8 @@ public abstract class Property {
 		};
 	}
 
-	public static Property order() {
-		return new Property() {
+	public static CensusResultProperty order() {
+		return new CensusResultProperty() {
 			@Override
 			public double getProperty(CensusResult result) throws PropertyUndefinedException {
 				try {
@@ -91,8 +91,8 @@ public abstract class Property {
 		};
 	}
 
-	public static Property hasGuessedOrder() {
-		return new Property() {
+	public static CensusResultProperty hasGuessedOrder() {
+		return new CensusResultProperty() {
 			@Override
 			public double getProperty(CensusResult result) throws PropertyUndefinedException {
 				if (result.getAxis() == null) return 0;
@@ -105,11 +105,11 @@ public abstract class Property {
 		};
 	}
 
-	public static Property hasOrder() {
-		return new Property() {
+	public static CensusResultProperty hasOrder() {
+		return new CensusResultProperty() {
 			@Override
 			public double getProperty(CensusResult result) throws PropertyUndefinedException {
-				if (result.getOrder() < 2) return 0;
+				if (result.getGroup() == null || result.getGroup().isAsymmetric()) return 0;
 				return 1;
 			}
 			@Override
@@ -119,8 +119,8 @@ public abstract class Property {
 		};
 	}
 	
-	public static Property tmScore() {
-		return new Property() {
+	public static CensusResultProperty tmScore() {
+		return new CensusResultProperty() {
 			@Override
 			public double getProperty(CensusResult result) throws PropertyUndefinedException {
 				try {
@@ -136,8 +136,8 @@ public abstract class Property {
 		};
 	}
 
-	public static Property epsilon() {
-		return new Property() {
+	public static CensusResultProperty epsilon() {
+		return new CensusResultProperty() {
 			@Override
 			public double getProperty(CensusResult result) throws PropertyUndefinedException {
 				try {

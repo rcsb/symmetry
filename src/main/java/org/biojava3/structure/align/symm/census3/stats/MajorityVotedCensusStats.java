@@ -42,20 +42,20 @@ import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
  * domains make the significance thresholds of TM-score and order.
  * 
  * @author dmyersturnbull
- * @see {@link SmartStats}, which uses instead requires that the <em>mean</em> TM-score is at least the threshold
+ * @see {@link AveragedCensusStats}, which uses instead requires that the <em>mean</em> TM-score is at least the threshold
  *      TM-score, and that the order is at least the order threshold
  * @deprecated
  */
-public class BasicStats {
+public class MajorityVotedCensusStats {
 
 	public static final String NEWLINE;
 
-	private static final Logger logger = LogManager.getLogger(BasicStats.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(MajorityVotedCensusStats.class.getPackage().getName());
 	private static final int MAX_FRACTION_DIGITS = 2;
 
 	private static NumberFormat nf = new DecimalFormat();
 
-	private final Grouping grouping;
+	private final StructureClassificationGrouping grouping;
 
 	private int nOrderUnknown;
 	private int nRotational;
@@ -91,7 +91,7 @@ public class BasicStats {
 	}
 
 	public static void main(String[] args) {
-		Grouping grouping = Grouping.byName(args[0]);
+		StructureClassificationGrouping grouping = StructureClassificationGrouping.byName(args[0]);
 		File[] files = new File[args.length - 1];
 		for (int i = 1; i < args.length; i++) {
 			files[i - 1] = new File(args[i]);
@@ -99,7 +99,7 @@ public class BasicStats {
 		printBasicStats(System.out, grouping, files);
 	}
 
-	public static void printBasicStats(PrintStream ps, Grouping grouping, File... censusFiles) {
+	public static void printBasicStats(PrintStream ps, StructureClassificationGrouping grouping, File... censusFiles) {
 		try {
 			PrintWriter pw = new PrintWriter(new OutputStreamWriter(ps, "UTF-8")); // do NOT close
 			printBasicStats(pw, grouping, censusFiles);
@@ -108,7 +108,7 @@ public class BasicStats {
 		}
 	}
 
-	public static void printBasicStats(PrintStream ps, Grouping grouping, File censusFile) {
+	public static void printBasicStats(PrintStream ps, StructureClassificationGrouping grouping, File censusFile) {
 		try {
 			PrintWriter pw = new PrintWriter(new OutputStreamWriter(ps, "UTF-8")); // do NOT close
 			printBasicStats(pw, grouping, censusFile);
@@ -117,7 +117,7 @@ public class BasicStats {
 		}
 	}
 
-	public static void printBasicStats(PrintWriter ps, Grouping grouping, File... censusFiles) {
+	public static void printBasicStats(PrintWriter ps, StructureClassificationGrouping grouping, File... censusFiles) {
 		for (File file : censusFiles) {
 			System.out.println(file.getName() + ":");
 			printBasicStats(System.out, grouping, file);
@@ -125,21 +125,21 @@ public class BasicStats {
 		}
 	}
 
-	public static void printBasicStats(PrintWriter ps, Grouping grouping, File censusFile) {
-		BasicStats stats;
+	public static void printBasicStats(PrintWriter ps, StructureClassificationGrouping grouping, File censusFile) {
+		MajorityVotedCensusStats stats;
 		try {
-			stats = new BasicStats(grouping, censusFile);
+			stats = new MajorityVotedCensusStats(grouping, censusFile);
 		} catch (IOException e) {
 			throw new RuntimeException("Could not load census file", e);
 		}
 		ps.println(stats.toString());
 	}
 
-	public BasicStats(Grouping grouping, File censusFile) throws IOException {
+	public MajorityVotedCensusStats(StructureClassificationGrouping grouping, File censusFile) throws IOException {
 		this(grouping, CensusResultList.fromXML(censusFile));
 	}
 
-	public BasicStats(Grouping grouping, CensusResultList census) {
+	public MajorityVotedCensusStats(StructureClassificationGrouping grouping, CensusResultList census) {
 
 		/*
 		 * First, collect stats per group:
@@ -181,11 +181,11 @@ public class BasicStats {
 			}
 
 			// record stats per group
-			StatUtils.plus(nTotalGroup, group);
-			if (isSymm) StatUtils.plus(nSymmGroup, group);
-			if (isRot) StatUtils.plus(nRotGroup, group);
-			if (isUnknown) StatUtils.plus(nUnknownGroup, group);
-			if (isRotUnknown) StatUtils.plus(nRotUnknownGroup, group);
+			CensusStatUtils.plus(nTotalGroup, group);
+			if (isSymm) CensusStatUtils.plus(nSymmGroup, group);
+			if (isRot) CensusStatUtils.plus(nRotGroup, group);
+			if (isUnknown) CensusStatUtils.plus(nUnknownGroup, group);
+			if (isRotUnknown) CensusStatUtils.plus(nRotUnknownGroup, group);
 
 			getAdditionalStats(result);
 
@@ -210,14 +210,14 @@ public class BasicStats {
 
 			// N total
 			final int nTotalG = entry.getValue();
-			StatUtils.plus(nTotalFold, fold);
+			CensusStatUtils.plus(nTotalFold, fold);
 
 			// % symmetric
 			Integer nSymmG = nSymmGroup.get(group);
 			if (nSymmG == null) nSymmG = 0;
 			double fractionSymmG = (double) nSymmG / (double) nTotalG;
 			if (fractionSymmG >= 0.5) {
-				StatUtils.plus(nSymmFold, fold);
+				CensusStatUtils.plus(nSymmFold, fold);
 			}
 
 			// % rotational
@@ -225,7 +225,7 @@ public class BasicStats {
 			if (nRotG == null) nRotG = 0;
 			double fractionRotG = (double) nRotG / (double) nTotalG;
 			if (fractionRotG >= 0.5) {
-				StatUtils.plus(nRotFold, fold);
+				CensusStatUtils.plus(nRotFold, fold);
 			}
 
 		}
@@ -249,16 +249,16 @@ public class BasicStats {
 
 			// N total
 			final int nTotalG = entry.getValue();
-			StatUtils.plus(nTotalClass, clas);
-			StatUtils.plus(nTotalClass, "overall");
+			CensusStatUtils.plus(nTotalClass, clas);
+			CensusStatUtils.plus(nTotalClass, "overall");
 
 			// % symmetric
 			Integer nSymmG = nSymmFold.get(fold);
 			if (nSymmG == null) nSymmG = 0;
 			double fractionSymmG = (double) nSymmG / (double) nTotalG;
 			if (fractionSymmG >= 0.5) {
-				StatUtils.plus(nSymmClass, clas);
-				StatUtils.plus(nSymmClass, "overall");
+				CensusStatUtils.plus(nSymmClass, clas);
+				CensusStatUtils.plus(nSymmClass, "overall");
 			}
 
 			// % rotational
@@ -266,8 +266,8 @@ public class BasicStats {
 			if (nRotG == null) nRotG = 0;
 			double fractionRotG = (double) nRotG / (double) nTotalG;
 			if (fractionRotG >= 0.5) {
-				StatUtils.plus(nRotClass, clas);
-				StatUtils.plus(nRotClass, "overall");
+				CensusStatUtils.plus(nRotClass, clas);
+				CensusStatUtils.plus(nRotClass, "overall");
 			}
 
 		}

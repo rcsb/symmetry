@@ -29,7 +29,7 @@ import org.biojava3.core.sequence.template.Sequence;
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
-import org.biojava3.structure.align.symm.census3.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 import org.biojava3.ws.hmmer.HmmerResult;
 import org.biojava3.ws.hmmer.HmmerScan;
@@ -74,7 +74,7 @@ public class ConservedSequenceFinder {
 			for (HmmerResult result : results) {
 				logger.debug("Found result " + result);
 				if (result.getEvalue() <= eValue) {
-					StatUtils.plus(counts, result.getName());
+					CensusStatUtils.plus(counts, result.getName());
 				}
 			}
 		}

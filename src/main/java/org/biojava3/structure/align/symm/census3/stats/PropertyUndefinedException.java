@@ -23,7 +23,7 @@
 package org.biojava3.structure.align.symm.census3.stats;
 
 /**
- * An exception where a {@link Property} was not defined for some {@link CensusResult}, but should have been.
+ * An exception where a {@link CensusResultProperty} was not defined for some {@link CensusResult}, but should have been.
  * @author dmyersturnbull
  */
 public class PropertyUndefinedException extends Exception {

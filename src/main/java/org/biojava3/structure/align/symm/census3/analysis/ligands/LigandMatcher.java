@@ -7,7 +7,7 @@ import org.biojava.bio.structure.Element;
 import org.biojava.bio.structure.ElementType;
 
 /**
- * Something to decide "yes" or "no" given a {@link Ligand}.
+ * Something to decide "yes" or "no" given a {@link CensusLigand}.
  * @author dmyersturnbull
  */
 public abstract class LigandMatcher {
@@ -15,7 +15,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher and(final LigandMatcher... as) {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				for (LigandMatcher a : as) {
 					if (!a.matches(ligand)) return false;
 				}
@@ -27,7 +27,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher everything() {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				return true;
 			}
 		};
@@ -36,7 +36,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher hasAtomicMass(final double min) {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				Map<Element, Integer> elements = parse(ligand);
 				for (Element e : elements.keySet()) {
 					if (e.getAtomicMass() >= min) return true;
@@ -49,7 +49,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher hasElectronegativity(final float min) {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				Map<Element, Integer> elements = parse(ligand);
 				for (Element e : elements.keySet()) {
 					if (e.getPaulingElectronegativity() >= min) return true;
@@ -62,7 +62,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher hasElement(final Element element) {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				// System.out.println(ligand.getFormula());
 				Map<Element, Integer> elements = parse(ligand);
 				for (Element e : elements.keySet()) {
@@ -78,7 +78,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher hasElementType(final ElementType elementType) {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				Map<Element, Integer> elements = parse(ligand);
 				for (Element e : elements.keySet()) {
 					if (e.getElementType().equals(elementType)) return true;
@@ -91,7 +91,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher hasMetal() {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				return ligand.isMetallic();
 			}
 		};
@@ -100,7 +100,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher hasTotalOxidationMagnitude(final int min) {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				Map<Element, Integer> elements = parse(ligand);
 				for (Element e : elements.keySet()) {
 					if (e.equals(Element.R)) continue;
@@ -118,7 +118,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher hasOxidationMagnitude(final int min) {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				Map<Element, Integer> elements = parse(ligand);
 				for (Element e : elements.keySet()) {
 					if (e.equals(Element.R)) continue;
@@ -134,7 +134,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher hasPeriod(final int min) {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				Map<Element, Integer> elements = parse(ligand);
 				for (Element e : elements.keySet()) {
 					if (e.getPeriod() >= min) return true;
@@ -147,7 +147,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher isOnlyMetal() {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				Map<Element, Integer> elements = parse(ligand);
 				for (Element e : elements.keySet()) {
 					if (!e.isMetal()) return false;
@@ -160,7 +160,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher isOrganicMetal() {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				Map<Element, Integer> elements = parse(ligand);
 				boolean containsMetal = false;
 				boolean containsCarbon = false;
@@ -176,7 +176,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher isTrueSalt() {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				Map<Element, Integer> elements = parse(ligand);
 				boolean containsMetal = false;
 				boolean containsNonmetal = false;
@@ -193,7 +193,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher nElements(final int n) {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				Map<Element, Integer> elements = parse(ligand);
 				return elements.size() == n;
 			}
@@ -203,7 +203,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher nothing() {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				return false;
 			}
 		};
@@ -212,7 +212,7 @@ public abstract class LigandMatcher {
 	public static LigandMatcher or(final LigandMatcher... as) {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				for (LigandMatcher a : as) {
 					if (a.matches(ligand)) return true;
 				}
@@ -221,7 +221,7 @@ public abstract class LigandMatcher {
 		};
 	}
 
-	public static Map<Element, Integer> parse(Ligand ligand) {
+	public static Map<Element, Integer> parse(CensusLigand ligand) {
 		Map<Element, Integer> compounds = new LinkedHashMap<Element, Integer>();
 		StringBuilder currentCompound = null;
 		int currentNumber = 1;
@@ -246,19 +246,19 @@ public abstract class LigandMatcher {
 		return compounds;
 	}
 
-	public boolean containsAMatch(StructureLigands ligands) {
-		for (Ligand ligand : ligands.getLigands()) {
+	public boolean containsAMatch(LigandsOfStructure ligands) {
+		for (CensusLigand ligand : ligands.getLigands()) {
 			if (matches(ligand)) return true;
 		}
 		return false;
 	}
 
-	public abstract boolean matches(Ligand ligand);
+	public abstract boolean matches(CensusLigand ligand);
 
 	public LigandMatcher not() {
 		return new LigandMatcher() {
 			@Override
-			public boolean matches(Ligand ligand) {
+			public boolean matches(CensusLigand ligand) {
 				return !LigandMatcher.this.matches(ligand);
 			}
 		};

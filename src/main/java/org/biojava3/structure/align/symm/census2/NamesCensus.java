@@ -46,7 +46,7 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  */
 public class NamesCensus extends Census {
 
-	private static final Logger logger = LogManager.getLogger(NamesCensus.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(NamesCensus.class.getSimpleName());
 
 	private List<ScopDomain> domains;
 

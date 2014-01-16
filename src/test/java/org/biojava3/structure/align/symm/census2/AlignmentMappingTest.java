@@ -11,8 +11,6 @@ import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
-import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.junit.Test;
@@ -23,23 +21,29 @@ import org.junit.Test;
  */
 public class AlignmentMappingTest {
 
+	public static void main(String[] args) throws IOException {
+		AtomCache cache = new AtomCache();
+		ScopFactory.setScopDatabase(ScopFactory.LATEST_VERSION);
+		CensusJob job = CensusJob.setUpJob("d1ux8a_", 0, Census.AlgorithmGiver.getDefault(), Census.getDefaultSignificance(), cache, ScopFactory.getSCOP());
+		job.setRecordAlignmentMapping(true);
+		Result result = job.call();
+		Results results = new Results();
+		results.add(result);
+		System.out.println(results.toXML());
+	}
+	
 	@Test
 	public void testBuildAfpChain() throws IOException, StructureException {
 		Results census = Results.fromXML(new File("src/test/resources/census2/expected1_with_map.xml"));
 		Result result = census.getData().get(0);
 		AlignmentMapping mapping = result.getAlignmentMapping();
-		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_2_0_2);
-		ScopFactory.setScopDatabase(scop);
-//		ScopDatabase scop = new BerkeleyScopInstallation();
-//		scop.setScopVersion("1.75B");
-		ScopDomain domain = scop.getDomainByScopID("d2c35e1");
-		System.out.println(domain);
+		ScopDomain domain = ScopFactory.getSCOP().getDomainByScopID("d1ux8a_");
 		AtomCache cache = new AtomCache();
-		Structure structure = cache.getStructureForDomain(domain, scop);
+		Structure structure = cache.getStructure(domain.getScopId());
 		Atom[] ca1 = StructureTools.getAtomCAArray(structure);
 		Atom[] ca2 = StructureTools.getAtomCAArray(structure);
 		AFPChain afpChain = mapping.buildAfpChain(ca1, ca2);
-		assertEquals("Wrong TM-score", 0.24488482, afpChain.getTMScore(), 0.00000001);
+		assertEquals("Wrong TM-score", 0.509579, afpChain.getTMScore(), 0.00000001);
 	}
 
 }

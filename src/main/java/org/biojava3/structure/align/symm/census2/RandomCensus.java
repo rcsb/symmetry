@@ -42,7 +42,7 @@ import org.biojava.bio.structure.scop.ScopFactory;
  */
 public class RandomCensus extends Census {
 
-	private static final Logger logger = LogManager.getLogger(RandomCensus.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(RandomCensus.class.getName());
 
 	private final int domainsPerSf;
 	private final boolean shuffle;
@@ -52,7 +52,9 @@ public class RandomCensus extends Census {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			RandomCensus census = new RandomCensus(maxThreads, domainsPerSf, shuffle);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache());
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {

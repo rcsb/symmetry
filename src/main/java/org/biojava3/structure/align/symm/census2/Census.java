@@ -61,7 +61,7 @@ import org.biojava3.structure.utils.FileUtils;
  */
 public class Census {
 
-	private static final Logger logger = LogManager.getLogger("org.biojava3");
+	private static final Logger logger = LogManager.getLogger(Census.class.getSimpleName());
 
 	/**
 	 * A class that creates a new {@link StructureAlignment StructureAlignments} for each {@link CensusJob}, to avoid
@@ -129,7 +129,9 @@ public class Census {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			Census census = new Census(maxThreads);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache());
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -176,7 +178,7 @@ public class Census {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {
-			out.close();
+			if (out != null) out.close();
 		}
 	}
 
@@ -199,22 +201,26 @@ public class Census {
 			int count = 0;
 			List<ScopDomain> domains;
 			if (doPrefetch) {
+				logger.info("Performing prefetch...");
 				domains = filterAndPrefetch();
+				logger.info("Finished performing prefetch.");
 			} else {
 				domains = getDomains();
 			}
-			logger.info("There are " + domains.size() + " domains");
+			logger.info("There are " + domains.size() + " domains (" + knownResults.size() + " known)");
 
 			List<CensusJob> submittedJobs = new ArrayList<CensusJob>(domains.size()); // to get time taken
 
 			// submit jobs
 			for (ScopDomain domain : domains) {
-				if (count % 1000 == 0) logger.info("Submitting " + count + " / " + domains.size());
 				if (domain.getRanges() == null || domain.getRanges().isEmpty()) {
-					logger.debug("Skipping " + domain.getScopId() + " because SCOP ranges for it are not defined");
+					logger.warn("Skipping " + domain.getScopId() + " because SCOP ranges for it are not defined");
 					continue;
 				}
 				if (knownResults.contains(domain.getScopId())) continue;
+				if (count % 10 * (String.valueOf(domains.size()).length() - 1) == 0) {
+					logger.info("Submitting " + count + " / " + domains.size());
+				}
 				logger.debug("Submitting new job for " + domain.getScopId() + " (job #" + count + ")");
 				CensusJob calc = CensusJob.setUpJob(domain.getScopId(), count, getAlgorithm(), significance, cache, scop);
 				calc.setRecordAlignmentMapping(recordAlignmentMapping);

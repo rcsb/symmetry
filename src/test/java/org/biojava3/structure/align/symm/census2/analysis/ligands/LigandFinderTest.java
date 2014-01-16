@@ -47,6 +47,11 @@ public class LigandFinderTest extends TestCase {
 		ScopFactory.setScopDatabase(scop);
 	}
 	
+	@Test
+	public void test() {
+		
+	}
+	
 	@Override
 	protected void tearDown() throws Exception {
 		super.tearDown();

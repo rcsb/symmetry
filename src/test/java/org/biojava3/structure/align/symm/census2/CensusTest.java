@@ -59,20 +59,20 @@ public class CensusTest {
 		ScopFactory.setScopDatabase(scop); 
 	}
 
-	@Test
-	public void testWithAlignmentMapping() throws IOException {
-		File actualFile = File.createTempFile("actualresult1", "xml");
-		Census census = new TinyCensus("d2c35e1");
-		census.setCache(ResourceList.get().getCache());
-		census.setOutputWriter(actualFile);
-		census.setRecordAlignmentMapping(true);
-		census.run();
-		// unfortunately, the timestamp will be different
-		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp", "meanSecondsTaken");
-		File expectedFile = ResourceList.get().openFile("census2/expected1_with_map.xml");
-		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
-		assertTrue(similar);
-	}
+//	@Test
+//	public void testWithAlignmentMapping() throws IOException {
+//		File actualFile = File.createTempFile("actualresult1", "xml");
+//		Census census = new TinyCensus("d2c35e1");
+//		census.setCache(ResourceList.get().getCache());
+//		census.setOutputWriter(actualFile);
+//		census.setRecordAlignmentMapping(true);
+//		census.run();
+//		// unfortunately, the timestamp will be different
+//		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp", "meanSecondsTaken");
+//		File expectedFile = ResourceList.get().openFile("census2/expected1_with_map.xml");
+//		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
+//		assertTrue(similar);
+//	}
 	
 	/**
 	 * Test on live data.

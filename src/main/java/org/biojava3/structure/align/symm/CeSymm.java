@@ -41,20 +41,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8,
 			0.4f); // TODO finish
 
-	/**
-	 * An penalty that is exp(e, x), where x is the number of residues from the
-	 * main diagonal.
-	 */
-	private double gradientExpCoeff = 0;
-
-	public double getGradientExpCoeff() {
-		return gradientExpCoeff;
-	}
-
-	public void setGradientExpCoeff(double gradientExpCoeff) {
-		this.gradientExpCoeff = gradientExpCoeff;
-	}
-
 	public OrderDetector getOrderDetector() {
 		return orderDetector;
 	}

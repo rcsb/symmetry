@@ -128,8 +128,31 @@ public abstract class StructureClassificationGrouping {
 			@Override
 			public String group(ScopDomain domain) {
 				String[] parts = domain.getClassificationId().split("\\.");
-				if (parts.length < 3) throw new IllegalArgumentException("Classification id is invalid for " + domain.getScopId());
+				if (parts.length < 2) throw new IllegalArgumentException("Classification id is invalid for " + domain.getScopId());
 				return parts[0] + "." + parts[1];
+			}
+		};
+	}
+
+	public static StructureClassificationGrouping clas() {
+		return new StructureClassificationGrouping() {
+			@Override
+			public String group(CensusResult result) {
+				String classification = ScopFactory.getSCOP().getDomainByScopID(result.getId()).getClassificationId();
+				String[] parts = classification.split("\\.");
+				if (parts.length < 1) throw new IllegalArgumentException("Classification id is invalid for " + result.getId());
+				return parts[0];
+			}
+
+			@Override
+			public String toString() {
+				return "class";
+			}
+			@Override
+			public String group(ScopDomain domain) {
+				String[] parts = domain.getClassificationId().split("\\.");
+				if (parts.length < 1) throw new IllegalArgumentException("Classification id is invalid for " + domain.getScopId());
+				return parts[0];
 			}
 		};
 	}

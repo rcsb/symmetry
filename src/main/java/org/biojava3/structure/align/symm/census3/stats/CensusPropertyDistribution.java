@@ -70,16 +70,16 @@ public class CensusPropertyDistribution {
 		}
 		File censusFile = new File(args[0]);
 		CensusSignificance sig = CensusSignificanceFactory.fromMethod(CensusSignificanceFactory.class.getName(), args[1]);
-		List<CensusResultProperty> properties = new ArrayList<CensusResultProperty>();
-		properties.add(CensusResultProperty.tmScore());
+		List<CensusResultProperty<?>> properties = new ArrayList<CensusResultProperty<?>>();
+		properties.add(CensusResultPropertyFactory.identity());
 		printBasicStats(System.out, censusFile, properties, sig);
 	}
 
-	public static void printBasicStats(PrintStream ps, File censusFile, List<CensusResultProperty> properties, CensusSignificance sig) {
+	public static void printBasicStats(PrintStream ps, File censusFile, List<CensusResultProperty<?>> properties, CensusSignificance sig) {
 		printBasicStats(new PrintWriter(ps, true), censusFile, properties, sig);
 	}
 
-	public static void printBasicStats(PrintWriter pw, File censusFile, List<CensusResultProperty> properties, CensusSignificance sig) {
+	public static void printBasicStats(PrintWriter pw, File censusFile, List<CensusResultProperty<?>> properties, CensusSignificance sig) {
 		StructureClassificationGrouping normalizingGrouping = StructureClassificationGrouping.superfamily();
 		StructureClassificationGrouping reportGrouping = StructureClassificationGrouping.fold();
 		CensusResultList census;
@@ -94,7 +94,7 @@ public class CensusPropertyDistribution {
 			if (sig.isSignificant(r)) filtered.add(r);
 		}
 		logger.info("Done reading census file");
-		for (CensusResultProperty property : properties) {
+		for (CensusResultProperty<?> property : properties) {
 			CensusPropertyDistribution dist = new CensusPropertyDistribution(normalizingGrouping, reportGrouping, filtered, property);
 			pw.println(dist.toString());
 			pw.println();
@@ -104,7 +104,7 @@ public class CensusPropertyDistribution {
 	private StructureClassificationGrouping normalizingGrouping;
 	private StructureClassificationGrouping reportGrouping;
 	private NavigableMap<String,List<Double>> map;
-	private CensusResultProperty property;
+	private CensusResultProperty<?> property;
 
 	public CensusPropertyDistribution(StructureClassificationGrouping normalizingGrouping, StructureClassificationGrouping reportGrouping, CensusResultList census, CensusResultProperty property) {
 
@@ -122,7 +122,7 @@ public class CensusPropertyDistribution {
 			String normalizingKey = normalizingGrouping.group(result);
 			String reportKey = reportGrouping.group(result);
 			try {
-				double value = property.getProperty(result);
+				double value = property.getProperty(result).doubleValue();
 				CensusStatUtils.plusD(values, normalizingKey, value);
 				CensusStatUtils.plus(counts, normalizingKey);
 			} catch (PropertyUndefinedException e) {
@@ -134,13 +134,17 @@ public class CensusPropertyDistribution {
 		// normalize (take mean)
 		logger.info("Normalizing values over " + normalizingGrouping.toString());
 		Map<String,Double> means = new TreeMap<String,Double>();
+		double total = 0;
 		for (Map.Entry<String,Double> entry : values.entrySet()) {
 			final String normalizingKey = entry.getKey();
 			final Double value = entry.getValue();
 			final double fraction = value / (double) counts.get(normalizingKey);
+			total += fraction;
 			CensusStatUtils.plusD(means, normalizingKey, fraction);
 		}
 
+		System.err.println(total / means.size());
+		
 		// okay, now record normalized stats
 		logger.info("Reporting normalized values by " + reportGrouping.toString());
 		for (Map.Entry<String,Double> entry : means.entrySet()) {
@@ -153,6 +157,7 @@ public class CensusPropertyDistribution {
 			map.get(reportKey).add(value);
 		}
 
+		
 	}
 
 	public NavigableMap<String, List<Double>> getMap() {

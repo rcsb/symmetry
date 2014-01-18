@@ -46,8 +46,6 @@ public class AveragedCensusStats {
 
 	private static final Logger logger = LogManager.getLogger(AveragedCensusStats.class.getPackage().getName());
 
-	private CensusResultProperty property;
-
 	Map<String, Integer> nDomainsInFolds = new TreeMap<String, Integer>();
 
 	Map<String, Integer> nInFoldsTotal = new TreeMap<String, Integer>();
@@ -68,12 +66,10 @@ public class AveragedCensusStats {
 	}
 
 	public AveragedCensusStats(File census, double tmScoreTreshold, double orderTreshold) throws IOException {
-		this(CensusResultProperty.tmScore(), CensusResultList.fromXML(census), tmScoreTreshold, orderTreshold);
+		this(CensusResultList.fromXML(census), tmScoreTreshold, orderTreshold);
 	}
 
-	public AveragedCensusStats(CensusResultProperty property, CensusResultList census, double tmScoreTreshold, double orderTreshold) {
-
-		this.property = property;
+	public AveragedCensusStats(CensusResultList census, double tmScoreTreshold, double orderTreshold) {
 
 		Map<String, Double> tmInSfs = new TreeMap<String, Double>();
 		Map<String, Integer> nInSfs = new TreeMap<String, Integer>();
@@ -95,24 +91,14 @@ public class AveragedCensusStats {
 			}
 			CensusStatUtils.plus(nInSfs, sf);
 			try {
-				tmScore = property.getProperty(result);
+				tmScore = CensusResultPropertyFactory.tmScore().getProperty(result);
 			} catch (PropertyUndefinedException e) {
 				// okay, just leave as 0
 			}
-			int theOrder = 0;
 			try {
-				theOrder = (int) CensusResultProperty.hasOrder().getProperty(result);
+				order = (byte) CensusResultPropertyFactory.hasAnyOrder().getProperty(result);
 			} catch (PropertyUndefinedException e) {
 				// okay, just leave as 0
-			}
-			int guessedOrder = 0;
-			try {
-				guessedOrder =  (int) CensusResultProperty.hasGuessedOrder().getProperty(result);
-			} catch (PropertyUndefinedException e) {
-				// okay, just leave as 0
-			}
-			if (theOrder == 1 || guessedOrder == 1) {
-				order = 1; // otherwise, order = 0
 			}
 			CensusStatUtils.plus(nDomainsInFolds, fold);
 			CensusStatUtils.plus(nDomainsInFolds, clas);
@@ -147,10 +133,6 @@ public class AveragedCensusStats {
 			CensusStatUtils.plus(nInFoldsTotal, "overall");
 		}
 
-	}
-
-	public CensusResultProperty getProperty() {
-		return property;
 	}
 
 	@Override

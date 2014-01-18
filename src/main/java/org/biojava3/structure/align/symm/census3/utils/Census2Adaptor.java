@@ -39,11 +39,11 @@ public class Census2Adaptor {
 		Results census2 = Results.fromXML(args[0]);
 		AtomCache cache = new AtomCache();
 		
-		convertInChunks(census2, cache, args[1], 1000);
-//		CensusResultList newResults = convertResults(census2, cache);
+//		convertInChunks(census2, cache, args[1], 1000);
+		CensusResultList newResults = convertResults(census2, cache);
 //
 //		// print the new census
-//		IOUtils.print(newResults.toXML(), new File(args[1]));
+		IOUtils.print(newResults.toXML(), new File(args[1]));
 	}
 
 	public static void convertInChunks(Results census2, AtomCache cache, String outputDir, int every) throws IOException {

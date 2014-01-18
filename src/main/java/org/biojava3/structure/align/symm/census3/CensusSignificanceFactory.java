@@ -117,6 +117,10 @@ public class CensusSignificanceFactory {
 		};
 	}
 
+	public static CensusSignificance notForCeSymmOrd() {
+		return not(and(tmScore(0.4), order()));
+	}
+
 	public static CensusSignificance forCeSymmOrd() {
 		return and(tmScore(0.4), order());
 	}

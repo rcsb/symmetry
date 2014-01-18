@@ -125,7 +125,7 @@ public class CensusEnzymeStats {
 	
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
-			System.err.println("Usage: " + CensusEnzymeFinder.class.getSimpleName() + " census-file.xml ecs-file.tsv");
+			System.err.println("Usage: " + CensusEnzymeStats.class.getSimpleName() + " census-file.xml ecs-file.tsv");
 			return;
 		}
 		CensusResultList census = CensusResultList.fromXML(new File(args[0]));
@@ -134,9 +134,11 @@ public class CensusEnzymeStats {
 		Map<String, String> ecs = new HashMap<String, String>();
 		ecs.putAll(finder.getEcsBySymmDomain());
 		ecs.putAll(finder.getEcsByAsymmDomain());
+		System.err.println(ecs.size());
 		ecer.printComparisonSmart(1, 10, census, ecs);
 		ecer.printComparisonSmart(2, 5, census, ecs);
 	}
+	
 	/**
 	 * Prints a comparison between symmetric and asymmetric results for each EC.
 	 * The comparison is done per-domain; results are not normalized.
@@ -312,6 +314,8 @@ public class CensusEnzymeStats {
 		Map<String, Set<String>> symmSfsByLabel = new TreeMap<String, Set<String>>();
 		Map<String, Set<String>> totalSfsByLabel = new TreeMap<String, Set<String>>();
 		Map<String, ExampleSet> examples = new HashMap<String, ExampleSet>();
+		Map<String, Integer> nDomainsByLabel = new HashMap<String, Integer>();
+		Map<String, Set<String>> totalFoldsByLabel = new TreeMap<String, Set<String>>();
 
 		Set<String> symmFolds = getSymmetricSuperfamilies(census);
 
@@ -337,6 +341,12 @@ public class CensusEnzymeStats {
 				symmSfsByLabel.get(label).add(sf);
 			}
 			totalSfsByLabel.get(label).add(sf);
+			CensusStatUtils.plus(nDomainsByLabel, label);
+			
+			if (!totalFoldsByLabel.containsKey(label)) {
+				totalFoldsByLabel.put(label, new HashSet<String>());
+			}
+			totalFoldsByLabel.get(label).add(fold);
 			
 			// record as an example
 			if (!examples.containsKey(label)) {
@@ -348,13 +358,15 @@ public class CensusEnzymeStats {
 		}
 
 		
-		
-		System.out.println("label\tNr-symm-sfs\tNr-total-sfs\t%SFs-symm\tstddev\tN-folds\tfold1\tfold2\t...");
+
+		System.out.println("label\tN-SFs-symm\tN-SFs-total\t%SFs-symm\tstddev\tN-domains\tN-folds");
+		System.out.println("\tfold1\tfold2\t...");
+
 		for (String label : totalSfsByLabel.keySet()) {
 
-//			final int nSymm = symmSfsByLabel.containsKey(label)? symmSfsByLabel.get(label).size() : 0;
-//			final int nTotal = totalSfsByLabel.containsKey(label) ? totalSfsByLabel.get(label).size() : 0;
-
+			int nDomains = nDomainsByLabel.get(label);
+			int nFolds = totalFoldsByLabel.get(label).size();
+			
 			Set<String> allSfs = totalSfsByLabel.get(label);
 			if (!symmSfsByLabel.containsKey(label)) symmSfsByLabel.put(label, new HashSet<String>());
 			Set<String> symmSfs = symmSfsByLabel.get(label);
@@ -363,26 +375,26 @@ public class CensusEnzymeStats {
 			int i = 0;
 			int nTotal = allSfs.size();
 			int nSymm = symmSfs.size();
-			double[] stddevs = new double[allSfs.size()];
+			double[] nSfsSymmetric = new double[allSfs.size()];
 			for (String sf : allSfs) {
 				if (symmSfs.contains(sf)) {
-					stddevs[i] = 1;
+					nSfsSymmetric[i] = 1;
 				} else {
-					stddevs[i] = 0;
+					nSfsSymmetric[i] = 0;
 				}
 				i++;
 			}
-			DescriptiveStatistics stats = new DescriptiveStatistics(stddevs);
+			DescriptiveStatistics stats = new DescriptiveStatistics(nSfsSymmetric);
 			double mean = stats.getMean();
 			double stddev = stats.getStandardDeviation();
 			
-			System.out.print(label + "\t" + nSymm + "\t" + nTotal + "\t" + CensusStatUtils.formatP(mean) + "\t" + CensusStatUtils.formatP(stddev));
+			System.out.println(label + "\t" + nSymm + "\t" + nTotal + "\t" + CensusStatUtils.formatP(mean) + "\t" + CensusStatUtils.formatP(stddev) + "\t" + nDomains + "\t" + nFolds);
 
 			/*
 			 * now we want to list example domains for this, we want the top most common folds so we need a new map
 			 * sorted by values
 			 */
-			System.out.println("\t" + examples.get(label).getAsString(maxExamples));
+//			System.out.println("\t" + examples.get(label).getAsString(maxExamples));
 		}
 	}
 

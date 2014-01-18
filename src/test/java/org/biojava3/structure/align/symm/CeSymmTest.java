@@ -32,6 +32,9 @@ public class CeSymmTest extends TestCase {
 		super.setUp();
 	}
 
+	public void testNothing() {
+		
+	}
 	
 	/**
 	 * CeSymm and CeCalculator both use some internal variables, which should

@@ -1,5 +1,7 @@
 package org.biojava3.structure.align.symm.order;
 
+import java.util.Map;
+
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.model.AFPChain;
@@ -27,7 +29,11 @@ public class SequenceFunctionOrderDetector implements OrderDetector {
 	@Override
 	public int calculateOrder(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
 		try {
-			return AlignmentTools.getSymmetryOrder(afpChain, maxSymmetry, minimumMetricChange);
+			Map<Integer,Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
+
+			return AlignmentTools.getSymmetryOrder(alignment,
+					new AlignmentTools.IdentityMap<Integer>(), maxSymmetry, minimumMetricChange);
+//			return AlignmentTools.getSymmetryOrder(afpChain, maxSymmetry, minimumMetricChange);
 		} catch (StructureException e) {
 			throw new OrderDetectionFailedException(e);
 		}

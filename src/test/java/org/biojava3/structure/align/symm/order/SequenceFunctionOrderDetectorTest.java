@@ -26,7 +26,7 @@ public class SequenceFunctionOrderDetectorTest {
 		orderMap.put("1itb.A",3); // b-trefoil, C3
 		orderMap.put("1tim.A",2); // tim-barrel, C8
 		//orderMap.put("d1p9ha_",-1); // not rotational symmetry
-//		orderMap.put("3HKE.A",2); // very questionable alignment
+		orderMap.put("3HKE.A",2); // very questionable alignment
 		orderMap.put("d1jlya1",3); // a very nice trefoil
 		
 		AtomCache cache = new AtomCache();

@@ -1,35 +1,20 @@
 package org.biojava3.structure.quaternary.analysis;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.URL;
-import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import org.biojava.bio.structure.Chain;
 import org.biojava.bio.structure.PDBHeader;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.io.mmcif.AllChemCompProvider;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
-import org.biojava3.genome.homology.BlastHomologyHits;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
 import org.biojava3.structure.quaternary.core.AxisAligner;
@@ -39,11 +24,9 @@ import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 import org.biojava3.structure.quaternary.core.Subunits;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava3.structure.quaternary.misc.BioassemblyCheck;
-import org.biojava3.structure.quaternary.misc.PdbBlastHit;
-import org.biojava3.structure.quaternary.misc.PdbBlastXMLParser;
 import org.biojava3.structure.quaternary.misc.FindPdbRepresentatives;
+import org.biojava3.structure.quaternary.misc.PdbBlastHit;
 import org.biojava3.structure.quaternary.misc.ProteinComplexSignature;
-import org.biojava3.structure.quaternary.misc.SimpleCsvReader;
 import org.biojava3.structure.quaternary.utils.BlastClustReader;
 
 public class BioAssemblyAnalyzer implements Runnable {

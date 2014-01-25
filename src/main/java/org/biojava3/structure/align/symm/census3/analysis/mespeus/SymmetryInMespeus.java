@@ -25,54 +25,6 @@ public class SymmetryInMespeus {
 
 	private static final Logger logger = LogManager.getLogger(SymmetryInMespeus.class.getName());
 
-	public static abstract class MespeusEntryMatcher {
-		public static MespeusEntryMatcher everything() {
-			return new MespeusEntryMatcher() {
-				@Override
-				public boolean matches(MespeusEntry entry) {
-					return true;
-				}
-			};
-		}
-		public static MespeusEntryMatcher coordinationNumberEquals(final int coordinationNumber) {
-			return new MespeusEntryMatcher() {
-				@Override
-				public boolean matches(MespeusEntry entry) {
-					return entry.getCoordinationNumber() == coordinationNumber;
-				}
-			};
-		}
-		public static MespeusEntryMatcher coordinationNumberAtLeast(final int coordinationNumber) {
-			return new MespeusEntryMatcher() {
-				@Override
-				public boolean matches(MespeusEntry entry) {
-					return entry.getCoordinationNumber() >= coordinationNumber;
-				}
-			};
-		}
-		public static MespeusEntryMatcher coordinationNumberAtMost(final int coordinationNumber) {
-			return new MespeusEntryMatcher() {
-				@Override
-				public boolean matches(MespeusEntry entry) {
-					return entry.getCoordinationNumber() <= coordinationNumber;
-				}
-			};
-		}
-		public static MespeusEntryMatcher metalName(final String[] metalNames) {
-			return new MespeusEntryMatcher() {
-				@Override
-				public boolean matches(MespeusEntry entry) {
-					String s = entry.getMetalName().split(" ")[0];
-					for (String name : metalNames) {
-						if (name.equalsIgnoreCase(s)) return true;
-					}
-					return false;
-				}
-			};
-		}
-		public abstract boolean matches(MespeusEntry entry);
-	}
-
 	private CensusSignificance significance;
 	private List<MespeusEntry> entries;
 
@@ -105,9 +57,40 @@ public class SymmetryInMespeus {
 		CensusSignificance significance = CensusSignificanceFactory.forCeSymmOrd();
 		SymmetryInMespeus mespeus = new SymmetryInMespeus(new File(args[1]), significance);
 		CensusResultList census = CensusResultList.fromXML(new File(args[0]));
-		DescriptiveStatistics stats = mespeus.correlate(census, MespeusEntryMatcher.everything());
+		DescriptiveStatistics stats = mespeus.correlate(census, MespeusEntryMatcherFactory.everything());
 //		DescriptiveStatistics stats = mespeus.correlate(census, MespeusEntryMatcher.metalName(new String[] {"FE", "FE1", "FE2", "FE3", "FE4"}));
 		System.out.println(stats);
+		DescriptiveStatistics symmStats = mespeus.correlateWithSymmetryOrder(census, MespeusEntryMatcherFactory.everything());
+		System.out.println(symmStats);
+	}
+
+	private DescriptiveStatistics correlateWithSymmetryOrder(CensusResultList census, MespeusEntryMatcher everything) {
+		Map<String,Integer> orders = new HashMap<String,Integer>();
+		for (CensusResult result : census.getEntries()) {
+			if (result.getAlignedUnit() == null) continue;
+			int x = result.getAlignedUnit().indexOf('.');
+			if (x == -1) continue;
+			String pdbId = result.getAlignedUnit().substring(0, x);
+			if (!orders.containsKey(pdbId)) {
+				if (significance.isSignificant(result)) {
+					orders.put(pdbId, result.getOrder());
+				} else {
+					orders.put(pdbId, 1);
+				}
+			}
+		}
+
+		DescriptiveStatistics stats = new DescriptiveStatistics();
+		for (MespeusEntry entry : entries) {
+			if (everything.matches(entry)) {
+				Integer order = orders.get(entry.getPdbId());
+				if (order != null) {
+					MespeusEntryMatcher matcher = MespeusEntryMatcherFactory.coordinationEquals(order);
+					stats.addValue(matcher.matches(entry)? 1 : 0);
+				}
+			}
+		}
+		return stats;
 	}
 
 	public DescriptiveStatistics correlate(CensusResultList census, MespeusEntryMatcher matcher) {

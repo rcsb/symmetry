@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>symmetry</artifactId>
-	<version>0.3.3-SNAPSHOT</version>
+	<version>0.3.4-SNAPSHOT</version>
 	<name>RCSB Symmetry</name>
 	
 	<properties>
@@ -105,9 +105,15 @@
 			
 		</dependency>
 		<dependency>
+			<groupId>org.biojava</groupId>
+			<artifactId>biojava3-ws</artifactId>
+			<version>3.0.8-SNAPSHOT</version>
+			
+		</dependency>
+		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>ava-core</artifactId>
-			<version>2012-05-21-SNAPSHOT</version>
+			<version>2013-11-1-SNAPSHOT</version>
 			
 		</dependency>
 		<dependency>

@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis;
+package org.biojava3.structure.align.symm.census2.analysis.ligands;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -89,6 +89,24 @@ public abstract class LigandMatcher {
 			@Override
 			public boolean matches(Ligand ligand) {
 				return ligand.isMetallic();
+			}
+		};
+	}
+
+	public static LigandMatcher hasTotalOxidationMagnitude(final int min) {
+		return new LigandMatcher() {
+			@Override
+			public boolean matches(Ligand ligand) {
+				Map<Element, Integer> elements = parse(ligand);
+				for (Element e : elements.keySet()) {
+					if (e.equals(Element.R)) continue;
+					int sum = 0;
+					for (int o : e.getAllOxidationStates()) {
+						sum += o;
+					}
+					if (Math.abs(sum) >= min) return true;
+				}
+				return false;
 			}
 		};
 	}

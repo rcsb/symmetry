@@ -26,6 +26,7 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
@@ -39,8 +40,9 @@ import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.secstruc.SecStruc;
 import org.biojava.bio.structure.secstruc.SecStrucGroup;
 import org.biojava.bio.structure.secstruc.SecStrucState;
-import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
+import org.biojava3.structure.align.symm.order.OrderDetector;
+import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 /**
@@ -50,34 +52,9 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  */
 public class CensusJob implements Callable<Result> {
 
-	public static class FullInfo {
-		private AFPChain afpChain;
-		private Result result;
-
-		public FullInfo(AFPChain afpChain, Result result) {
-			super();
-			this.afpChain = afpChain;
-			this.result = result;
-		}
-
-		public AFPChain getAfpChain() {
-			return afpChain;
-		}
-
-		public Result getResult() {
-			return result;
-		}
-
-		public void setAfpChain(AFPChain afpChain) {
-			this.afpChain = afpChain;
-		}
-
-		public void setResult(Result result) {
-			this.result = result;
-		}
-	}
-
-	private static final Logger logger = LogManager.getLogger(CensusJob.class.getPackage().getName());
+	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
+	
+	private static final Logger logger = LogManager.getLogger(CensusJob.class.getSimpleName());
 
 	private AlgorithmGiver algorithm;
 	private Significance significance;
@@ -88,13 +65,20 @@ public class CensusJob implements Callable<Result> {
 	private AtomCache cache;
 	private ScopDatabase scop;
 
-	private boolean calcFractionHelical;
-	private boolean storeAfpChain;
-	private AFPChain afpChain;
+	private boolean calcFractionHelical = false;
+	private boolean storeAfpChain = false;
+	private boolean recordAlignmentMapping = false; 
 
 	private Long timeTaken;
+	
+	private AFPChain afpChain;
 
-	public static CensusJob forScopId(AlgorithmGiver algorithm, Significance significance, String name, int count,
+	public static Result runJob(String name, int count, AlgorithmGiver algorithm, Significance significance, AtomCache cache,
+			ScopDatabase scop) {
+		return setUpJob(name, count, algorithm, significance, cache, scop).call();
+	}
+
+	public static CensusJob setUpJob(String name, int count, AlgorithmGiver algorithm, Significance significance,
 			AtomCache cache, ScopDatabase scop) {
 		CensusJob job = new CensusJob(algorithm, significance);
 		job.setCache(cache);
@@ -102,21 +86,6 @@ public class CensusJob implements Callable<Result> {
 		job.setName(name);
 		job.setCount(count);
 		return job;
-	}
-
-	/**
-	 * Preferred method for web-based calls.
-	 */
-	public static FullInfo runOn(String name, AlgorithmGiver algorithm, Significance sig, AtomCache cache,
-			ScopDatabase scop) {
-		CensusJob job = new CensusJob(algorithm, sig);
-		job.setScop(scop);
-		job.setCache(cache);
-		job.setStoreAfpChain(true);
-		job.setName(name);
-		job.setCount(0);
-		Result r = job.call();
-		return new FullInfo(job.getAfpChain(), r);
 	}
 
 	private static boolean sanityCheckPreAlign(Atom[] ca1, Atom[] ca2) {
@@ -158,10 +127,11 @@ public class CensusJob implements Callable<Result> {
 		logger.debug("Got " + ca1.length + " atoms (job #" + count + ")");
 
 		// run the alignment
+		StructureAlignment algorithm = this.algorithm.getAlgorithm();
 		AFPChain afpChain = null;
 		logger.debug("Running CE-Symm (job #" + count + ")");
 		try {
-			afpChain = findSymmetry(name, ca1, ca2);
+			afpChain = findSymmetry(name, algorithm, ca1, ca2);
 		} catch (Exception e) {
 			logger.error("Failed running CE-Symm on " + name + ": " + e.getMessage(), e);
 			return convertResult(null, null, null, null, name, null, null);
@@ -203,8 +173,7 @@ public class CensusJob implements Callable<Result> {
 			// now try to find the order
 			logger.debug("Finding order (job #" + count + ")");
 			try {
-				CeSymm s = (CeSymm) (algorithm.getAlgorithm());
-				order = CeSymm.getSymmetryOrder(afpChain, s.getMaxSymmetryOrder(), s.getMinimumMetricChange());
+				order = orderDetector.calculateOrder(afpChain, ca1);
 				logger.debug("Order is " + order + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.error("Failed to determine the order of symmetry on " + name + ": " + e.getMessage(), e);
@@ -253,11 +222,8 @@ public class CensusJob implements Callable<Result> {
 		return timeTaken;
 	}
 
-	/**
-	 * Discards the stored AFPChain to free heap memory.
-	 */
-	public void nullifyAfpChain() {
-		afpChain = null;
+	public void setRecordAlignmentMapping(boolean recordAlignmentMapping) {
+		this.recordAlignmentMapping = recordAlignmentMapping;
 	}
 
 	public void setCache(AtomCache cache) {
@@ -276,10 +242,18 @@ public class CensusJob implements Callable<Result> {
 		this.name = name;
 	}
 
+	public void setOrderDetector(OrderDetector orderDetector) {
+		this.orderDetector = orderDetector;
+	}
+
 	public void setScop(ScopDatabase scop) {
 		this.scop = scop;
 	}
 
+	public void nullifyAfpChain() {
+		this.afpChain = null;
+	}
+	
 	/**
 	 * Store the raw AFPChain in {@link #getAfpChain()}. Requires a lot of memory. Not recommended.
 	 * 
@@ -292,9 +266,10 @@ public class CensusJob implements Callable<Result> {
 	private Result convertResult(AFPChain afpChain, Boolean isSymmetric, Integer order, Protodomain protodomain,
 			String name, Float angle, Float fractionHelical) {
 
-		if (storeAfpChain) this.afpChain = afpChain;
-
 		Result r = new Result();
+
+		if (storeAfpChain) this.afpChain = afpChain;
+		if (recordAlignmentMapping) r.setAlignmentMapping(new AlignmentMapping(afpChain));
 
 		r.setRank(count);
 		r.setScopId(name);
@@ -336,10 +311,10 @@ public class CensusJob implements Callable<Result> {
 		return r;
 	}
 
-	private AFPChain findSymmetry(String name, Atom[] ca1, Atom[] ca2) throws StructureException, IOException {
+	private AFPChain findSymmetry(String name, StructureAlignment algorithm, Atom[] ca1, Atom[] ca2) throws StructureException, IOException {
 		if (!sanityCheckPreAlign(ca1, ca2)) throw new RuntimeException("Can't align using same structure.");
 		long startTime = System.currentTimeMillis();
-		AFPChain afpChain = algorithm.getAlgorithm().align(ca1, ca2);
+		AFPChain afpChain = algorithm.align(ca1, ca2);
 		long endTime = System.currentTimeMillis();
 		timeTaken = endTime - startTime;
 		if (afpChain == null) return null;

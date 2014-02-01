@@ -282,7 +282,8 @@ public class SignificanceFactory {
 				} catch (Exception e) {
 					return false;
 				}
-				double epsilon = axis.evaluateEpsilon(order);
+				Double epsilon = axis.evaluateEpsilon(order);
+				if (epsilon == null) return false;
 				if (epsilon > epsilonThreshold) return false;
 				return afpChain.getTMScore() >= threshold && order >= 2;
 			}

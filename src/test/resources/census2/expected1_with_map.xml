@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:CensusResults xmlns:ns2="http://source.rcsb.org">
+    <data>
+        <alignment>
+            <alignLength>118</alignLength>
+            <alignScore>314.85556</alignScore>
+            <block1Length>48</block1Length>
+            <block2Length>49</block2Length>
+            <coverage>82</coverage>
+            <gapLength>21</gapLength>
+            <identity>0.06779661</identity>
+            <rmsd>3.9876678</rmsd>
+            <similarity>0.16949153</similarity>
+            <tmScore>0.509579</tmScore>
+            <zScore>4.58</zScore>
+        </alignment>
+        <alignmentMapping>
+            <simpleFunction>1&gt;70&gt;1 2&gt;71&gt;2 3&gt;72&gt;3 4&gt;73&gt;4 5&gt;74&gt;5 6&gt;75&gt;6 7&gt;76&gt;7 8&gt;77&gt;8 9&gt;78&gt;9 10&gt;79&gt;10 11&gt;80&gt;11 12&gt;81&gt;12 13&gt;82&gt;13 14&gt;83&gt;14 15&gt;84&gt;15 17&gt;86&gt;17 16&gt;85&gt;16 19&gt;88&gt;19 18&gt;87&gt;18 21&gt;90&gt;21 20&gt;89&gt;20 23&gt;92&gt;23 22&gt;91&gt;22 25&gt;94&gt;25 24&gt;93&gt;24 26&gt;95&gt;26 29&gt;97&gt;29 28&gt;96&gt;28 31&gt;99&gt;31 30&gt;98&gt;30 34&gt;102&gt;34 35&gt;103&gt;35 32&gt;100&gt;32 33&gt;101&gt;33 38&gt;106&gt;38 39&gt;107&gt;39 36&gt;104&gt;36 37&gt;105&gt;37 42&gt;110&gt;42 43&gt;111&gt;43 40&gt;108&gt;40 41&gt;109&gt;41 46&gt;114&gt;46 47&gt;115&gt;47 44&gt;112&gt;44 45&gt;113&gt;45 49&gt;117&gt;49 48&gt;116&gt;48 69&gt;0</simpleFunction>
+        </alignmentMapping>
+        <axis>
+            <orthogonal>22.965769</orthogonal>
+            <screw>0.015378313</screw>
+            <theta>3.1387491</theta>
+            <x>0.1182102</x>
+            <y>-0.8843038</y>
+            <z>-0.4517003</z>
+        </axis>
+        <classification>a.1.1</classification>
+        <description>Globin-like</description>
+        <isSignificant>true</isSignificant>
+        <order>2</order>
+        <protodomain>1ux8.A_7-55,A_75-123</protodomain>
+        <rank>0</rank>
+        <scopId>d1ux8a_</scopId>
+        <sunId>113449</sunId>
+    </data>
+    <meanSecondsTaken>0.0</meanSecondsTaken>
+    <timestamp>2013-12-29 22:17:48</timestamp>
+</ns2:CensusResults>

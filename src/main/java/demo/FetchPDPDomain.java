@@ -27,14 +27,10 @@ package demo;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava.bio.structure.scop.ScopInstallation;
 import org.biojava3.structure.StructureIO;
-
 import org.rcsb.ava.dbsearch.domainassign.DomainAssigner;
 import org.rcsb.fatcat.server.PdbChainKey;
 
@@ -65,9 +61,9 @@ public class FetchPDPDomain {
 			System.out.println("got range: " + pdpId + " : " + range);
 			//A:345-343,A:983-1092,A:1182-1452,A:1505-1701
 			//2UV8Ag	A:345-343,A:983-1092,A:1182-1452,A:1505-1701
-			PdbChainKey key  = PdbChainKey.fromName(pdpId);
+			StructureName key  = new StructureName(pdpId);
 			try {
-				System.out.println(DomainAssigner.getDomainRangesForName(key));
+				System.out.println(DomainAssigner.getDomainRangesForName((PdbChainKey) key));
 			} catch (Exception e){
 				e.printStackTrace();
 			}

@@ -2,9 +2,15 @@ package org.biojava3.changeux;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
+
 import java.beans.*;
 
+/**
+ * 
+ * @deprecated
+ */
 @Deprecated
 public class ProgressBar extends JPanel
                              implements ActionListener, 

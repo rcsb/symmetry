@@ -75,7 +75,6 @@ public class MathUtils {
 			}
 			if (i < matrix.getRowDimension() - 1) sb.append(StatUtils.NEWLINE);
 		}
-		System.out.println(sb.toString());
 	}
 
 	public static int argmax(RealVector vector) {

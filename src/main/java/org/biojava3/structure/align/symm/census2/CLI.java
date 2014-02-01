@@ -17,7 +17,10 @@
  */
 package org.biojava3.structure.align.symm.census2;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -35,15 +38,14 @@ import org.apache.commons.cli.ParseException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.scop.Astral;
 import org.biojava.bio.structure.scop.Astral.AstralSet;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava.bio.structure.scop.ScopInstallation;
+import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
 
 /**
  * Decent command-line interface to Census. Combines aspects of many of the other census subclasses.
@@ -53,14 +55,6 @@ import org.biojava.bio.structure.scop.ScopInstallation;
 public class CLI {
 
 	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
-
-	private static final String NEWLINE = "\n";
-
-	public static int foldByIndex(int index) {
-		ScopDatabase scop = ScopFactory.getSCOP();
-		List<ScopDescription> allFolds = scop.getByCategory(ScopCategory.Fold);
-		return allFolds.get(index).getSunID();
-	}
 
 	/**
 	 * See {@link #run(String, String, String, String, String, PrintStream)}.
@@ -84,7 +78,10 @@ public class CLI {
 				return;
 			}
 
-			ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
+			// set SCOP version
+			String scopVersion = cmd.getOptionValue("scopversion");
+			if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
+			ScopFactory.setScopDatabase(scopVersion);
 
 			final String pdbDir = cmd.getOptionValue("pdb");
 			final String censusFile = cmd.getOptionValue("file");
@@ -94,70 +91,82 @@ public class CLI {
 					.getOptionValue("every"));
 			final Integer number = cmd.getOptionValue("number") == null ? null : Integer.parseInt(cmd
 					.getOptionValue("number"));
-			// final Integer clustering = cmd.getOptionValue("clustering") == null ? null :
-			// Integer.parseInt(cmd.getOptionValue("clustering"));
 			final AstralSet clustering = cmd.getOptionValue("clustering") == null ? null : AstralSet.parse(cmd
 					.getOptionValue("clustering"));
 
 			int[] sunIds = null;
 			if (cmd.getOptionValue("sfindex") != null) {
-				if (cmd.hasOption("oldscop")) {
-					printUsage(null, options);
-					System.exit(-1);
-				}
 				int index = Integer.parseInt(cmd.getOptionValue("sfindex"));
-				sunIds = new int[] { sfByIndex(index) };
+				sunIds = new int[] { ScopSupport.getInstance().getByIndex(ScopCategory.Superfamily, index).getSunID() };
 			} else if (cmd.getOptionValue("foldindex") != null) {
-				if (cmd.hasOption("oldscop")) {
-					printUsage(null, options);
-					System.exit(-1);
-				}
 				int index = Integer.parseInt(cmd.getOptionValue("foldindex"));
-				sunIds = new int[] { foldByIndex(index) };
+				sunIds = new int[] { ScopSupport.getInstance().getByIndex(ScopCategory.Fold, index).getSunID() };
 			} else if (cmd.getOptionValue("sunids") != null) {
 				String parts[] = cmd.getOptionValue("sunids").split(" ");
 				sunIds = new int[parts.length];
 				for (int i = 0; i < parts.length; i++) {
 					sunIds[i] = Integer.parseInt(parts[i]);
 				}
+			} else if (cmd.getOptionValue("names") != null) {
+				// get sun ids from the SCOP ids
+				// this is pretty stupid, since we'll do the opposite in a bit
+				ScopDatabase scop = ScopFactory.getSCOP();
+				BufferedReader br = null;
+				try {
+					br = new BufferedReader(new FileReader(new File(cmd.getOptionValue("names"))));
+					String line = "";
+					List<Integer> list = new ArrayList<Integer>();
+					while ((line = br.readLine()) != null) {
+						ScopDomain domain = scop.getDomainByScopID(line.trim());
+						list.add(domain.getSunid());
+					}
+					sunIds = new int[list.size()];
+					for (int i = 0; i < list.size(); i++) {
+						sunIds[i] = list.get(i);
+					}
+				} catch (IOException e) {
+					throw new RuntimeException("Couldn't parse list of SCOP Ids", e);
+				} finally {
+					if (br != null) {
+						try {
+							br.close();
+						} catch (IOException e) {
+							logger.warn("Couldn't close file " + cmd.getOptionValue("names"), e);
+						}
+					}
+				}
 			}
+			final int start = cmd.getOptionValue("start") == null ? 0 : Integer.parseInt(cmd
+					.getOptionValue("start"));
+			final int stop = cmd.getOptionValue("stop") == null ? Integer.MAX_VALUE : Integer.parseInt(cmd
+					.getOptionValue("stop"));
 
-			final String[] superfamilies = cmd.getOptionValue("superfamilies") == null ? null : cmd.getOptionValue(
-					"superfamilies").split(" ");
-			final String[] folds = cmd.getOptionValue("folds") == null ? null : cmd.getOptionValue("folds").split(" ");
+			final String[] classifications = cmd.getOptionValue("classids") == null ? null : cmd.getOptionValue(
+					"classids").split(" ");
 			final boolean randomize = cmd.hasOption("randomize");
 			final boolean restart = cmd.hasOption("restart");
 			final boolean prefetch = cmd.hasOption("prefetch");
-			final String scopVersion = cmd.getOptionValue("scopversion");
+			final boolean storeMapping = cmd.hasOption("storemapping");
+			final boolean diverse = cmd.hasOption("diverse");
+			final boolean allProteins = cmd.hasOption("allproteins");
+			final boolean reverse = cmd.hasOption("reverse");
 
 
 			final String sigClass = cmd.getOptionValue("sigclass");
 			final String sigMethod = cmd.getOptionValue("sigmethod");
 
-			run(pdbDir, censusFile, nThreads, writeEvery, number, clustering, sunIds, superfamilies, folds, randomize,
-					restart, prefetch, scopVersion, sigClass, sigMethod);
+			run(pdbDir, censusFile, nThreads, writeEvery, number, clustering, sunIds, classifications, randomize,
+					restart, prefetch, storeMapping, scopVersion, diverse, allProteins, sigClass, sigMethod, start, stop, reverse);
 
 		} catch (RuntimeException e) {
-			printError(e);
+			logger.fatal(e);
 		}
 	}
 
 	/**
-	 * Prints an error message for {@code e} that shows causes and suppressed messages recursively. Just a little more
-	 * useful than {@code e.printStackTrace()}.
-	 * 
-	 * @param e
+	 * Returns the best Significance object.
 	 */
-	public static void printError(Exception e) {
-		System.err.println(printError(e, ""));
-	}
-
-	public static void run(final String pdbDir, final String censusFile, final Integer pNThreads,
-			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] pSunIds,
-			final String[] superfamilies, final String[] folds, final boolean randomize, final boolean restart,
-			boolean prefetch, final String scopVersion, String sigClass, String sigMethod) {
-
-		// get a significance object
+	private static Significance getSignificance(String sigClass, String sigMethod) {
 		final Significance sig;
 		if (sigClass != null) {
 			if (sigMethod != null) {
@@ -172,151 +181,189 @@ public class CLI {
 				sig = SignificanceFactory.forCensus();
 			}
 		}
+		return sig;
+	}
 
+	/**
+	 * Returns the best number of threads.
+	 */
+	private static int getNThreads(Integer inputNThreads) {
 		// set the number of threads
 		final int nThreads;
-		if (pNThreads == null) {
+		if (inputNThreads == null) {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			if (maxThreads < 1) maxThreads = 1;
 			nThreads = maxThreads;
 		} else {
-			nThreads = pNThreads;
+			nThreads = inputNThreads;
 		}
-		logger.info("Using " + nThreads + " threads");
+		return nThreads;
+	}
 
-		Census census = new Census(nThreads) {
-			@Override
-			protected List<ScopDomain> getDomains() {
-
-				// first we make a list of sun IDs to use
-				List<Integer> sunIds = new ArrayList<Integer>();
-				if (pSunIds != null) {
-					for (Integer pSunId : pSunIds) {
-						sunIds.add(pSunId);
-					}
-				}
-				sunIds.addAll(getSunIds(superfamilies, ScopCategory.Superfamily));
-				sunIds.addAll(getSunIds(folds, ScopCategory.Fold));
-				if (sunIds.isEmpty()) {
-					int[] ppSunIds = new int[] { 46456, 48724, 51349, 53931, 56572, 56835 };
-					for (Integer sunId : ppSunIds) {
-						sunIds.add(sunId);
-					}
-				}
-
-				// print the sun IDs we're using
-				StringBuilder sb = new StringBuilder();
-				for (int i = 0; i < sunIds.size(); i++) {
-					sb.append(sunIds.get(i));
-					if (i < sunIds.size() - 1) sb.append(", ");
-				}
-				logger.info("Using sun IDs " + sb.toString());
-
-				// get sequence clusters
-				Set<String> clusterRepresentatives = null;
-				if (clustering != null) {
-					clusterRepresentatives = Astral.getRepresentatives(clustering);
-					logger.info("Using sequence clustering at " + clustering.getId());
-					logger.info("Number of clusters: " + clusterRepresentatives.size());
-				}
-
-				// okay, now create the final set
-				List<ScopDomain> domains = new ArrayList<ScopDomain>();
-				for (int sunId : sunIds) {
-
-					// first, let putative contain all the domains under our sun id
-					List<ScopDomain> putative = new ArrayList<ScopDomain>();
-					ScopDescriptionCensus.getDomainsUnder(sunId, putative);
-
-					// randomize if we need to
-					if (randomize) {
-						Collections.shuffle(putative);
-						logger.debug("Taking " + (number == null ? "all" : number) + " ids in random order out of "
-								+ putative.size());
-					} else {
-						logger.debug("Taking " + (number == null ? "all" : number) + " ids in sequential order out of "
-								+ putative.size());
-					}
-
-					// keep track of the number we've added
-					// we don't want to add more than the number we're allowed to
-					int numForId = 0;
-
-					for (ScopDomain domain : putative) {
-
-						boolean contains = clustering == null;
-						if (!contains) {
-							contains = clusterRepresentatives.contains(domain.getScopId());
-						}
-						// if (!contains) {
-						// contains = PdbClusteringScopDescriptionCensus.isDomainOverChain(domain,
-						// clusterRepresentatives);
-						// }
-						// logger.debug("Contains " + domain.getScopId());
-
-						if (contains) { // if we want to include the domain
-							// don't add more than we're allowed to
-							if (number != null && numForId >= number) break; // number == null means no limit
-							domains.add(domain);
-							numForId++;
-						}
-					}
-				}
-				logger.info("Found " + domains.size() + " domains");
-				return domains;
-
+	/**
+	 * Gets an <em>initial</em> list of sun ids to use, without clustering.
+	 */
+	private static List<Integer> getSunIdsToUse(int[] inputSunIds, String[] inputClassIds, AstralSet clustering) {
+		List<Integer> sunIds = new ArrayList<Integer>();
+		if (inputSunIds != null) {
+			for (Integer sunId : inputSunIds) {
+				sunIds.add(sunId);
 			}
-
-			@Override
-			protected Significance getSignificance() {
-				return sig;
+		}
+		if (sunIds.isEmpty()) {
+			for (Integer sunId : ScopSupport.TRUE_SCOP_CLASSES) {
+				sunIds.add(sunId);
 			}
+		}
+		return sunIds;
+	}
 
-			@Override
-			protected Results getStartingResults() {
-				if (restart) return new Results();
-				return super.getStartingResults();
-			}
-		};
+	/**
+	 * Returns a <em>clustered and truncated</em> list of ScopDomains from the list of sun ids.
+	 */
+	private static List<ScopDomain> getDomainsFromSunIds(List<Integer> sunIds, AstralSet clustering, Integer limit, boolean diverse, boolean allProteins, boolean randomize) {
 
-		// set SCOP version
-		if (scopVersion != null) {
-			if (scopVersion.endsWith("A")) {
-				BerkeleyScopInstallation inst = new BerkeleyScopInstallation();
-				inst.setScopVersion(scopVersion);
-				ScopFactory.setScopDatabase(inst);
+		// get sequence clusters
+		Set<String> clusterRepresentatives = null;
+		if (clustering != null) {
+			clusterRepresentatives = Astral.getRepresentatives(clustering);
+			logger.info("Using sequence clustering at " + clustering.getId());
+			logger.info("Number of clusters: " + clusterRepresentatives.size());
+		}
+
+		// okay, now create the final set
+		List<ScopDomain> domains = new ArrayList<ScopDomain>();
+		for (int sunId : sunIds) {
+
+			// first, let putative contain all the domains under our sun id
+			List<ScopDomain> putative = new ArrayList<ScopDomain>();
+			if (diverse) {
+				ScopSupport.getInstance().getDomainsUnder(sunId, putative, limit, allProteins);
 			} else {
-				ScopInstallation inst = new ScopInstallation();
-				inst.setScopVersion(scopVersion);
-				ScopFactory.setScopDatabase(inst);
+				ScopSupport.getInstance().getAllDomainsUnder(sunId, putative, allProteins);
+			}
+
+			// randomize if we need to
+			if (randomize) {
+				Collections.shuffle(putative);
+				logger.debug("Taking " + (limit == null ? "all" : limit) + " ids in random order out of "
+						+ putative.size());
+			} else {
+				logger.debug("Taking " + (limit == null ? "all" : limit) + " ids in sequential order out of "
+						+ putative.size());
+			}
+
+			// now handle clustering and limited number
+			// keep track of the number we've added
+			// we don't want to add more than the number we're allowed to
+			int numForId = 0;
+
+			for (ScopDomain domain : putative) {
+
+				boolean contains = clustering == null;
+				if (!contains) {
+					contains = clusterRepresentatives.contains(domain.getScopId());
+				}
+				if (contains) { // if we want to include the domain
+					// don't add more than we're allowed to
+					if (limit != null && numForId >= limit) break; // number == null means no limit
+					domains.add(domain);
+					numForId++;
+				}
 			}
 		}
-		
-		// set final options
-		if (writeEvery != null) census.setPrintFrequency(writeEvery);
-		census.setDoPrefetch(prefetch);
-		if (censusFile != null) {
-			census.setOutputWriter(new File(censusFile));
-		} else {
-			census.setOutputWriter(new File("census.xml"));
-		}
-		if (pdbDir == null) {
-			census.setCache(new AtomCache());
-		} else {
-			census.setCache(new AtomCache(pdbDir, false));
+
+		return domains;
+
+	}
+
+	public static void run(final String pdbDir, final String censusFile, final Integer inputNThreads,
+			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] inputSunIds,
+			final String[] inputClassIds, final boolean randomize, final boolean restart,
+			boolean prefetch, final boolean storeMapping, String scopVersion, final boolean diverse, final boolean allProteins, String sigClass, String sigMethod, final int start, final int stop, final boolean reverse) {
+
+		Census census;
+
+		{
+
+			final Significance significance = getSignificance(sigClass, sigMethod);
+
+			final int nThreads = getNThreads(inputNThreads);
+
+			logger.info("Using " + nThreads + " threads");
+
+			census = new Census(nThreads) {
+				@Override
+				protected List<ScopDomain> getDomains() {
+
+					// get list of sun Ids
+					List<Integer> sunIds = getSunIdsToUse(inputSunIds, inputClassIds, clustering);
+
+					// print the sun IDs we're using
+					StringBuilder sb = new StringBuilder();
+					for (int i = 0; i < sunIds.size(); i++) {
+						sb.append(sunIds.get(i));
+						if (i < sunIds.size() - 1) sb.append(", ");
+					}
+					logger.info("Using sun IDs " + sb.toString());
+
+					List<ScopDomain> domains = getDomainsFromSunIds(sunIds, clustering, number, diverse, allProteins, randomize);
+					List<ScopDomain> restrictedList = new ArrayList<ScopDomain>(Math.min(domains.size(), stop - start));
+					for (int i = start; i < Math.min(domains.size(), stop); i++) {
+						restrictedList.add(domains.get(i));
+					}
+					logger.info("Found " + domains.size() + " domains and using " + restrictedList.size());
+					if (reverse) {
+						Collections.reverse(restrictedList);
+					}
+					return restrictedList;
+
+				}
+
+				@Override
+				protected Significance getSignificance() {
+					return significance;
+				}
+
+				@Override
+				protected Results getStartingResults() {
+					if (restart) return new Results();
+					return super.getStartingResults();
+				}
+			};
+
+			// set PDB dir
+			// this actually gets called first
+			if (pdbDir == null) {
+				AtomCache cache = new AtomCache();
+				cache.setFetchFileEvenIfObsolete(true);
+				census.setCache(cache);
+			} else {
+				AtomCache cache = new AtomCache(pdbDir, false);
+				cache.setFetchFileEvenIfObsolete(true);
+				census.setCache(cache);
+				System.setProperty(UserConfiguration.PDB_DIR, pdbDir);
+			}
+
+			// set final options
+			if (writeEvery != null) census.setPrintFrequency(writeEvery);
+			census.setDoPrefetch(prefetch);
+			if (censusFile != null) {
+				census.setOutputWriter(new File(censusFile));
+			} else {
+				census.setOutputWriter(new File("census.xml"));
+			}
+			census.setRecordAlignmentMapping(storeMapping);
+
 		}
 
 		// now run
+		ScopSupport.nullifyInstance();
 		census.run();
 		System.out.println(census);
 	}
 
-	public static int sfByIndex(int index) {
-		ScopDatabase scop = ScopFactory.getSCOP();
-		List<ScopDescription> allSfs = scop.getByCategory(ScopCategory.Superfamily);
-		return allSfs.get(index).getSunID();
-	}
-
+	@SuppressWarnings("static-access")
 	private static Options getOptions() {
 		Options options = new Options();
 		options.addOption(OptionBuilder.hasArg(true)
@@ -330,12 +377,26 @@ public class CLI {
 		options.addOption(OptionBuilder.hasArg(false)
 				.withDescription("Ignore any existing work and start from scratch.").isRequired(false)
 				.create("restart"));
-		options.addOption(OptionBuilder.hasArg(true).withDescription("Use the specified SCOP version; otherwise will use 1.75A.").isRequired(false)
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Use the specified SCOP version; defaults to the most recent.").isRequired(false)
 				.create("scopversion"));
 		options.addOption(OptionBuilder.hasArg(false).withDescription("Prefetch all PDB files.").isRequired(false)
 				.create("prefetch"));
+		options.addOption(OptionBuilder.hasArg(false).withDescription("Record the alignment mapping in the XML. Can be used to reconstruct an AFPChain quickly").isRequired(false)
+				.create("storemapping"));
+		options.addOption(OptionBuilder.hasArg(false).withDescription("Use all \"px\"s under every domain. If not set, uses only the first \"px\" of each domain.").isRequired(false)
+				.create("allproteins"));
+		options.addOption(OptionBuilder.hasArg(false).withDescription("Reverses the direction in which the jobs are run.").isRequired(false)
+				.create("reverse"));
+		options.addOption(OptionBuilder.hasArg(false).withDescription("If -number is less than the total number of domains for a SCOP category, tries to spread the selection over the category. Currently only works with SCOP superfamilies.").isRequired(false)
+				.create("diverse"));
 		options.addOption(OptionBuilder.hasArg(true).withDescription("Write to file every n jobs.").isRequired(false)
 				.create("every"));
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Start writing on the nth domain selected. Defaults to 0.").isRequired(false)
+				.create("start"));
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Stop writing on the nth domains selected. Defaults to +infinity.").isRequired(false)
+				.create("stop"));
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Use a file containing a line-by-line list of SCOP Ids to run on").isRequired(false)
+				.create("names"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
@@ -347,15 +408,12 @@ public class CLI {
 						"Run on only the specified space-seperated list of SCOP sun ids. Defaults to SCOP classes A-F, \"46456 48724 51349 53931 56572 56835\"")
 						.isRequired(false).create("sunids"));
 		options.addOption(OptionBuilder.hasArg(true)
-				.withDescription("Run on only the specified space-seperated list of superfamily names.")
-				.isRequired(false).create("superfamilies"));
-		options.addOption(OptionBuilder.hasArg(true)
-				.withDescription("Run on only the specified space-seperated list of fold names.").isRequired(false)
-				.create("folds"));
+				.withDescription("Run on only the specified space-seperated list of classification identifiers, in addition to -sunids")
+				.isRequired(false).create("classids"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
-						"Use only the specified number of entities from the sun ids or superfamilies selected. A value of -1 (default) means all. This option does not attempt to select diverse domains from the sets (will fix). Use with -randomize.")
+						"Use at most the specified number of entities from the sun ids or superfamilies selected. A value of -1 (default) means all. This option does not attempt to select diverse domains from the sets (will fix). Use with -randomize.")
 						.isRequired(false).create("number"));
 		options.addOption(OptionBuilder
 				.hasArg(false)
@@ -365,12 +423,12 @@ public class CLI {
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
-						"Run on only the nth fold. Special option for running on OSG. Does not work with -oldscop.")
+						"Run on only the nth fold. Special option for running on OSG.")
 						.isRequired(false).create("foldindex"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
-						"Run on only the nth superfamily. Special option for running on OSG. Does not work with -oldscop.")
+						"Run on only the nth superfamily. Special option for running on OSG.")
 						.isRequired(false).create("sfindex"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
@@ -383,45 +441,6 @@ public class CLI {
 						"The name of a factory method that returns a Significance object. If sigclass is also set, expects the factory method to be in that class; otherwise, checks in SignificanceFactory.")
 						.isRequired(false).create("sigmethod"));
 		return options;
-	}
-
-	private static List<Integer> getSunIds(String[] superfamilies, ScopCategory category) {
-		List<Integer> sunIds = new ArrayList<Integer>();
-		if (superfamilies == null) return sunIds;
-		final ScopDatabase scop = ScopFactory.getSCOP();
-		List<ScopDescription> allSfs = scop.getByCategory(category);
-		for (ScopDescription superfamily : allSfs) {
-			for (String superfamilie : superfamilies) {
-				if (superfamilie.equals(superfamily.getClassificationId())) {
-					sunIds.add(superfamily.getSunID());
-					break;
-				}
-			}
-		}
-		return sunIds;
-	}
-
-	/**
-	 * @see #printError(Exception)
-	 */
-	private static String printError(Exception e, String tabs) {
-		StringBuilder sb = new StringBuilder();
-		Throwable prime = e;
-		while (prime != null) {
-			if (tabs.length() > 0) sb.append(tabs + "Cause:" + NEWLINE);
-			sb.append(tabs + prime.getClass().getSimpleName() + NEWLINE);
-			if (prime.getMessage() != null) sb.append(tabs + prime.getMessage() + NEWLINE);
-			if (prime instanceof Exception) {
-				StackTraceElement[] trace = ((Exception) prime).getStackTrace();
-				for (StackTraceElement element : trace) {
-					sb.append(tabs + element.toString() + NEWLINE);
-				}
-			}
-			prime = prime.getCause();
-			tabs += "\t";
-			sb.append(NEWLINE);
-		}
-		return sb.toString();
 	}
 
 	private static void printUsage(String note, Options options) {

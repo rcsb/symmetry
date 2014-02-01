@@ -45,7 +45,7 @@ import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
  */
 public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 
-	private static final Logger logger = LogManager.getLogger(PdbClusteringScopDescriptionCensus.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(PdbClusteringScopDescriptionCensus.class.getName());
 
 	private static final String SERVER_LOCATION = FarmJobParameters.DEFAULT_SERVER_URL;
 
@@ -56,7 +56,9 @@ public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			PdbClusteringScopDescriptionCensus census = new PdbClusteringScopDescriptionCensus(maxThreads, identityCutoff, sunIds);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache());
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -133,7 +135,7 @@ public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 		for (int sunId : sunIds) {
 
 			List<ScopDomain> putative = new ArrayList<ScopDomain>();
-			ScopDescriptionCensus.getDomainsUnder(sunId, putative);
+			ScopSupport.getInstance().getAllDomainsUnder(sunId, putative, false);
 
 			for (ScopDomain domain : putative) {
 				if (isDomainOverChain(domain, clusterRepresentatives)) domains.add(domain);

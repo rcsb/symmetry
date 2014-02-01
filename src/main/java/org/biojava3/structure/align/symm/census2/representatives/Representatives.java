@@ -30,6 +30,7 @@ import org.biojava.bio.structure.scop.ScopFactory;
  * A list of {@link ScopDomain ScopDomains} to be used as representatives.
  * This class also implements a singleton pattern, although Representative objects aren't required to be used this way.
  * @author dmyerstu
+ * TODO Use generics to avoid limiting to SCOP domains.
  */
 public abstract class Representatives {
 

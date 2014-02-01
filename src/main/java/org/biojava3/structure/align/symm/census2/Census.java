@@ -49,6 +49,8 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.core.util.ConcurrencyTools;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.order.OrderDetector;
+import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava3.structure.utils.FileUtils;
 
 /**
@@ -59,7 +61,7 @@ import org.biojava3.structure.utils.FileUtils;
  */
 public class Census {
 
-	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(Census.class.getSimpleName());
 
 	/**
 	 * A class that creates a new {@link StructureAlignment StructureAlignments} for each {@link CensusJob}, to avoid
@@ -97,6 +99,9 @@ public class Census {
 	private int numSymm;
 
 	private int numTotal;
+	
+	private boolean recordAlignmentMapping = false;
+	private boolean storeAfpChain = false;
 
 	private int printFrequency = 400;
 	private Map<String, Integer> symm = new TreeMap<String, Integer>();
@@ -105,12 +110,28 @@ public class Census {
 
 	private AlgorithmGiver algorithm = null;
 
+	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
+	
+	public void setRecordAlignmentMapping(boolean recordAlignmentMapping) {
+		this.recordAlignmentMapping = recordAlignmentMapping;
+	}
+
+	public void setStoreAfpChain(boolean keepAfpChain) {
+		this.storeAfpChain = keepAfpChain;
+	}
+
+	public void setOrderDetector(OrderDetector orderDetector) {
+		this.orderDetector = orderDetector;
+	}
+
 	public static void buildDefault(File censusFile) {
 		try {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			Census census = new Census(maxThreads);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache());
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -157,12 +178,14 @@ public class Census {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {
-			out.close();
+			if (out != null) out.close();
 		}
 	}
 
 	public final void run() {
 
+		Results census;
+		
 		try {
 
 			if (file == null) throw new IllegalStateException("Must set file first");
@@ -170,7 +193,7 @@ public class Census {
 
 			ScopDatabase scop = ScopFactory.getSCOP();
 			List<Future<Result>> futures = new ArrayList<Future<Result>>();
-			Results census = getStartingResults();
+			census = getStartingResults();
 			Significance significance = getSignificance();
 			List<String> knownResults = getKnownResults(census);
 			logger.info("There are " + knownResults.size() + " known results");
@@ -178,24 +201,31 @@ public class Census {
 			int count = 0;
 			List<ScopDomain> domains;
 			if (doPrefetch) {
+				logger.info("Performing prefetch...");
 				domains = filterAndPrefetch();
+				logger.info("Finished performing prefetch.");
 			} else {
 				domains = getDomains();
 			}
-			logger.info("There are " + domains.size() + " domains");
+			logger.info("There are " + domains.size() + " domains (" + knownResults.size() + " known)");
 
 			List<CensusJob> submittedJobs = new ArrayList<CensusJob>(domains.size()); // to get time taken
 
 			// submit jobs
 			for (ScopDomain domain : domains) {
-				if (count % 1000 == 0) logger.info("Working on " + count + " / " + domains.size());
 				if (domain.getRanges() == null || domain.getRanges().isEmpty()) {
-					logger.debug("Skipping " + domain.getScopId() + " because SCOP ranges for it are not defined");
+					logger.warn("Skipping " + domain.getScopId() + " because SCOP ranges for it are not defined");
 					continue;
 				}
 				if (knownResults.contains(domain.getScopId())) continue;
+				if (count % 10 * (String.valueOf(domains.size()).length() - 1) == 0) {
+					logger.info("Submitting " + count + " / " + domains.size());
+				}
 				logger.debug("Submitting new job for " + domain.getScopId() + " (job #" + count + ")");
-				CensusJob calc = CensusJob.forScopId(getAlgorithm(), significance, domain.getScopId(), count, cache, scop);
+				CensusJob calc = CensusJob.setUpJob(domain.getScopId(), count, getAlgorithm(), significance, cache, scop);
+				calc.setRecordAlignmentMapping(recordAlignmentMapping);
+				calc.setStoreAfpChain(storeAfpChain);
+				calc.setOrderDetector(orderDetector);
 				initializeJob(calc);
 				submittedJobs.add(calc);
 				Future<Result> result = ConcurrencyTools.submit(calc);
@@ -230,28 +260,34 @@ public class Census {
 				updateStats(result);
 				if (census.size() % printFrequency == 0) {
 					logger.debug("Printing to stream ");
+					setTimeTaken(census, submittedJobs);
 					print(census);
 				}
 			}
 			logger.debug("Printing leftover results to stream");
-			print(census);
+			setTimeTaken(census, submittedJobs);
+			print(census); // should be redundant
 			logger.info("Finished!");
 
-			long timeTaken = 0;
-			int nSuccess = 0;
-			for (CensusJob job : submittedJobs) {
-				if (job.getTimeTaken() != null) {
-					timeTaken += job.getTimeTaken();
-					nSuccess++;
-				}
-			}
-			avgTimeTaken = (double) timeTaken / (double) nSuccess;
-
 		} finally {
-			ConcurrencyTools.shutdown();
+			ConcurrencyTools.shutdownAndAwaitTermination();
 		}
+		print(census);
 	}
 
+	private void setTimeTaken(Results census, List<CensusJob> submittedJobs) {
+		long timeTaken = 0;
+		int nSuccess = 0;
+		for (CensusJob job : submittedJobs) {
+			if (job.getTimeTaken() != null) {
+				timeTaken += job.getTimeTaken();
+				nSuccess++;
+			}
+		}
+		avgTimeTaken = (double) timeTaken / (double) nSuccess;
+		census.setMeanSecondsTaken(avgTimeTaken);
+	}
+	
 	/**
 	 * Do anything else to the {@link CensusJob} object before it is run.
 	 * @param calc
@@ -280,15 +316,17 @@ public class Census {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		double totalPercent = (double) numSymm / (double) numTotal * 100.0;
-		sb.append("overall" + "\t" + totalPercent);
 		DecimalFormat df = new DecimalFormat();
 		df.setMaximumFractionDigits(3);
+		String newline = System.getProperty("line.separator");
+		sb.append("time taken: " + avgTimeTaken + newline);
+		double totalPercent = (double) numSymm / (double) numTotal * 100.0;
+		sb.append("overall" + "\t" + df.format(totalPercent) + "%" + newline);
 		for (Map.Entry<String, Integer> entry : total.entrySet()) {
 			Integer nSymm = symm.get(entry.getKey());
 			if (nSymm == null) nSymm = 0;
 			double percent = (double) nSymm / (double) entry.getValue() * 100.0;
-			sb.append(entry.getKey() + "\t" + df.format(percent) + "%\n");
+			sb.append(entry.getKey() + "\t" + df.format(percent) + "%" + newline);
 		}
 		return sb.toString();
 	}
@@ -395,10 +433,10 @@ public class Census {
 		try {
 			String[] parts = result.getClassification().split("\\.");
 			plus(total, parts[0]);
-			plus(total, parts[1]);
+			plus(total, parts[0] + "." + parts[1]);
 			if (result.getIsSignificant()) {
 				plus(symm, parts[0]);
-				plus(symm, parts[1]);
+				plus(symm, parts[0] + "." + parts[1]);
 				numSymm++;
 			}
 			numTotal++;

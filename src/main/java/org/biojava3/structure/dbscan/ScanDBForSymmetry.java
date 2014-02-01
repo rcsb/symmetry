@@ -9,11 +9,11 @@ import org.biojava.bio.structure.align.ce.CECalculator;
 import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.ce.CeParameters;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.jama.Matrix;
-import org.rcsb.fatcat.server.PdbChainKey;
 
 /**
  * @deprecated Use {@link census2.Census} instead.
@@ -21,15 +21,15 @@ import org.rcsb.fatcat.server.PdbChainKey;
 @Deprecated
 public class ScanDBForSymmetry {
 	public static void main(String[] args){
-		SortedSet<PdbChainKey> reps = GetRepresentatives.getRepresentatives();
+		SortedSet<StructureName> reps = GetRepresentatives.getRepresentatives();
 		AtomCache cache = new AtomCache();
 		ScanDBForSymmetry me = new ScanDBForSymmetry();
 		
 		int total = 0;
 		int symmetric = 0;
-		for ( PdbChainKey r : reps){
+		for ( StructureName r : reps){
 			try {
-				String name = r.toName();
+				String name = r.getName();
 				Atom[] ca1 = cache.getAtoms(name);
 				Atom[] ca2 = cache.getAtoms(name);
 				

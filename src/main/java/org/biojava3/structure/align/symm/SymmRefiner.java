@@ -1,5 +1,6 @@
 package org.biojava3.structure.align.symm;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -397,9 +398,18 @@ public class SymmRefiner {
 			//name = "1YOX(A:95-160)";
 			name = "3jut.A"; // b-trefoil FGF-1, C3
 			name = "2jaj.A"; //C5
+			name = "d1poqa_"; //superantigen Ypm
+			name = "1hiv"; // hiv protease
 
-			boolean writeSIF = true;
-			boolean displayStruct = false;
+			// Should we display the structure?
+			boolean displayStruct = true;
+
+			// Write a SIF (graph) file
+			boolean writeSIF = false;
+			String path = "/Users/blivens/dev/bourne/symmetry/refinement/";
+			if( !(new File(path)).exists() ) {
+				writeSIF = false;
+			}
 
 			AtomCache cache = new AtomCache();
 			Atom[] ca1 = cache.getAtoms(name);
@@ -426,7 +436,6 @@ public class SymmRefiner {
 			System.out.format("Finding order took %dms%n", orderTime);
 
 			//Output SIF file
-			String path = "/Users/blivens/dev/bourne/symmetry/refinement/";
 			String filename = path+name+".sif";
 			Writer out = null;
 			if(writeSIF) {

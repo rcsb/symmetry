@@ -50,6 +50,13 @@ public class ProtodomainTest {
 	}
 
 	@Test
+	public void testConcat() throws Exception {
+		AFPChainAndAtoms storedAcaa = ResourceList.get().loadSymm("1ngk.B");
+		Protodomain protodomain = Protodomain.fromSymmetryAlignment(storedAcaa.getAfpChain(), storedAcaa.getCa1(), 2, cache);
+		
+	}
+	
+	@Test
 	public void testWholeChain() throws Exception {
 		checkAlignSymm("1hiv.A_1-44,A_58-88,A_93-95", "1hiv.A");
 	}
@@ -108,13 +115,29 @@ public class ProtodomainTest {
 	public void testSubstructure() throws Exception {
 		AFPChainAndAtoms storedAcaa = ResourceList.get().loadSim("1qdm.A_3S-37S,A_65S-99S", "d2biba2");
 		Protodomain protodomain = Protodomain.fromReferral(storedAcaa.getAfpChain(), storedAcaa.getCa2(), cache);
-		checkSubstruct("2bib.A_56-79", protodomain, 2); // note that the protodomain is rounded down in all of these
-		checkSubstruct("2bib.A_56-71", protodomain, 3);
-		checkSubstruct("2bib.A_56-67", protodomain, 4);
-		checkSubstruct("2bib.A_56-65", protodomain, 5);
-		checkSubstruct("2bib.A_56-63", protodomain, 6);
+		checkSubstruct("2bib.A_56-79", protodomain, 2, 0); // note that the protodomain is rounded down in all of these
+		checkSubstruct("2bib.A_56-71", protodomain, 3, 0);
+		checkSubstruct("2bib.A_56-67", protodomain, 4, 0);
+		checkSubstruct("2bib.A_56-65", protodomain, 5, 0);
+		checkSubstruct("2bib.A_56-63", protodomain, 6, 0);
 	}
 
+	@Test
+	public void testSubstructureWithIndex() throws Exception {
+		/*
+		 * Should be:
+		 * ngk.B_10-33,B_38-58,B_77-126
+		 * ngk.B_10-33,B_38-58,B_77-80
+		 * 1ngk.B_81-126
+		 */
+		AFPChainAndAtoms storedAcaa = ResourceList.get().loadSymm("1ngk.B");
+		// order here shouldn't affect the ability to create a substructure, so just say 5
+		Protodomain protodomain = Protodomain.fromSymmetryAlignment(storedAcaa.getAfpChain(), storedAcaa.getCa1(), 5, cache);
+		checkSubstruct("1ngk.B_10-33,B_38-58,B_77-80", protodomain, 2, 0);
+		checkSubstruct("1ngk.B_81-126", protodomain, 2, 1);
+		// TODO check other orders
+	}
+	
 	@Test
 	public void testLongGaps() throws Exception {
 		checkAlignSymm("3iek.A_17-28,A_56-82,A_87-128,A_133-134,A_150-166,A_173-239,A_244-265,A_273-294,A_320-352,A_369-377", "d3ieka_");
@@ -137,8 +160,8 @@ public class ProtodomainTest {
 		Protodomain.fromSymmetryAlignment(acaa.getAfpChain(), acaa.getCa1(), 1, cache); // should throw an exception
 	}
 
-	Protodomain checkSubstruct(String string, Protodomain parent, int order) throws ProtodomainCreationException, IOException, StructureException {
-		Protodomain sub = parent.createSubstruct(order);
+	Protodomain checkSubstruct(String string, Protodomain parent, int order, int index) throws ProtodomainCreationException, IOException, StructureException {
+		Protodomain sub = parent.createSubstruct(order, index);
 
 		// check that the protodomain's string is correct
 		assertEquals("The protodomain created has the wrong string", string, sub.toString());

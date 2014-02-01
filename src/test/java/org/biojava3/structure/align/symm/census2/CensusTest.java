@@ -59,6 +59,21 @@ public class CensusTest {
 		ScopFactory.setScopDatabase(scop); 
 	}
 
+//	@Test
+//	public void testWithAlignmentMapping() throws IOException {
+//		File actualFile = File.createTempFile("actualresult1", "xml");
+//		Census census = new TinyCensus("d2c35e1");
+//		census.setCache(ResourceList.get().getCache());
+//		census.setOutputWriter(actualFile);
+//		census.setRecordAlignmentMapping(true);
+//		census.run();
+//		// unfortunately, the timestamp will be different
+//		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp", "meanSecondsTaken");
+//		File expectedFile = ResourceList.get().openFile("census2/expected1_with_map.xml");
+//		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
+//		assertTrue(similar);
+//	}
+	
 	/**
 	 * Test on live data.
 	 * @throws IOException
@@ -71,7 +86,7 @@ public class CensusTest {
 		census.setOutputWriter(actualFile);
 		census.run();
 		// unfortunately, the timestamp will be different
-		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp");
+		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp", "meanSecondsTaken");
 		File expectedFile = ResourceList.get().openFile("census2/expected1.xml");
 		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
 		assertTrue(similar);
@@ -118,8 +133,17 @@ public class CensusTest {
 	}
 	
 	@Test
-	public void testHard() {
-		// TODO
+	public void testHard() throws IOException {
+//		File actualFile = File.createTempFile("actualresult2", "xml");
+		File actualFile = new File("actualrestuldf2.xml");
+		Census census = new TinyCensus("d1kcwa6");
+		census.setCache(ResourceList.get().getCache());
+		census.setOutputWriter(actualFile);
+		census.run();
+		// unfortunately, the timestamp will be different
+		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp", "meanSecondsTaken");
+		File expectedFile = ResourceList.get().openFile("census2/expected2.xml");
+		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
+		assertTrue(similar);
 	}
-
 }

@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 
 
+
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
@@ -17,6 +18,10 @@ import org.biojava.bio.structure.io.PDBFileParser;
 import org.biojava3.structure.dbscan.FindRotationSymmetries;
 
 
+/**
+ * 
+ * @deprecated
+ */
 @Deprecated
 public class ShowRotationSymmetry {
 

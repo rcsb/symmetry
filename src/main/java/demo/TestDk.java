@@ -14,6 +14,10 @@ import org.biojava3.structure.utils.SymmetryTools;
 
 
 
+/**
+ * 
+ * @deprecated
+ */
 @Deprecated
 public class TestDk {
 

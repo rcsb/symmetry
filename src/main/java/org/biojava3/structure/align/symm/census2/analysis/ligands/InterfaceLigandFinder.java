@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis;
+package org.biojava3.structure.align.symm.census2.analysis.ligands;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,9 +7,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-import org.apache.commons.math3.ml.distance.DistanceMeasure;
-import org.apache.commons.math3.ml.distance.EuclideanDistance;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
@@ -19,25 +16,25 @@ import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.io.mmcif.chem.ResidueType;
 import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.census2.Census;
+import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.census2.CensusJob;
-import org.biojava3.structure.align.symm.census2.CensusJob.FullInfo;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * Finds ligands near symmetric interfaces.
  * @author dmyersturnbull
+ * @deprecated Use {@link LigandFinder} instead
  */
+@Deprecated
 public class InterfaceLigandFinder {
 
 	private static final double DEFAULT_MAX_DISTANCE = 4;
@@ -54,7 +51,7 @@ public class InterfaceLigandFinder {
 					+ " census-file.xml output-file [max-distance]");
 			return;
 		}
-		int radius = LigandFinder.DEFAULT_RADIUS;
+		double radius = InterfaceLigandFinder.DEFAULT_MAX_DISTANCE;
 		if (args.length > 2) {
 			radius = Integer.parseInt(args[2]);
 		}
@@ -84,53 +81,13 @@ public class InterfaceLigandFinder {
 	private double maxDistance = DEFAULT_MAX_DISTANCE;
 
 	private File output;
+	
+	private Significance significance;
 
 	private int printFrequency = 100;
 
-	private double calcDistance(RotationAxis axis, Atom atom, double axisLength) {
-
-		Vector3D rotation = new Vector3D(axis.getRotationAxis().getCoords());
-		Vector3D origin = new Vector3D(axis.getRotationPos().getCoords());
-		Vector3D point = new Vector3D(atom.getCoords());
-		Vector3D origin0 = origin.subtract(rotation.scalarMultiply(axisLength / 2.0)); // segment
-																						// start
-		Vector3D origin1 = origin.add(rotation.scalarMultiply(axisLength / 2.0)); // segment
-																					// end
-
-		DistanceMeasure distance = new EuclideanDistance();
-
-		// closest to start of segment
-		double dot0 = point.subtract(origin0).dotProduct(origin1.subtract(origin0));
-		if (dot0 <= 0) {
-			return distance.compute(origin0.toArray(), point.toArray());
-		}
-
-		// closest to end of segment
-		double dot1 = origin1.subtract(origin0).dotProduct(origin1.subtract(origin0));
-		if (dot1 <= dot0) {
-			return distance.compute(origin1.toArray(), point.toArray());
-		}
-
-		// normal vector is closest
-		Vector3D toVector = origin0.add(point.scalarMultiply(dot1 / dot0));
-		return distance.compute(toVector.toArray(), point.toArray());
-	}
-
-	private double calcMaxParallel(RotationAxis axis, Atom[] ca) {
-		double max = 0;
-		Vector3D rotation = new Vector3D(axis.getRotationAxis().getCoords());
-		Vector3D position = new Vector3D(axis.getRotationPos().getCoords());
-		Vector3D x = position.add(rotation);
-		for (Atom atom : ca) {
-			if (exclusionMatcher.matches(atom.getGroup())) { // only amino acids
-				Vector3D v = new Vector3D(atom.getCoords());
-				double test = v.dotProduct(x);
-				if (test > max) {
-					max = test;
-				}
-			}
-		}
-		return max;
+	public void setSignificance(Significance significance) {
+		this.significance = significance;
 	}
 
 	public void find(Results census) {
@@ -148,7 +105,6 @@ public class InterfaceLigandFinder {
 		}
 
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
-		Significance sig = SignificanceFactory.rotationallySymmetricSmart();
 		AtomCache cache = new AtomCache();
 		cache.setFetchFileEvenIfObsolete(true);
 
@@ -159,28 +115,31 @@ public class InterfaceLigandFinder {
 			if (ligandList.contains(scopId)) continue; // don't redo domains
 			try {
 
-				ScopDomain domain = scop.getDomainByScopID(scopId);
-				if (domain == null) {
-					logger.error(result.getScopId() + " is null");
-					continue;
-				}
-				if (!sig.isSignificant(result)) {
+				if (!significance.isSignificant(result)) {
 					continue;
 				}
 
 				// we want to get all groups in the center that are NOT amino
 				// acids or water atoms
-				Structure structure = cache.getStructureForDomain(scopId, scop);
-				Atom[] ca = StructureTools.getAtomCAArray(structure);
+				Structure structure;
+				StructureName theName = new StructureName(scopId);
+				if (theName.isScopName()) {
+					structure = cache.getStructureForDomain(scopId, scop);
+				} else {
+					structure = cache.getStructure(scopId);
+				}
+				Atom[] allAtoms = StructureTools.getAllAtomArray(structure);
 
 				// run CE-Symm to get alignment
-				FullInfo info = CensusJob.runOn(scopId, Census.AlgorithmGiver.getDefault(), sig, cache, scop);
-				AFPChain afpChain = info.getAfpChain();
+				CensusJob job = CensusJob.setUpJob(scopId, 0, AlgorithmGiver.getDefault(), significance, cache, scop);
+				job.setStoreAfpChain(true);
+				job.call();
+				AFPChain afpChain = job.getAfpChain();
 
 				/*
 				 * add ligands to list
 				 */
-				StructureLigands ligands = findAlongInterface(scopId, afpChain, ca);
+				StructureLigands ligands = findAlongInterface(scopId, afpChain, allAtoms);
 				ligandList.put(scopId, ligands);
 				if (!ligands.isEmpty()) {
 					logger.debug("Assigning " + ligands.size() + " ligands to " + scopId);
@@ -210,14 +169,13 @@ public class InterfaceLigandFinder {
 	private StructureLigands findAlongInterface(String scopId, AFPChain afpChain, Atom[] ca) throws StructureException {
 		RotationAxis axis = new RotationAxis(afpChain);
 		StructureLigands ligands = new StructureLigands(scopId);
-		double segmentLength = calcMaxParallel(axis, ca);
 		HashSet<Group> groupsFound = new HashSet<Group>();
 		for (Atom atom : ca) {
-			if (!exclusionMatcher.matches(atom.getGroup()) && !groupsFound.contains(atom.getGroup())) { // only
-																										// heteroatoms
-				double distance = calcDistance(axis, atom, segmentLength);
+			// only heteroatoms
+			if (!exclusionMatcher.matches(atom.getGroup()) && !groupsFound.contains(atom.getGroup())) {
+				double distance = axis.getProjectedDistance(atom);
 				if (distance <= maxDistance) {
-					ligands.add(new Ligand(atom.getGroup().getAtoms(), distance));
+					ligands.add(new Ligand(atom.getGroup().getAtoms(), -1, distance));
 					groupsFound.add(atom.getGroup());
 				}
 			}

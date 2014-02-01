@@ -24,20 +24,19 @@
  */
 package org.biojava3.structure.align.symm.census2;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -47,6 +46,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.census2.utils.ResultConverter;
 
 /**
@@ -57,11 +58,14 @@ import org.biojava3.structure.align.symm.census2.utils.ResultConverter;
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public class Results implements Serializable {
 
+	private static final Logger logger = LogManager.getLogger(Results.class.getSimpleName());
+
 	private static final long serialVersionUID = -5517546595033480440L;
 	private static JAXBContext jaxbContext;
 	private List<Result> data = new ArrayList<Result>();
 
 	private String timestamp;
+	private double meanSecondsTaken;
 
 	static {
 		try {
@@ -105,9 +109,23 @@ public class Results implements Serializable {
 
 	public static Results fromXML(File[] files) throws IOException {
 		Results results = new Results();
+		// don't keep duplicate SCOP Ids
+		Set<String> scopIds = new HashSet<String>();
+		double meanSecondsTaken = 0;
 		for (File file : files) {
-			results.getData().addAll(fromXML(file).getData());
+			Results old = fromXML(file);
+			logger.debug("Taking " + old.size() + " results from " + file.getName());
+			meanSecondsTaken += old.getMeanSecondsTaken();
+			for (Result result : old.getData()) {
+				if (!scopIds.contains(result.getScopId())) {
+					scopIds.add(result.getScopId());
+					results.add(result);
+				} else {
+					logger.warn("Found duplicate " + result.getScopId() + " in file " + file.getName());
+				}
+			}
 		}
+		results.setMeanSecondsTaken(meanSecondsTaken / files.length);
 		return results;
 	}
 
@@ -160,6 +178,14 @@ public class Results implements Serializable {
 
 	public void setTimestamp(String timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public double getMeanSecondsTaken() {
+		return meanSecondsTaken;
+	}
+
+	public void setMeanSecondsTaken(double meanSecondsTaken) {
+		this.meanSecondsTaken = meanSecondsTaken;
 	}
 
 	public String toHTML() {

@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis;
+package org.biojava3.structure.align.symm.census2.analysis.ec;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -236,8 +236,8 @@ public class ECFinder {
 			ecs = new ECFinder();
 		}
 		ecs.rebuild(new File(args[0]), new File(args[1]));
-		NormalizedECs.printComparisonUnnormalized(0, 10, ecs.ecsBySymmDomain, ecs.ecsBySymmDomain);
 		NormalizedECs.printComparisonUnnormalized(1, 10, ecs.ecsBySymmDomain, ecs.ecsBySymmDomain);
+		NormalizedECs.printComparisonUnnormalized(2, 10, ecs.ecsBySymmDomain, ecs.ecsBySymmDomain);
 	}
 
 }

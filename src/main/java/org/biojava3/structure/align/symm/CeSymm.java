@@ -245,6 +245,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 			throw new IllegalArgumentException(
 					"CE algorithm needs an object of call CeParameters as argument.");
 
+		afpChain = null;
+		
 		this.params = (CeParameters) param;
 
 		this.ca1 = ca1;

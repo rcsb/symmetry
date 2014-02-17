@@ -35,6 +35,7 @@ import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.align.symm.census3.CensusAlignment;
 import org.biojava3.structure.align.symm.census3.CensusAxis;
 import org.biojava3.structure.align.symm.census3.CensusResult;
+import org.biojava3.structure.align.symm.census3.CensusScoreList;
 import org.biojava3.structure.align.symm.census3.CensusSymmetryGroup;
 import org.biojava3.structure.align.symm.census3.run.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.order.OrderDetector;
@@ -226,9 +227,11 @@ public class CensusJob implements Callable<CensusResult> {
 			String name, Float angle) {
 
 		CensusResult r = new CensusResult();
+		r.setId(this.name);
 
 		if (storeAfpChain) this.afpChain = afpChain;
 		if (recordAlignmentMapping) r.setAlignment(new CensusAlignment(afpChain));
+		r.setScoreList(new CensusScoreList(afpChain));
 
 		if (protodomain != null) r.setAlignedUnit(protodomain.toString());
 

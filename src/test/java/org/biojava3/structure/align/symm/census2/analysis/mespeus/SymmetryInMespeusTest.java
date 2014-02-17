@@ -12,8 +12,8 @@ import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
 import org.biojava3.structure.align.symm.census3.analysis.mespeus.CoordinationGeometry;
 import org.biojava3.structure.align.symm.census3.analysis.mespeus.CoordinationGeometryType;
 import org.biojava3.structure.align.symm.census3.analysis.mespeus.MespeusEntry;
+import org.biojava3.structure.align.symm.census3.analysis.mespeus.MespeusEntryMatcherFactory;
 import org.biojava3.structure.align.symm.census3.analysis.mespeus.SymmetryInMespeus;
-import org.biojava3.structure.align.symm.census3.analysis.mespeus.SymmetryInMespeus.MespeusEntryMatcher;
 import org.junit.Test;
 
 /**
@@ -41,7 +41,7 @@ public class SymmetryInMespeusTest {
 		for (MespeusEntry entry : mespeus.getEntries()) {
 			System.out.println(entry);
 		}
-		DescriptiveStatistics stats = mespeus.correlate(CensusResultList.fromXML(new File("src/test/resources/mespeus_census.xml")), MespeusEntryMatcher.everything());
+		DescriptiveStatistics stats = mespeus.correlate(CensusResultList.fromXML(new File("src/test/resources/mespeus_census.xml")), MespeusEntryMatcherFactory.everything());
 		assertEquals(9, stats.getN());
 		assertEquals(5.0 / 9.0, stats.getMean(), 0.0000001);
 	}

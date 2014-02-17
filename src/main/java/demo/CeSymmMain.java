@@ -1,6 +1,8 @@
 package demo;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JOptionPane;
 
@@ -8,6 +10,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.biojava.bio.structure.Atom;
@@ -18,6 +21,11 @@ import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.census2.CLI;
+import org.biojava3.structure.align.symm.census2.Significance;
+import org.biojava3.structure.align.symm.order.OrderDetectionFailedException;
+import org.biojava3.structure.align.symm.order.OrderDetector;
+import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 
 /**
  * Main executable for running CE-Symm
@@ -28,20 +36,32 @@ import org.biojava3.structure.align.symm.CeSymm;
  */
 public class CeSymmMain {
 
+	/**
+	 * Stub order detector. Always returns 100.
+	 * 
+	 * @author blivens
+	 *
+	 */
+	public class AlwaysSymmetricOrderDetector implements OrderDetector {
+
+		/**
+		 * @return 100 for all cases.
+		 */
+		@Override
+		public int calculateOrder(AFPChain afpChain, Atom[] ca)
+				throws OrderDetectionFailedException {
+			return 100;
+		}
+
+	}
+
 	public static void main(String[] args) {
 		// Begin argument parsing
 		final String usage = "[OPTIONS] [structures...]";
 		final String header = "Determine the order for each structure, which may " +
 				"be PDB IDs, SCOP domains, or file paths. If none are given, the " +
 				"user will be prompted at startup.";
-
-		Options options = new Options();
-		options.addOption("h","help",false,"print help");
-		options.addOption("j","jmol",false,"enable jMol display. [default]");
-		options.addOption("J","nojmol",false,"disable jMol display.");
-		options.addOption("a","alignment",false,"print alignment.");
-		options.addOption("A","noalignment",false,"don't print alignment [default]");
-		
+		Options options = getOptions();
 		CommandLineParser parser = new GnuParser();
 		HelpFormatter help = new HelpFormatter();
 
@@ -100,6 +120,21 @@ public class CeSymmMain {
 		boolean displayAlignment = cli.hasOption('j') || !cli.hasOption('J');
 		// Show alignment?
 		boolean printAlignment = cli.hasOption('a') && !cli.hasOption('A');
+		
+		// Symmetry method
+		String method = "tm";
+		if(cli.hasOption('m') ) {
+			method = cli.getOptionValue('m');
+		}
+		OrderDetector detector = createOrderDetector(method);
+		if(detector == null) {
+			System.exit(1);
+		}
+		
+		// Significance Method
+		Significance significance = CLI.getSignificance(
+				cli.getOptionValue("sigclass"), cli.getOptionValue("sigmethod"));
+		
 		// Done parsing arguments
 
 
@@ -118,13 +153,24 @@ public class CeSymmMain {
 					StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(alignment, ca1, ca2);
 					jmol.evalString(axis.getJmolScript(ca1));
 				}
-
-
+				
+				// Significance
+				// TODO wrong method to use
+				significance.isPossiblySignificant(alignment);
+				
 				// Order
-				int symmNr = CeSymm.getSymmetryOrder(alignment);
+				int symmNr;
+				try {
+					symmNr = detector.calculateOrder(alignment, ca1);
+				} catch (OrderDetectionFailedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					symmNr = 1;
+				}
 				if(alignment.getTMScore()<.4) {
 					symmNr = 1;
 				}
+
 
 				// Print result
 				System.out.format("%s\tTMscore %f\tOrder %d%n",name,alignment.getTMScore(),symmNr);
@@ -138,5 +184,108 @@ public class CeSymmMain {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	@SuppressWarnings("static-access")
+	private static Options getOptions() {
+		Options options = new Options();
+		options.addOption("h","help",false,"print help");
+		options.addOption("j","jmol",false,"enable jMol display. [default]");
+		options.addOption("J","nojmol",false,"disable jMol display.");
+		options.addOption("a","alignment",false,"print alignment.");
+		options.addOption("A","noalignment",false,"don't print alignment [default]");
+		options.addOption("d","detector",true,"Order detection method. Can be a full class name,"
+				+ "a short class name from the org.biojava3.structure.align.symm.order package,"
+				+ "or one of the shortcuts 'tm' or 'order'. [default 'tm']");
+		options.addOption(OptionBuilder
+				.hasArg(true)
+				.withDescription(
+						"A fully-qualified class name for a Significance object. "
+						+ "If sigmethod is also set, calls that factory method; "
+						+ "otherwise, calls the default constructor.")
+						.isRequired(false).create("sigclass"));
+		options.addOption(OptionBuilder
+				.hasArg(true)
+				.withDescription(
+						"The name of a factory method that returns a Significance "
+						+ "object. If sigclass is also set, expects the factory "
+						+ "method to be in that class; otherwise, checks in "
+						+ "SignificanceFactory. Common values are 'forCeSymmTm' "
+						+ "[default] and 'forCeSymmOrd'")
+						.isRequired(false).create("sigmethod"));
+		options.addOption("withorder",false,"Use TM-Score with order for deciding "
+				+ "signifiance. Equivalent to --sigmethod=\"forCeSymmOrd\".");
+		
+		return options;
+	}
+	/**
+	 * Creates an OrderDetector from a class name.
+	 * 
+	 * <p>
+	 * Accepts the following inputs:<ol>
+	 *  <li>null or "" returns a SequenceFunctionOrderDetector
+	 *  <li>The full class path to a class implementing OrderDetector and containing a default constructor
+	 *  <li>The class name for any class in the org.biojava3.structure.align.symm.order package.
+	 * </ol>
+	 * 
+	 * @param method Name of the OrderDetector method
+	 * @return An OrderDetector instance, or null for invalid input
+	 */
+	private static OrderDetector createOrderDetector(String method) {	
+		
+		if(method == null || method.isEmpty()) {
+			return new SequenceFunctionOrderDetector();
+		}
+			
+		ClassLoader cl = CeSymmMain.class.getClassLoader();
+		Class<?> klass = null;
+		// try full class name
+		try {
+			klass = cl.loadClass(method);
+		} catch( ClassNotFoundException e) {
+			// ignore
+		}
+		
+		// try order package
+		try {
+			String fullname = OrderDetector.class.getPackage().getName()+"."+method;
+			klass = cl.loadClass(fullname);
+		} catch( ClassNotFoundException e) {
+			//ignore
+		}
+		
+		// Give up if that didn't work
+		if(klass == null) {
+			System.err.format("Error: Method '%s' not found.%n",method);
+			return null;
+		}
+		
+		// Instantiate default constructor
+		OrderDetector detector = null;
+		try {
+			Constructor<?> constructor = klass.getConstructor();
+			detector = (OrderDetector) constructor.newInstance();
+		} catch (ClassCastException e) {
+			// Not an OrderDetector
+			System.err.println("Error: "+method+" is not an OrderDetector.");
+		} catch( NoSuchMethodException e) {
+			// No default constructor
+			System.err.println("Error: Unable to use "+method+" because it lacks a default constructor");
+		} catch (IllegalArgumentException e) {
+			// Shouldn't happen–bad argument types
+			System.err.println("Error: [Bug] Error with constructor arguments to "+method);
+		} catch (InstantiationException e) {
+			// Abstract class
+			System.err.println("Error: Can't instantiate abstract class "+method);
+		} catch (IllegalAccessException e) {
+			// constructor is private
+			System.err.println("Error: "+method+" lacks a public default constructor");
+		} catch (InvocationTargetException e) {
+			// Constructor threw an exception
+			System.err.println("Error: Exception while creating "+method);
+			e.getCause().printStackTrace();
+		}
+		
+		return detector;
 	}
 }

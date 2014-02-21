@@ -122,7 +122,7 @@ public class CeSymmMain {
 		boolean printAlignment = cli.hasOption('a') && !cli.hasOption('A');
 		
 		// Symmetry method
-		String method = "tm";
+		String method = null;
 		if(cli.hasOption('m') ) {
 			method = cli.getOptionValue('m');
 		}

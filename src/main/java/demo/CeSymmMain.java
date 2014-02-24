@@ -10,7 +10,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.biojava.bio.structure.Atom;
@@ -21,8 +20,6 @@ import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.census2.CLI;
-import org.biojava3.structure.align.symm.census2.Significance;
 import org.biojava3.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava3.structure.align.symm.order.OrderDetector;
 import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
@@ -132,9 +129,7 @@ public class CeSymmMain {
 		}
 		
 		// Significance Method
-		Significance significance = CLI.getSignificance(
-				cli.getOptionValue("sigclass"), cli.getOptionValue("sigmethod"));
-		
+		boolean useOrder = cli.hasOption('w') || !cli.hasOption('W');
 		// Done parsing arguments
 
 
@@ -153,27 +148,29 @@ public class CeSymmMain {
 					StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(alignment, ca1, ca2);
 					jmol.evalString(axis.getJmolScript(ca1));
 				}
-				
+
 				// Significance
-				// TODO wrong method to use
-				significance.isPossiblySignificant(alignment);
-				
-				// Order
-				int symmNr;
-				try {
-					symmNr = detector.calculateOrder(alignment, ca1);
-				} catch (OrderDetectionFailedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					symmNr = 1;
-				}
-				if(alignment.getTMScore()<.4) {
-					symmNr = 1;
+				boolean significant = false;
+				if(useOrder) {
+					significant = ce.isSignificant();
+				} else {
+					//TODO remove hard coded threshold
+					significant = alignment.getTMScore() >= .4;
 				}
 
+				// Order
+				int symmNr = 1;
+				if( significant ) {
+					try {
+						symmNr = detector.calculateOrder(alignment, ca1);
+					} catch (OrderDetectionFailedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 
 				// Print result
-				System.out.format("%s\tTMscore %f\tOrder %d%n",name,alignment.getTMScore(),symmNr);
+				System.out.format("%s\tTMscore %f\tOrder %d\tSignificant %s%n",name,alignment.getTMScore(),symmNr,significant?"Y":"N");
 				// Print alignment
 				if(printAlignment)
 					System.out.println(alignment.toFatcat(ca1,ca2));
@@ -186,7 +183,6 @@ public class CeSymmMain {
 		}
 	}
 
-	@SuppressWarnings("static-access")
 	private static Options getOptions() {
 		Options options = new Options();
 		options.addOption("h","help",false,"print help");
@@ -197,25 +193,10 @@ public class CeSymmMain {
 		options.addOption("d","detector",true,"Order detection method. Can be a full class name,"
 				+ "a short class name from the org.biojava3.structure.align.symm.order package,"
 				+ "or one of the shortcuts 'tm' or 'order'. [default 'tm']");
-		options.addOption(OptionBuilder
-				.hasArg(true)
-				.withDescription(
-						"A fully-qualified class name for a Significance object. "
-						+ "If sigmethod is also set, calls that factory method; "
-						+ "otherwise, calls the default constructor.")
-						.isRequired(false).create("sigclass"));
-		options.addOption(OptionBuilder
-				.hasArg(true)
-				.withDescription(
-						"The name of a factory method that returns a Significance "
-						+ "object. If sigclass is also set, expects the factory "
-						+ "method to be in that class; otherwise, checks in "
-						+ "SignificanceFactory. Common values are 'forCeSymmTm' "
-						+ "[default] and 'forCeSymmOrd'")
-						.isRequired(false).create("sigmethod"));
-		options.addOption("withorder",false,"Use TM-Score with order for deciding "
-				+ "signifiance. Equivalent to --sigmethod=\"forCeSymmOrd\".");
-		
+		options.addOption("w","withorder",false,"Use TM-Score with order for deciding "
+				+ "signifiance. [default]");
+		options.addOption("W","withoutorder",false,"Use TM-Score alone for deciding "
+				+ "signifiance.");
 		return options;
 	}
 	/**

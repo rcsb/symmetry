@@ -27,7 +27,7 @@ public class OrderAccuracy {
 			return;
 		}
 		File input = new File(args[0]);
-		OrderAccuracy finder = new OrderAccuracy(input, SignificanceFactory.rotationallySymmetric(), GroupComparisonFactory.withMultiplesOk());
+		OrderAccuracy finder = new OrderAccuracy(input, SignificanceFactory.generallySymmetric(), GroupComparisonFactory.exact());
 		System.out.println(finder);
 	}
 
@@ -37,24 +37,6 @@ public class OrderAccuracy {
 
 	private int correct = 0;
 	private int total = 0;
-
-	/**
-	 * TODO This does not belong here
-	 */
-	public int guessOrderFromAngle(double theta, double threshold) {
-		final int maxOrder = 8;
-		double bestDelta = threshold;
-		int bestOrder = 1;
-		for (int order = 2; order < maxOrder; order++) {
-			double delta = Math.abs(2 * Math.PI / order - theta);
-			System.out.println(delta);
-			if (delta < bestDelta) {
-				bestOrder = order;
-				bestDelta = delta;
-			}
-		}
-		return bestOrder;
-	}
 	
 	public OrderAccuracy(Sample sample, Significance sig, GroupComparator guesser) {
 		for (Case c : sample.getData()) {

@@ -234,6 +234,7 @@ public class SymDRunner {
 		}
 		printResults(results);
 		this.timeTaken = (double) timeTaken / (double) nSuccess;
+		results.setMeanSecondsTaken(this.timeTaken);
 		return results;
 	}
 

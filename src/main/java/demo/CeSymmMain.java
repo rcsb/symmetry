@@ -141,6 +141,8 @@ public class CeSymmMain {
 				Atom[] ca2 = StructureTools.cloneCAArray(ca1);
 				CeSymm ce = new CeSymm();
 				AFPChain alignment = ce.align(ca1, ca2);
+				alignment.setName1(name);
+				alignment.setName2(name);
 				RotationAxis axis = new RotationAxis(alignment);
 
 				// Display alignment

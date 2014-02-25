@@ -25,6 +25,7 @@ All common options have short forms.
 Short Option | Long Option | Description
 :----------: | :---------- | :----------
 -h  | --help            | Print usage information
+-V  | --version         | Print CE-Symm version
 -v  | --verbose         | Print detailed output (equivalent to "--tsv=-")
 -j  | --show3d          | Force jMol display for each structure [default for <10 structures when specified on command line]
 -J  | --noshow3d        | Disable jMol display [default with --input or for >=10 structures]
@@ -38,9 +39,9 @@ Short Option | Long Option | Description
     | --ordermethod     | Order detection method. Can be a full class name or a short class name from the org.biojava3.structure.align.symm.order package. [default SequenceFunctionOrderDetector]
     | --pdbFilePath=dir | Download directory for new structures [default temp folder]
     | --pdbDirSplit     | Indicates that --pdbFilePath is split into multiple subdirs, like the ftp site. [default]
-    | --noPdbDirSplit     | Indicates that --pdbFilePath should be a single directory.
-    | --threads     | Number of threads
-    
+    | --noPdbDirSplit   | Indicates that --pdbFilePath should be a single directory.
+    | --threads         | Number of threads
+    | --scopVersion=version | Version of SCOP or SCOPe to use when resolving SCOP identifiers [defaults to latest SCOPe]
 
 Interactive mode
 ----------------

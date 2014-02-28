@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis.ligands;
+package org.biojava3.structure.align.symm.census3.analysis.ligands;
 
 
 import junit.framework.TestCase;

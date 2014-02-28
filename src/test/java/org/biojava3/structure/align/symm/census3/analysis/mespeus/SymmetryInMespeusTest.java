@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.analysis.mespeus;
+package org.biojava3.structure.align.symm.census3.analysis.mespeus;
 
 import static org.junit.Assert.assertEquals;
 

@@ -1,4 +1,4 @@
-package org.biojava3.structure.align.symm.census2.representatives;
+package org.biojava3.structure.align.symm.census3.representatives;
 
 
 import static org.junit.Assert.assertEquals;

@@ -20,7 +20,7 @@
  * Created on 2013-03-01
  *
  */
-package org.biojava3.structure.align.symm.census2;
+package org.biojava3.structure.align.symm.census3;
 
 
 import static org.junit.Assert.assertEquals;
@@ -35,8 +35,10 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.census3.run.AfpChainCensusRestrictor;
+import org.biojava3.structure.align.symm.census3.run.Census.AlgorithmGiver;
+import org.biojava3.structure.align.symm.census3.run.CensusJob;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
-import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.protodomain.ResourceList;
 import org.biojava3.structure.align.symm.protodomain.ResourceList.NameProvider;
@@ -54,7 +56,7 @@ public class CensusJobTest extends TestCase{
 	private final double zScore = 6.0;
 	
 	private AlgorithmGiver giver;
-	private Significance sig;
+	private AfpChainCensusRestrictor sig;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -69,18 +71,10 @@ public class CensusJobTest extends TestCase{
 		afpChain.setBlockNum(2);
 		afpChain.setOptAln(new int[1][][]);
 		when(ceSymm.align(any(Atom[].class), any(Atom[].class))).thenReturn(afpChain);
-		sig = new Significance() {
+		sig = new AfpChainCensusRestrictor() {
 			@Override
 			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return false;
-			}
-			@Override
-			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				return false;
-			}
-			@Override
-			public boolean isSignificant(Result result) {
-				return false;
+				return true;
 			}
 		};
 		giver = new AlgorithmGiver() {
@@ -96,8 +90,8 @@ public class CensusJobTest extends TestCase{
 		CensusJob job = new CensusJob(giver, sig);
 		job.setCount(0);
 		job.setName("4JNO.A");
-		Result result = job.call();
-		assertEquals(zScore, result.getAlignment().getzScore().doubleValue(), 0);
+		CensusResult result = job.call();
+		assertEquals(zScore, result.getScoreList().getzScore().doubleValue(), 0);
 	}
 
 	@Test
@@ -105,8 +99,8 @@ public class CensusJobTest extends TestCase{
 		CensusJob job = new CensusJob(giver, sig);
 		job.setCount(0);
 		job.setName("4JNO");
-		Result result = job.call();
-		assertEquals(zScore, result.getAlignment().getzScore().doubleValue(), 0);
+		CensusResult result = job.call();
+		assertEquals(zScore, result.getScoreList().getzScore().doubleValue(), 0);
 	}
 	
 	@Test
@@ -118,12 +112,12 @@ public class CensusJobTest extends TestCase{
 			job.setCache(ResourceList.get().getCache());;
 			job.setCount(i);
 			job.setName(domain.getScopId());
-			Result result = job.call();
+			CensusResult result = job.call();
 			assertNotNull(domains[i]);
 			assertNotNull(result);
-			assertNotNull(result.getScopId());
-			assertEquals(domains[i], result.getScopId());
-			assertEquals(zScore, result.getAlignment().getzScore().doubleValue(), 0);
+			assertNotNull(result.getId());
+			assertEquals(domains[i], result.getId());
+			assertEquals(zScore, result.getScoreList().getzScore().doubleValue(), 0);
 		}
 	}
 

@@ -25,7 +25,7 @@ All common options have short forms.
 Short Option | Long Option | Description
 :----------: | :---------- | :----------
 -h  | --help            | Print usage information
--V  | --version         | Print CE-Symm version
+    | --version         | Print CE-Symm version
 -v  | --verbose         | Print detailed output (equivalent to "--tsv=-")
 -j  | --show3d          | Force jMol display for each structure [default for <10 structures when specified on command line]
 -J  | --noshow3d        | Disable jMol display [default with --input or for >=10 structures]

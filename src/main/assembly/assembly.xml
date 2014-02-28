@@ -11,24 +11,26 @@
 			<directory>${project.basedir}/src/main/assembly/</directory>
 			<outputDirectory>.</outputDirectory>
 			<includes>
-				<include>*.sh</include>
 				<include>LICENSE</include>
 			</includes>
 		</fileSet>
-	</fileSets>
-	<dependencySets>
-		<dependencySet>
-			<outputDirectory>jars</outputDirectory>
+		<fileSet>
+			<directory>${project.build.directory}</directory>
+			<outputDirectory>.</outputDirectory>
 			<includes>
-				<include>${groupId}:symmetry</include>
-				<include>${groupId}:biojava3-core</include>
-				<include>${groupId}:biojava3-alignment</include>
-				<include>${groupId}:biojava3-structure</include>
-				<include>${groupId}:biojava3-structure-gui</include>
-				<include>net.sourceforge.jmol:jmol</include>
-				<include>javaws:javaws</include>
+				<include>${artifactId}*.jar</include>
 			</includes>
-		</dependencySet>
-	</dependencySets>
-
+		</fileSet>
+	</fileSets>
+	<files>
+		<file>
+			<source>src/main/assembly/runCESymm.sh</source>
+			<outputDirectory>/</outputDirectory>
+			<filtered>true</filtered>
+		</file>
+		<file>
+			<source>docs/CeSymm.md</source>
+			<outputDirectory>/</outputDirectory>
+		</file>
+	</files>
 </assembly>

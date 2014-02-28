@@ -14,9 +14,5 @@
 # Run on several structures (allows PDB ID, SCOP ID, ranges, etc)
 #  bash runCESymm.sh --nojmol 1hiv d1ijqa1 1MER.A
 
-
 # send the arguments to the java app
-# allows to specify a different config file
-args="$*"
-
-java -Xmx500M -cp "$PWD/jars/*" demo.CeSymmMain $args
+java -Xmx500M -jar "${project.build.finalName}" demo.CeSymmMain "$@"

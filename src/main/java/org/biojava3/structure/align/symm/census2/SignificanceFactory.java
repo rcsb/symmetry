@@ -36,15 +36,17 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
  * angle</li>
  * </ul>
  * These objects, particularly the latter two, may change frequently. Also helps running the {@link Census} with
- * arbitrary Significance objects via {@link CLI}, using the methods:
+ * arbitrary Significance objects via {@link CensusCLI}, using the methods:
  * <ul>
  * <li>{@link #SignificanceFactory#fromClass(String)}</li>
  * <li>{@link #SignificanceFactory#fromClass(String, Object...)}</li>
  * <li>{@link #SignificanceFactory#fromMethod(String, String, Object...)}</li>
  * </ul>
  * 
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class SignificanceFactory {
 
 	public static Significance and(final Significance a, final Significance b) {

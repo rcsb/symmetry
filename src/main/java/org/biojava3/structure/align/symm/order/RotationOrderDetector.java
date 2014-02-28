@@ -96,7 +96,7 @@ public class RotationOrderDetector implements OrderDetector {
 	 */
 	public static Pair<double[],double[]> sampleRotations(Atom[] ca, RotationAxis axis, double degreesIncrement) throws StructureException {
 		
-		final double angleIncr = 5*Calc.radiansPerDegree;
+		final double angleIncr = degreesIncrement*Calc.radiansPerDegree;
 		final int steps = (int)Math.floor(2*Math.PI/angleIncr);
 
 		double[] angles = new double[steps];

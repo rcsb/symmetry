@@ -52,8 +52,10 @@ import org.biojava3.structure.align.symm.census2.utils.ResultConverter;
 
 /**
  * A census (list of census {@link Result Results}).
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 @XmlRootElement(name = "CensusResults", namespace = "http://source.rcsb.org")
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public class Results implements Serializable {

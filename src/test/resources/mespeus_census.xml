@@ -1,341 +1,144 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<ns2:CensusResults xmlns:ns2="http://source.rcsb.org">
-    <data>
-        <alignment>
+<ns2:CensusResultList xmlns:ns2="http://source.rcsb.org">
+    <entry id="d1be7a_">
+        <alignedUnit>1be7.A_5-43</alignedUnit>
+        <group>C1</group>
+        <scores>
             <alignLength>46</alignLength>
-            <alignScore>195.13477</alignScore>
-            <block1Length>27</block1Length>
-            <block2Length>12</block2Length>
-            <coverage>72</coverage>
             <gapLength>7</gapLength>
             <identity>0.10869565</identity>
             <rmsd>4.887143</rmsd>
             <similarity>0.2173913</similarity>
             <tmScore>0.22366627</tmScore>
             <zScore>2.58</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>31.63642</orthogonal>
-            <screw>0.33341658</screw>
-            <theta>2.677545</theta>
-            <x>-0.5097151</x>
-            <y>-0.3158225</y>
-            <z>-0.80027914</z>
-        </axis>
-        <classification>g.41.5</classification>
-        <description>Rubredoxin-like</description>
-        <isSignificant>true</isSignificant>
-        <order>1</order>
-        <protodomain>1be7.A_5-43</protodomain>
-        <rank>0</rank>
-        <scopId>d1be7a_</scopId>
-        <sunId>45232</sunId>
-    </data>
-    <data>
-        <alignment>
+        </scores>
+    </entry>
+    <entry id="d1fp4a_">
+        <scores>
             <alignLength>164</alignLength>
-            <alignScore>175.57387</alignScore>
-            <block1Length>101</block1Length>
-            <block2Length>0</block2Length>
-            <coverage>22</coverage>
             <gapLength>63</gapLength>
             <identity>0.036585364</identity>
             <rmsd>3.8502235</rmsd>
             <similarity>0.1402439</similarity>
             <tmScore>0.17754917</tmScore>
             <zScore>3.89</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>22.687119</orthogonal>
-            <screw>23.15726</screw>
-            <theta>2.9305134</theta>
-            <x>-0.2785688</x>
-            <y>0.8956348</y>
-            <z>0.34675327</z>
-        </axis>
-        <classification>c.92.2</classification>
-        <description>&quot;Helical backbone&quot; metal receptor</description>
-        <isSignificant>false</isSignificant>
-        <rank>1</rank>
-        <scopId>d1fp4a_</scopId>
-        <sunId>76187</sunId>
-    </data>
-    <data>
-        <alignment>
+        </scores>
+    </entry>
+    <entry id="d1fp4a_">
+        <scores>
             <alignLength>164</alignLength>
-            <alignScore>175.57387</alignScore>
-            <block1Length>101</block1Length>
-            <block2Length>0</block2Length>
-            <coverage>22</coverage>
             <gapLength>63</gapLength>
             <identity>0.036585364</identity>
             <rmsd>3.8502235</rmsd>
             <similarity>0.1402439</similarity>
             <tmScore>0.17754917</tmScore>
             <zScore>3.89</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>22.687119</orthogonal>
-            <screw>23.15726</screw>
-            <theta>2.9305134</theta>
-            <x>-0.2785688</x>
-            <y>0.8956348</y>
-            <z>0.34675327</z>
-        </axis>
-        <classification>c.92.2</classification>
-        <description>&quot;Helical backbone&quot; metal receptor</description>
-        <isSignificant>false</isSignificant>
-        <rank>2</rank>
-        <scopId>d1fp4a_</scopId>
-        <sunId>76187</sunId>
-    </data>
-    <data>
-        <alignment>
+        </scores>
+    </entry>
+    <entry id="d1frxa_">
+        <alignedUnit>1frx.A_9-9,A_16-33,A_45-82</alignedUnit>
+        <group>C1</group>
+        <scores>
             <alignLength>105</alignLength>
-            <alignScore>248.4962</alignScore>
-            <block1Length>44</block1Length>
-            <block2Length>13</block2Length>
-            <coverage>54</coverage>
             <gapLength>48</gapLength>
             <identity>0.057142857</identity>
             <rmsd>6.2227964</rmsd>
             <similarity>0.15238096</similarity>
             <tmScore>0.21740295</tmScore>
             <zScore>2.3</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>38.239864</orthogonal>
-            <screw>2.351669</screw>
-            <theta>1.7675207</theta>
-            <x>-0.6917729</x>
-            <y>0.641113</y>
-            <z>-0.3323017</z>
-        </axis>
-        <classification>d.58.1</classification>
-        <description>4Fe-4S ferredoxins</description>
-        <isSignificant>true</isSignificant>
-        <order>1</order>
-        <protodomain>1frx.A_9-9,A_16-33,A_45-82</protodomain>
-        <rank>3</rank>
-        <scopId>d1frxa_</scopId>
-        <sunId>38981</sunId>
-    </data>
-    <data>
-        <alignment>
+        </scores>
+    </entry>
+    <entry id="d1g20e_">
+        <alignedUnit>1g20.E_17-43,E_75-152,E_160-197,E_207-211,E_238-252</alignedUnit>
+        <group>C1</group>
+        <scores>
             <alignLength>299</alignLength>
-            <alignScore>408.83517</alignScore>
-            <block1Length>69</block1Length>
-            <block2Length>83</block2Length>
-            <coverage>59</coverage>
             <gapLength>147</gapLength>
             <identity>0.04347826</identity>
             <rmsd>5.258831</rmsd>
             <similarity>0.110367894</similarity>
             <tmScore>0.37002462</tmScore>
             <zScore>3.5</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>161.09528</orthogonal>
-            <screw>1.7041997</screw>
-            <theta>2.7241828</theta>
-            <x>-0.9258544</x>
-            <y>-0.35172567</y>
-            <z>0.13814034</z>
-        </axis>
-        <classification>c.37.1</classification>
-        <description>P-loop containing nucleoside triphosphate hydrolases</description>
-        <isSignificant>true</isSignificant>
-        <order>1</order>
-        <protodomain>1g20.E_17-43,E_75-152,E_160-197,E_207-211,E_238-252</protodomain>
-        <rank>4</rank>
-        <scopId>d1g20e_</scopId>
-        <sunId>32247</sunId>
-    </data>
-    <data>
-        <alignment>
+        </scores>
+    </entry>
+    <entry id="d1g20e_">
+        <alignedUnit>1g20.E_17-43,E_75-152,E_160-197,E_207-211,E_238-252</alignedUnit>
+        <group>C1</group>
+        <scores>
             <alignLength>299</alignLength>
-            <alignScore>408.83517</alignScore>
-            <block1Length>69</block1Length>
-            <block2Length>83</block2Length>
-            <coverage>59</coverage>
             <gapLength>147</gapLength>
             <identity>0.04347826</identity>
             <rmsd>5.258831</rmsd>
             <similarity>0.110367894</similarity>
             <tmScore>0.37002462</tmScore>
             <zScore>3.5</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>161.09528</orthogonal>
-            <screw>1.7041997</screw>
-            <theta>2.7241828</theta>
-            <x>-0.9258544</x>
-            <y>-0.35172567</y>
-            <z>0.13814034</z>
-        </axis>
-        <classification>c.37.1</classification>
-        <description>P-loop containing nucleoside triphosphate hydrolases</description>
-        <isSignificant>true</isSignificant>
-        <order>1</order>
-        <protodomain>1g20.E_17-43,E_75-152,E_160-197,E_207-211,E_238-252</protodomain>
-        <rank>5</rank>
-        <scopId>d1g20e_</scopId>
-        <sunId>32247</sunId>
-    </data>
-    <data>
-        <alignment>
+        </scores>
+    </entry>
+    <entry id="d1js2a_">
+        <alignedUnit>1js2.A_10-24,A_30-57,A_67-78</alignedUnit>
+        <group>C3</group>
+        <scores>
             <alignLength>80</alignLength>
-            <alignScore>151.72047</alignScore>
-            <block1Length>36</block1Length>
-            <block2Length>19</block2Length>
-            <coverage>62</coverage>
             <gapLength>25</gapLength>
             <identity>0.075</identity>
             <rmsd>5.1866245</rmsd>
             <similarity>0.1375</similarity>
             <tmScore>0.26369005</tmScore>
             <zScore>1.99</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>23.208498</orthogonal>
-            <screw>1.2045453</screw>
-            <theta>1.9293863</theta>
-            <x>0.98909736</x>
-            <y>0.06166136</y>
-            <z>0.13373199</z>
-        </axis>
-        <classification>g.35.1</classification>
-        <description>HIPIP (high potential iron protein)</description>
-        <isSignificant>true</isSignificant>
-        <order>3</order>
-        <protodomain>1js2.A_10-24,A_30-57,A_67-78</protodomain>
-        <rank>6</rank>
-        <scopId>d1js2a_</scopId>
-        <sunId>67211</sunId>
-    </data>
-    <data>
-        <alignment>
+        </scores>
+    </entry>
+    <entry id="d1js2a_">
+        <alignedUnit>1js2.A_10-24,A_30-57,A_67-78</alignedUnit>
+        <group>C3</group>
+        <scores>
             <alignLength>80</alignLength>
-            <alignScore>151.72047</alignScore>
-            <block1Length>36</block1Length>
-            <block2Length>19</block2Length>
-            <coverage>62</coverage>
             <gapLength>25</gapLength>
             <identity>0.075</identity>
             <rmsd>5.1866245</rmsd>
             <similarity>0.1375</similarity>
             <tmScore>0.26369005</tmScore>
             <zScore>1.99</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>23.208498</orthogonal>
-            <screw>1.2045453</screw>
-            <theta>1.9293863</theta>
-            <x>0.98909736</x>
-            <y>0.06166136</y>
-            <z>0.13373199</z>
-        </axis>
-        <classification>g.35.1</classification>
-        <description>HIPIP (high potential iron protein)</description>
-        <isSignificant>true</isSignificant>
-        <order>3</order>
-        <protodomain>1js2.A_10-24,A_30-57,A_67-78</protodomain>
-        <rank>7</rank>
-        <scopId>d1js2a_</scopId>
-        <sunId>67211</sunId>
-    </data>
-    <data>
-        <alignment>
+        </scores>
+    </entry>
+    <entry id="d1js2a_">
+        <alignedUnit>1js2.A_10-24,A_30-57,A_67-78</alignedUnit>
+        <group>C3</group>
+        <scores>
             <alignLength>80</alignLength>
-            <alignScore>151.72047</alignScore>
-            <block1Length>36</block1Length>
-            <block2Length>19</block2Length>
-            <coverage>62</coverage>
             <gapLength>25</gapLength>
             <identity>0.075</identity>
             <rmsd>5.1866245</rmsd>
             <similarity>0.1375</similarity>
             <tmScore>0.26369005</tmScore>
             <zScore>1.99</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>23.208498</orthogonal>
-            <screw>1.2045453</screw>
-            <theta>1.9293863</theta>
-            <x>0.98909736</x>
-            <y>0.06166136</y>
-            <z>0.13373199</z>
-        </axis>
-        <classification>g.35.1</classification>
-        <description>HIPIP (high potential iron protein)</description>
-        <isSignificant>true</isSignificant>
-        <order>3</order>
-        <protodomain>1js2.A_10-24,A_30-57,A_67-78</protodomain>
-        <rank>8</rank>
-        <scopId>d1js2a_</scopId>
-        <sunId>67211</sunId>
-    </data>
-    <data>
-        <alignment>
+        </scores>
+    </entry>
+    <entry id="d1js2a_">
+        <alignedUnit>1js2.A_10-24,A_30-57,A_67-78</alignedUnit>
+        <group>C3</group>
+        <scores>
             <alignLength>80</alignLength>
-            <alignScore>151.72047</alignScore>
-            <block1Length>36</block1Length>
-            <block2Length>19</block2Length>
-            <coverage>62</coverage>
             <gapLength>25</gapLength>
             <identity>0.075</identity>
             <rmsd>5.1866245</rmsd>
             <similarity>0.1375</similarity>
             <tmScore>0.26369005</tmScore>
             <zScore>1.99</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>23.208498</orthogonal>
-            <screw>1.2045453</screw>
-            <theta>1.9293863</theta>
-            <x>0.98909736</x>
-            <y>0.06166136</y>
-            <z>0.13373199</z>
-        </axis>
-        <classification>g.35.1</classification>
-        <description>HIPIP (high potential iron protein)</description>
-        <isSignificant>true</isSignificant>
-        <order>3</order>
-        <protodomain>1js2.A_10-24,A_30-57,A_67-78</protodomain>
-        <rank>9</rank>
-        <scopId>d1js2a_</scopId>
-        <sunId>67211</sunId>
-    </data>
-    <data>
-        <alignment>
+        </scores>
+    </entry>
+    <entry id="d1m2ba_">
+        <alignedUnit>1m2b.A_24-59,A_64-72,A_88-99</alignedUnit>
+        <group>C2</group>
+        <scores>
             <alignLength>98</alignLength>
-            <alignScore>157.13683</alignScore>
-            <block1Length>29</block1Length>
-            <block2Length>28</block2Length>
-            <coverage>56</coverage>
             <gapLength>41</gapLength>
             <identity>0.020408163</identity>
             <rmsd>6.1871157</rmsd>
             <similarity>0.040816326</similarity>
             <tmScore>0.18905598</tmScore>
             <zScore>1.99</zScore>
-        </alignment>
-        <axis>
-            <orthogonal>81.42923</orthogonal>
-            <screw>1.1776463</screw>
-            <theta>3.075526</theta>
-            <x>-0.39470753</x>
-            <y>0.7303132</y>
-            <z>-0.55753803</z>
-        </axis>
-        <classification>c.47.1</classification>
-        <description>Thioredoxin-like</description>
-        <isSignificant>true</isSignificant>
-        <order>2</order>
-        <protodomain>1m2b.A_24-59,A_64-72,A_88-99</protodomain>
-        <rank>10</rank>
-        <scopId>d1m2ba_</scopId>
-        <sunId>78474</sunId>
-    </data>
-    <timestamp>2013-11-27 12:35:55</timestamp>
-</ns2:CensusResults>
+        </scores>
+    </entry>
+    <meanSecondsTaken>0.0</meanSecondsTaken>
+    <startingTime>2013-11-27 12:35:55</startingTime>
+</ns2:CensusResultList>

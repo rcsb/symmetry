@@ -25,8 +25,10 @@ import org.biojava.bio.structure.align.util.RotationAxis;
 /**
  * An axis of rotation.
  * 
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class Axis implements Serializable {
 
 	private static final long serialVersionUID = -1523140268972093071L;

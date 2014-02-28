@@ -168,7 +168,7 @@ public class CLI {
 	/**
 	 * Returns the best Significance object.
 	 */
-	private static Significance getSignificance(String sigClass, String sigMethod) {
+	public static Significance getSignificance(String sigClass, String sigMethod) {
 		final Significance sig;
 		if (sigClass != null) {
 			if (sigMethod != null) {

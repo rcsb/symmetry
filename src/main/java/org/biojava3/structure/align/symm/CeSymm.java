@@ -3,6 +3,7 @@ package org.biojava3.structure.align.symm;
 import java.io.IOException;
 
 import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.AbstractStructureAlignment;
@@ -15,6 +16,7 @@ import org.biojava.bio.structure.align.ce.MatrixListener;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.align.symm.gui.CEsymmGUI;
 import org.biojava3.structure.align.symm.order.OrderDetectionFailedException;
@@ -48,6 +50,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 	public void setOrderDetector(OrderDetector orderDetector) {
 		this.orderDetector = orderDetector;
 	}
+
+	private int order = -1;
 
 	AFPChain afpChain;
 
@@ -245,8 +249,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 			throw new IllegalArgumentException(
 					"CE algorithm needs an object of call CeParameters as argument.");
 
-		afpChain = null;
-		
 		this.params = (CeParameters) param;
 
 		this.ca1 = ca1;
@@ -267,7 +269,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 		while ((afpChain == null) && i < maxNrAlternatives) {
 
-			// this.afpChain = (AFPChain) myAFP.clone();
 			afpChain = myAFP;
 			if (origM != null) {
 				myAFP.setDistanceMatrix((Matrix) origM.clone());
@@ -343,12 +344,35 @@ public class CeSymm extends AbstractStructureAlignment implements
 	public boolean isRefineResult() {
 		return refineResult;
 	}
-
 	/**
 	 * @param refineResult
 	 *            the refineResult to set
 	 */
 	public void setRefineResult(boolean refineResult) {
 		this.refineResult = refineResult;
+	}
+
+	public boolean isSignificant() throws StructureException {
+
+		// TM-score cutoff
+		if (afpChain.getTMScore() < 0.4) return false;
+
+		// sequence-function order cutoff
+		if (this.order == -1) {
+			try {
+				order = this.orderDetector.calculateOrder(afpChain, ca1);
+			} catch (OrderDetectionFailedException e) {
+				e.printStackTrace();
+				// try the other method
+			}
+		}
+		if (order > 1) return true;
+
+		// angle order cutoff
+		RotationAxis rot = new RotationAxis(afpChain);
+		int theOrder = rot.guessOrderFromAngle(1.0 * Calc.radiansPerDegree, 8);
+		if (theOrder > 1) return true;
+		// asymmetric
+		return false;
 	}
 }

@@ -29,11 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
-import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.benchmark.Case;
-import org.biojava3.structure.align.symm.benchmark.Sample;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -59,9 +55,9 @@ public class SampleTest {
 		assertEquals("d1ezda1", c.getScopId());
 		assertEquals("D4", c.getKnownGroup());
 		assertEquals(4, c.getKnownOrder());
-		assertEquals("1ezd.A_40-62,A_68-144", c.getProtodomain());
-		assertEquals(4.74, c.getAlignment().getzScore(), 0.000001);
-		assertEquals(0.64949524, c.getAxis().getScrew(), 0.000001);
+		assertEquals("1ezd.A_40-62,A_68-144", c.getAlignedUnit());
+		assertEquals(4.74, c.getScoreList().getzScore(), 0.000001);
+		assertEquals(0.64949524, c.getAxis().getParallel(), 0.000001);
 	}
 
 }

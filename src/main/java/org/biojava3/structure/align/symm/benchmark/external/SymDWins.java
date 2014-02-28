@@ -6,16 +6,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.Result;
-import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
-import org.biojava3.structure.align.symm.protodomain.Protodomain;
+import org.biojava3.structure.align.symm.census3.CensusResult;
+import org.biojava3.structure.align.symm.census3.CensusSignificance;
+import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
 
 /**
  * Finds cases where one algorithm correctly identifies rotational symmetry and another doesn't.
@@ -31,7 +29,7 @@ public class SymDWins {
 	 * @param didFindSig
 	 * @return
 	 */
-	public static List<String> findWins(Sample didNotFind, Sample didFind, Significance didNotFindSig, Significance didFindSig) {
+	public static List<String> findWins(Sample didNotFind, Sample didFind, CensusSignificance didNotFindSig, CensusSignificance didFindSig) {
 		List<String> scopIds = new ArrayList<String>();
 		HashSet<String> all = new HashSet<String>();
 		HashSet<String> a = new HashSet<String>();
@@ -65,22 +63,12 @@ public class SymDWins {
 			System.err.println("Usage: " + SymDWins.class.getSimpleName() + " cesymm-file symd-file");
 			return;
 		}
-		Significance symDSig = new Significance() {
+		CensusSignificance symDSig = new CensusSignificance() {
 			private static final double cutoff = 9.2;
 			@Override
-			public boolean isPossiblySignificant(AFPChain afpChain) {
-				return true; // whatever
-			}
-
-			@Override
-			public boolean isSignificant(Protodomain protodomain, int order, double angle, AFPChain afpChain) {
-				return true; // whatever
-			}
-
-			@Override
-			public boolean isSignificant(Result result) {
+			public boolean isSignificant(CensusResult result) {
 				if (result.getAlignment() == null) return false;
-				return result.getAlignment().getzScore() >= cutoff;
+				return result.getScoreList().getzScore() >= cutoff;
 			}
 		};
 		Sample ceSymm = Sample.fromXML(new File(args[0]));
@@ -88,7 +76,7 @@ public class SymDWins {
 //			if (c.getAlignment().getTmScore() >= 0.38 && c.getAlignment().getTmScore() <= 0.4) System.out.println(c.getScopId());
 //		}
 		ScopDatabase scop = ScopFactory.getSCOP(ScopFactory.VERSION_1_75A);
-		List<String> wins = findWins(ceSymm, Sample.fromXML(new File(args[1])), SignificanceFactory.rotationallySymmetric(), symDSig);
+		List<String> wins = findWins(ceSymm, Sample.fromXML(new File(args[1])), CensusSignificanceFactory.forCeSymmOrd(), symDSig);
 		for (String s : wins) {
 			ScopDomain d = scop.getDomainByScopID(s);
 			int sf = d.getFoldId();

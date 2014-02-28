@@ -19,9 +19,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
-import org.biojava3.structure.align.symm.census2.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.CensusSignificance;
+import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 import org.biojava3.structure.utils.SymmetryTools;
 
 /**
@@ -49,6 +49,7 @@ import org.biojava3.structure.utils.SymmetryTools;
  * random error.
  * 
  * @author dmyerstu
+ * @deprecated
  */
 public class ErrorKernel {
 
@@ -82,7 +83,7 @@ public class ErrorKernel {
 				sb.append(nf.format(matrix.getEntry(i, j)));
 				if (j < matrix.getColumnDimension() - 1) sb.append("\t");
 			}
-			if (i < matrix.getRowDimension() - 1) sb.append(StatUtils.NEWLINE);
+			if (i < matrix.getRowDimension() - 1) sb.append(CensusStatUtils.NEWLINE);
 		}
 		PrintWriter pw = null;
 		try {
@@ -100,7 +101,7 @@ public class ErrorKernel {
 	}
 
 	private RealMatrix kernel;
-	private Significance significance = SignificanceFactory.forCeSymmTm();
+	private CensusSignificance significance = CensusSignificanceFactory.forCeSymmTm();
 
 	private double[] singleStepInverseMistakeRates = new double[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -128,7 +129,7 @@ public class ErrorKernel {
 			Integer order = c.getOrder();
 			if (order == null || order < 1) order = 1;
 			int knownOrder = c.getKnownOrder();
-			StatUtils.plus(knownOrderCounts, knownOrder);
+			CensusStatUtils.plus(knownOrderCounts, knownOrder);
 
 			/*
 			 * Record all the possible primes, which are given by:
@@ -393,10 +394,10 @@ public class ErrorKernel {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < 8; i++) {
 			for (int j = 0; j < 8; j++) {
-				sb.append((StatUtils.formatD(kernel.getEntry(i, j))));
+				sb.append((CensusStatUtils.formatD(kernel.getEntry(i, j))));
 				if (j < 7) sb.append(" ");
 			}
-			sb.append(StatUtils.NEWLINE);
+			sb.append(CensusStatUtils.NEWLINE);
 		}
 		return sb.toString();
 	}
@@ -405,16 +406,16 @@ public class ErrorKernel {
 		StringBuilder sb = new StringBuilder();
 		sb.append("[");
 		for (int i = 0; i < singleStepMistakeRates.length; i++) {
-			sb.append(StatUtils.formatD(singleStepMistakeRates[i]));
+			sb.append(CensusStatUtils.formatD(singleStepMistakeRates[i]));
 			if (i < singleStepMistakeRates.length - 1) sb.append(" ");
 		}
-		sb.append("]" + StatUtils.NEWLINE);
+		sb.append("]" + CensusStatUtils.NEWLINE);
 		sb.append("[");
 		for (int i = 0; i < singleStepInverseMistakeRates.length; i++) {
-			sb.append(StatUtils.formatD(singleStepInverseMistakeRates[i]));
+			sb.append(CensusStatUtils.formatD(singleStepInverseMistakeRates[i]));
 			if (i < singleStepInverseMistakeRates.length - 1) sb.append(" ");
 		}
-		sb.append("]" + StatUtils.NEWLINE);
+		sb.append("]" + CensusStatUtils.NEWLINE);
 		return sb.toString();
 	}
 

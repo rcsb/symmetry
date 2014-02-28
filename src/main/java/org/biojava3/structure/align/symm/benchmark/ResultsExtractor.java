@@ -5,7 +5,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.biojava3.structure.align.symm.census2.Results;
+import org.biojava3.structure.align.symm.census3.CensusResultList;
+
 
 /**
  * Gets a Results object (see symmetry project) back from a {@link Sample} object.
@@ -23,15 +24,15 @@ public class ResultsExtractor {
 
 	private static void extractResults(File input, File output) throws IOException {
 		Sample sample = Sample.fromXML(input);
-		Results results = extractResults(sample);
+		CensusResultList results = extractResults(sample);
 		String xml = results.toXML();
 		BufferedWriter bw = new BufferedWriter(new FileWriter(output));
 		bw.write(xml);
 		bw.close();
 	}
 
-	private static Results extractResults(Sample sample) {
-		Results results = new Results();
+	private static CensusResultList extractResults(Sample sample) {
+		CensusResultList results = new CensusResultList();
 		for (Case c : sample.getData()) {
 			results.add(c.getResult());
 		}

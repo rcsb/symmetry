@@ -41,11 +41,12 @@ import org.biojava3.structure.align.symm.benchmark.comparison.Criterion;
 import org.biojava3.structure.align.symm.benchmark.comparison.ROCCurves;
 import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.census2.NamesCensus;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
+import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
 
 /**
  * Runs CE-Symm with different gradient penalties on the main diagonal, and benchmark the results.
  * @author dmyerstu
+ * @deprecated We found using a gradient to do very little
  */
 public class GradientSampler {
 
@@ -99,7 +100,7 @@ public class GradientSampler {
 				@Override
 				public StructureAlignment getAlgorithm() {
 					CeSymm ce = new CeSymm();
-					ce.setGradientPolyCoeff(gradients[j]);
+//					ce.setGradientPolyCoeff(gradients[j]);
 					return ce;
 				}
 			};
@@ -113,7 +114,7 @@ public class GradientSampler {
 			}
 			try {
 				File accFile = new File(dir + i + "_acc.txt");
-				AccuracyFinder finder = new AccuracyFinder(benchmarkFile, SignificanceFactory.rotationallySymmetric());
+				AccuracyFinder finder = new AccuracyFinder(benchmarkFile, CensusSignificanceFactory.forCeSymmOrd());
 				PrintWriter accPw = new PrintWriter(new BufferedWriter(new FileWriter(accFile)));
 				accPw.println(finder);
 				accPw.close();

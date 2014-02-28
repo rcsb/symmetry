@@ -5,9 +5,9 @@ import java.io.IOException;
 
 import org.biojava3.structure.align.symm.benchmark.KnownInfo;
 import org.biojava3.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.Result;
-import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
+import org.biojava3.structure.align.symm.census3.CensusResult;
+import org.biojava3.structure.align.symm.census3.CensusSignificance;
+import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
 
 public class BenchmarkTable {
 
@@ -20,18 +20,18 @@ public class BenchmarkTable {
 	}
 
 	private static void printTable(Sample cesymm, Sample symdPublished, Sample symdUnpublished) {
-		Significance forCeSymmTm = SignificanceFactory.forCeSymmTm();
-		Significance forCeSymmOrd = SignificanceFactory.forCeSymmOrd();
-		Significance forSymd8 = SignificanceFactory.forPublishedSymD8();
-		Significance forSymd10 = SignificanceFactory.forPublishedSymD10();
-		Significance forSymdUnpublished = SignificanceFactory.forUnpublishedSymD();
+		CensusSignificance forCeSymmTm = CensusSignificanceFactory.forCeSymmTm();
+		CensusSignificance forCeSymmOrd = CensusSignificanceFactory.forCeSymmOrd();
+		CensusSignificance forSymd8 = CensusSignificanceFactory.forPublishedSymD8();
+		CensusSignificance forSymd10 = CensusSignificanceFactory.forPublishedSymD10();
+		CensusSignificance forSymdUnpublished = CensusSignificanceFactory.forUnpublishedSymD();
 		System.out.println("----------------------");
 		for (int i = 0; i < cesymm.getData().size(); i++) {
 			KnownInfo info = cesymm.getData().get(i).getKnownInfo();
-			Result cesymmCase = cesymm.getData().get(i).getResult();
-			Result symdPublishedCase = symdPublished.getData().get(i).getResult();
-			Result symdUnpublishedCase = symdUnpublished.getData().get(i).getResult();
-			System.out.print(cesymmCase.getScopId());
+			CensusResult cesymmCase = cesymm.getData().get(i).getResult();
+			CensusResult symdPublishedCase = symdPublished.getData().get(i).getResult();
+			CensusResult symdUnpublishedCase = symdUnpublished.getData().get(i).getResult();
+			System.out.print(cesymmCase.getId());
 			System.out.print("\t");
 			System.out.print(info.getGroup());
 			System.out.print("\t");

@@ -11,8 +11,8 @@ import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
+import org.biojava3.structure.align.symm.census3.CensusSignificance;
+import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
 
 /**
  * Builds a matrix indexed by the correct order and the order CE-Symm found.
@@ -38,7 +38,7 @@ public class SimpleErrorMatrix {
 
 	private Matrix matrix = new Matrix(8, 8);
 
-	private Significance significance = SignificanceFactory.forCeSymmTm();
+	private CensusSignificance significance = CensusSignificanceFactory.forCeSymmTm();
 	private OrderDetermination orderer = OrderDeterminationFactory.simpleWithScrew(2 * Math.PI / 180, 7);
 
 	public void setOrderer(OrderDetermination orderer) {
@@ -83,7 +83,7 @@ public class SimpleErrorMatrix {
 		matrix.print(output, 2, 0);
 	}
 
-	public void setSignificance(Significance significance) {
+	public void setSignificance(CensusSignificance significance) {
 		this.significance = significance;
 	}
 

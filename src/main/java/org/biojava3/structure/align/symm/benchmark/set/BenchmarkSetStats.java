@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 
 import org.biojava3.structure.align.symm.benchmark.KnownInfo;
 import org.biojava3.structure.align.symm.benchmark.SampleBuilder;
-import org.biojava3.structure.align.symm.census2.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * Finds basic statistics about the benchmark set itself (known info).
@@ -105,16 +105,16 @@ public class BenchmarkSetStats {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("symmetric\t" + nSymm + StatUtils.NEWLINE);
-		sb.append("cyclic\t" + nCyclic + StatUtils.NEWLINE);
-		sb.append("dihedral\t" + nDihedral + StatUtils.NEWLINE);
-		sb.append("translational\t" + nTranslational + StatUtils.NEWLINE);
-		sb.append("true helical\t" + (nHelical - nSuperhelical - nNonIntegralHelical) + StatUtils.NEWLINE);
-		sb.append("superhelical\t" + nSuperhelical + StatUtils.NEWLINE);
-		sb.append("non-integral helical\t" + nNonIntegralHelical + StatUtils.NEWLINE);
-		sb.append("even-order\t" + nEven + StatUtils.NEWLINE);
-		sb.append("odd-order\t" + nOdd + StatUtils.NEWLINE);
-		sb.append("total\t" + nTotal + StatUtils.NEWLINE);
+		sb.append("symmetric\t" + nSymm + CensusStatUtils.NEWLINE);
+		sb.append("cyclic\t" + nCyclic + CensusStatUtils.NEWLINE);
+		sb.append("dihedral\t" + nDihedral + CensusStatUtils.NEWLINE);
+		sb.append("translational\t" + nTranslational + CensusStatUtils.NEWLINE);
+		sb.append("true helical\t" + (nHelical - nSuperhelical - nNonIntegralHelical) + CensusStatUtils.NEWLINE);
+		sb.append("superhelical\t" + nSuperhelical + CensusStatUtils.NEWLINE);
+		sb.append("non-integral helical\t" + nNonIntegralHelical + CensusStatUtils.NEWLINE);
+		sb.append("even-order\t" + nEven + CensusStatUtils.NEWLINE);
+		sb.append("odd-order\t" + nOdd + CensusStatUtils.NEWLINE);
+		sb.append("total\t" + nTotal + CensusStatUtils.NEWLINE);
 		return sb.toString();
 	}
 

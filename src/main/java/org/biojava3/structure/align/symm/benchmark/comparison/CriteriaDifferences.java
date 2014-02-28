@@ -31,8 +31,9 @@ import java.util.TreeSet;
 
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
+import org.biojava3.structure.align.symm.census3.CensusResult;
+import org.biojava3.structure.align.symm.census3.CensusResultList;
 
 /**
  * Finds (significant) differences between different {@link Criterion Criteria} on either a {@link Sample} object or a {@link Results} object.
@@ -118,7 +119,7 @@ public class CriteriaDifferences {
 			return;
 		}
 		Criterion a = Criterion.tmScore();
-		Criterion b = Criterion.symDTMScore();
+		Criterion b = Criterion.tmScore(); // TODO WRONG
 		CriteriaDifferences comp = new CriteriaDifferences(a, b);
 		// Results results = Results.fromXML(new File(args[0]));
 		Sample sample = Sample.fromXML(new File(args[0]));
@@ -138,9 +139,9 @@ public class CriteriaDifferences {
 		this.b = b;
 	}
 
-	public List<Difference> findDifferences(Results results, double precision) {
+	public List<Difference> findDifferences(CensusResultList results, double precision) {
 		List<Difference> diffs = new ArrayList<Difference>();
-		for (Result result : results.getData()) {
+		for (CensusResult result : results.getEntries()) {
 			Double x = null, y = null;
 			try {
 				x = a.get(result);
@@ -151,7 +152,7 @@ public class CriteriaDifferences {
 			} catch (NoncomputableCriterionException e) {
 			}
 			if (Math.abs(x) - Math.abs(y) >= precision) {
-				diffs.add(new Difference(result.getScopId(), x, y));
+				diffs.add(new Difference(result.getId(), x, y));
 			}
 		}
 		return diffs;

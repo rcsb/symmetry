@@ -8,10 +8,14 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.SymmRefiner;
 import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 
-
+/**
+ * Quick demo of how to call CE-Symm programmatically.
+ *
+ * @author spencer
+ *
+ */
 public class DemoCeSymm {
 
 	public static void main(String[] args){

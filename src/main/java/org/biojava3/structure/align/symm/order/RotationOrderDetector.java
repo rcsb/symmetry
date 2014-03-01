@@ -1,21 +1,7 @@
 package org.biojava3.structure.align.symm.order;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-import javax.swing.JOptionPane;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.math3.util.Pair;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Calc;
@@ -24,7 +10,6 @@ import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
-import org.biojava3.structure.align.symm.CeSymm;
 
 /**
  * Detects order by analyzing the goodness of fit as the protein is rotated
@@ -43,8 +28,8 @@ public class RotationOrderDetector implements OrderDetector {
 
 	private int maxOrder;
 
-	private static final double DEFAULT_ANGLE_INCR = 5*Calc.radiansPerDegree;
-	private final double angleIncr = DEFAULT_ANGLE_INCR; // angular resolution
+	public static final double DEFAULT_ANGLE_INCR = 5*Calc.radiansPerDegree;
+	private double angleIncr = DEFAULT_ANGLE_INCR; // angular resolution
 
 	private RotationOrderMethod method;
 	public RotationOrderDetector() {
@@ -68,6 +53,21 @@ public class RotationOrderDetector implements OrderDetector {
 	}
 	public RotationOrderMethod getMethod() {
 		return method;
+	}
+	public int getMaxOrder() {
+		return maxOrder;
+	}
+
+	public void setMaxOrder(int maxOrder) {
+		this.maxOrder = maxOrder;
+	}
+
+	public double getAngleIncr() {
+		return angleIncr;
+	}
+
+	public void setAngleIncr(double angleIncr) {
+		this.angleIncr = angleIncr;
 	}
 
 	@Override
@@ -333,24 +333,6 @@ public class RotationOrderDetector implements OrderDetector {
 
 		double dist = total/(ca1.length+ca2.length);
 		return dist;
-	}
-	public static void printSuperpositionDistance(Atom[] ca, RotationAxis axis, PrintStream out) throws StructureException {
-		printSuperpositionDistance(ca, axis, DEFAULT_ANGLE_INCR, out);
-	}
-	public static void printSuperpositionDistance(Atom[] ca, RotationAxis axis,double angleIncr, PrintStream out) throws StructureException {
-		final int steps = (int)Math.floor(Math.PI/angleIncr);
-
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
-
-		for (int step=0; step<steps;step++) {
-			double dist = superpositionDistance(ca, ca2);
-			double angle = angleIncr*step;
-
-			// Rotate for next step
-			axis.rotate(ca2, angleIncr);
-
-			out.format("%f\t%f%n",angle,dist);
-		}
 	}
 
 	/**
@@ -751,159 +733,5 @@ public class RotationOrderDetector implements OrderDetector {
 		}
 
 		return sses;
-	}
-
-	@SuppressWarnings("static-access")
-	public static void main(String[] args) {
-		//argument parsing
-		final String usage = "[OPTIONS] [structure]";
-		final String header = "Determine the order for <structure>, which may " +
-				"be a PDB ID, SCOP domain, or file path. If none is given, the " +
-				"user will be prompted at startup.";
-		Options options = new Options();
-		options.addOption("h","help",false,"print help");
-		options.addOption(OptionBuilder.withArgName("maxorder")
-				.hasArg()
-				.withLongOpt("max-order")
-				.withType(Number.class)
-				.withDescription("maximum order to consider [default 8]")
-				.create("x") );
-		StringBuilder descr = new StringBuilder("Method to use. May be specified multiple times. [");
-		RotationOrderMethod[] availableMethods = RotationOrderMethod.values();
-		descr.append(availableMethods[0]);
-		for(int i=1;i<availableMethods.length;i++) {
-			descr.append(" | ");
-			descr.append(availableMethods[i]);
-		}
-		descr.append(']');
-		options.addOption(OptionBuilder.withArgName("method")
-				.hasArg()
-				.withLongOpt("method")
-				.withType(RotationOrderMethod.class)
-				.withDescription(descr.toString())
-				.create('M') );
-		options.addOption("o","output",true,"tab delimited output file containing angle and distance columns");
-		CommandLineParser parser = new GnuParser();
-		HelpFormatter help = new HelpFormatter();
-
-		CommandLine cli;
-		try {
-			cli = parser.parse(options,args,false);
-			if(cli.hasOption('h')) {
-				help.printHelp(usage, header, options, "");
-				System.exit(1);
-				return;
-			}
-		} catch (ParseException e) {
-			System.err.println("Error: "+e.getMessage());
-			help.printHelp(usage, header, options, "");
-			System.exit(1);
-			return;
-		}
-
-		args = cli.getArgs();
-
-
-		String name;
-		if(args.length == 0) {
-			// default name
-			name = "d1ijqa1";
-			//		name = "1G6S";
-			name = "1MER.A";
-			//		name = "1MER";
-			//		name = "1TIM.A";
-			//		name = "d1h70a_";
-			name = "2YMS";
-
-			name = (String)JOptionPane.showInputDialog(
-					null,
-					"Structure ID (PDB, SCOP, etc):",
-					"Input Structure",
-					JOptionPane.PLAIN_MESSAGE,
-					null,
-					null,
-					name);
-
-			if( name == null) {
-				//cancel
-				return;
-			}
-		} else if(args.length == 1) {
-			name = args[0];
-		} else {
-			help.printHelp(usage, header, options, "");
-			System.exit(1);
-			return;
-		}
-
-		int maxorder = 8;
-		if(cli.hasOption('x') ) {
-			maxorder = Integer.parseInt(cli.getOptionValue('x'));
-		}
-
-		String outfile = null;
-		if(cli.hasOption('o')) {
-			outfile = cli.getOptionValue('o');
-		}
-
-		List<RotationOrderDetector> methods = new ArrayList<RotationOrderDetector>();
-		if(cli.hasOption('M')) {
-			for(String method: cli.getOptionValues('M')) {
-				RotationOrderMethod m = RotationOrderMethod.valueOf(method);
-				methods.add(new RotationOrderDetector(maxorder,m) );
-			}
-		}
-
-//		System.out.println("Name:" + name);
-//		System.out.println("order:" + maxorder);
-//		System.out.println("output:" + outfile);
-//		for(RotationOrderDetector m: methods) {
-//			System.out.println("method:"+m);
-//		}
-
-		// Done parsing arguments
-
-
-		try {
-
-			// Perform alignment to determine axis
-			Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-			Atom[] ca2 = StructureTools.cloneCAArray(ca1);
-			CeSymm ce = new CeSymm();
-			AFPChain alignment = ce.align(ca1, ca2);
-			RotationAxis axis = new RotationAxis(alignment);
-
-			// Output raw data
-			if(outfile != null) {
-				PrintStream out = null;
-				try {
-					out = new PrintStream(outfile);
-					out.println("Angle\tDistance");
-					printSuperpositionDistance(ca1,axis,out);
-				} catch(FileNotFoundException e) {
-					e.printStackTrace();
-				} finally {
-					if(out != null) {
-						out.close();
-					}
-				}
-			}
-
-			// Print orders
-			for( OrderDetector detector: methods) {
-				// Calculate order
-				int order = detector.calculateOrder(alignment, ca1);
-				System.out.format("%s\t%d%n",detector,order);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (StructureException e) {
-			e.printStackTrace();
-		} catch (OrderDetectionFailedException e) {
-			e.printStackTrace();
-		}
-
-
-
 	}
 }

@@ -51,9 +51,7 @@ import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
  * Decent command-line interface to Census. Combines aspects of many of the other census subclasses.
  * 
  * @author dmyersturnbull
- * @deprecated
  */
-@Deprecated
 public class CensusCLI {
 
 	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
@@ -85,14 +83,14 @@ public class CensusCLI {
 			if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
 			ScopFactory.setScopDatabase(scopVersion);
 
-			final String pdbDir = cmd.getOptionValue("pdb");
+			final String pdbDir = cmd.getOptionValue("pdbdir");
 			final String censusFile = cmd.getOptionValue("file");
 			final Integer nThreads = cmd.getOptionValue("threads") == null ? null : Integer.parseInt(cmd
 					.getOptionValue("threads"));
 			final Integer writeEvery = cmd.getOptionValue("every") == null ? null : Integer.parseInt(cmd
 					.getOptionValue("every"));
-			final Integer number = cmd.getOptionValue("number") == null ? null : Integer.parseInt(cmd
-					.getOptionValue("number"));
+			final Integer number = cmd.getOptionValue("maxreps") == null ? null : Integer.parseInt(cmd
+					.getOptionValue("maxreps"));
 			final AstralSet clustering = cmd.getOptionValue("clustering") == null ? null : AstralSet.parse(cmd
 					.getOptionValue("clustering"));
 
@@ -148,13 +146,13 @@ public class CensusCLI {
 			final boolean randomize = cmd.hasOption("randomize");
 			final boolean restart = cmd.hasOption("restart");
 			final boolean prefetch = cmd.hasOption("prefetch");
-			final boolean storeMapping = cmd.hasOption("storemapping");
+			final boolean noMapping = cmd.hasOption("nomapping");
 			final boolean diverse = cmd.hasOption("diverse");
 			final boolean allProteins = cmd.hasOption("allproteins");
 			final boolean reverse = cmd.hasOption("reverse");
 
 			run(pdbDir, censusFile, nThreads, writeEvery, number, clustering, sunIds, classifications, randomize,
-					restart, prefetch, storeMapping, scopVersion, diverse, allProteins, start, stop, reverse);
+					restart, prefetch, noMapping, scopVersion, diverse, allProteins, start, stop, reverse);
 
 		} catch (RuntimeException e) {
 			logger.fatal(e);
@@ -257,7 +255,7 @@ public class CensusCLI {
 	public static void run(final String pdbDir, final String censusFile, final Integer inputNThreads,
 			final Integer writeEvery, final Integer number, final AstralSet clustering, final int[] inputSunIds,
 			final String[] inputClassIds, final boolean randomize, final boolean restart,
-			boolean prefetch, final boolean storeMapping, String scopVersion, final boolean diverse, final boolean allProteins, final int start, final int stop, final boolean reverse) {
+			boolean prefetch, final boolean noMapping, String scopVersion, final boolean diverse, final boolean allProteins, final int start, final int stop, final boolean reverse) {
 
 		Census census;
 
@@ -323,7 +321,7 @@ public class CensusCLI {
 			} else {
 				census.setOutputWriter(new File("census.xml"));
 			}
-			census.setRecordAlignmentMapping(storeMapping);
+			census.setRecordAlignmentMapping(!noMapping);
 
 		}
 
@@ -337,54 +335,54 @@ public class CensusCLI {
 	private static Options getOptions() {
 		Options options = new Options();
 		options.addOption(OptionBuilder.hasArg(true)
-				.withDescription("The PDB directory. Defaults to the AtomCache default.").isRequired(false)
-				.create("pdb"));
-		options.addOption(OptionBuilder.hasArg(true).withDescription("The output file. Defaults to ./census.xml.")
+				.withDescription("The PDB directory. Defaults to the Biojava AtomCache default, which is typically the operating system's temporary directory.").isRequired(false)
+				.create("pdbdir"));
+		options.addOption(OptionBuilder.hasArg(true).withDescription("The output file. Defaults to \"./census.xml\".")
 				.isRequired(false).create("file"));
 		options.addOption(OptionBuilder.hasArg(true)
 				.withDescription("The number of threads to use. Defaults to the number available minus 1.")
 				.isRequired(false).create("threads"));
 		options.addOption(OptionBuilder.hasArg(false)
-				.withDescription("Ignore any existing work and start from scratch.").isRequired(false)
+				.withDescription("Ignore any existing work and start from scratch. Otherwise, the census will read the output file and not repeat any jobs.").isRequired(false)
 				.create("restart"));
 		options.addOption(OptionBuilder.hasArg(true).withDescription("Use the specified SCOP version; defaults to the most recent.").isRequired(false)
 				.create("scopversion"));
-		options.addOption(OptionBuilder.hasArg(false).withDescription("Prefetch all PDB files.").isRequired(false)
+		options.addOption(OptionBuilder.hasArg(false).withDescription("Prefetch all PDB files before starting.").isRequired(false)
 				.create("prefetch"));
-		options.addOption(OptionBuilder.hasArg(false).withDescription("Record the alignment mapping in the XML. Can be used to reconstruct an AFPChain quickly").isRequired(false)
-				.create("storemapping"));
+		options.addOption(OptionBuilder.hasArg(false).withDescription("Do not record the alignment mapping in the XML. The mapping can be used to reconstruct an AFPChain quickly.").isRequired(false)
+				.create("nomapping"));
 		options.addOption(OptionBuilder.hasArg(false).withDescription("Use all \"px\"s under every domain. If not set, uses only the first \"px\" of each domain.").isRequired(false)
 				.create("allproteins"));
 		options.addOption(OptionBuilder.hasArg(false).withDescription("Reverses the direction in which the jobs are run.").isRequired(false)
 				.create("reverse"));
-		options.addOption(OptionBuilder.hasArg(false).withDescription("If -number is less than the total number of domains for a SCOP category, tries to spread the selection over the category. Currently only works with SCOP superfamilies.").isRequired(false)
+		options.addOption(OptionBuilder.hasArg(false).withDescription("If -maxreps is less than the total number of domains for a SCOP category, tries to spread the selection over the category. Currently only works with SCOP superfamilies.").isRequired(false)
 				.create("diverse"));
-		options.addOption(OptionBuilder.hasArg(true).withDescription("Write to file every n jobs.").isRequired(false)
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Write to the file every n jobs.").isRequired(false)
 				.create("every"));
 		options.addOption(OptionBuilder.hasArg(true).withDescription("Start writing on the nth domain selected. Defaults to 0.").isRequired(false)
 				.create("start"));
-		options.addOption(OptionBuilder.hasArg(true).withDescription("Stop writing on the nth domains selected. Defaults to +infinity.").isRequired(false)
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Stop writing after the nth domains selected. Defaults to +infinity.").isRequired(false)
 				.create("stop"));
-		options.addOption(OptionBuilder.hasArg(true).withDescription("Use a file containing a line-by-line list of SCOP Ids to run on").isRequired(false)
+		options.addOption(OptionBuilder.hasArg(true).withDescription("Use a file containing a line-by-line list of SCOP Ids to run on.").isRequired(false)
 				.create("names"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
-						"Apply sequence clustering at the specified sequence identity, in decimal. A value of 0 (default) means no sequence clustering.")
+						"Apply sequence clustering using ASTRAL at the specified sequence identity, in decimal. A value of 0 (default) means no sequence clustering.")
 						.isRequired(false).create("clustering"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
-						"Run on only the specified space-seperated list of SCOP sun ids. Defaults to SCOP classes A-F, \"46456 48724 51349 53931 56572 56835\"")
+						"Run on only the specified space-seperated list of SCOP sun ids. Defaults to SCOP classes A-F, \"46456 48724 51349 53931 56572 56835\".")
 						.isRequired(false).create("sunids"));
 		options.addOption(OptionBuilder.hasArg(true)
-				.withDescription("Run on only the specified space-seperated list of classification identifiers, in addition to -sunids")
+				.withDescription("Run on only the specified space-seperated list of classification identifiers, in addition to -sunids.")
 				.isRequired(false).create("classids"));
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
 						"Use at most the specified number of entities from the sun ids or superfamilies selected. A value of -1 (default) means all. This option does not attempt to select diverse domains from the sets (will fix). Use with -randomize.")
-						.isRequired(false).create("number"));
+						.isRequired(false).create("maxreps"));
 		options.addOption(OptionBuilder
 				.hasArg(false)
 				.withDescription(
@@ -393,7 +391,7 @@ public class CensusCLI {
 		options.addOption(OptionBuilder
 				.hasArg(true)
 				.withDescription(
-						"Run on only the nth fold. Special option for running on OSG.")
+						"Run on only the \"nth\" fold, where the ordering is arbitrary. Historically used for running on Open Science Grid.")
 						.isRequired(false).create("foldindex"));
 		return options;
 	}

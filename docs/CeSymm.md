@@ -26,22 +26,23 @@ Short Option | Long Option | Description
 :----------: | :---------- | :----------
 -h  | --help            | Print usage information
     | --version         | Print CE-Symm version
+-i  | --input=file      | File listing whitespace-delimited query structures
+-o  | --xml=file        | Output alignment as XML
+    | --fatcat=file     | Output alignment as FATCAT output
+    | --ce=file         | Output alignment as CE output
+    | --pdb=file        | Output alignment as two-model PDB file
+    | --tsv=file        | Output alignment as tab-separated file
 -v  | --verbose         | Print detailed output (equivalent to "--tsv=-")
 -j  | --show3d          | Force jMol display for each structure [default for <10 structures when specified on command line]
 -J  | --noshow3d        | Disable jMol display [default with --input or for >=10 structures]
 -t  | --order           | Use TM-Score with order for deciding significance. [default]
 -T  | --noorder         | Use TM-Score alone for deciding significance.
--o  | --xml=file        | Output alignment as XML
-    | --fatCat=file     | Output alignment as FATCAT output
-    | --ce=file         | Output alignment as CE output
-    | --pdb=file        | Output alignment as two-model PDB file
-    | --tsv=file        | Output alignment as tab-separated file
-    | --ordermethod     | Order detection method. Can be a full class name or a short class name from the org.biojava3.structure.align.symm.order package. [default SequenceFunctionOrderDetector]
-    | --pdbFilePath=dir | Download directory for new structures [default temp folder]
-    | --pdbDirSplit     | Indicates that --pdbFilePath is split into multiple subdirs, like the ftp site. [default]
-    | --noPdbDirSplit   | Indicates that --pdbFilePath should be a single directory.
+    | --ordermethod=Class   | Order detection method. Can be a full class name or a short class name from the org.biojava3.structure.align.symm.order package. [default SequenceFunctionOrderDetector]
+    | --pdbfilepath=dir | Download directory for new structures [default temp folder]
+    | --pdbdirsplit     | Indicates that --pdbfilepath is split into multiple subdirs, like the ftp site. [default]
+    | --nopdbdirsplit   | Indicates that --pdbfilepath should be a single directory.
     | --threads         | Number of threads
-    | --scopVersion=version | Version of SCOP or SCOPe to use when resolving SCOP identifiers [defaults to latest SCOPe]
+    | --scopversion=version | Version of SCOP or SCOPe to use when resolving SCOP identifiers [defaults to latest SCOPe]
 
 Interactive mode
 ----------------

@@ -19,7 +19,6 @@ package org.biojava3.structure.align.symm.census2;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -82,8 +81,8 @@ public class CLI {
 
 			// set SCOP version
 			String scopVersion = cmd.getOptionValue("scopversion");
-			if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
-			ScopFactory.setScopDatabase(scopVersion);
+			if (scopVersion != null && !scopVersion.isEmpty())
+				ScopFactory.setScopDatabase(scopVersion);
 
 			final String pdbDir = cmd.getOptionValue("pdb");
 			final String censusFile = cmd.getOptionValue("file");

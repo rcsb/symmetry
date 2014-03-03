@@ -80,8 +80,8 @@ public class CensusCLI {
 
 			// set SCOP version
 			String scopVersion = cmd.getOptionValue("scopversion");
-			if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
-			ScopFactory.setScopDatabase(scopVersion);
+			if (scopVersion != null && !scopVersion.isEmpty())
+				ScopFactory.setScopDatabase(scopVersion);
 
 			final String pdbDir = cmd.getOptionValue("pdbdir");
 			final String censusFile = cmd.getOptionValue("file");

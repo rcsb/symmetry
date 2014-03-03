@@ -9,8 +9,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
+import org.biojava3.structure.align.symm.census3.CensusSignificance;
+import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
 
 /**
  * A class to determine the accuracy of CE-Symm for determining order of rotational symmetry.
@@ -27,18 +27,18 @@ public class OrderAccuracy {
 			return;
 		}
 		File input = new File(args[0]);
-		OrderAccuracy finder = new OrderAccuracy(input, SignificanceFactory.generallySymmetric(), GroupComparisonFactory.exact());
+		OrderAccuracy finder = new OrderAccuracy(input, CensusSignificanceFactory.forCeSymmTm(), GroupComparisonFactory.exact());
 		System.out.println(finder);
 	}
 
-	public OrderAccuracy(File input, Significance sig, GroupComparator guesser) throws IOException {
+	public OrderAccuracy(File input, CensusSignificance sig, GroupComparator guesser) throws IOException {
 		this(Sample.fromXML(input), sig, guesser);
 	}
 
 	private int correct = 0;
 	private int total = 0;
 	
-	public OrderAccuracy(Sample sample, Significance sig, GroupComparator guesser) {
+	public OrderAccuracy(Sample sample, CensusSignificance sig, GroupComparator guesser) {
 		for (Case c : sample.getData()) {
 			try {
 				if (!c.getKnownInfo().hasRotationalSymmetry()) continue;

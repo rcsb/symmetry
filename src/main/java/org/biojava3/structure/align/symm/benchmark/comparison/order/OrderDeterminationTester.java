@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import org.biojava.bio.structure.jama.Matrix;
 import org.biojava3.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.stats.StatUtils;
+import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * Test the <em>performance</em> of order-detection methods.
@@ -37,11 +37,11 @@ public class OrderDeterminationTester {
 				argmax = i;
 				top = mx.getMatrix();
 			}
-			System.out.println(StatUtils.formatD(i) + "\t" + StatUtils.formatD(test));
+			System.out.println(CensusStatUtils.formatD(i) + "\t" + CensusStatUtils.formatD(test));
 			i += step;
 		}
 		System.out.println("===========================================================");
-		System.out.println(StatUtils.formatD(argmax) + "\t" + StatUtils.formatD(max));
+		System.out.println(CensusStatUtils.formatD(argmax) + "\t" + CensusStatUtils.formatD(max));
 		System.out.println(top);
 	}
 	

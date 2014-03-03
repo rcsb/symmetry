@@ -8,10 +8,17 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
+<<<<<<< HEAD
+import org.biojava3.structure.align.symm.census2.Result;
+import org.biojava3.structure.align.symm.census2.SignificanceFactory;
+import org.biojava3.structure.align.symm.census2.stats.StatUtils;
+import org.biojava3.structure.align.symm.order.AngleOrderDetector;
+=======
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
 import org.biojava3.structure.align.symm.census3.CensusSymmetryGroup;
 import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
+>>>>>>> douglas/master
 import org.biojava3.structure.align.symm.order.OrderDetector;
 import org.biojava3.structure.align.symm.order.PeakCountingOrderDetector;
 import org.biojava3.structure.align.symm.order.RotationOrderDetector;
@@ -28,6 +35,7 @@ public class BenchmarkOrderDetector {
 			System.err.println("Usage: " + BenchmarkOrderDetector.class.getSimpleName() + " input-benchmark-file [output-file]");
 			return;
 		}
+<<<<<<< HEAD
 		String inputFilename = args[0];
 		String outputFilename = null;
 		if(args.length>1) {
@@ -41,30 +49,36 @@ public class BenchmarkOrderDetector {
 		detector = new SequenceFunctionOrderDetector();
 
 		// Read in benchmark
-		AtomCache cache = new AtomCache();
-		cache.setFetchFileEvenIfObsolete(true);
-		ScopFactory.setScopDatabase(ScopFactory.VERSION_2_0_1, true);
+		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A, true);
 		Sample sample = Sample.fromXML(new File(inputFilename));
-		BenchmarkOrderDetector b = new BenchmarkOrderDetector(cache);
+		BenchmarkOrderDetector b = new BenchmarkOrderDetector(new AtomCache());
 
 		//Set up output
 		PrintStream out = System.out;
 		if(outputFilename != null) {
 			out = new PrintStream(outputFilename);
-	}
-	
+		}
+
 		//Recalculate orders
 		b.calculateOrder(sample, detector, out);
 
 		//Calculate accuracy
-		b.calculateOrder(sample, new PeakCountingOrderDetector(8),out);
 		double acc = b.getOrderAccuracy(sample);
-		System.out.println("Accuracy\t"+CensusStatUtils.formatP(acc));
+		System.out.println("Accuracy\t"+StatUtils.formatP(acc));
 
 		// Finish up
 		if(out != System.out) {
 			out.close();
 		}
+=======
+		ScopFactory.setScopDatabase(ScopFactory.VERSION_2_0_1);
+		Sample sample = Sample.fromXML(new File(args[0]));
+		AtomCache cache = new AtomCache();
+		cache.setFetchFileEvenIfObsolete(true);
+		BenchmarkOrderDetector b = new BenchmarkOrderDetector(cache);
+		double acc = b.testOrderDetector(sample, new PeakCountingOrderDetector(8));
+		System.out.println("accuracy=" + CensusStatUtils.formatP(acc));
+>>>>>>> douglas/master
 	}
 
 	private AtomCache cache;
@@ -83,12 +97,13 @@ public class BenchmarkOrderDetector {
 	public void calculateOrder(Sample sample, OrderDetector detector, PrintStream out) {
 		OrderDetermination determination = new OrderDetectorDeterminationAdaptor(detector, cache);
 		for (Case c : sample.getData()) {
-			CensusResult result = c.getResult();
+<<<<<<< HEAD
+			Result result = c.getResult();
 			int order = determination.getOrder(result);
-			result.setGroup(new CensusSymmetryGroup("C" + order));
 			if(out != null) {
-				out.println(result.getId()+"\t"+order);
+				out.println(result.getScopId()+"\t"+order);
 			}
+			result.setOrder(order);
 		}
 	}
 
@@ -98,18 +113,13 @@ public class BenchmarkOrderDetector {
 	 * @return
 	 */
 	public double getOrderAccuracy(Sample sample ) {
+		OrderAccuracy acc = new OrderAccuracy(sample, SignificanceFactory.generallySymmetric(), GroupComparisonFactory.exact());
+=======
+			CensusResult result = c.getResult();
+			result.setGroup(new CensusSymmetryGroup("C" + determination.getOrder(result)));
+		}
 		OrderAccuracy acc = new OrderAccuracy(sample, CensusSignificanceFactory.forCeSymmTm(), GroupComparisonFactory.exact());
+>>>>>>> douglas/master
 		return acc.getAccuracy();
-	}
-
-	/**
-	 * Get the accuracy of a specified OrderDetector against a sample
-	 * @param sample the benchmark, annotated with true results
-	 * @param detector the order detection method
-	 * @return the accuracy (TP+TN)/N
-	 */
-	public double testOrderDetector(Sample sample, OrderDetector detector) {
-		calculateOrder(sample,detector,null);
-		return getOrderAccuracy(sample);
 	}
 }

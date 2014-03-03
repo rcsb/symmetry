@@ -26,8 +26,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.benchmark.Case;
 import org.biojava3.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
+import org.biojava3.structure.align.symm.census3.CensusSignificance;
+import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
 
 /**
  * Determines the false-positive, true-positive, false-negative, and true-negative frequencies of a benchmark
@@ -46,20 +46,20 @@ public class AccuracyFinder {
 			return;
 		}
 		File input = new File(args[0]);
-		Significance sig = SignificanceFactory.forCeSymmOrd();
+		CensusSignificance sig = CensusSignificanceFactory.forCeSymmOrd();
 		if (args.length > 2) {
 			logger.info("Using alternate Significance "  + args[1] + "." + args[2]);
-			sig = SignificanceFactory.fromMethod(args[1], args[2]);
+			sig = CensusSignificanceFactory.fromMethod(args[1], args[2]);
 		} else if (args.length > 1) {
 
 			logger.info("Using alternate Significance "  + args[1]);
-			sig = SignificanceFactory.fromMethod(SignificanceFactory.class.getName(), args[1]);
+			sig = CensusSignificanceFactory.fromMethod(CensusSignificanceFactory.class.getName(), args[1]);
 		}
 		AccuracyFinder finder = new AccuracyFinder(input, sig);
 		System.out.println(finder);
 	}
 
-	public AccuracyFinder(File input, Significance sig) throws IOException {
+	public AccuracyFinder(File input, CensusSignificance sig) throws IOException {
 		this(Sample.fromXML(input), sig);
 	}
 
@@ -84,7 +84,7 @@ public class AccuracyFinder {
 	private int fp = 0;
 	private int tn = 0;
 
-	public AccuracyFinder(Sample sample, Significance sig) {
+	public AccuracyFinder(Sample sample, CensusSignificance sig) {
 		for (Case c : sample.getData()) {
 			try {
 				if (c.getKnownInfo().hasRotationalSymmetry()) {

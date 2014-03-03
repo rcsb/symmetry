@@ -24,9 +24,11 @@ package org.biojava3.structure.align.symm.benchmark;
 
 import java.io.Serializable;
 
-import org.biojava3.structure.align.symm.census2.Alignment;
-import org.biojava3.structure.align.symm.census2.Axis;
 import org.biojava3.structure.align.symm.census2.Result;
+import org.biojava3.structure.align.symm.census3.CensusAxis;
+import org.biojava3.structure.align.symm.census3.CensusResult;
+import org.biojava3.structure.align.symm.census3.CensusScoreList;
+
 
 /**
  * A single case (result) to benchmark. Contains a {@link Result} (see symmetry project) and a known space group as {@link KnownInfo}.
@@ -38,7 +40,7 @@ public class Case implements Serializable {
 	private static final long serialVersionUID = 1604599374800984540L;
 	
 	private KnownInfo knownInfo;
-	private Result result;
+	private CensusResult result;
 	public int getKnownOrder() {
 		return knownInfo.getOrder();
 	}
@@ -52,10 +54,10 @@ public class Case implements Serializable {
 	public void setKnownInfo(KnownInfo knownInfo) {
 		this.knownInfo = knownInfo;
 	}
-	public Result getResult() {
+	public CensusResult getResult() {
 		return result;
 	}
-	public void setResult(Result result) {
+	public void setResult(CensusResult result) {
 		this.result = result;
 	}
 
@@ -88,31 +90,19 @@ public class Case implements Serializable {
 	}
 	public Case() {
 	}
-	public Axis getAxis() {
+	public CensusAxis getAxis() {
 		return result.getAxis();
 	}
-	public Alignment getAlignment() {
-		return result.getAlignment();
-	}
-	public String getClassification() {
-		return result.getClassification();
-	}
-	public String getDescription() {
-		return result.getDescription();
+	public CensusScoreList getScoreList() {
+		return result.getScoreList();
 	}
 	public Integer getOrder() {
 		return result.getOrder();
 	}
-	public String getProtodomain() {
-		return result.getProtodomain();
-	}
-	public Integer getRank() {
-		return result.getRank();
+	public String getAlignedUnit() {
+		return result.getAlignedUnit();
 	}
 	public String getScopId() {
-		return result.getScopId();
-	}
-	public Integer getSunId() {
-		return result.getSunId();
+		return result.getId();
 	}
 }

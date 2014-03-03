@@ -32,8 +32,9 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
+import org.biojava3.structure.align.symm.census3.CensusResult;
+import org.biojava3.structure.align.symm.census3.CensusResultList;
 
 /**
  * Converts a {@link Results} (see symmetry project) to a {@link Sample}. In other words, takes a table of known space
@@ -51,14 +52,14 @@ public class SampleBuilder {
 	}
 
 	public static void buildSample(File input, File output, Map<String, KnownInfo> knownInfos) throws IOException {
-		Results results = Results.fromXML(input);
+		CensusResultList results = CensusResultList.fromXML(input);
 		logger.info("File " + input + " contains " + results.size() + " entries");
 		Sample sample = new Sample();
-		for (Result result : results.getData()) {
+		for (CensusResult result : results.getEntries()) {
 			if (result == null) continue;
 			Case c = new Case();
 			c.setResult(result);
-			KnownInfo knownInfo = knownInfos.get(result.getScopId());
+			KnownInfo knownInfo = knownInfos.get(result.getId());
 			if (knownInfo == null) {
 				logger.warn("No info known for " + c.getScopId());
 				continue;

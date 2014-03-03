@@ -25,6 +25,8 @@ package org.biojava3.structure.align.symm.benchmark.comparison;
 import java.util.Random;
 
 import org.biojava3.structure.align.symm.census2.Result;
+import org.biojava3.structure.align.symm.census3.CensusResult;
+
 
 /**
  * A metric that scores symmetry predictions. Has a single method {@link #get(Result)} that determines the quality of a {@link Result}.
@@ -33,7 +35,7 @@ import org.biojava3.structure.align.symm.census2.Result;
  */
 public abstract class Criterion {
 
-	public abstract double get(Result result) throws NoncomputableCriterionException;
+	public abstract double get(CensusResult result) throws NoncomputableCriterionException;
 
 	public abstract String getName();
 	
@@ -45,7 +47,7 @@ public abstract class Criterion {
 	public Criterion exp(final double radix) {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
 				return Math.pow(radix, Criterion.this.get(result));
 			}
 			@Override
@@ -58,7 +60,7 @@ public abstract class Criterion {
 	public Criterion log() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
 				return Math.log(Criterion.this.get(result));
 			}
 			@Override
@@ -71,7 +73,7 @@ public abstract class Criterion {
 	public Criterion noFail(final float penalty) {
 		return new Criterion() {
 			@Override
-			public double get(Result result) {
+			public double get(CensusResult result) {
 				try {
 					return Criterion.this.get(result);
 				} catch (NoncomputableCriterionException e) {
@@ -88,7 +90,7 @@ public abstract class Criterion {
 	public static Criterion combine(final Criterion a, final Criterion b, final double coeffA, final double coeffB) {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
 				return coeffA * a.get(result) + coeffB * b.get(result);
 			}
 			@Override
@@ -101,7 +103,7 @@ public abstract class Criterion {
 	public static Criterion combineNoFail(final Criterion a, final Criterion b, final double coeffA, final double coeffB) {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
 				double aa = 0, ba = 0;
 				try {
 					aa = a.get(result);
@@ -121,7 +123,7 @@ public abstract class Criterion {
 	public Criterion inverse() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
 				return -Criterion.this.get(result);
 			}
 			@Override
@@ -134,8 +136,8 @@ public abstract class Criterion {
 	public static Criterion hasOrder(final float penalty) {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getOrder() == null || result.getOrder() < 2) return -penalty;
+			public double get(CensusResult result) throws NoncomputableCriterionException {
+				if (result.getOrder() < 2) return -penalty;
 				return 0;
 			}
 
@@ -149,8 +151,8 @@ public abstract class Criterion {
 	public static Criterion hasOrderLiberal(final float penalty) {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getOrder() == null || result.getOrder() < 2) {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
+				if (result.getOrder() < 2) {
 					if (result.getAxis() == null) return -penalty;
 					if (result.getAxis().guessOrder() == 1) {
 						return -penalty;
@@ -169,7 +171,7 @@ public abstract class Criterion {
 	public static Criterion hasOrderByAngle(final float penalty, final double threshold, final int maxOrder) {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
 				int order = result.getAxis().guessOrder(threshold, maxOrder);
 				if (order > 1) return 0;
 				return -penalty;
@@ -184,8 +186,7 @@ public abstract class Criterion {
 	public static Criterion order() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getOrder() == null) throw new NoncomputableCriterionException("The case has a null getOrder()");
+			public double get(CensusResult result) throws NoncomputableCriterionException {
 				return result.getOrder();
 			}
 
@@ -198,9 +199,9 @@ public abstract class Criterion {
 	public static Criterion zScore() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().getzScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getzScore();
+			public double get(CensusResult result) throws NoncomputableCriterionException {
+				if (result.getScoreList() == null || result.getScoreList().getzScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getScoreList().getzScore();
 			}
 
 			@Override
@@ -209,54 +210,12 @@ public abstract class Criterion {
 			}
 		};
 	}
-	public static Criterion coverage() {
-		return new Criterion() {
-			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().getCoverage() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getCoverage();
-			}
-
-			@Override
-			public String getName() {
-				return "coverage";
-			}
-		};
-	}
-	public static Criterion tScore() {
-		return new Criterion() {
-			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().gettScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().gettScore();
-			}
-
-			@Override
-			public String getName() {
-				return "T-score";
-			}
-		};
-	}
-	public static Criterion symdZScore() {
-		return new Criterion() {
-			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().getSymDZScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getSymDZScore();
-			}
-
-			@Override
-			public String getName() {
-				return "Z-score(T-score)";
-			}
-		};
-	}
 	public static Criterion tmScore() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().getTmScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getTmScore();
+			public double get(CensusResult result) throws NoncomputableCriterionException {
+				if (result.getScoreList() == null || result.getScoreList().getTmScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getScoreList().getTmScore();
 			}
 
 			@Override
@@ -266,41 +225,12 @@ public abstract class Criterion {
 
 		};
 	}
-	public static Criterion symDTMScore() {
-		return new Criterion() {
-			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().getSymDTmScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getSymDTmScore();
-			}
-
-			@Override
-			public String getName() {
-				return "SymD TM-score";
-			}
-		};
-	}
-	public static Criterion alignScore() {
-		return new Criterion() {
-			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().getAlignScore() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getAlignScore();
-			}
-
-			@Override
-			public String getName() {
-				return "Align-score";
-			}
-
-		};
-	}
 	public static Criterion rmsd() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null || result.getAlignment().getRmsd() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getRmsd();
+			public double get(CensusResult result) throws NoncomputableCriterionException {
+				if (result.getScoreList() == null || result.getScoreList().getRmsd() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getScoreList().getRmsd();
 			}
 
 			@Override
@@ -313,9 +243,9 @@ public abstract class Criterion {
 	public static Criterion identity() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getIdentity();
+			public double get(CensusResult result) throws NoncomputableCriterionException {
+				if (result.getScoreList() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getScoreList().getIdentity();
 			}
 
 			@Override
@@ -328,9 +258,9 @@ public abstract class Criterion {
 	public static Criterion similarity() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getSimilarity();
+			public double get(CensusResult result) throws NoncomputableCriterionException {
+				if (result.getScoreList() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getScoreList().getSimilarity();
 			}
 
 			@Override
@@ -343,9 +273,9 @@ public abstract class Criterion {
 	public static Criterion theta() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
 				if (result.getAxis() == null) throw new NoncomputableCriterionException("The case has a null getAxis()");
-				return result.getAxis().getTheta();
+				return result.getAxis().getAngle();
 			}
 
 			@Override
@@ -359,9 +289,8 @@ public abstract class Criterion {
 	public static Criterion epsilon() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
 				if (result.getAxis() == null) throw new NoncomputableCriterionException("The case has a null getAxis()");
-				if (result.getOrder() == null) throw new NoncomputableCriterionException("The case has a null getOrder()");
 				if (result.getOrder() < 2) throw new NoncomputableCriterionException("The case has a getOrder() of less than 2");
 				Double epsilon = result.getAxis().evaluateEpsilon(result.getOrder());
 				if (epsilon == null) throw new NoncomputableCriterionException("Could not determine epsilon");
@@ -380,7 +309,7 @@ public abstract class Criterion {
 	public static Criterion random() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
 				return random.nextFloat();
 			}
 
@@ -394,11 +323,11 @@ public abstract class Criterion {
 	public static Criterion screw() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAxis() == null || result.getAxis().getScrew() == null) {
+			public double get(CensusResult result) throws NoncomputableCriterionException {
+				if (result.getAxis() == null || result.getAxis().getParallel() == null) {
 					throw new NoncomputableCriterionException("The case has a null getAxis()");
 				}
-				return result.getAxis().getScrew();
+				return result.getAxis().getParallel();
 			}
 
 			@Override
@@ -409,30 +338,12 @@ public abstract class Criterion {
 		};
 	}
 	
-	public static Criterion helical() {
-		return new Criterion() {
-			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getFractionHelical() == null) {
-					throw new NoncomputableCriterionException("The case has a null getFractionHelical()");
-				}
-				return result.getFractionHelical();
-			}
-
-			@Override
-			public String getName() {
-				return "% helical";
-			}
-
-		};
-	}
-	
 	public static Criterion alignLength() {
 		return new Criterion() {
 			@Override
-			public double get(Result result) throws NoncomputableCriterionException {
-				if (result.getAlignment() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
-				return result.getAlignment().getAlignLength();
+			public double get(CensusResult result) throws NoncomputableCriterionException {
+				if (result.getScoreList() == null) throw new NoncomputableCriterionException("The case has a null getAlignment()");
+				return result.getScoreList().getAlignLength();
 			}
 
 			@Override

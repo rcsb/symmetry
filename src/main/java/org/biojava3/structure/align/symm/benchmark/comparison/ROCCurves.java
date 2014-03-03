@@ -131,24 +131,24 @@ public class ROCCurves {
 	 * @param symdOutput
 	 */
 	public static void runForSymD(File input, File output, boolean isUpdated) {
-		try {
-
-			// ROC curves
-			List<Criterion> symdCriteria = new ArrayList<Criterion>();
-			symdCriteria.add(Criterion.symdZScore());
-			symdCriteria.add(Criterion.tScore());
-			if (isUpdated) symdCriteria.add(Criterion.symDTMScore());
-			symdCriteria.add(Criterion.tmScore());
-			ROCCurves symdRocs = new ROCCurves(input, symdCriteria);
-			symdRocs.graph(output);
-
-			// print text
-			symdRocs.printMatrices(System.out);
-			symdRocs.printText();
-
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+//		try {
+//
+//			// ROC curves
+//			List<Criterion> symdCriteria = new ArrayList<Criterion>();
+//			symdCriteria.add(Criterion.symdZScore());
+//			symdCriteria.add(Criterion.tScore());
+//			if (isUpdated) symdCriteria.add(Criterion.symDTMScore());
+//			symdCriteria.add(Criterion.tmScore());
+//			ROCCurves symdRocs = new ROCCurves(input, symdCriteria);
+//			symdRocs.graph(output);
+//
+//			// print text
+//			symdRocs.printMatrices(System.out);
+//			symdRocs.printText();
+//
+//		} catch (IOException e) {
+//			throw new RuntimeException(e);
+//		}
 	}
 
 	/**

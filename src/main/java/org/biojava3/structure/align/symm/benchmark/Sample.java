@@ -165,7 +165,7 @@ public class Sample implements Serializable {
 		int nAgree = 0;
 		for (Case aCase : data) {
 			final boolean agree = aCase.getOrder() == aCase.getKnownOrder();
-			sb.append(aCase.getProtodomain() + ": " + (agree ? "agree" : "disagree")
+			sb.append(aCase.getAlignedUnit() + ": " + (agree ? "agree" : "disagree")
 					+ System.getProperty("line.seperator"));
 			if (agree) nAgree++;
 		}

@@ -9,7 +9,7 @@ import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava3.structure.align.symm.census2.Result;
+import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava3.structure.align.symm.order.OrderDetector;
 
@@ -30,22 +30,17 @@ public class OrderDetectorDeterminationAdaptor implements OrderDetermination {
 	}
 
 	@Override
-	public int getOrder(Result result) {
-		if (result.getAlignmentMapping() == null) {
+	public int getOrder(CensusResult result) {
+		if (result.getAlignment() == null) {
 			throw new IllegalArgumentException("Alignment mapping needed to use adaptor");
 		}
 		try {
-			Atom[] ca = cache.getAtoms(result.getScopId());
-			AFPChain afpChain = result.getAlignmentMapping().buildAfpChain(ca, StructureTools.cloneCAArray(ca));
-			return detector.calculateOrder(afpChain, ca);
-		} catch (StructureException e) {
-			logger.error(e);
-			return -1;
-		} catch (IOException e) {
-			logger.error(e);
-			return -1;
-		} catch (OrderDetectionFailedException e) {
-			logger.error(e);
+			Atom[] ca1 = cache.getAtoms(result.getId());
+			Atom[] ca2 = cache.getAtoms(result.getId());
+			AFPChain afpChain = result.getAlignment().buildAfpChain(ca1, ca2);
+			return detector.calculateOrder(afpChain, ca1);
+		} catch (Exception e) {
+			logger.error("Failed to get AFPChain from " + result.getId(), e);
 			return -1;
 		}
 	}

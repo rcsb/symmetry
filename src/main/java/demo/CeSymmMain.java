@@ -1,16 +1,18 @@
 package demo;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 import javax.swing.JOptionPane;
 
@@ -99,7 +101,13 @@ public class CeSymmMain {
 		List<String> names;
 		if(cli.hasOption("input")) {
 			// read from file
-			names = parseInputStructures(cli.getOptionValue("input"));
+			try {
+				names = parseInputStructures(cli.getOptionValue("input"));
+			} catch (FileNotFoundException e) {
+				System.err.println("Error: File not found: "+cli.getOptionValue("input"));
+				System.exit(1);
+				return;
+			}
 			// append cli arguments
 			names.addAll(Arrays.asList(args));
 		} else {
@@ -329,10 +337,18 @@ public class CeSymmMain {
 		optionOrder.put("version", optionNum++);
 
 		// Input file
-		options.addOption("i","input",true,"File listing whitespace-delimited query structures");
+		options.addOption( OptionBuilder.withLongOpt("input")
+				.hasArg(true)
+				.withArgName("file")
+				.withDescription("File listing whitespace-delimited query structures")
+				.create("i"));
 		optionOrder.put("input", optionNum++);
 		// Output formats
-		options.addOption("o","xml",true,"Output alignment as XML (use --xml=- for standard out)");
+		options.addOption( OptionBuilder.withLongOpt("xml")
+				.hasArg(true)
+				.withArgName("file")
+				.withDescription("Output alignment as XML (use --xml=- for standard out")
+				.create("o"));
 		optionOrder.put("xml", optionNum++);
 		options.addOption( OptionBuilder.withLongOpt("ce")
 				.hasArg(true)
@@ -462,11 +478,22 @@ public class CeSymmMain {
 
 	/**
 	 * Parse a whitespace-delimited file containing structure names
+	 * @throws FileNotFoundException 
 	 */
-	public static List<String> parseInputStructures(String filename) {
-		//TODO stub
+	public static List<String> parseInputStructures(String filename) throws FileNotFoundException {
+		File file = new File(filename);
+		Scanner s = new Scanner(file);
+
 		List<String> structures = new ArrayList<String>();
-		structures.add("1HIV");
+		while(s.hasNext()) {
+			String name = s.next();
+			if(name.startsWith("#")) {
+				//comment
+				s.nextLine();
+			} else {
+				structures.add(name);
+			}
+		}
 		return structures;
 	}
 

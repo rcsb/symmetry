@@ -1,9 +1,11 @@
 package demo;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -36,7 +38,11 @@ import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.order.OrderDetectionFailedException;
+import org.biojava3.structure.align.symm.census3.CensusResult;
+import org.biojava3.structure.align.symm.census3.CensusResultList;
+import org.biojava3.structure.align.symm.census3.CensusScoreList;
+import org.biojava3.structure.align.symm.census3.run.Census;
+import org.biojava3.structure.align.symm.census3.run.CensusJob;
 import org.biojava3.structure.align.symm.order.OrderDetector;
 import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 
@@ -176,23 +182,39 @@ public class CeSymmMain {
 		}
 
 		// Output formats
-		PrintStream xmlOut = null;
-		PrintStream fatcatOut = null;
-		PrintStream ceOut = null;
-		PrintStream tsvOut = null;
+		PrintWriter xmlOut = null;
+		PrintWriter fatcatOut = null;
+		PrintWriter ceOut = null;
+		PrintWriter tsvOut = null;
 		if(cli.hasOption("xml")) {
-			xmlOut = openOutputFile(cli.getOptionValue("xml"));
+			try {
+				xmlOut = openOutputFile(cli.getOptionValue("xml"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		if(cli.hasOption("fatcat")) {
-			fatcatOut = openOutputFile(cli.getOptionValue("fatcat"));
+			try {
+				fatcatOut = openOutputFile(cli.getOptionValue("fatcat"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		if(cli.hasOption("ce")) {
-			ceOut = openOutputFile(cli.getOptionValue("ce"));
+			try {
+				ceOut = openOutputFile(cli.getOptionValue("ce"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-		if(cli.hasOption("tsv")) {
-			tsvOut = openOutputFile(cli.getOptionValue("tsv"));
-		} else if(cli.hasOption("verbose")) {
-			tsvOut = openOutputFile("-");
+		try {
+			if(cli.hasOption("tsv")) {
+				tsvOut = openOutputFile(cli.getOptionValue("tsv"));
+			} else if(cli.hasOption("verbose")) {
+				tsvOut = openOutputFile("-");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		// TODO pdbOut (needs individual files)
 
@@ -208,49 +230,92 @@ public class CeSymmMain {
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
 
+		CensusResultList results = new CensusResultList();
+
+		//print header
+		System.out.println("" +
+				"Name\t" +
+				"Sig\t" +
+				"MinOrder\t" +
+				"TMscore\t" +
+				"ZScore\t" +
+				"CEScore\t" +
+				"PValue\t" +
+				"RMSD\t" +
+				"Length\t" +
+				"Coverage\t" +
+				"%ID\t" +
+				"%Sim\t" +
+				"");
+
 		for(String name: names) {
 			try {
 
+				CensusJob calc = CensusJob.setUpJob(name, 1, Census.AlgorithmGiver.getDefault(),
+						Census.getDefaultAfpChainCensusRestrictor(), cache);
+				calc.setRecordAlignmentMapping(true);
+				calc.setStoreAfpChain(true);
+				calc.setOrderDetector(detector);
+
+				CensusResult result = calc.call();
+				results.add(result);
+
+				CensusScoreList scores = result.getScoreList();
+
+
 				// Perform alignment to determine axis
-				Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name,null,cache));
+				Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(result.getAlignedUnit(),null,cache));
 				Atom[] ca2 = StructureTools.cloneCAArray(ca1);
-				CeSymm ce = new CeSymm();
-				AFPChain alignment = ce.align(ca1, ca2);
-				alignment.setName1(name);
-				alignment.setName2(name);
-				RotationAxis axis = new RotationAxis(alignment);
+				AFPChain alignment = calc.getAfpChain();
+				//alignment.setName1(name);
+				//alignment.setName2(name);
+				RotationAxis axis = result.getAxis().toRotationAxis();
 
 				// Display alignment
 				if( displayAlignment ) {
 					StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(alignment, ca1, ca2);
 					jmol.evalString(axis.getJmolScript(ca1));
 				}
-
-				// Significance
+				
 				boolean significant = false;
-				if(useOrder) {
-					significant = ce.isSignificant();
+				if( useOrder ) {
+					significant = CeSymm.isSignificant(alignment, detector, ca1);
 				} else {
-					//TODO remove hard coded threshold
-					significant = alignment.getTMScore() >= .4;
+					//TODO don't hard code this?
+					significant = scores.getTmScore() >= 0.4;
 				}
 
-				// Order
-				int symmNr = 1;
-				if( significant ) {
-					try {
-						symmNr = detector.calculateOrder(alignment, ca1);
-					} catch (OrderDetectionFailedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
 
-				// Print result
-				System.out.format("%s\tTMscore %f\tOrder %d\tSignificant %s%n",name,alignment.getTMScore(),symmNr,significant?"Y":"N");
-				// Output
-				// TODO implement output
-				System.out.println(alignment.toFatcat(ca1,ca2));
+				System.out.format("%s\t%s\t%d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%d\t%.1f\t%.1f%n",
+						alignment.getName1(),
+						(significant?"Y":"N"),
+						result.getOrder(),
+						scores.getTmScore(),
+						scores.getzScore(),
+						alignment.getAlignScore(),
+						alignment.getProbability(),
+						scores.getRmsd(),
+						scores.getAlignLength(),
+						scores.getIdentity()*100,
+						scores.getSimilarity()*100
+						);
+
+				// Outputs
+				if(tsvOut != null) {
+					tsvOut.write(alignment.toDBSearchResult());
+					tsvOut.println("//");
+					tsvOut.flush();
+				}
+				if(fatcatOut != null) {
+					fatcatOut.write(alignment.toFatcat(ca1,ca2));
+					fatcatOut.println("//");
+					fatcatOut.flush();
+				}
+				if(ceOut != null) {
+					ceOut.write(alignment.toCE(ca1,ca2));
+					ceOut.println("//");
+					ceOut.flush();
+				}
 
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -259,31 +324,42 @@ public class CeSymmMain {
 			}
 		}
 
-		// Close outpus
+		// outputs
 		if(xmlOut != null) {
-			xmlOut.close();
+			try {
+				xmlOut.write(results.toXML());
+				xmlOut.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		if(fatcatOut != null) {
 			fatcatOut.close();
 		}
 		if(ceOut != null) {
 			ceOut.close();
+
 		}
 		if(tsvOut != null) {
 			tsvOut.close();
 		}
 	}
 
+	private static char[] toCeSymmResult() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * Opens 'filename' for writing.
 	 * @param filename Name of output file, or '-' for standard out
+	 * @throws IOException 
 	 */
-	private static PrintStream openOutputFile(String filename) {
+	private static PrintWriter openOutputFile(String filename) throws IOException {
 		if(filename.equals("-")) {
-			return System.out;
+			return new PrintWriter(System.out);
 		}
-		// TODO Auto-generated method stub
-		return System.out;
+		return new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 	}
 
 	/**
@@ -494,6 +570,7 @@ public class CeSymmMain {
 				structures.add(name);
 			}
 		}
+		s.close();
 		return structures;
 	}
 

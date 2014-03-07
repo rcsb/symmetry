@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:CensusResultList xmlns:ns2="http://source.rcsb.org">
+    <entry id="d1kcwa6">
+        <alignedUnit>1kcw.A_938-977,A_997-1026</alignedUnit>
+        <alignment>129=75=136 66=121=67=122=68=123=69=124=70=125=71=126=72=127=73=128=74=135 133=76=137 134=77=11 105=52=85=51=84=50=83=49=82=48=81=47=80=46=79=13 111=55=112=56=113=57=114=58=115=59 54=107=54 53=106=53 65=120=64=119=63=118=62=117=61=116=60 78=12</alignment>
+        <axis>
+            <angle>3.079014</angle>
+            <axis z="0.36044785" y="0.5946005" x="0.71869856"/>
+            <origin z="-30.551208" y="-39.646156" x="48.122738"/>
+            <orthogonal>138.79875</orthogonal>
+            <parallel>0.7654455</parallel>
+        </axis>
+        <group>C2</group>
+        <scores>
+            <alignLength>153</alignLength>
+            <gapLength>91</gapLength>
+            <identity>0.019607844</identity>
+            <rmsd>4.595799</rmsd>
+            <similarity>0.078431375</similarity>
+            <tmScore>0.24091585</tmScore>
+            <zScore>1.99</zScore>
+        </scores>
+    </entry>
+    <meanSecondsTaken>NaN</meanSecondsTaken>
+    <startingTime>2014-03-07 12:41:30</startingTime>
+</ns2:CensusResultList>

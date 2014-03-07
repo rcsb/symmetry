@@ -134,8 +134,7 @@ public class CensusTest {
 	
 	@Test
 	public void testHard() throws IOException {
-//		File actualFile = File.createTempFile("actualresult2", "xml");
-		File actualFile = new File("actualrestuldf2.xml");
+		File actualFile = File.createTempFile("actualresult2", "xml");
 		Census census = new TinyCensus("d1kcwa6");
 		census.setCache(ResourceList.get().getCache());
 		census.setOutputWriter(actualFile);

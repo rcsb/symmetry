@@ -40,6 +40,7 @@ import org.biojava.bio.structure.ResidueRange;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.SubstructureIdentifier;
 import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
@@ -148,6 +149,9 @@ public class Protodomain {
 	public static Protodomain fromAfpChain(String enclosingName, AFPChain afpChain, Atom[] ca,
 			int numBlocks, int chainIndex, AtomCache cache) throws ProtodomainCreationException {
 		StructureName name = new StructureName(enclosingName);
+		
+		//SubstructureIdentifier sid = mew SubstructureIdentifier(enclosingName);
+		
 		List<String> domainRanges;
 		if (name.isScopName()) {
 			// SCOP
@@ -156,7 +160,7 @@ public class Protodomain {
 			// chain
 			domainRanges = new ArrayList<String>();
 			domainRanges.add(name.getChainId() + ":");
-		} else {
+		} else if ( name.isPdbId()){
 			// whole PDB Id
 			domainRanges = new ArrayList<String>();
 			Set<String> chains = new HashSet<String>();
@@ -164,8 +168,13 @@ public class Protodomain {
 				chains.add(atom.getGroup().getChainId());
 			}
 			for (String chain : chains) domainRanges.add(chain + ":");
+		} else if (  name.hasRanges()){
+			domainRanges = name.getRanges();
+		} else {
+			throw new ProtodomainCreationException(enclosingName, "","Don't know how to interpret " + enclosingName + " !");
 		}
 		return fromAfpChain(name.getPdbId().toLowerCase(), enclosingName, domainRanges, afpChain, ca, numBlocks, chainIndex, cache);
+		
 	}
 
 

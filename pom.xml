@@ -161,14 +161,21 @@
 							<filters>
 								<filter>
 									<artifact>net.sourceforge.jmol:jmol</artifact>
-									<includes>
-										<!-- Jmol includes conflicting CLI 1.1 -->
-										<include>org/apache/commons/cli</include>
-										<include>org/junit/**</include>
-									</includes>
 									<excludes>
-										<exclude>org/junit/experimental/**</exclude>
-										<exclude>org/junit/runners/**</exclude>
+										<exclude>org/apache/commons/cli/**</exclude>
+										<exclude>javax/vecmath/**</exclude>
+									</excludes>
+								</filter>
+								<filter>
+									<artifact>commons-beanutils:commons-beanutils</artifact>
+									<excludes>
+										<exclude>org/apache/commons/collections/**</exclude>
+									</excludes>
+								</filter>
+								<filter>
+									<artifact>org.biojava:*</artifact>
+									<excludes>
+										<exclude>demo/**</exclude>
 									</excludes>
 								</filter>
 								<filter>

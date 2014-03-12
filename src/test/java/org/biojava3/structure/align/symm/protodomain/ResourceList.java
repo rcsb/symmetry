@@ -88,7 +88,7 @@ public class ResourceList {
 		public int differenceFound(Difference difference) {
 			Node controlNode = difference.getControlNodeDetail().getNode();
 			String name = null;
-			if (controlNode != null) {
+			if (controlNode != null && controlNode.getParentNode() != null) {
 				name = controlNode.getParentNode().getNodeName();
 			}
 			for (String ignoredName : ignoredNames) {

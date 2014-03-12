@@ -352,27 +352,31 @@ public class CeSymm extends AbstractStructureAlignment implements
 		this.refineResult = refineResult;
 	}
 
-	public boolean isSignificant() throws StructureException {
+	public static boolean isSignificant(AFPChain afpChain,OrderDetector orderDetector, Atom[] ca1) throws StructureException {
 
 		// TM-score cutoff
 		if (afpChain.getTMScore() < 0.4) return false;
 
 		// sequence-function order cutoff
-		if (this.order == -1) {
+		int order = 1;
 			try {
-				order = this.orderDetector.calculateOrder(afpChain, ca1);
+				order = orderDetector.calculateOrder(afpChain, ca1);
 			} catch (OrderDetectionFailedException e) {
 				e.printStackTrace();
 				// try the other method
 			}
-		}
+
 		if (order > 1) return true;
 
 		// angle order cutoff
 		RotationAxis rot = new RotationAxis(afpChain);
-		int theOrder = rot.guessOrderFromAngle(1.0 * Calc.radiansPerDegree, 8);
-		if (theOrder > 1) return true;
+		order = rot.guessOrderFromAngle(1.0 * Calc.radiansPerDegree, 8);
+		if (order > 1) return true;
 		// asymmetric
 		return false;
+	}
+	
+	public boolean isSignificant() throws StructureException {
+		return CeSymm.isSignificant(this.afpChain,this.orderDetector,this.ca1);
 	}
 }

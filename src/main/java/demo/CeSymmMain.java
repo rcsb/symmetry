@@ -12,8 +12,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingFormatArgumentException;
 import java.util.Scanner;
 
 import javax.swing.JOptionPane;
@@ -28,11 +30,14 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.gui.DisplayAFP;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.bio.structure.align.model.AfpChainWriter;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.align.util.UserConfiguration;
@@ -70,6 +75,9 @@ public class CeSymmMain {
 			public int compare(Option o1, Option o2) {
 				Integer i1 = optionOrder.get(o1.getLongOpt());
 				Integer i2 = optionOrder.get(o2.getLongOpt());
+				// Check that we didn't miss any options setting up optionOrder
+				assert i1!=null : o1.getLongOpt();
+				assert i2!=null : o2.getLongOpt();
 				return i1.compareTo(i2);
 			}
 		} );
@@ -183,6 +191,7 @@ public class CeSymmMain {
 
 		// Output formats
 		PrintWriter xmlOut = null;
+		PrintWriter htmlOut = null;
 		PrintWriter fatcatOut = null;
 		PrintWriter ceOut = null;
 		PrintWriter tsvOut = null;
@@ -190,6 +199,15 @@ public class CeSymmMain {
 			try {
 				xmlOut = openOutputFile(cli.getOptionValue("xml"));
 			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		if(cli.hasOption("html")) {
+			try {
+				htmlOut = openOutputFile(cli.getOptionValue("html"));
+				htmlOut.write(htmlHeader());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -216,7 +234,12 @@ public class CeSymmMain {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		// TODO pdbOut (needs individual files)
+		
+		String pdbFormat = null;
+		if(cli.hasOption("pdb")) {
+			String filespec = cli.getOptionValue("pdb");
+			pdbFormat = createPDBFilenameFormatString(filespec);
+		}
 
 		// Done parsing arguments
 
@@ -264,7 +287,7 @@ public class CeSymmMain {
 
 
 				// Perform alignment to determine axis
-				Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(result.getAlignedUnit(),null,cache));
+				Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(result.getId(),null,cache));
 				Atom[] ca2 = StructureTools.cloneCAArray(ca1);
 				AFPChain alignment = calc.getAfpChain();
 				//alignment.setName1(name);
@@ -302,9 +325,15 @@ public class CeSymmMain {
 
 				// Outputs
 				if(tsvOut != null) {
-					tsvOut.write(alignment.toDBSearchResult());
+					tsvOut.write(AfpChainWriter.toAlignedPairs(alignment, ca1, ca2));
 					tsvOut.println("//");
 					tsvOut.flush();
+				}
+				if(htmlOut != null) {
+					htmlOut.write("<h3>"+name+"</h3>\n");
+					htmlOut.write("<pre>\n");
+					htmlOut.write(AfpChainWriter.toWebSiteDisplay(alignment, ca1, ca2));
+					htmlOut.write("</pre>\n");
 				}
 				if(fatcatOut != null) {
 					fatcatOut.write(alignment.toFatcat(ca1,ca2));
@@ -315,6 +344,16 @@ public class CeSymmMain {
 					ceOut.write(alignment.toCE(ca1,ca2));
 					ceOut.println("//");
 					ceOut.flush();
+				}
+				if(pdbFormat != null) {
+					Structure s = DisplayAFP.createArtificalStructure(alignment, ca1, ca2);
+					String filename = String.format(pdbFormat,name);
+					PrintWriter pdbOut = openOutputFile(filename);
+
+					String pdb = s.toPDB();
+					pdbOut.write(pdb);
+
+					pdbOut.close();
 				}
 
 			} catch (IOException e) {
@@ -333,6 +372,10 @@ public class CeSymmMain {
 				e.printStackTrace();
 			}
 		}
+		if(htmlOut != null) {
+			htmlOut.write(htmlFooter());
+			htmlOut.close();
+		}
 		if(fatcatOut != null) {
 			fatcatOut.close();
 		}
@@ -345,9 +388,101 @@ public class CeSymmMain {
 		}
 	}
 
-	private static char[] toCeSymmResult() {
-		// TODO Auto-generated method stub
-		return null;
+
+	/**
+	 * @param pdbFormat
+	 * @param filespec
+	 * @return
+	 */
+	private static String createPDBFilenameFormatString( String filespec) {
+		String pdbFormat;
+		if(filespec.isEmpty()) {
+			filespec = ".";
+		}
+		File pdbOutDir = new File(filespec);
+		// 1) It is a directory. Use default filenames
+		if(pdbOutDir.isDirectory()) { //should also cover ""
+			pdbFormat = new File(pdbOutDir,"%s.cesymm.pdb").getPath();
+		} else {
+			// Split into file/directory & check for existence
+			String name = pdbOutDir.getName();
+			assert(!name.isEmpty());
+
+			String parent = pdbOutDir.getParent();
+			pdbOutDir = new File(parent);
+			if(!pdbOutDir.isDirectory() || !pdbOutDir.canWrite()) {
+				System.err.println("Error: unable to write to "+filespec);
+				System.exit(1);
+				return null;
+			}
+			try {
+				String.format(filespec); // throws exception if filespec has "%s"
+				// 2) Not a format string. Append structure name and extension
+				pdbFormat = filespec+".%s.pdb";
+			} catch(MissingFormatArgumentException e) {
+				// 3) The filename contains %s, making it a valid format string
+				try {
+					String.format(filespec,"");
+					pdbFormat = filespec;
+				} catch(IllegalFormatException f) {
+					System.err.println("Illegal pdb formating string (use a single %s): "+filespec);
+					System.exit(1);
+					return null;
+				}
+			}
+		}
+		return pdbFormat;
+	}
+
+
+	private static String htmlHeader() {
+		StringBuilder html = new StringBuilder();
+		html.append("<html>\n");
+		html.append("  <head>\n");
+		html.append("    <title>CeSymm</title>\n");
+		html.append("    <style type=\"text/css\">\n" +
+				".aligmentDisp span { color:#999999; }\n" + 
+				"span.m { color:#008800; }\n" + 
+				"span.dm, #alignment span.na { color: #A66A00; } \n" + 
+				"span.sm { color: #D460CF; }\n" + 
+				"span.qg, #alignment span.hg { color: #104BA9; }\n" + 
+				".aligmentDisp { border-style: solid; border-width: 1px; font-family: \"Courier New\", Courier, monospace; font-size: 1.1em; margin: 10px; overflow-x:auto; padding:10px; width:90%; white-space: nowrap; }\n" + 
+				"\n" + 
+				".alignmentBlock11 { background-color: rgb(255, 165, 0); }\n" + 
+				".alignmentBlock12 { background-color: rgb(255, 229, 0); }\n" + 
+				".alignmentBlock13 { background-color: rgb(217, 255, 0); }\n" + 
+				".alignmentBlock14 { background-color: rgb(154, 255, 0); }\n" + 
+				".alignmentBlock15 { background-color: rgb( 90, 255, 0); }\n" + 
+				"\n" + 
+				".alignmentBox11   { background-color: rgb(255, 165, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+				".alignmentBox12   { background-color: rgb(255, 229, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+				".alignmentBox13   { background-color: rgb(217, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+				".alignmentBox14   { background-color: rgb(154, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+				".alignmentBox15   { background-color: rgb( 90, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+				"\n" + 
+				".alignmentBlock21 { background-color: rgb(0, 255, 255); }\n" + 
+				".alignmentBlock22 { background-color: rgb(0, 178, 255); }\n" + 
+				".alignmentBlock23 { background-color: rgb(0, 102, 255); }\n" + 
+				".alignmentBlock24 { background-color: rgb(0,  25, 255); }\n" + 
+				".alignmentBlock25 { background-color: rgb(51, 0, 255);  } \n" + 
+				"\n" + 
+				".alignmentBox21   { background-color: rgb(0, 255, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+				".alignmentBox22   { background-color: rgb(0, 178, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+				".alignmentBox23   { background-color: rgb(0, 102, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+				".alignmentBox24   { background-color: rgb(0,  25, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+				".alignmentBox25   { background-color: rgb(51,  0, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+				"    </style>\n");
+		html.append("  </head>\n");
+		html.append("  <body>\n");
+		html.append("    <div id=\"mainContent\">\n");
+		return html.toString();
+	}
+	private static String htmlFooter() {
+		StringBuilder html = new StringBuilder();
+		html.append("    </div>");
+		html.append("  </body>\n");
+		html.append("</html>\n");
+		return html.toString();
 	}
 
 	/**
@@ -423,9 +558,15 @@ public class CeSymmMain {
 		options.addOption( OptionBuilder.withLongOpt("xml")
 				.hasArg(true)
 				.withArgName("file")
-				.withDescription("Output alignment as XML (use --xml=- for standard out")
+				.withDescription("Output alignment as XML (use --xml=- for standard out).")
 				.create("o"));
 		optionOrder.put("xml", optionNum++);
+		options.addOption( OptionBuilder.withLongOpt("html")
+				.hasArg(true)
+				.withArgName("file")
+				.withDescription("Output alignment as HTML output")
+				.create());
+		optionOrder.put("html", optionNum++);
 		options.addOption( OptionBuilder.withLongOpt("ce")
 				.hasArg(true)
 				.withArgName("file")
@@ -438,12 +579,15 @@ public class CeSymmMain {
 				.withDescription("Output alignment as FATCAT output")
 				.create());
 		optionOrder.put("fatcat", optionNum++);
-		//TODO pdb output
-		//		options.addOption( OptionBuilder.withLongOpt("pdb")
-		//				.hasArg(true)
-		//		.withArgName("file")
-		//				.withDescription("Output alignment as two-model PDB file")
-		//				.create());
+		options.addOption( OptionBuilder.withLongOpt("pdb")
+				.hasArg(true)
+				.withArgName("dir")
+				.withDescription("Output each alignment as a two-model PDB file. "
+						+ "The argument may be a directory or a formatting string, "
+						+ "where \"%s\" will be replaced with the structure name. "
+						+ "[default \"%s.cesymm.pdb\"]")
+				.create());
+		optionOrder.put("pdb", optionNum++);
 		options.addOption( OptionBuilder.withLongOpt("tsv")
 				.hasArg(true)
 				.withArgName("file")

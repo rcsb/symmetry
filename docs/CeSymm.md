@@ -27,10 +27,11 @@ Short Option | Long Option | Description
 -h  | --help            | Print usage information
     | --version         | Print CE-Symm version
 -i  | --input=file      | File listing whitespace-delimited query structures
--o  | --xml=file        | Output alignment as XML
-    | --fatcat=file     | Output alignment as FATCAT output
+-o  | --xml=file        | Output alignment as XML (use --xml=- for standard out)
+    | --html=file       | Output alignment as HTML output
     | --ce=file         | Output alignment as CE output
-    | --pdb=file        | Output alignment as two-model PDB file
+    | --fatcat=file     | Output alignment as FATCAT output
+    | --pdb=file        | Output each alignment as a two-model PDB file. The argument may be a directory or a formatting string, where "%s" will be replaced with the structure name. [default "%s.cesymm.pdb"]
     | --tsv=file        | Output alignment as tab-separated file
 -v  | --verbose         | Print detailed output (equivalent to "--tsv=-")
 -j  | --show3d          | Force jMol display for each structure [default for <10 structures when specified on command line]
@@ -78,6 +79,26 @@ display by default. Use <tt>--jmol</tt> to override this behavior.
 runCESymm.sh --input=queries.txt --xml=output.xml
 ```
 
+Output
+------
+
+By default, the program will output some basic statistics about each alignment
+to standard out in a simple tab-delimited format.
+
+Additional information can be output in the following formats. Most formats
+represent the symmetry as an alignment from the structure to itself.
+
+* __CE__: A single file containing all alignments in CE's traditional output format,
+  with a line containing only '//' to separate records.
+* __FATCAT__: A single file containing all alignments in FATCAT's traditional output
+   format, with a line containing only '//' to separate records.
+* __TSV__: A list of aligned residues for each structure,  with a line containing 
+  only '//' to separate records.
+* __HTML__: A nicely colored display of the alignments.
+* __XML__: All the alignments in a custom XML format
+* __PDB__: A PDB file containing the input structure as one model, and a rotated
+  input structure as another model.
+
 
 Examples
 --------
@@ -110,6 +131,11 @@ runCESymm.sh --xml=output.xml 1GEN.A 1TL2.A 1RI6.A
 # Lines beginning with '#' are ignored.
 runCESymm.sh --input=queries.txt --xml=output.xml
 
+# Alignments can be output as two-model PDB files.
+# The --pdb option can take a directory
+runCESymm.sh --input=queries.txt --pdb=.
+# It can also take a format string, where "%s" gets substituted for the structure name.
+runCESymm.sh --input=queries.txt --pdb=%s.cesymm.pdb
 ```
 
 

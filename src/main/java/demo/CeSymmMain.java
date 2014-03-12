@@ -60,6 +60,7 @@ import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
  */
 public class CeSymmMain {
 
+
 	public static void main(String[] args) {
 		// Begin argument parsing
 		final String usage = "[OPTIONS] [structures...]";
@@ -190,59 +191,72 @@ public class CeSymmMain {
 		}
 
 		// Output formats
-		PrintWriter xmlOut = null;
-		PrintWriter htmlOut = null;
-		PrintWriter fatcatOut = null;
-		PrintWriter ceOut = null;
-		PrintWriter tsvOut = null;
+		List<CeSymmWriter> writers = new ArrayList<CeSymmWriter>();
+
+		try {
+			//default stdout output
+			writers.add(new SimpleWriter("-",useOrder?detector:null));
+		} catch (IOException e1) {}
+
 		if(cli.hasOption("xml")) {
+			String filename = cli.getOptionValue("xml");
 			try {
-				xmlOut = openOutputFile(cli.getOptionValue("xml"));
+				writers.add(new XMLWriter(filename));
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.err.println("Error: Ignoring file "+filename+".");
+				System.err.println(e.getMessage());
 			}
 		}
 		if(cli.hasOption("html")) {
+			String filename = cli.getOptionValue("html");
 			try {
-				htmlOut = openOutputFile(cli.getOptionValue("html"));
-				htmlOut.write(htmlHeader());
+				writers.add(new HTMLWriter(filename));
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.err.println("Error: Ignoring file "+filename+".");
+				System.err.println(e.getMessage());
 			}
 		}
 		if(cli.hasOption("fatcat")) {
+			String filename = cli.getOptionValue("fatcat");
 			try {
-				fatcatOut = openOutputFile(cli.getOptionValue("fatcat"));
+				writers.add(new FatcatWriter(filename));
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.err.println("Error: Ignoring file "+filename+".");
+				System.err.println(e.getMessage());
 			}
 		}
 		if(cli.hasOption("ce")) {
+			String filename = cli.getOptionValue("ce");
 			try {
-				ceOut = openOutputFile(cli.getOptionValue("ce"));
+				writers.add(new CeWriter(filename));
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.err.println("Error: Ignoring file "+filename+".");
+				System.err.println(e.getMessage());
 			}
 		}
-		try {
-			if(cli.hasOption("tsv")) {
-				tsvOut = openOutputFile(cli.getOptionValue("tsv"));
-			} else if(cli.hasOption("verbose")) {
-				tsvOut = openOutputFile("-");
+
+		if(cli.hasOption("tsv")) {
+			String filename = cli.getOptionValue("tsv");
+			try {
+				writers.add(new TSVWriter(filename));
+			} catch (IOException e) {
+				System.err.println("Error: Ignoring file "+filename+".");
+				System.err.println(e.getMessage());
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
+		} else if(cli.hasOption("verbose")) {
+			try {
+				writers.add(new TSVWriter("-"));
+			} catch (IOException e) {} //shouldn't happen
 		}
-		
-		String pdbFormat = null;
+
 		if(cli.hasOption("pdb")) {
 			String filespec = cli.getOptionValue("pdb");
-			pdbFormat = createPDBFilenameFormatString(filespec);
+			writers.add(new PDBWriter(filespec));
 		}
 
 		// Done parsing arguments
 
+		// Configure atomcache
 		UserConfiguration cacheConfig = new UserConfiguration();
 		if(pdbFilePath != null && !pdbFilePath.isEmpty()) {
 			cacheConfig.setPdbFilePath(pdbFilePath);
@@ -253,24 +267,19 @@ public class CeSymmMain {
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
 
+
 		CensusResultList results = new CensusResultList();
 
-		//print header
-		System.out.println("" +
-				"Name\t" +
-				"Sig\t" +
-				"MinOrder\t" +
-				"TMscore\t" +
-				"ZScore\t" +
-				"CEScore\t" +
-				"PValue\t" +
-				"RMSD\t" +
-				"Length\t" +
-				"Coverage\t" +
-				"%ID\t" +
-				"%Sim\t" +
-				"");
+		//print headers
+		for(CeSymmWriter writer: writers) {
+			try {
+				writer.writeHeader();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
+		// Run jobs
 		for(String name: names) {
 			try {
 
@@ -282,9 +291,6 @@ public class CeSymmMain {
 
 				CensusResult result = calc.call();
 				results.add(result);
-
-				CensusScoreList scores = result.getScoreList();
-
 
 				// Perform alignment to determine axis
 				Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(result.getId(),null,cache));
@@ -299,63 +305,15 @@ public class CeSymmMain {
 					StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(alignment, ca1, ca2);
 					jmol.evalString(axis.getJmolScript(ca1));
 				}
-				
-				boolean significant = false;
-				if( useOrder ) {
-					significant = CeSymm.isSignificant(alignment, detector, ca1);
-				} else {
-					//TODO don't hard code this?
-					significant = scores.getTmScore() >= 0.4;
-				}
 
-
-				System.out.format("%s\t%s\t%d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%d\t%.1f\t%.1f%n",
-						alignment.getName1(),
-						(significant?"Y":"N"),
-						result.getOrder(),
-						scores.getTmScore(),
-						scores.getzScore(),
-						alignment.getAlignScore(),
-						alignment.getProbability(),
-						scores.getRmsd(),
-						scores.getAlignLength(),
-						scores.getIdentity()*100,
-						scores.getSimilarity()*100
-						);
-
-				// Outputs
-				if(tsvOut != null) {
-					tsvOut.write(AfpChainWriter.toAlignedPairs(alignment, ca1, ca2));
-					tsvOut.println("//");
-					tsvOut.flush();
+				// Output alignments
+				for(CeSymmWriter writer: writers) {
+					try {
+						writer.writeAlignment(alignment, result, ca1, ca2);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-				if(htmlOut != null) {
-					htmlOut.write("<h3>"+name+"</h3>\n");
-					htmlOut.write("<pre>\n");
-					htmlOut.write(AfpChainWriter.toWebSiteDisplay(alignment, ca1, ca2));
-					htmlOut.write("</pre>\n");
-				}
-				if(fatcatOut != null) {
-					fatcatOut.write(alignment.toFatcat(ca1,ca2));
-					fatcatOut.println("//");
-					fatcatOut.flush();
-				}
-				if(ceOut != null) {
-					ceOut.write(alignment.toCE(ca1,ca2));
-					ceOut.println("//");
-					ceOut.flush();
-				}
-				if(pdbFormat != null) {
-					Structure s = DisplayAFP.createArtificalStructure(alignment, ca1, ca2);
-					String filename = String.format(pdbFormat,name);
-					PrintWriter pdbOut = openOutputFile(filename);
-
-					String pdb = s.toPDB();
-					pdbOut.write(pdb);
-
-					pdbOut.close();
-				}
-
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (StructureException e) {
@@ -363,139 +321,24 @@ public class CeSymmMain {
 			}
 		}
 
-		// outputs
-		if(xmlOut != null) {
+		// Output footers
+		for(CeSymmWriter writer: writers) {
 			try {
-				xmlOut.write(results.toXML());
-				xmlOut.close();
+				writer.writeFooter(results);
 			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		if(htmlOut != null) {
-			htmlOut.write(htmlFooter());
-			htmlOut.close();
-		}
-		if(fatcatOut != null) {
-			fatcatOut.close();
-		}
-		if(ceOut != null) {
-			ceOut.close();
-
-		}
-		if(tsvOut != null) {
-			tsvOut.close();
-		}
 	}
 
 
-	/**
-	 * @param pdbFormat
-	 * @param filespec
-	 * @return
-	 */
-	private static String createPDBFilenameFormatString( String filespec) {
-		String pdbFormat;
-		if(filespec.isEmpty()) {
-			filespec = ".";
-		}
-		File pdbOutDir = new File(filespec);
-		// 1) It is a directory. Use default filenames
-		if(pdbOutDir.isDirectory()) { //should also cover ""
-			pdbFormat = new File(pdbOutDir,"%s.cesymm.pdb").getPath();
-		} else {
-			// Split into file/directory & check for existence
-			String name = pdbOutDir.getName();
-			assert(!name.isEmpty());
-
-			String parent = pdbOutDir.getParent();
-			pdbOutDir = new File(parent);
-			if(!pdbOutDir.isDirectory() || !pdbOutDir.canWrite()) {
-				System.err.println("Error: unable to write to "+filespec);
-				System.exit(1);
-				return null;
-			}
-			try {
-				String.format(filespec); // throws exception if filespec has "%s"
-				// 2) Not a format string. Append structure name and extension
-				pdbFormat = filespec+".%s.pdb";
-			} catch(MissingFormatArgumentException e) {
-				// 3) The filename contains %s, making it a valid format string
-				try {
-					String.format(filespec,"");
-					pdbFormat = filespec;
-				} catch(IllegalFormatException f) {
-					System.err.println("Illegal pdb formating string (use a single %s): "+filespec);
-					System.exit(1);
-					return null;
-				}
-			}
-		}
-		return pdbFormat;
-	}
 
 
-	private static String htmlHeader() {
-		StringBuilder html = new StringBuilder();
-		html.append("<html>\n");
-		html.append("  <head>\n");
-		html.append("    <title>CeSymm</title>\n");
-		html.append("    <style type=\"text/css\">\n" +
-				".aligmentDisp span { color:#999999; }\n" + 
-				"span.m { color:#008800; }\n" + 
-				"span.dm, #alignment span.na { color: #A66A00; } \n" + 
-				"span.sm { color: #D460CF; }\n" + 
-				"span.qg, #alignment span.hg { color: #104BA9; }\n" + 
-				".aligmentDisp { border-style: solid; border-width: 1px; font-family: \"Courier New\", Courier, monospace; font-size: 1.1em; margin: 10px; overflow-x:auto; padding:10px; width:90%; white-space: nowrap; }\n" + 
-				"\n" + 
-				".alignmentBlock11 { background-color: rgb(255, 165, 0); }\n" + 
-				".alignmentBlock12 { background-color: rgb(255, 229, 0); }\n" + 
-				".alignmentBlock13 { background-color: rgb(217, 255, 0); }\n" + 
-				".alignmentBlock14 { background-color: rgb(154, 255, 0); }\n" + 
-				".alignmentBlock15 { background-color: rgb( 90, 255, 0); }\n" + 
-				"\n" + 
-				".alignmentBox11   { background-color: rgb(255, 165, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-				".alignmentBox12   { background-color: rgb(255, 229, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-				".alignmentBox13   { background-color: rgb(217, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-				".alignmentBox14   { background-color: rgb(154, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-				".alignmentBox15   { background-color: rgb( 90, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-				"\n" + 
-				".alignmentBlock21 { background-color: rgb(0, 255, 255); }\n" + 
-				".alignmentBlock22 { background-color: rgb(0, 178, 255); }\n" + 
-				".alignmentBlock23 { background-color: rgb(0, 102, 255); }\n" + 
-				".alignmentBlock24 { background-color: rgb(0,  25, 255); }\n" + 
-				".alignmentBlock25 { background-color: rgb(51, 0, 255);  } \n" + 
-				"\n" + 
-				".alignmentBox21   { background-color: rgb(0, 255, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-				".alignmentBox22   { background-color: rgb(0, 178, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-				".alignmentBox23   { background-color: rgb(0, 102, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-				".alignmentBox24   { background-color: rgb(0,  25, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-				".alignmentBox25   { background-color: rgb(51,  0, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-				"    </style>\n");
-		html.append("  </head>\n");
-		html.append("  <body>\n");
-		html.append("    <div id=\"mainContent\">\n");
-		return html.toString();
-	}
-	private static String htmlFooter() {
-		StringBuilder html = new StringBuilder();
-		html.append("    </div>");
-		html.append("  </body>\n");
-		html.append("</html>\n");
-		return html.toString();
-	}
 
-	/**
-	 * Opens 'filename' for writing.
-	 * @param filename Name of output file, or '-' for standard out
-	 * @throws IOException 
-	 */
-	private static PrintWriter openOutputFile(String filename) throws IOException {
-		if(filename.equals("-")) {
-			return new PrintWriter(System.out);
-		}
-		return new PrintWriter(new BufferedWriter(new FileWriter(filename)));
-	}
+
+
+
 
 	/**
 	 * Prompts the user for an input structure using a dialog box
@@ -586,7 +429,7 @@ public class CeSymmMain {
 						+ "The argument may be a directory or a formatting string, "
 						+ "where \"%s\" will be replaced with the structure name. "
 						+ "[default \"%s.cesymm.pdb\"]")
-				.create());
+						.create());
 		optionOrder.put("pdb", optionNum++);
 		options.addOption( OptionBuilder.withLongOpt("tsv")
 				.hasArg(true)
@@ -788,5 +631,282 @@ public class CeSymmMain {
 		}
 
 		return detector;
+	}
+
+	// Output formats
+
+	/**
+	 * Parent class for all output formats
+	 * All methods are empty stubs, which should be overridden to write
+	 * data to the writer.
+	 * @author blivens
+	 *
+	 */
+	private static abstract class CeSymmWriter {
+		protected PrintWriter writer;
+		public CeSymmWriter(PrintWriter writer) {
+			this.writer = writer;
+		}
+		public CeSymmWriter(String filename) throws IOException {
+			this(openOutputFile(filename));
+		}
+		public void writeHeader() throws IOException {}
+		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) throws IOException {}
+		public void writeFooter(CensusResultList results) throws IOException {
+			if(writer != null) {
+				writer.close();
+			}
+		}
+		/**
+		 * Opens 'filename' for writing.
+		 * @param filename Name of output file, or '-' for standard out
+		 * @throws IOException 
+		 */
+		public static PrintWriter openOutputFile(String filename) throws IOException {
+			if(filename.equals("-")) {
+				return new PrintWriter(System.out);
+			}
+			return new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+		}
+		@Override
+		protected void finalize() throws Throwable {
+			if(writer != null) {
+				writer.close();
+			}
+		}
+	}
+	private static class XMLWriter extends CeSymmWriter {
+		public XMLWriter(String filename) throws IOException {
+			super(filename);
+		}
+		@Override
+		public void writeFooter(CensusResultList results) throws IOException {
+			writer.write(results.toXML());
+			writer.close();
+		}
+	}
+	private static class HTMLWriter extends CeSymmWriter {
+		public HTMLWriter(String filename) throws IOException {
+			super(filename);
+		}
+		@Override
+		public void writeHeader() {
+			StringBuilder html = new StringBuilder();
+			html.append("<html>\n");
+			html.append("  <head>\n");
+			html.append("    <title>CeSymm</title>\n");
+			html.append("    <style type=\"text/css\">\n" +
+					".aligmentDisp span { color:#999999; }\n" + 
+					"span.m { color:#008800; }\n" + 
+					"span.dm, #alignment span.na { color: #A66A00; } \n" + 
+					"span.sm { color: #D460CF; }\n" + 
+					"span.qg, #alignment span.hg { color: #104BA9; }\n" + 
+					".aligmentDisp { border-style: solid; border-width: 1px; font-family: \"Courier New\", Courier, monospace; font-size: 1.1em; margin: 10px; overflow-x:auto; padding:10px; width:90%; white-space: nowrap; }\n" + 
+					"\n" + 
+					".alignmentBlock11 { background-color: rgb(255, 165, 0); }\n" + 
+					".alignmentBlock12 { background-color: rgb(255, 229, 0); }\n" + 
+					".alignmentBlock13 { background-color: rgb(217, 255, 0); }\n" + 
+					".alignmentBlock14 { background-color: rgb(154, 255, 0); }\n" + 
+					".alignmentBlock15 { background-color: rgb( 90, 255, 0); }\n" + 
+					"\n" + 
+					".alignmentBox11   { background-color: rgb(255, 165, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+					".alignmentBox12   { background-color: rgb(255, 229, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+					".alignmentBox13   { background-color: rgb(217, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+					".alignmentBox14   { background-color: rgb(154, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+					".alignmentBox15   { background-color: rgb( 90, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+					"\n" + 
+					".alignmentBlock21 { background-color: rgb(0, 255, 255); }\n" + 
+					".alignmentBlock22 { background-color: rgb(0, 178, 255); }\n" + 
+					".alignmentBlock23 { background-color: rgb(0, 102, 255); }\n" + 
+					".alignmentBlock24 { background-color: rgb(0,  25, 255); }\n" + 
+					".alignmentBlock25 { background-color: rgb(51, 0, 255);  } \n" + 
+					"\n" + 
+					".alignmentBox21   { background-color: rgb(0, 255, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+					".alignmentBox22   { background-color: rgb(0, 178, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+					".alignmentBox23   { background-color: rgb(0, 102, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+					".alignmentBox24   { background-color: rgb(0,  25, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+					".alignmentBox25   { background-color: rgb(51,  0, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
+					"    </style>\n");
+			html.append("  </head>\n");
+			html.append("  <body>\n");
+			html.append("    <div id=\"mainContent\">\n");
+			writer.append(html.toString());
+		}
+		@Override
+		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) {
+			writer.write("<h3>"+alignment.getName1()+"</h3>\n");
+			writer.write("<pre>\n");
+			writer.write(AfpChainWriter.toWebSiteDisplay(alignment, ca1, ca2));
+			writer.write("</pre>\n");
+			writer.flush();
+		}
+		@Override
+		public void writeFooter(CensusResultList results) {
+			StringBuilder html = new StringBuilder();
+			html.append("    </div>");
+			html.append("  </body>\n");
+			html.append("</html>\n");
+			writer.append(html.toString());
+			writer.close();
+		}
+
+	}
+	private static class FatcatWriter extends CeSymmWriter {
+		public FatcatWriter(String filename) throws IOException {
+			super(filename);
+		}
+		@Override
+		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) {
+			writer.write(alignment.toFatcat(ca1,ca2));
+			writer.println("//");
+			writer.flush();
+		}
+	}
+	private static class CeWriter extends CeSymmWriter {
+		public CeWriter(String filename) throws IOException {
+			super(filename);
+		}
+		@Override
+		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) {
+			writer.write(alignment.toCE(ca1,ca2));
+			writer.println("//");
+			writer.flush();
+		}
+	}
+	private static class TSVWriter extends CeSymmWriter {
+		public TSVWriter(String filename) throws IOException {
+			super(filename);
+		}
+		@Override
+		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) {
+			writer.write(AfpChainWriter.toAlignedPairs(alignment, ca1, ca2));
+			writer.println("//");
+			writer.flush();
+		}
+	}
+	private static class PDBWriter extends CeSymmWriter {
+		private String pdbFormat;
+		public PDBWriter(String format) {
+			super((PrintWriter)null);
+			pdbFormat = createPDBFilenameFormatString(format);
+		}
+		/**
+		 * @param pdbFormat
+		 * @param filespec
+		 * @return
+		 */
+		private static String createPDBFilenameFormatString( String filespec) {
+			String pdbFormat;
+			if(filespec.isEmpty()) {
+				filespec = ".";
+			}
+			File pdbOutDir = new File(filespec);
+			// 1) It is a directory. Use default filenames
+			if(pdbOutDir.isDirectory()) { //should also cover ""
+				pdbFormat = new File(pdbOutDir,"%s.cesymm.pdb").getPath();
+			} else {
+				// Split into file/directory & check for existence
+				String name = pdbOutDir.getName();
+				assert(!name.isEmpty());
+
+				String parent = pdbOutDir.getParent();
+				pdbOutDir = new File(parent);
+				if(!pdbOutDir.isDirectory() || !pdbOutDir.canWrite()) {
+					System.err.println("Error: unable to write to "+filespec);
+					System.exit(1);
+					return null;
+				}
+				try {
+					String.format(filespec); // throws exception if filespec has "%s"
+					// 2) Not a format string. Append structure name and extension
+					pdbFormat = filespec+".%s.pdb";
+				} catch(MissingFormatArgumentException e) {
+					// 3) The filename contains %s, making it a valid format string
+					try {
+						String.format(filespec,"");
+						pdbFormat = filespec;
+					} catch(IllegalFormatException f) {
+						System.err.println("Illegal pdb formating string (use a single %s): "+filespec);
+						System.exit(1);
+						return null;
+					}
+				}
+			}
+			return pdbFormat;
+		}
+		@Override
+		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) throws IOException {
+			try {
+				Structure s = DisplayAFP.createArtificalStructure(alignment, ca1, ca2);
+				String filename = String.format(pdbFormat,alignment.getName1());
+				PrintWriter pdbOut = openOutputFile(filename);
+
+				String pdb = s.toPDB();
+				pdbOut.write(pdb);
+
+				pdbOut.close();
+			} catch(StructureException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	private static class SimpleWriter extends CeSymmWriter {
+		OrderDetector detector;
+		/**
+		 * Significance calculations are currently hard-coded (TODO) to be
+		 * use a hard-coded TM-Score threshold if detector is null, or use
+		 * order plus the TM-Score otherwise.
+		 * @param detector Either an OrderDetector or null
+		 */
+		public SimpleWriter(String filename,OrderDetector detector) throws IOException {
+			super(filename);
+			this.detector = detector;
+		}
+		@Override
+		public void writeHeader() {
+			writer.append("Name\t" +
+					"Sig\t" +
+					"MinOrder\t" +
+					"TMscore\t" +
+					"ZScore\t" +
+					"CEScore\t" +
+					"PValue\t" +
+					"RMSD\t" +
+					"Length\t" +
+					"Coverage\t" +
+					"%ID\t" +
+					"%Sim\t");
+		}
+		@Override
+		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2)
+				throws IOException {
+			CensusScoreList scores = result.getScoreList();
+
+			//TODO Use a consistent method for significance, rather than hard coding in output(!) code
+			boolean significant = false;
+			if( detector != null ) {
+				try {
+					significant = CeSymm.isSignificant(alignment, detector, ca1);
+				} catch (StructureException e) {
+					e.printStackTrace();
+				}
+			} else {
+				significant = scores.getTmScore() >= 0.4;
+			}
+
+			writer.format("%s\t%s\t%d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%d\t%.1f\t%.1f%n",
+					alignment.getName1(),
+					(significant?"Y":"N"),
+					result.getOrder(),
+					scores.getTmScore(),
+					scores.getzScore(),
+					alignment.getAlignScore(),
+					alignment.getProbability(),
+					scores.getRmsd(),
+					scores.getAlignLength(),
+					scores.getIdentity()*100,
+					scores.getSimilarity()*100
+					);
+		}
 	}
 }

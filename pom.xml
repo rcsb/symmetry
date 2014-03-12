@@ -109,11 +109,7 @@
 			<artifactId>biojava3-ws</artifactId>
 			<version>3.0.8-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>org.rcsb</groupId>
-			<artifactId>ava-core</artifactId>
-			<version>2013-11-1-SNAPSHOT</version>
-		</dependency>
+		
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>

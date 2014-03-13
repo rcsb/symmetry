@@ -41,6 +41,7 @@ import org.biojava.bio.structure.align.model.AfpChainWriter;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.align.util.UserConfiguration;
+import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.census3.CensusResult;
@@ -202,6 +203,7 @@ public class CeSymmMain {
 			String filename = cli.getOptionValue("xml");
 			try {
 				writers.add(new XMLWriter(filename));
+				//writers.add(new AltXMLWriter(filename));
 			} catch (IOException e) {
 				System.err.println("Error: Ignoring file "+filename+".");
 				System.err.println(e.getMessage());
@@ -329,6 +331,10 @@ public class CeSymmMain {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+		// close last, in case any writers share output streams
+		for(CeSymmWriter writer: writers) {
+			writer.close();
 		}
 	}
 
@@ -652,8 +658,10 @@ public class CeSymmMain {
 		}
 		public void writeHeader() throws IOException {}
 		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) throws IOException {}
-		public void writeFooter(CensusResultList results) throws IOException {
+		public void writeFooter(CensusResultList results) throws IOException {}
+		public void close() {
 			if(writer != null) {
+				writer.flush();
 				writer.close();
 			}
 		}
@@ -664,15 +672,9 @@ public class CeSymmMain {
 		 */
 		public static PrintWriter openOutputFile(String filename) throws IOException {
 			if(filename.equals("-")) {
-				return new PrintWriter(System.out);
+				return new PrintWriter(System.out,true);
 			}
 			return new PrintWriter(new BufferedWriter(new FileWriter(filename)));
-		}
-		@Override
-		protected void finalize() throws Throwable {
-			if(writer != null) {
-				writer.close();
-			}
 		}
 	}
 	private static class XMLWriter extends CeSymmWriter {
@@ -682,7 +684,18 @@ public class CeSymmMain {
 		@Override
 		public void writeFooter(CensusResultList results) throws IOException {
 			writer.write(results.toXML());
-			writer.close();
+			writer.flush();
+		}
+	}
+	private static class AltXMLWriter extends CeSymmWriter {
+		public AltXMLWriter(String filename) throws IOException {
+			super(filename);
+		}
+		@Override
+		public void writeAlignment(AFPChain afpChain, CensusResult results,
+				Atom[] ca1, Atom[] ca2) throws IOException {
+			writer.append(AFPChainXMLConverter.toXML(afpChain, ca1, ca2));
+			writer.flush();
 		}
 	}
 	private static class HTMLWriter extends CeSymmWriter {
@@ -731,6 +744,7 @@ public class CeSymmMain {
 			html.append("  <body>\n");
 			html.append("    <div id=\"mainContent\">\n");
 			writer.append(html.toString());
+			writer.flush();
 		}
 		@Override
 		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) {
@@ -747,7 +761,7 @@ public class CeSymmMain {
 			html.append("  </body>\n");
 			html.append("</html>\n");
 			writer.append(html.toString());
-			writer.close();
+			writer.flush();
 		}
 
 	}
@@ -843,7 +857,7 @@ public class CeSymmMain {
 
 				String pdb = s.toPDB();
 				pdbOut.write(pdb);
-
+				pdbOut.flush();
 				pdbOut.close();
 			} catch(StructureException e) {
 				e.printStackTrace();
@@ -864,7 +878,7 @@ public class CeSymmMain {
 		}
 		@Override
 		public void writeHeader() {
-			writer.append("Name\t" +
+			writer.println("Name\t" +
 					"Sig\t" +
 					"MinOrder\t" +
 					"TMscore\t" +
@@ -875,7 +889,9 @@ public class CeSymmMain {
 					"Length\t" +
 					"Coverage\t" +
 					"%ID\t" +
-					"%Sim\t");
+					"%Sim\t" +
+					"time");
+			writer.flush();
 		}
 		@Override
 		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2)
@@ -907,6 +923,7 @@ public class CeSymmMain {
 					scores.getIdentity()*100,
 					scores.getSimilarity()*100
 					);
+			writer.flush();
 		}
 	}
 }

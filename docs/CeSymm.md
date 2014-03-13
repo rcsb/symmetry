@@ -33,6 +33,7 @@ Short Option | Long Option | Description
     | --fatcat=file     | Output alignment as FATCAT output
     | --pdb=file        | Output each alignment as a two-model PDB file. The argument may be a directory or a formatting string, where "%s" will be replaced with the structure name. [default "%s.cesymm.pdb"]
     | --tsv=file        | Output alignment as tab-separated file
+-q  | --quiet           | Do not output default statistics to standard out.
 -v  | --verbose         | Print detailed output (equivalent to "--tsv=-")
 -j  | --show3d          | Force jMol display for each structure [default for <10 structures when specified on command line]
 -J  | --noshow3d        | Disable jMol display [default with --input or for >=10 structures]

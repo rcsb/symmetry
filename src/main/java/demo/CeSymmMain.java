@@ -44,6 +44,7 @@ import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava3.structure.align.symm.census3.AdditionalScoreList;
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusScoreList;
@@ -194,10 +195,12 @@ public class CeSymmMain {
 		// Output formats
 		List<CeSymmWriter> writers = new ArrayList<CeSymmWriter>();
 
-		try {
-			//default stdout output
-			writers.add(new SimpleWriter("-",useOrder?detector:null));
-		} catch (IOException e1) {}
+		if(!cli.hasOption("quiet")) {
+			try {
+				//default stdout output
+				writers.add(new SimpleWriter("-",useOrder?detector:null));
+			} catch (IOException e1) {}
+		}
 
 		if(cli.hasOption("xml")) {
 			String filename = cli.getOptionValue("xml");
@@ -285,7 +288,7 @@ public class CeSymmMain {
 		for(String name: names) {
 			try {
 
-				CensusJob calc = CensusJob.setUpJob(name, 1, Census.AlgorithmGiver.getDefault(),
+				final CensusJob calc = CensusJob.setUpJob(name, 1, Census.AlgorithmGiver.getDefault(),
 						Census.getDefaultAfpChainCensusRestrictor(), cache);
 				calc.setRecordAlignmentMapping(true);
 				calc.setStoreAfpChain(true);
@@ -293,7 +296,24 @@ public class CeSymmMain {
 
 				CensusResult result = calc.call();
 				results.add(result);
-
+				// Probably an abuse of this property, but I'm not sure how it
+				// was intended. Used by SimpleWriter
+				result.getScoreList().setAdditionalScoreList(new AdditionalScoreList() {
+					private static final long serialVersionUID = 1730771735431993101L;
+					@Override
+					public String[] getScoreNames() {
+						return new String[] {"timeMillis"};
+					}
+					@Override
+					public Number getScore(String scoreName) {
+						if(scoreName.equalsIgnoreCase("timeMillis")) {
+							return calc.getTimeTaken();
+						} else {
+							return null;
+						}
+					}
+				});
+				
 				// Perform alignment to determine axis
 				Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(result.getId(),null,cache));
 				Atom[] ca2 = StructureTools.cloneCAArray(ca1);
@@ -328,7 +348,6 @@ public class CeSymmMain {
 			try {
 				writer.writeFooter(results);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -445,6 +464,11 @@ public class CeSymmMain {
 		optionOrder.put("tsv", optionNum++);
 
 
+		options.addOption(OptionBuilder.withLongOpt("quiet")
+				.hasArg(false)
+				.withDescription("Do not output default statistics to standard out.")
+				.create('q'));
+		optionOrder.put("quiet", optionNum++);
 		options.addOption(OptionBuilder.withLongOpt("verbose")
 				.hasArg(false)
 				.withDescription("Print detailed output (equivalent to \"--tsv=-\")")
@@ -910,7 +934,8 @@ public class CeSymmMain {
 				significant = scores.getTmScore() >= 0.4;
 			}
 
-			writer.format("%s\t%s\t%d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%d\t%.1f\t%.1f%n",
+			Number timeMillis = scores.getAdditionalScoreList().getScore("timeMillis");
+			writer.format("%s\t%s\t%d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%d\t%.1f\t%.1f\t%.4f%n",
 					alignment.getName1(),
 					(significant?"Y":"N"),
 					result.getOrder(),
@@ -921,7 +946,8 @@ public class CeSymmMain {
 					scores.getRmsd(),
 					scores.getAlignLength(),
 					scores.getIdentity()*100,
-					scores.getSimilarity()*100
+					scores.getSimilarity()*100,
+					timeMillis.longValue()/1000.
 					);
 			writer.flush();
 		}

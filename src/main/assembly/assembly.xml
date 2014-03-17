@@ -27,6 +27,7 @@
 			<source>src/main/assembly/runCESymm.sh</source>
 			<outputDirectory>/</outputDirectory>
 			<filtered>true</filtered>
+			<fileMode>0755</fileMode>
 		</file>
 		<file>
 			<source>docs/CeSymm.md</source>

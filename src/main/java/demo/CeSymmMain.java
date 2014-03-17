@@ -48,6 +48,7 @@ import org.biojava3.structure.align.symm.census3.AdditionalScoreList;
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusScoreList;
+import org.biojava3.structure.align.symm.census3.MapScoreList;
 import org.biojava3.structure.align.symm.census3.run.Census;
 import org.biojava3.structure.align.symm.census3.run.CensusJob;
 import org.biojava3.structure.align.symm.order.OrderDetector;
@@ -285,6 +286,7 @@ public class CeSymmMain {
 		}
 
 		// Run jobs
+		long totalTimeTaken = 0;
 		for(String name: names) {
 			try {
 
@@ -295,25 +297,19 @@ public class CeSymmMain {
 				calc.setOrderDetector(detector);
 
 				CensusResult result = calc.call();
+				if (result == null) continue; 
+				totalTimeTaken += calc.getTimeTaken();
+
 				results.add(result);
 				// Probably an abuse of this property, but I'm not sure how it
 				// was intended. Used by SimpleWriter
-				result.getScoreList().setAdditionalScoreList(new AdditionalScoreList() {
-					private static final long serialVersionUID = 1730771735431993101L;
-					@Override
-					public String[] getScoreNames() {
-						return new String[] {"timeMillis"};
-					}
-					@Override
-					public Number getScore(String scoreName) {
-						if(scoreName.equalsIgnoreCase("timeMillis")) {
-							return calc.getTimeTaken();
-						} else {
-							return null;
-						}
-					}
-				});
-				
+				Map<String, Number> scoreMap = new HashMap<String, Number>();
+				scoreMap.put( "timeMillis",calc.getTimeTaken());
+				AdditionalScoreList moreScores = new MapScoreList( scoreMap );
+				result.getScoreList().setAdditionalScoreList(moreScores);
+
+				results.setMeanSecondsTaken((float) (totalTimeTaken / (float) names.size() / 1000.0f));
+
 				// Perform alignment to determine axis
 				Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(result.getId(),null,cache));
 				Atom[] ca2 = StructureTools.cloneCAArray(ca1);

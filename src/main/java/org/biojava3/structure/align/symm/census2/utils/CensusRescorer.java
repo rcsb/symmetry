@@ -34,7 +34,7 @@ import org.biojava3.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * A class to update a census ({@link Results}) XML file with new score cutoffs.
- * @author dmyerstu
+ * @author dmyersturnbull
  */
 public class CensusRescorer {
 

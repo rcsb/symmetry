@@ -31,12 +31,14 @@ import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
+import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
 
 /**
  * A census that takes a list of sun Ids.
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class ScopDescriptionCensus extends Census {
 
 	private static final Logger logger = LogManager.getLogger(ScopDescriptionCensus.class.getName());

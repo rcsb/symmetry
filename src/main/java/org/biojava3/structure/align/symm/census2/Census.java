@@ -57,8 +57,10 @@ import org.biojava3.structure.utils.FileUtils;
  * Runs the symmetry census on every domain. The work is done in order of superfamily (since we're using multiple cores,
  * this may not be the order in which they are output).
  *
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class Census {
 
 	private static final Logger logger = LogManager.getLogger(Census.class.getSimpleName());

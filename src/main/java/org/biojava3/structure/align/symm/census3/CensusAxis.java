@@ -21,6 +21,8 @@ import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlAttribute;
 
+import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.AtomImpl;
 import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.align.util.RotationAxis;
 
@@ -104,6 +106,12 @@ public class CensusAxis implements Serializable {
 		public void setZ(Float z) {
 			this.z = z;
 		}
+		
+		public Atom toAtom() {
+			AtomImpl a = new AtomImpl();
+			a.setCoords(new double[] {x,y,z});
+			return a;
+		}
 	}
 
 	private static final long serialVersionUID = -1523140268972093071L;
@@ -146,6 +154,13 @@ public class CensusAxis implements Serializable {
 		if (rot.getOtherTranslation() != null && rot.getRotationAxis() != null) {
 			orthogonal = (float) (Calc.amount(rot.getOtherTranslation()) / Calc.amount(rot.getRotationAxis()));
 		}
+	}
+	
+	public RotationAxis toRotationAxis() {
+		Atom axisAtom = axis.toAtom();
+		Atom originAtom = origin.toAtom();
+		RotationAxis rotAxis = new RotationAxis(axisAtom,originAtom, angle);
+		return rotAxis;
 	}
 
 	@Override
@@ -223,6 +238,10 @@ public class CensusAxis implements Serializable {
 	 *         less than {@code threshold} is found
 	 */
 	public int guessOrder(double threshold, int maxOrder) {
+		return guessOrder(angle, threshold, maxOrder);
+	}
+	
+	public static int guessOrder(double angle, double threshold, int maxOrder) {
 		double bestDelta = threshold;
 		int bestOrder = 1;
 		for (int order = 2; order < maxOrder; order++) {

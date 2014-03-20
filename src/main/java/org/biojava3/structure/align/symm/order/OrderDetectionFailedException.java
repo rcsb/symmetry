@@ -1,5 +1,9 @@
 package org.biojava3.structure.align.symm.order;
 
+/**
+ * Order-detection failed.
+ * @author dmyersturnbull
+ */
 public class OrderDetectionFailedException extends Exception {
 	private static final long serialVersionUID = -7040421412578699838L;
 

@@ -34,13 +34,15 @@ import org.biojava.bio.structure.scop.Astral;
 import org.biojava.bio.structure.scop.Astral.AstralSet;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
+import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
 
 /**
  * A census that takes a list of sun Ids and a sequence clustering. Uses sequence clustering provided by ASTRAL.
  * 
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 
 	private static final Logger logger = LogManager.getLogger(Census.class.getName());

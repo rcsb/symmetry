@@ -48,8 +48,10 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
 /**
  * One run of CE-Symm in the census.
  * 
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class CensusJob implements Callable<Result> {
 
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();

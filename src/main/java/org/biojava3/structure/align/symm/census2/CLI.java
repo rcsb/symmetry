@@ -19,7 +19,6 @@ package org.biojava3.structure.align.symm.census2;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -45,13 +44,15 @@ import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
+import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
 
 /**
  * Decent command-line interface to Census. Combines aspects of many of the other census subclasses.
  * 
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class CLI {
 
 	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
@@ -80,8 +81,8 @@ public class CLI {
 
 			// set SCOP version
 			String scopVersion = cmd.getOptionValue("scopversion");
-			if (scopVersion == null || scopVersion.isEmpty()) scopVersion = ScopFactory.DEFAULT_VERSION;
-			ScopFactory.setScopDatabase(scopVersion);
+			if (scopVersion != null && !scopVersion.isEmpty())
+				ScopFactory.setScopDatabase(scopVersion);
 
 			final String pdbDir = cmd.getOptionValue("pdb");
 			final String censusFile = cmd.getOptionValue("file");
@@ -166,7 +167,7 @@ public class CLI {
 	/**
 	 * Returns the best Significance object.
 	 */
-	private static Significance getSignificance(String sigClass, String sigMethod) {
+	public static Significance getSignificance(String sigClass, String sigMethod) {
 		final Significance sig;
 		if (sigClass != null) {
 			if (sigMethod != null) {

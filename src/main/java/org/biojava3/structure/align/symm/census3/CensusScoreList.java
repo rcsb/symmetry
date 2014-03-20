@@ -24,6 +24,8 @@ package org.biojava3.structure.align.symm.census3;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 import org.biojava.bio.structure.align.model.AFPChain;
 
 /**
@@ -109,6 +111,13 @@ public class CensusScoreList implements Serializable {
 		return true;
 	}
 
+	// For now, ignore extra scores in XML since it's abstract.
+	@XmlTransient
+	// Could also list all possible concrete implementations here to include it.
+	//@XmlElements({
+	//	@XmlElement(type=SinglePropScoreList.class),
+	//	@XmlElement(type=MapScoreList.class),
+	//})
 	public AdditionalScoreList getAdditionalScoreList() {
 		return additionalScoreList;
 	}

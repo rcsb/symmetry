@@ -42,8 +42,10 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 /**
  * A census that takes a file containing a line-by-line list of SCOP domains.
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class NamesCensus extends Census {
 
 	private static final Logger logger = LogManager.getLogger(NamesCensus.class.getSimpleName());

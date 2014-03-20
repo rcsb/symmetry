@@ -130,11 +130,11 @@ public class CensusJob implements Callable<CensusResult> {
 		// there are two cases in which we know there is no symmetry
 		if (afpChain.getBlockNum() != 2) {
 			logger.debug("CE-Symm returned a result with " + afpChain.getBlockNum() + " block(s) (job #" + count + ")");
-			return convertResult(afpChain, false, null, null, name, null);
+			return convertResult(afpChain, false, 1, null, name, null);
 		}
 		if (afpChain.getAlnLength() < 1) {
 			logger.debug("CE-Symm returned an empty alignment (job #" + count + ")");
-			return convertResult(afpChain, false, null, null, name, null);
+			return convertResult(afpChain, false, 1, null, name, null);
 		}
 
 		if (significance.isPossiblySignificant(afpChain)) {
@@ -148,10 +148,10 @@ public class CensusJob implements Callable<CensusResult> {
 			Protodomain protodomain = null;
 
 			// first try to find the protodomain
-			logger.debug("Finding protodomain (job #" + count + ")");
+			logger.debug("Finding symmetry unit (job #" + count + ")");
 			try {
 				protodomain = Protodomain.fromSymmetryAlignment(afpChain, ca2, 1, cache);
-				logger.debug("Protodomain is " + protodomain + " (job #" + count + ")");
+				logger.debug("Whole symmetry unit is " + protodomain + " (job #" + count + ")");
 			} catch (Exception e) {
 				logger.warn("Could not create protodomain because " + e.getMessage(), e);
 			}
@@ -255,7 +255,9 @@ public class CensusJob implements Callable<CensusResult> {
 				r.setAxis(axis);
 			}
 		}
-		r.setGroup(new CensusSymmetryGroup("C" + order));
+		if (order == null) {
+			r.setGroup(new CensusSymmetryGroup("C" + order));
+		}
 
 		return r;
 	}

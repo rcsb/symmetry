@@ -20,12 +20,9 @@ import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
-import org.biojava3.structure.quaternary.misc.BioJavaPdbDeflator;
-import org.biojava3.structure.quaternary.misc.RcsbPdbDeflator;
+
 import org.biojava3.structure.quaternary.misc.RcsbPdbInMemoryDatabase;
-import org.biojava3.structure.quaternary.misc.RcsbPdbInflator;
-import org.biojava3.structure.quaternary.misc.RcsbPdbStructureInterface;
-import org.biojava3.structure.quaternary.misc.StructureToBinary2;
+
 
 public class InMemoryDbTester implements Runnable {
 	private static String RESULT_DIR_R = "C:/Users/Peter/Documents/StructureSerializerResults/";
@@ -122,21 +119,21 @@ public class InMemoryDbTester implements Runnable {
 			System.out.println("------------- " + pdbId  + "-------------");
 			
 			long t1 = System.nanoTime();
-			BioJavaPdbDeflator deflator = new BioJavaPdbDeflator();
-			try {
-				db.getData(pdbId, deflator);
-				count++;
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+//			BioJavaPdbDeflator deflator = new BioJavaPdbDeflator();
+//			try {
+//				db.getData(pdbId, deflator);
+//				count++;
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (Exception e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 			totalReadTime += System.nanoTime() - t1;
-			Structure structure = deflator.getStructure();
-			int atomCount = StructureTools.getNrAtoms(structure);
-			System.out.println("atomCount: " + atomCount);
+			//Structure structure = deflator.getStructure();
+			//int atomCount = StructureTools.getNrAtoms(structure);
+			//System.out.println("atomCount: " + atomCount);
  
 
 

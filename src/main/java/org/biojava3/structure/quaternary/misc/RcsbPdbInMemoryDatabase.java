@@ -49,10 +49,10 @@ public class RcsbPdbInMemoryDatabase {
 	public int getSize() {
 		return pdbs.size();
 	}
-	public void getData(String pdbId, RcsbPdbStructureInterface deflator) throws Exception {
-		RcsbPdbDeflator def = new RcsbPdbDeflator(deflator);
-		byte[] data = pdbs.get(pdbId);
-		def.read(data, format);
-		def.close();
-	}
+//	public void getData(String pdbId, RcsbPdbStructureInterface deflator) throws Exception {
+//		RcsbPdbDeflator def = new RcsbPdbDeflator(deflator);
+//		byte[] data = pdbs.get(pdbId);
+//		def.read(data, format);
+//		def.close();
+//	}
 }

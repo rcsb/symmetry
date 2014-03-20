@@ -23,7 +23,10 @@ public class DeflateInflate {
 
 	@Test
 	public void test() throws Exception {
-		String[] pdbIds = {"1ZMP"};
+//		String[] pdbIds = {"1STP"};
+		String[] pdbIds = {"4HHB"};
+//		String[] pdbIds = {"148L"};
+//		String[] pdbIds = {"11GS"};
 //		String[] pdbIds = {"1STP","4HHB","1OHR"};
 
 		for (String pdbId: pdbIds) {
@@ -47,12 +50,15 @@ public class DeflateInflate {
 	}
 	
 	public static String deflate(Structure structure, String pdbId) throws IOException {
-		File temp = File.createTempFile(pdbId, CodecConstants.FileExtension);
-		String fileName = temp.getName();
-		int compressionLevel = 1;
+	//	File temp = File.createTempFile(pdbId, CodecConstants.CODEC_FILE_EXTENSION);
+		File temp = new File("/tmp/" + pdbId + CodecConstants.CODEC_FILE_EXTENSION);
+		String fileName = temp.getPath();
+		System.out.println(fileName);
+		int compressionMethod = 1;
 		
 		BioJavaStructureDeflator deflator = new BioJavaStructureDeflator();
-		deflator.deflate(structure, fileName, compressionLevel);
+		deflator.deflate(structure, fileName, compressionMethod);
+		System.out.println("Compressed file size: " + deflator.getFileSizeCompressed());
 		
 		return fileName;
 	}
@@ -71,12 +77,29 @@ public class DeflateInflate {
 	}
 	
 	private String maskSerialNumber(String atomRecord) {
+//		System.out.println(atomRecord);
+		atomRecord = replaceMinusZero(atomRecord);
 		return atomRecord.substring(0,  6) + "     " + atomRecord.substring(11, atomRecord.length());
+	}
+	
+	private String replaceMinusZero(String atomRecord) {
+		StringBuffer sb = new StringBuffer(atomRecord);
+		int index = sb.indexOf("-0.000"); // negative zero of coordinates
+		while (index > 0) {
+			sb.setCharAt(index, ' ');
+			index = sb.indexOf("-0.000");
+		}
+		index = sb.lastIndexOf("-0.00");
+		if (index >= 60) {
+			sb.setCharAt(index, ' ');
+		}
+		return sb.toString();
 	}
 	
 	private static void initializeCache() {
 		AtomCache cache = new AtomCache();
-		//		System.out.println("cache: " + cache.getPath());
+		cache.setPath("/tmp/pdb"); 
+		System.out.println("cache: " + cache.getPath());
 		FileParsingParameters params = cache.getFileParsingParams();
 		params.setStoreEmptySeqRes(true);
 		params.setAtomCaThreshold(Integer.MAX_VALUE);

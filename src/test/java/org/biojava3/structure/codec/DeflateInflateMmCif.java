@@ -23,14 +23,17 @@ public class DeflateInflateMmCif {
 
 	@Test
 	public void test() throws Exception {
-//		String[] pdbIds = {"1STP"};
-		String[] pdbIds = {"1AEY"};
-//		String[] pdbIds = {"1STP","4HHB","1OHR"};
+		//		String[] pdbIds = {"1STP"};
+		String[] pdbIds = {"11GS"};
+		//		String[] pdbIds = {"1STP","4HHB","1OHR"};
 
 		for (String pdbId: pdbIds) {
 			Structure original = getStructure(pdbId);
-			String fileName = deflate(original, pdbId);
-			Structure copy = inflate(fileName);
+			File file = deflate(original, pdbId);
+			Structure copy = inflate(file);
+
+			// it is just a tmp file, clean up..
+			file.delete();
 
 			int expectedCount =  StructureTools.getNrAtoms(original);
 			int actualCount = StructureTools.getNrAtoms(copy);	
@@ -40,44 +43,44 @@ public class DeflateInflateMmCif {
 			Atom[] actualAtoms = StructureTools.getAllAtomArray(copy);
 
 			for (int i = 0; i < expectedAtoms.length; i++) {
-	//			System.out.println(expectedAtoms[i].toPDB());
-	//			System.out.println(actualAtoms[i].toPDB());
+				//			System.out.println(expectedAtoms[i].toPDB());
+				//			System.out.println(actualAtoms[i].toPDB());
 				assertEquals(maskSerialNumber(expectedAtoms[i].toPDB()), maskSerialNumber(actualAtoms[i].toPDB()));
 			}
 		}
 	}
-	
-	public static String deflate(Structure structure, String pdbId) throws IOException {
+
+	public static File deflate(Structure structure, String pdbId) throws IOException {
 		File temp = File.createTempFile(pdbId, CodecConstants.CODEC_FILE_EXTENSION);
 		String fileName = temp.getName();
 		int compressionMethod = 1;
-		
+
 		BioJavaStructureDeflator deflator = new BioJavaStructureDeflator();
 		deflator.deflate(structure, fileName, compressionMethod);
 		System.out.println("Compressed file size: " + deflator.getFileSizeCompressed());
-		
-		return fileName;
+
+		return temp;
 	}
-	
-	public static Structure inflate(String fileName) throws Exception {
+
+	public static Structure inflate(File file) throws Exception {
 		BioJavaStructureInflator inflator = new BioJavaStructureInflator();
 		StructureInflator def = new StructureInflator(inflator);
-	    FileInputStream inputStream = new FileInputStream(fileName);
+		FileInputStream inputStream = new FileInputStream(file);
 		def.read(inputStream);
 		return inflator.getStructure();
 	}
-	
+
 	private static Structure getStructure(String pdbId) throws IOException, StructureException {
 		initializeCache();
 		return StructureIO.getStructure(pdbId);
 	}
-	
+
 	private String maskSerialNumber(String atomRecord) {
 		System.out.println(atomRecord);
 		atomRecord = replaceMinusZero(atomRecord);
 		return atomRecord.substring(0,  6) + "     " + atomRecord.substring(11, atomRecord.length());
 	}
-	
+
 	private String replaceMinusZero(String atomRecord) {
 		StringBuffer sb = new StringBuffer(atomRecord);
 		int index = sb.indexOf("-0.000"); // negative zero of coordinates
@@ -91,11 +94,11 @@ public class DeflateInflateMmCif {
 		}
 		return sb.toString();
 	}
-	
+
 	private static void initializeCache() {
 		AtomCache cache = new AtomCache();
 		cache.setUseMmCif(true);
-		cache.setPath("/tmp/pdb"); 
+
 		System.out.println("cache: " + cache.getPath());
 		FileParsingParameters params = cache.getFileParsingParams();
 		params.setStoreEmptySeqRes(true);

@@ -10,7 +10,6 @@
             <orthogonal>138.79875</orthogonal>
             <parallel>0.7654455</parallel>
         </axis>
-        <group>C2</group>
         <scores>
             <alignLength>153</alignLength>
             <gapLength>91</gapLength>

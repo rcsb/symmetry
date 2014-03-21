@@ -111,6 +111,9 @@ import org.rcsb.codec.BitEncoder;
  *
  */
 public class StructureEncoderImpl1 extends StructureEncoder {
+	
+	public static final boolean DEBUG = false;
+	
 	private DataOutputStream outStream = null;
 	
 	private int atomCount = 0;
@@ -268,7 +271,8 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 						bondInfo.add(bondList);
 					}
 		
-					System.out.println("info: " + groups.indexOf(g) + ": " + g + " gIndex: " + gIndex);
+					if ( DEBUG)
+						System.out.println("info: " + groups.indexOf(g) + ": " + g + " gIndex: " + gIndex);
 					
 					groupArray.add(gIndex);			
 					outStream.writeByte(GROUP);
@@ -376,7 +380,8 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 //				for (Group g: c.getSeqResGroups()) {
 				for (Group g: getCombinedGroups(actualChain)) {
 					int gIndex = groupArray.get(groupCount);
-					System.out.println("atoms: " + groupCount + ": " + g + " gIndex: " + gIndex);
+					if ( DEBUG)
+						System.out.println("atoms: " + groupCount + ": " + g + " gIndex: " + gIndex);
 					int[] bondList = bondInfo.get(gIndex);	
 					
 					List<Atom> atoms = g.getAtoms();

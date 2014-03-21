@@ -1,12 +1,14 @@
 package org.biojava3.structure.codec;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.biojava.bio.structure.Atom;
+import org.biojava.bio.structure.Chain;
+import org.biojava.bio.structure.Group;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
@@ -24,19 +26,25 @@ public class DeflateInflate {
 	@Test
 	public void test() throws Exception {
 //		String[] pdbIds = {"1STP"};
-		String[] pdbIds = {"4HHB"};
+		String[] pdbIds = {"18GS"};
 //		String[] pdbIds = {"148L"};
 //		String[] pdbIds = {"11GS"};
 //		String[] pdbIds = {"1STP","4HHB","1OHR"};
 
 		for (String pdbId: pdbIds) {
 			Structure original = getStructure(pdbId);
-			String fileName = deflate(original, pdbId);
-			Structure copy = inflate(fileName);
-
+			
+			printFirstTwoResidues(original);
+			
+			File file = deflate(original, pdbId);
+			Structure copy = inflate(file);
+			
+			// it is just a tmp file, clean up..
+			file.delete();
+			
 			int expectedCount =  StructureTools.getNrAtoms(original);
 			int actualCount = StructureTools.getNrAtoms(copy);	
-			assertEquals(expectedCount, actualCount);
+			assertEquals("Original structure and copy don't have the same number of atoms!" ,expectedCount, actualCount);
 
 			Atom[] expectedAtoms = StructureTools.getAllAtomArray(original);
 			Atom[] actualAtoms = StructureTools.getAllAtomArray(copy);
@@ -49,9 +57,23 @@ public class DeflateInflate {
 		}
 	}
 	
-	public static String deflate(Structure structure, String pdbId) throws IOException {
-	//	File temp = File.createTempFile(pdbId, CodecConstants.CODEC_FILE_EXTENSION);
-		File temp = new File("/tmp/" + pdbId + CodecConstants.CODEC_FILE_EXTENSION);
+	private void printFirstTwoResidues(Structure original) {
+		
+		Chain c = original.getChain(0);
+		
+		Group first  = c.getSeqResGroup(0);
+		Group second = c.getSeqResGroup(1);
+		Group third  = c.getSeqResGroup(2);
+		
+		System.out.println(first);
+		System.out.println(second);
+		System.out.println(third);
+		
+	}
+
+	public static File deflate(Structure structure, String pdbId) throws IOException {
+		File temp = File.createTempFile(pdbId, CodecConstants.CODEC_FILE_EXTENSION);
+
 		String fileName = temp.getPath();
 		System.out.println(fileName);
 		int compressionMethod = 1;
@@ -60,13 +82,13 @@ public class DeflateInflate {
 		deflator.deflate(structure, fileName, compressionMethod);
 		System.out.println("Compressed file size: " + deflator.getFileSizeCompressed());
 		
-		return fileName;
+		return temp;
 	}
 	
-	public static Structure inflate(String fileName) throws Exception {
+	public static Structure inflate(File file) throws Exception {
 		BioJavaStructureInflator inflator = new BioJavaStructureInflator();
 		StructureInflator def = new StructureInflator(inflator);
-	    FileInputStream inputStream = new FileInputStream(fileName);
+	    FileInputStream inputStream = new FileInputStream(file);
 		def.read(inputStream);
 		return inflator.getStructure();
 	}
@@ -98,7 +120,7 @@ public class DeflateInflate {
 	
 	private static void initializeCache() {
 		AtomCache cache = new AtomCache();
-		cache.setPath("/tmp/pdb"); 
+
 		System.out.println("cache: " + cache.getPath());
 		FileParsingParameters params = cache.getFileParsingParams();
 		params.setStoreEmptySeqRes(true);

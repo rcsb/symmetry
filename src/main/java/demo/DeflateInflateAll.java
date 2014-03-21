@@ -1,12 +1,9 @@
-package org.biojava3.structure.codec;
-
-import static org.junit.Assert.*;
+package demo;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.biojava.bio.structure.Atom;
@@ -18,23 +15,24 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava3.structure.StructureIO;
+import org.biojava3.structure.codec.BioJavaStructureDeflator;
+import org.biojava3.structure.codec.BioJavaStructureInflator;
 import org.biojava3.structure.dbscan.GetRepresentatives;
-import org.junit.Test;
 import org.rcsb.codec.CodecConstants;
 import org.rcsb.codec.StructureInflator;
 
-public class DeflateInflateAllMmCif {
+public class DeflateInflateAll {
 
-	@Test
+
 	public void test() throws Exception {
 		List<String> pdbIds = new ArrayList<String>(GetRepresentatives.getAll());
-//		pdbIds.remove("11GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-//		pdbIds.remove("12GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-//		pdbIds.remove("13GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-//		pdbIds.remove("14GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-//		pdbIds.remove("16GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-//		pdbIds.remove("17GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-//		pdbIds.remove("18GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+		pdbIds.remove("11GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+		pdbIds.remove("12GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+		pdbIds.remove("13GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+		pdbIds.remove("14GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+		pdbIds.remove("16GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+		pdbIds.remove("17GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+		pdbIds.remove("18GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
 		pdbIds.remove("136D"); // issue with irregular numbering of inserted residues, or missing seq. res. residues in model 1??
 		pdbIds.remove("177D"); // multiple model issue
 		pdbIds.remove("176D"); // B: GAGUUC: UUC added twice, once without atoms, once with atoms? Problem handling nucleotides??
@@ -153,8 +151,7 @@ public class DeflateInflateAllMmCif {
 	
 	private static void initializeCache() {
 		AtomCache cache = new AtomCache();
-		cache.setUseMmCif(true);
-		cache.setPath("/tmp/pdb"); 
+
 		System.out.println("cache: " + cache.getPath());
 		FileParsingParameters params = cache.getFileParsingParams();
 		params.setStoreEmptySeqRes(true);
@@ -166,6 +163,16 @@ public class DeflateInflateAllMmCif {
 		StructureIO.setAtomCache(cache);
 	}
 
+	private void assertEquals(String maskSerialNumber, String maskSerialNumber2) {
+		if (! maskSerialNumber.equals(maskSerialNumber2))
+			throw new RuntimeException(maskSerialNumber + " != " + maskSerialNumber2);
+		
+	}
 
+	private void assertEquals(int expectedCount, int actualCount) {
+		if (expectedCount != actualCount)
+			throw new RuntimeException(expectedCount + " != " + actualCount);
+		
+	}
 
 }

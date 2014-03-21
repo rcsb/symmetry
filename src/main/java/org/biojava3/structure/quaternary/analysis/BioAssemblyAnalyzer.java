@@ -24,8 +24,8 @@ import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 import org.biojava3.structure.quaternary.core.Subunits;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava3.structure.quaternary.misc.BioassemblyCheck;
-import org.biojava3.structure.quaternary.misc.PdbBlastHit;
 import org.biojava3.structure.quaternary.misc.FindPdbRepresentatives;
+import org.biojava3.structure.quaternary.misc.PdbBlastHit;
 import org.biojava3.structure.quaternary.misc.ProteinComplexSignature;
 import org.biojava3.structure.quaternary.utils.BlastClustReader;
 

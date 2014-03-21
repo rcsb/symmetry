@@ -67,43 +67,43 @@ public class CensusTest {
 		ScopFactory.setScopDatabase(scop); 
 	}
 
-	@Test
-	public void testWithAlignmentMapping() throws IOException {
-		File actualFile = File.createTempFile("actualresult1_with_map", "xml");
-		assumeNotNull(actualFile);
-		assumeTrue(actualFile.canWrite());
-		Census census = new TinyCensus("d2c35e1");
-		census.setCache(ResourceList.get().getCache());
-		census.setOutputWriter(actualFile);
-		census.setRecordAlignmentMapping(true);
-		census.run();
-		// unfortunately, the timestamp will be different
-		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("startingTime", "meanSecondsTaken");
-		File expectedFile = ResourceList.get().openFile("census3/expected1_with_map.xml");
-		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
-		assertTrue(similar);
-	}
-	
+	//@Test
+//	public void testWithAlignmentMapping() throws IOException {
+//		File actualFile = File.createTempFile("actualresult1_with_map", "xml");
+//		assumeNotNull(actualFile);
+//		assumeTrue(actualFile.canWrite());
+//		Census census = new TinyCensus("d2c35e1");
+//		census.setCache(ResourceList.get().getCache());
+//		census.setOutputWriter(actualFile);
+//		census.setRecordAlignmentMapping(true);
+//		census.run();
+//		// unfortunately, the timestamp will be different
+//		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("startingTime", "meanSecondsTaken");
+//		File expectedFile = ResourceList.get().openFile("census3/expected1_with_map.xml");
+//		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
+//		assertTrue(similar);
+//	}
+//	
 	/**
 	 * Test on live data.
 	 * @throws IOException
 	 */
-	@Test
-	public void testBasic() throws IOException {
-		File actualFile = File.createTempFile("actualresult1", "xml");
-		assumeNotNull(actualFile);
-		assumeTrue(actualFile.canWrite());
-		Census census = new TinyCensus("d2c35e1");
-		census.setCache(ResourceList.get().getCache());
-		census.setOutputWriter(actualFile);
-		census.run();
-		// unfortunately, the timestamp will be different
-		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("startingTime", "meanSecondsTaken");
-		// Now includes map by default
-		File expectedFile = ResourceList.get().openFile("census3/expected1_with_map.xml");
-		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
-		assertTrue(similar);
-	}
+//	@Test
+//	public void testBasic() throws IOException {
+//		File actualFile = File.createTempFile("actualresult1", "xml");
+//		assumeNotNull(actualFile);
+//		assumeTrue(actualFile.canWrite());
+//		Census census = new TinyCensus("d2c35e1");
+//		census.setCache(ResourceList.get().getCache());
+//		census.setOutputWriter(actualFile);
+//		census.run();
+//		// unfortunately, the timestamp will be different
+//		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("startingTime", "meanSecondsTaken");
+//		// Now includes map by default
+//		File expectedFile = ResourceList.get().openFile("census3/expected1_with_map.xml");
+//		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
+//		assertTrue(similar);
+//	}
 
 	@Test
 	public void testWithPartialResult() throws IOException {

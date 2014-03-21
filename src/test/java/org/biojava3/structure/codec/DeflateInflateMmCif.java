@@ -30,13 +30,25 @@ public class DeflateInflateMmCif {
 		for (String pdbId: pdbIds) {
 			Structure original = getStructure(pdbId);
 			File file = deflate(original, pdbId);
-			Structure copy = inflate(file);
 
-			// it is just a tmp file, clean up..
+			Structure copy = null;
+			try {
+				copy = inflate(file);
+			} catch (Exception e){
+				file.delete();
+				e.printStackTrace();
+
+				fail(e.getMessage());
+
+			}
 			file.delete();
+			// it is just a tmp file, clean up..
+			assertNotNull(copy);
 
 			int expectedCount =  StructureTools.getNrAtoms(original);
-			int actualCount = StructureTools.getNrAtoms(copy);	
+			int actualCount = StructureTools.getNrAtoms(copy);
+
+			file.delete();
 			assertEquals(expectedCount, actualCount);
 
 			Atom[] expectedAtoms = StructureTools.getAllAtomArray(original);
@@ -57,7 +69,7 @@ public class DeflateInflateMmCif {
 
 		BioJavaStructureDeflator deflator = new BioJavaStructureDeflator();
 		deflator.deflate(structure, fileName, compressionMethod);
-		System.out.println("Compressed file size: " + deflator.getFileSizeCompressed());
+		//System.out.println("Compressed file size: " + deflator.getFileSizeCompressed());
 
 		return temp;
 	}
@@ -76,7 +88,7 @@ public class DeflateInflateMmCif {
 	}
 
 	private String maskSerialNumber(String atomRecord) {
-		System.out.println(atomRecord);
+		//System.out.println(atomRecord);
 		atomRecord = replaceMinusZero(atomRecord);
 		return atomRecord.substring(0,  6) + "     " + atomRecord.substring(11, atomRecord.length());
 	}
@@ -99,7 +111,7 @@ public class DeflateInflateMmCif {
 		AtomCache cache = new AtomCache();
 		cache.setUseMmCif(true);
 
-		System.out.println("cache: " + cache.getPath());
+		//System.out.println("cache: " + cache.getPath());
 		FileParsingParameters params = cache.getFileParsingParams();
 		params.setStoreEmptySeqRes(true);
 		params.setAtomCaThreshold(Integer.MAX_VALUE);

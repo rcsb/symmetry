@@ -1,6 +1,8 @@
 package org.biojava3.structure.codec;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,10 +39,20 @@ public class DeflateInflate {
 			printFirstTwoResidues(original);
 			
 			File file = deflate(original, pdbId);
-			Structure copy = inflate(file);
-			
-			// it is just a tmp file, clean up..
+			Structure copy = null;
+			try {
+				copy = inflate(file);
+			} catch (Exception e){
+				file.delete();
+				e.printStackTrace();
+
+				fail(e.getMessage());
+
+			}
 			file.delete();
+			// it is just a tmp file, clean up..
+			assertNotNull(copy);
+			
 			
 			int expectedCount =  StructureTools.getNrAtoms(original);
 			int actualCount = StructureTools.getNrAtoms(copy);	

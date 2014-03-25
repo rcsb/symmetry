@@ -42,6 +42,7 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
+import org.biojava.bio.structure.io.util.FileDownloadUtils;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.census3.AdditionalScoreList;
@@ -844,6 +845,7 @@ public class CeSymmMain {
 				assert(!name.isEmpty());
 
 				String parent = pdbOutDir.getParent();
+				if(parent == null) parent = ".";
 				pdbOutDir = new File(parent);
 				if(!pdbOutDir.isDirectory() || !pdbOutDir.canWrite()) {
 					System.err.println("Error: unable to write to "+filespec);
@@ -872,7 +874,15 @@ public class CeSymmMain {
 		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) throws IOException {
 			try {
 				Structure s = DisplayAFP.createArtificalStructure(alignment, ca1, ca2);
-				String filename = String.format(pdbFormat,alignment.getName1());
+				
+				// If the input was from a file then we need to remove the path
+				String escapedName = alignment.getName1();
+				File file = new File(FileDownloadUtils.expandUserHome(escapedName));
+				if(file.exists()) {
+					escapedName = file.getName();
+				}
+				escapedName = escapedName.replaceAll(File.separator, "_");
+				String filename = String.format(pdbFormat,escapedName);
 				PrintWriter pdbOut = openOutputFile(filename);
 
 				String pdb = s.toPDB();
@@ -899,7 +909,7 @@ public class CeSymmMain {
 		@Override
 		public void writeHeader() {
 			writer.println("Name\t" +
-					"Sig\t" +
+					"Symm\t" +
 					"MinOrder\t" +
 					"TMscore\t" +
 					"ZScore\t" +

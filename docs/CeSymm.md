@@ -100,6 +100,40 @@ represent the symmetry as an alignment from the structure to itself.
 * __PDB__: A PDB file containing the input structure as one model, and a rotated
   input structure as another model.
 
+***Statistics Output***
+
+By default (without -q), the program outputs the following statistics about each
+alignment performed to standard out as a tab-delimited list:
+
+- __ Name__ Name of the structure
+- __ Symm__ Either Y or N depending on whether CE-Symm determined the protein to be symmetric
+- __ MinOrder__ If this structure is symmetric, the minimum order of symmetry detected.
+- __ TMscore__ TM-Score of the aligned portions
+- __ ZScore__ CE Z-Score of the aligned portion relative to non-homologous alignments
+- __ CEScore__ Raw CE score
+- __ PValue__ P-value calculated from the z-score
+- __ RMSD__ RMSD of the alignment
+- __ Length__ Number of aligned residues
+- __ Coverage__ Percentage of residues included in the alignment
+- __ %ID__ Percent sequence identity between aligned portions
+- __ %Sim__ Percent sequence similarity between aligned portions
+- __ time__ Time required for the alignment itself (seconds)
+
+
+License & Availability
+----------------------
+
+CE-Symm is licensed under LGPL 2.1 (see LICENSE, which should have come bundled
+with the executable).
+
+The source code is available at https://github.com/rcsb/symmetry-tools.
+A webserver is also provided at http://source.rcsb.org/jfatcatserver/symmetry.jsp
+
+If you use CE-Symm in your research, please cite:
+
+Douglas Myers-Turnbull, Spencer E Bliven, Peter W Rose, Zaid K Aziz, Philippe
+  Youkharibache, Philip E Bourne, and Andreas Prlic. Systematic detection of
+  internal symmetry in proteins using CE-Symm. 2014. Awaiting publication.
 
 Examples
 --------
@@ -115,16 +149,17 @@ runCESymm.sh
 # Run CE-Symm on a single structure or a short list of structures
 # and display the results using jMol
 runCESymm.sh 1HIV
-runCESymm.sh 1GEN.A 1TL2.A 1RI6.A
+runCESymm.sh 1GEN.A d1tl2a_ PDP:1RI6Aa
+runCESymm.sh ./myprotein.pdb
 
 # Print result summary to standard out, repressing jMol display
-runCESymm.sh --nojmol 1GEN.A 1TL2.A 1RI6.A
+runCESymm.sh --noshow3d 1GEN.A 1TL2.A 1RI6.A
 
 # Print detailed alignment information
-runCESymm.sh --nojmol -v 1GEN.A 1TL2.A 1RI6.A
+runCESymm.sh -v 1GEN.A
 
 # Output XML file with full alignments and detailed results
-runCESymm.sh --xml=output.xml 1GEN.A 1TL2.A 1RI6.A
+runCESymm.sh --xml=output.xml -J 1GEN.A 1TL2.A 1RI6.A
 
 # Run in batch mode.
 # The input file should list one structure per line.
@@ -134,7 +169,7 @@ runCESymm.sh --input=queries.txt --xml=output.xml
 
 # Alignments can be output as two-model PDB files.
 # The --pdb option can take a directory
-runCESymm.sh --input=queries.txt --pdb=.
+#runCESymm.sh --input=queries.txt --pdb=.
 # It can also take a format string, where "%s" gets substituted for the structure name.
 runCESymm.sh --input=queries.txt --pdb=%s.cesymm.pdb
 ```

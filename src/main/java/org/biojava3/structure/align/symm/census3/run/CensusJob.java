@@ -103,7 +103,7 @@ public class CensusJob implements Callable<CensusResult> {
 		logger.debug("Getting atoms for " + name + " (job #" + count + ")");
 		try {
 			if (cache == null) cache = new AtomCache();
-			structure = cache.getStructure(name);
+			structure = StructureTools.getStructure(name, null, cache);
 			ca1 = StructureTools.getAtomCAArray(structure);
 			ca2 = StructureTools.cloneCAArray(ca1);
 		} catch (Exception e) {

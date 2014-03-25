@@ -23,6 +23,7 @@
 
 package org.biojava3.structure.align.symm.protodomain;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,10 +41,10 @@ import org.biojava.bio.structure.ResidueRange;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.SubstructureIdentifier;
 import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.io.util.FileDownloadUtils;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 
@@ -153,6 +154,11 @@ public class Protodomain {
 		//SubstructureIdentifier sid = mew SubstructureIdentifier(enclosingName);
 		
 		List<String> domainRanges;
+		//Check if its a file instead
+		File file = new File(FileDownloadUtils.expandUserHome(enclosingName));
+		if (file.exists()) {
+			return null;
+		}
 		if (name.isScopName()) {
 			// SCOP
 			domainRanges = ScopFactory.getSCOP().getDomainByScopID(enclosingName).getRanges();
@@ -463,7 +469,8 @@ public class Protodomain {
 		try {
 			// We cannot use CA atoms only here because sometimes the C-alpha atom is missing
 			// Our AtomPositionMap should use something more liberal (see the AtomPositionMap constructor)
-			final Atom[] allAtoms = StructureTools.getAllAtomArray(cache.getStructure(pdbId)); // TODO is using scopId
+			Structure structure = StructureTools.getStructure(pdbId, null, cache);
+			final Atom[] allAtoms = StructureTools.getAllAtomArray(structure); // TODO is using scopId
 			// ok here?
 			return new AtomPositionMap(allAtoms);
 		} catch (IOException e) {

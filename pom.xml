@@ -85,18 +85,18 @@
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-structure</artifactId>
-			<version>3.0.8-SNAPSHOT</version>
+			<version>3.0.8</version>
 
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-structure-gui</artifactId>
-			<version>3.0.8-SNAPSHOT</version>
+			<version>3.0.8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-ws</artifactId>
-			<version>3.0.8-SNAPSHOT</version>
+			<version>3.0.8</version>
 		</dependency>
 		
 		<dependency>

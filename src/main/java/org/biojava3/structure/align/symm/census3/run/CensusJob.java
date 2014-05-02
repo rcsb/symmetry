@@ -255,7 +255,7 @@ public class CensusJob implements Callable<CensusResult> {
 				r.setAxis(axis);
 			}
 		}
-		if (order == null) {
+		if (order != null) {
 			r.setGroup(new CensusSymmetryGroup("C" + order));
 		}
 

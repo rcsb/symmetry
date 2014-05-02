@@ -171,6 +171,7 @@ public class CeSymmMain {
 		String pdbFilePath = null;
 		if( cli.hasOption("pdbfilepath") ) {
 			pdbFilePath = cli.getOptionValue("pdbfilepath");
+			pdbFilePath = FileDownloadUtils.expandUserHome(pdbFilePath);
 		}
 		Boolean pdbDirSplit = null;
 		if( cli.hasOption("nopdbdirsplit") ) {

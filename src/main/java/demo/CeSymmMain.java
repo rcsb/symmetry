@@ -197,7 +197,16 @@ public class CeSymmMain {
 		// Output formats
 		List<CeSymmWriter> writers = new ArrayList<CeSymmWriter>();
 
-		if(!cli.hasOption("quiet")) {
+		if(cli.hasOption("stats")) {
+			String filename = cli.getOptionValue("stats");
+			try {
+				writers.add(new SimpleWriter(filename,useOrder?detector:null));
+			} catch (IOException e) {
+				System.err.println("Error: Ignoring file "+filename+".");
+				System.err.println(e.getMessage());
+			}
+		}
+		else if(!cli.hasOption("nostats")) {
 			try {
 				//default stdout output
 				writers.add(new SimpleWriter("-",useOrder?detector:null));
@@ -459,13 +468,23 @@ public class CeSymmMain {
 				.withDescription("Output alignment as tab-separated file")
 				.create());
 		optionOrder.put("tsv", optionNum++);
+		options.addOption( OptionBuilder.withLongOpt("stats")
+				.hasArg(true)
+				.withArgName("file")
+				.withDescription("Output tab-separated file giving alignment "
+						+ "statistics, one line per structure [defaults to stdout,"
+						+ " unless -q is given]")
+				.create());
+		optionOrder.put("stats", optionNum++);
 
 
-		options.addOption(OptionBuilder.withLongOpt("quiet")
+
+		options.addOption(OptionBuilder.withLongOpt("nostats")
 				.hasArg(false)
-				.withDescription("Do not output default statistics to standard out.")
+				.withDescription("Do not output default statistics to standard "
+						+ "out  (equivalent to \"--stats=/dev/null\")")
 				.create('q'));
-		optionOrder.put("quiet", optionNum++);
+		optionOrder.put("nostats", optionNum++);
 		options.addOption(OptionBuilder.withLongOpt("verbose")
 				.hasArg(false)
 				.withDescription("Print detailed output (equivalent to \"--tsv=-\")")

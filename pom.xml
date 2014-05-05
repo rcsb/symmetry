@@ -49,9 +49,9 @@
 	</repositories>
 
 	<scm>
-		<developerConnection>https://github.com/rcsb/symmetry</developerConnection>
-		<connection>git://github.com/rcsb/symmetry.git</connection>
-		<url>https://github.com/rcsb/symmetry</url>
+		<connection>scm:git:git@github.com:rcsb/symmetry.git</connection>
+		<developerConnection>scm:git:git@github.com:rcsb/symmetry.git</developerConnection>
+		<url>scm:git:git@github.com:rcsb/symmetry.git</url>
 	</scm>
 	<issueManagement>
 		<url>https://github.com/rcsb/symmetry/issues</url>
@@ -192,6 +192,12 @@
 				<configuration>
 					<argLine>-Xms256m -Xmx2000M</argLine>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5</version>
 			</plugin>
 
 		</plugins>

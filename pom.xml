@@ -58,12 +58,12 @@
 	</repositories>
 
 	<scm>
-		<developerConnection>https://github.com/sbliven/symmetry-tools</developerConnection>
-		<connection>git://github.com/sbliven/symmetry-tools.git</connection>
-		<url>https://github.com/sbliven/symmetry-tools</url>
+		<developerConnection>scm:git:git@github.com:rcsb/symmetry-tools.git</developerConnection>
+		<connection>scm:git:git@github.com:rcsb/symmetry-tools.git</connection>
+		<url>https://github.com/rcsb/symmetry-tools</url>
 	</scm>
 	<issueManagement>
-		<url>https://github.com/sbliven/symmetry-tools/issues</url>
+		<url>https://github.com/rcsb/symmetry-tools/issues</url>
 		<system>Github</system>
 	</issueManagement>
 
@@ -109,7 +109,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.5.1</version>
+				<version>3.1</version>
 				<configuration>
 					<fork>true</fork>
 					<source>${jdk.version}</source>
@@ -121,7 +121,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.2</version>
+				<version>2.3</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -183,7 +183,9 @@
 			</plugin>
 
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.4</version>
 				<configuration>
 					<descriptors>
 						<descriptor>src/main/assembly/assembly.xml</descriptor>

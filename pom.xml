@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>symmetry-tools</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<name>RCSB Symmetry</name>
 
 	<properties>
@@ -60,7 +60,7 @@
 		<developerConnection>scm:git:git@github.com:rcsb/symmetry-tools.git</developerConnection>
 		<connection>scm:git:git@github.com:rcsb/symmetry-tools.git</connection>
 		<url>https://github.com/rcsb/symmetry-tools</url>
-	  <tag>symmetry-tools-1.0.0</tag>
+	  <tag>HEAD</tag>
   </scm>
 	<issueManagement>
 		<url>https://github.com/rcsb/symmetry-tools/issues</url>
@@ -93,7 +93,7 @@
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>symmetry</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

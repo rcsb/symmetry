@@ -107,19 +107,19 @@ represent the symmetry as an alignment from the structure to itself.
 By default (without -q), the program outputs the following statistics about each
 alignment performed to standard out as a tab-delimited list:
 
-- __ Name__ Name of the structure
-- __ Symm__ Either Y or N depending on whether CE-Symm determined the protein to be symmetric
-- __ MinOrder__ If this structure is symmetric, the minimum order of symmetry detected.
-- __ TMscore__ TM-Score of the aligned portions
-- __ ZScore__ CE Z-Score of the aligned portion relative to non-homologous alignments
-- __ CEScore__ Raw CE score
-- __ PValue__ P-value calculated from the z-score
-- __ RMSD__ RMSD of the alignment
-- __ Length__ Number of aligned residues
-- __ Coverage__ Percentage of residues included in the alignment
-- __ %ID__ Percent sequence identity between aligned portions
-- __ %Sim__ Percent sequence similarity between aligned portions
-- __ time__ Time required for the alignment itself (seconds)
+- __Name__ Name of the structure
+- __Symm__ Either Y or N depending on whether CE-Symm determined the protein to be symmetric
+- __MinOrder__ If this structure is symmetric, the minimum order of symmetry detected.
+- __TMscore__ TM-Score of the aligned portions
+- __ZScore__ CE Z-Score of the aligned portion relative to non-homologous alignments
+- __CEScore__ Raw CE score
+- __PValue__ P-value calculated from the z-score
+- __RMSD__ RMSD of the alignment
+- __Length__ Number of aligned residues
+- __Coverage__ Percentage of residues included in the alignment
+- __%ID__ Percent sequence identity between aligned portions
+- __%Sim__ Percent sequence similarity between aligned portions
+- __time__ Time required for the alignment itself (seconds)
 
 
 License & Availability

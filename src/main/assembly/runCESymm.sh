@@ -45,4 +45,5 @@
 
 
 # send the arguments to the java app
-java -Xmx500M -jar "${project.build.finalName}.jar" "$@"
+DIR="$(dirname "$(readlink "$0")")"
+java -Xmx500M -jar "$DIR/${project.build.finalName}.jar" "$@"

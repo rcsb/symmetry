@@ -3,7 +3,7 @@
 	<groupId>org.biojava</groupId>
 	<artifactId>symmetry-tools</artifactId>
 	<version>1.0.1-SNAPSHOT</version>
-	<name>RCSB Symmetry</name>
+	<name>RCSB Symmetry Tools</name>
 
 	<properties>
 		<jdk.version>1.6</jdk.version>
@@ -198,7 +198,7 @@
 							<goal>single</goal>
 						</goals>
 						<configuration>
-							<finalName>${project.name}_${timestamp}</finalName>
+							<finalName>${project.artifactId}-${project.version}</finalName>
 							<appendAssemblyId>false</appendAssemblyId>
 							<filters>
 								<filter>src/main/assembly/filter.properties</filter>

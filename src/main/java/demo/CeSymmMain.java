@@ -386,7 +386,7 @@ public class CeSymmMain {
 		//		name = "1TIM.A";
 		//		name = "d1h70a_";
 		//name = "2YMS";
-		name = "1HIV";
+		//name = "1HIV";
 
 		name = (String)JOptionPane.showInputDialog(
 				null,
@@ -396,6 +396,9 @@ public class CeSymmMain {
 				null,
 				null,
 				name);
+		if( name != null ) {
+			name = name.trim();
+		}
 		return name;
 	}
 
@@ -963,8 +966,8 @@ public class CeSymmMain {
 			Number timeMillis = scores.getAdditionalScoreList().getScore("timeMillis");
 			writer.format("%s\t%s\t%d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%d\t%.1f\t%.1f\t%.4f%n",
 					alignment.getName1(),
-					(significant?"Y":"N"),
-					result.getOrder(),
+					significant?"Y":"N",
+					significant?result.getOrder():1,
 					scores.getTmScore(),
 					scores.getzScore(),
 					alignment.getAlignScore(),

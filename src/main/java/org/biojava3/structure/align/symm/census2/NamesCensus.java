@@ -37,6 +37,7 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.CESymmParameters;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
@@ -58,7 +59,7 @@ public class NamesCensus extends Census {
 			@Override
 			public StructureAlignment getAlgorithm() {
 				CeSymm ce = new CeSymm();
-				ce.setRefineResult(doRefine);
+				((CESymmParameters)ce.getParameters()).setRefineResult(doRefine);
 				return ce;
 			}
 		};

@@ -10,7 +10,6 @@ import org.biojava.bio.structure.align.AbstractStructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.ce.CECalculator;
 import org.biojava.bio.structure.align.ce.CeCPMain;
-import org.biojava.bio.structure.align.ce.CeParameters;
 import org.biojava.bio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.bio.structure.align.ce.MatrixListener;
 import org.biojava.bio.structure.align.model.AFPChain;
@@ -18,7 +17,6 @@ import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.jama.Matrix;
-import org.biojava3.structure.align.symm.gui.CEsymmGUI;
 import org.biojava3.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava3.structure.align.symm.order.OrderDetector;
 import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
@@ -34,7 +32,6 @@ import org.biojava3.structure.utils.SymmetryTools;
 public class CeSymm extends AbstractStructureAlignment implements
 		MatrixListener, StructureAlignment {
 	static final boolean debug = false;
-	boolean displayJmol = false;
 
 	public static final String algorithmName = "jCE-symmetry";
 
@@ -43,16 +40,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8,
 			0.4f); // TODO finish
 
-	public OrderDetector getOrderDetector() {
-		return orderDetector;
-	}
-
-	public void setOrderDetector(OrderDetector orderDetector) {
-		this.orderDetector = orderDetector;
-	}
-
-	private int order = -1;
-
 	AFPChain afpChain;
 
 	Atom[] ca1;
@@ -60,11 +47,13 @@ public class CeSymm extends AbstractStructureAlignment implements
 	int rows;
 	int cols;
 	CECalculator calculator;
-	CeParameters params;
+	CESymmParameters params;
 	// int loopCount ;
-	int maxNrAlternatives = 1;
-
-	private boolean refineResult = false;
+	
+	public CeSymm() {
+		super();
+		params = new CESymmParameters();
+	}
 
 	public static void main(String[] args) {
 
@@ -98,21 +87,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		processor.process(args);
 	}
 
-	public void setMaxNrAlternatives(int max) {
-		maxNrAlternatives = max;
-	}
 
-	public int getMaxNrAlternatives() {
-		return maxNrAlternatives;
-	}
-
-	public boolean isDisplayJmol() {
-		return displayJmol;
-	}
-
-	public void setDisplayJmol(boolean displayJmol) {
-		this.displayJmol = displayJmol;
-	}
 
 	public static String toDBSearchResult(AFPChain afpChain) {
 		StringBuffer str = new StringBuffer();
@@ -145,7 +120,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 			AtomCache cache, int fragmentLength) throws StructureException,
 			IOException {
 
-		params = new CeParameters();
+		params = new CESymmParameters();
 
 		params.setWinSize(fragmentLength);
 
@@ -157,7 +132,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 	}
 
 	private static Matrix align(AFPChain afpChain, Atom[] ca1, Atom[] ca2,
-			CeParameters params, Matrix origM, CECalculator calculator,
+			CESymmParameters params, Matrix origM, CECalculator calculator,
 			int counter) throws StructureException {
 
 		int fragmentLength = params.getWinSize();
@@ -237,7 +212,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 	public AFPChain align(Atom[] ca1, Atom[] ca2) throws StructureException {
 
 		if (params == null)
-			params = new CeParameters();
+			params = new CESymmParameters();
 
 		return align(ca1, ca2, params);
 	}
@@ -245,11 +220,11 @@ public class CeSymm extends AbstractStructureAlignment implements
 	@Override
 	public AFPChain align(Atom[] ca1, Atom[] ca2O, Object param)
 			throws StructureException {
-		if (!(param instanceof CeParameters))
+		if (!(param instanceof CESymmParameters))
 			throw new IllegalArgumentException(
-					"CE algorithm needs an object of call CeParameters as argument.");
+					"CE algorithm needs an object of call CESymmParameters as argument.");
 
-		this.params = (CeParameters) param;
+		this.params = (CESymmParameters) param;
 
 		this.ca1 = ca1;
 		this.ca2 = ca2O;
@@ -267,7 +242,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 		int i = 0;
 
-		while ((afpChain == null) && i < maxNrAlternatives) {
+		while ((afpChain == null) && i < params.getMaxNrAlternatives()) {
 
 			afpChain = myAFP;
 			if (origM != null) {
@@ -289,11 +264,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 			return afpChain;
 		}
 
-		if (displayJmol) {
-			CEsymmGUI.showCurrentAlig(afpChain, ca1, ca2);
-		}
-
-		if (refineResult) {
+		if (params.isRefineResult()) {
 			int order;
 			try {
 				order = orderDetector.calculateOrder(myAFP, ca1);
@@ -319,13 +290,13 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 	@Override
 	public void setParameters(ConfigStrucAligParams parameters) {
-		if (!(parameters instanceof CeParameters)) {
+		if (!(parameters instanceof CESymmParameters)) {
 			throw new IllegalArgumentException(
-					"Need to provide CeParameters, but provided "
+					"Need to provide CESymmParameters, but provided "
 							+ parameters.getClass().getName());
 		}
 
-		params = (CeParameters) parameters;
+		params = (CESymmParameters) parameters;
 	}
 
 	@Override
@@ -338,18 +309,12 @@ public class CeSymm extends AbstractStructureAlignment implements
 		return version;
 	}
 
-	/**
-	 * @return the refineResult
-	 */
-	public boolean isRefineResult() {
-		return refineResult;
+	public OrderDetector getOrderDetector() {
+		return orderDetector;
 	}
-	/**
-	 * @param refineResult
-	 *            the refineResult to set
-	 */
-	public void setRefineResult(boolean refineResult) {
-		this.refineResult = refineResult;
+
+	public void setOrderDetector(OrderDetector orderDetector) {
+		this.orderDetector = orderDetector;
 	}
 
 	public static boolean isSignificant(AFPChain afpChain,OrderDetector orderDetector, Atom[] ca1) throws StructureException {

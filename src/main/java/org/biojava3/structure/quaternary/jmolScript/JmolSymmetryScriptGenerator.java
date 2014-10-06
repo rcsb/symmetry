@@ -1,6 +1,12 @@
 package org.biojava3.structure.quaternary.jmolScript;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.vecmath.Color4f;
 import javax.vecmath.Matrix4d;
+import javax.vecmath.Tuple3d;
 
 import org.biojava3.structure.quaternary.core.AxisAligner;
 import org.biojava3.structure.quaternary.core.HelixAxisAligner;
@@ -90,6 +96,14 @@ public abstract class JmolSymmetryScriptGenerator {
 	public abstract void setDefaultColoring(String colorScript);
 	
 	/**
+	 * Sets the type of bioassembly to be colored. If set to true,
+	 * it will generate a Jmol script for a bioassembly generated
+	 * by Jmol on the fly. If set to false, it will generate Jmol script for
+	 * a bioassembly file read by Jmol.
+	 */
+	public abstract void setOnTheFly(boolean onTheFly);
+	
+	/**
 	 * Returns a Jmol script that draws an invisible polyhedron around a structure.
 	 * Use showPolyhedron() and hidePolyhedron() to toggle visibility.
 	 * @return Jmol script
@@ -143,5 +157,63 @@ public abstract class JmolSymmetryScriptGenerator {
 	 * @return Jmol script
 	 */
 	public abstract String colorBySymmetry();
+	
+	protected static String getJmolColorScript(Map<Color4f, List<String>> map) {
+		StringBuilder s = new StringBuilder();
+		s.append("color cartoons none;");
+		for (Entry<Color4f, List<String>> entry: map.entrySet()) {
+			s.append("color{");
+			List<String> ids = entry.getValue();
+			for (int i = 0; i < ids.size(); i++) {
+				s.append(":");
+				s.append(ids.get(i));
+				if (i < ids.size() -1 ) {
+			    s.append("|");
+				}
+			}
+			s.append("}");	
+			s.append(getJmolColor(entry.getKey()));
+			s.append(";");		
+		}
+		return s.toString();
+	}
+	
+	protected static String getJmolColor(Color4f color) {
+        String hex = Integer.toHexString((color.get().getRGB() & 0xffffff) | 0x1000000).substring(1);
+        return " [x" + hex + "]";
+	}
+	
+	protected static String getJmolPoint(Tuple3d point) {
+		StringBuilder s = new StringBuilder();
+		s.append("{");
+		s.append(fDot2(point.x));
+		s.append(",");
+		s.append(fDot2(point.y));
+		s.append(",");
+		s.append(fDot2(point.z));
+		s.append("}");
+		return s.toString();
+	}
+	
+	protected static String f1Dot2(float number) {
+		return String.format("%1.2f", number);
+	}
+	
+	protected static String fDot2(double number) {
+		return String.format("%.2f", number);
+	}
+	
+	/**
+	 * Returns a lower precision floating point number for Jmol
+	 * @param f
+	 * @return
+	 */
+	protected static float jMolFloat(double f) {
+		return (float)f;
+	}
+	
+	protected static String getJmolLigandScript() {
+		return "select ligand;wireframe 0.16;spacefill 23%;color cpk;";
+	}
 
 }

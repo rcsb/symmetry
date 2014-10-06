@@ -28,7 +28,9 @@ public class QuatSymmetryParameters {
 	private int maximumLocalSubunits = 20; // maximum number of subunits for local symmetry calculations
 	private boolean localSymmetry = true;
 	private double localTimeLimit = 120; // time limit for local calculations in seconds
+	private boolean onTheFly = false;
 	private boolean verbose = false;
+
 	private static final String n = System.getProperty("line.separator");
 	
 	/**
@@ -201,6 +203,19 @@ public class QuatSymmetryParameters {
 	public void setLocalTimeLimit(double localTimeLimit) {
 		this.localTimeLimit = localTimeLimit;
 	}
+	/**
+	 * @return true if Jmol on the fly bioassembly generation is used
+	 */
+	public boolean isOnTheFly() {
+		return onTheFly;
+	}
+	/**
+	 * @param onTheFly the onTheFly to set
+	 */
+	public void setOnTheFly(boolean useJmolBioAssemblies) {
+		this.onTheFly = useJmolBioAssemblies;
+	}
+	
 	public boolean isVerbose() {
 		return verbose;
 	}

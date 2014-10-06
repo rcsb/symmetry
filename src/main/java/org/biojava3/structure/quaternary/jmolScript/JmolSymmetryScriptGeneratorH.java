@@ -9,14 +9,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Color4f;
 import javax.vecmath.Matrix4d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Quat4d;
-import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
 
 import org.biojava3.structure.quaternary.core.HelixAxisAligner;
@@ -34,10 +32,15 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 	private HelixAxisAligner helixAxisAligner = null;
 	private String name = "";
 	private String defaultColoring = "";
+	private boolean onTheFly = false;
 
 	public JmolSymmetryScriptGeneratorH(HelixAxisAligner helixAxisAligner, String name) {
         this.helixAxisAligner = helixAxisAligner;
         this.name = name;
+	}
+	
+	public void setOnTheFly(boolean onTheFly) {
+		this.onTheFly = onTheFly;
 	}
 	
 	public int getZoom() {
@@ -394,7 +397,7 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 						ids = new ArrayList<String>();
 						colorMap.put(c,  ids);
 					}
-					String id = chainIds.get(j) + "/" + (modelNumbers.get(j)+1);
+					String id = getChainSpecification(modelNumbers, chainIds, j);
 					ids.add(id);
 				}
 		}
@@ -423,7 +426,7 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 				ids = new ArrayList<String>();
 				colorMap.put(c,  ids);
 			}
-			String id = chainIds.get(i) + "/" + (modelNumbers.get(i)+1);
+			String id = getChainSpecification(modelNumbers, chainIds, i);
 			ids.add(id);
 
 		}
@@ -472,7 +475,7 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 						ids = new ArrayList<String>();
 						colorMap.put(c,  ids);
 					}
-					String id = chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
+					String id = getChainSpecification(modelNumbers, chainIds, subunit);
 					ids.add(id);
 				}
 			}
@@ -480,6 +483,14 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 		
 		String coloring = defaultColoring + getJmolColorScript(colorMap);
 		return coloring;
+	}
+	
+	private String getChainSpecification(List<Integer> modelNumbers, List<String> chainIds, int subunit) {
+		if (onTheFly) {
+			return chainIds.get(subunit) + "&symop=" + (modelNumbers.get(subunit)+1);
+		} else {
+		    return chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
+		}
 	}
 	
 	/**
@@ -589,32 +600,7 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 		s.append(";");
 		return s.toString();
 	}
-	
-	private String getJmolColorScript(Map<Color4f, List<String>> map) {
-		StringBuilder s = new StringBuilder();
-		for (Entry<Color4f, List<String>> entry: map.entrySet()) {
-			s.append("select ");
-			List<String> ids = entry.getValue();
-			for (int i = 0; i < ids.size(); i++) {
-				s.append("*:");
-				s.append(ids.get(i));
-				if (i < ids.size() -1 ) {
-				    s.append(",");
-				} else {
-					s.append(";");
-				}
-			}
-			s.append("color cartoon");	
-			s.append(getJmolColor(entry.getKey()));
-			s.append(";");
-			s.append("color atom");
-			s.append(getJmolColor(entry.getKey()));
-			s.append(";");
-			
-		}
-		return s.toString();
-	}
-	
+
 	/**
 	 * Returns a unique color palette based on point group
 	 * @param nColors
@@ -641,53 +627,5 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 		s.append(";");
 		return s.toString();
 	}
-	
-	private static String getJmolPoint(Tuple3d point) {
-		StringBuilder s = new StringBuilder();
-		s.append("{");
-		s.append(fDot2(point.x));
-		s.append(",");
-		s.append(fDot2(point.y));
-		s.append(",");
-		s.append(fDot2(point.z));
-		s.append("}");
-		return s.toString();
-	}
-	
-	private static String getJmolColor(Color4f color) {
-		StringBuilder s = new StringBuilder();
-		s.append("{");
-		s.append(f1Dot2(color.x));
-		s.append(",");
-		s.append(f1Dot2(color.y));
-		s.append(",");
-		s.append(f1Dot2(color.z));
-		s.append("}");
-		return s.toString();
-	}
-	
-	private static String f1Dot2(float number) {
-		return String.format("%1.2f", number);
-	}
-	
-	private static String fDot2(double number) {
-		return String.format("%.2f", number);
-	}
-	
-	/**
-	 * Returns a lower precision floating point number for Jmol
-	 * @param f
-	 * @return
-	 */
-	private static float jMolFloat(double f) {
-	//	if (Math.abs(f) < 1.0E-7) {
-	//		return 0.0f;
-	//	}
-		return (float)f;
-
-	}
-
-	
-	
 	
 }

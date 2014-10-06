@@ -77,6 +77,7 @@ public class CalcBioAssemblySymmetry {
 				String postFix = "g";
 				AxisAligner aligner = AxisAligner.getInstance(globalSymmetry);
 				JmolSymmetryScriptGenerator generator = JmolSymmetryScriptGenerator.getInstance(aligner, postFix);
+				generator.setOnTheFly(parameters.isOnTheFly());
 				// save the preferred result
 				if (globalSymmetry.isPreferredResult()) {
 					this.results = globalSymmetry;
@@ -112,7 +113,8 @@ public class CalcBioAssemblySymmetry {
 					// to avoid naming conflicts when more than one symmetry is displayed at one time.
 					String postFix = "l" + count;
 					AxisAligner aligner = AxisAligner.getInstance(localSymmetry);
-					JmolSymmetryScriptGenerator generator = JmolSymmetryScriptGenerator.getInstance(aligner, postFix);			
+					JmolSymmetryScriptGenerator generator = JmolSymmetryScriptGenerator.getInstance(aligner, postFix);		
+					generator.setOnTheFly(parameters.isOnTheFly());
 					// sets color by symmetry for all subunits. This is
 					// required for local symmetry, to ensure all subunits are colored.
 					generator.setDefaultColoring(defaultColoring);

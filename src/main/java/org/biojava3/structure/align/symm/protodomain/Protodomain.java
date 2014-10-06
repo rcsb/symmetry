@@ -23,6 +23,7 @@
 
 package org.biojava3.structure.align.symm.protodomain;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,6 +44,7 @@ import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.io.util.FileDownloadUtils;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 
@@ -148,7 +150,15 @@ public class Protodomain {
 	public static Protodomain fromAfpChain(String enclosingName, AFPChain afpChain, Atom[] ca,
 			int numBlocks, int chainIndex, AtomCache cache) throws ProtodomainCreationException {
 		StructureName name = new StructureName(enclosingName);
+		
+		//SubstructureIdentifier sid = mew SubstructureIdentifier(enclosingName);
+		
 		List<String> domainRanges;
+		//Check if its a file instead
+		File file = new File(FileDownloadUtils.expandUserHome(enclosingName));
+		if (file.exists()) {
+			return null;
+		}
 		if (name.isScopName()) {
 			// SCOP
 			domainRanges = ScopFactory.getSCOP().getDomainByScopID(enclosingName).getRanges();
@@ -156,7 +166,7 @@ public class Protodomain {
 			// chain
 			domainRanges = new ArrayList<String>();
 			domainRanges.add(name.getChainId() + ":");
-		} else {
+		} else if ( name.isPdbId()){
 			// whole PDB Id
 			domainRanges = new ArrayList<String>();
 			Set<String> chains = new HashSet<String>();
@@ -164,11 +174,16 @@ public class Protodomain {
 				chains.add(atom.getGroup().getChainId());
 			}
 			for (String chain : chains) domainRanges.add(chain + ":");
+		} else if (  name.hasRanges()){
+			domainRanges = name.getRanges();
+		} else {
+			throw new ProtodomainCreationException(enclosingName, "","Don't know how to interpret " + enclosingName + " !");
 		}
 		return fromAfpChain(name.getPdbId().toLowerCase(), enclosingName, domainRanges, afpChain, ca, numBlocks, chainIndex, cache);
+		
 	}
 
-	
+
 	/**
 	 * Client code should avoid calling this method if either fromSymmetryAlignment or fromReferral is more appropriate.
 	 * The created Protodomain will include a gap in the alignment if and only if it is no greater than {@link #APPROX_CONSECUTIVE} residues.
@@ -205,9 +220,6 @@ public class Protodomain {
 		// since CE-Symm has two blocks, we're going to have to do this in 2 parts:
 		// from the start of block 1 to end end of block 1
 		// PLUS from the start of block 2 to the end of block 2
-
-
-		System.out.println("ranges:" + domainRanges);
 
 
 		// we rely on the fact that SCOP won't give us a range that contains multiple chains
@@ -268,9 +280,6 @@ public class Protodomain {
 	 *            (query) in position 1.
 	 * @param ca
 	 *            An array of Atoms of the result
-	 * @param order
-	 *            What the whole protodomain will be "cut" by. If it is set to 1, it the whole protodomain will be
-	 *            returned. This should ordinarily be set to the symmetry order of the query.
 	 * @param cache
 	 * @return
 	 * @throws ProtodomainCreationException
@@ -314,9 +323,9 @@ public class Protodomain {
 	 */
 	public static Protodomain fromString(String string, String enclosingName, AtomCache cache)
 			throws ProtodomainCreationException, IllegalArgumentException {
-		
+
 		String pdbId = new StructureName(enclosingName).getPdbId().toLowerCase();
-		
+
 		final AtomPositionMap map = Protodomain.getAminoAcidPositions(cache, pdbId, enclosingName);
 		final List<ResidueRange> list = ResidueRange.parseMultiple(string.substring(string.indexOf('.') + 1), map);
 
@@ -341,11 +350,34 @@ public class Protodomain {
 	 */
 	public static Protodomain fromSymmetryAlignment(AFPChain afpChain, Atom[] ca, int order, AtomCache cache)
 			throws ProtodomainCreationException {
+		// note that order isn't required in the current implementation, but it could be
 		if (afpChain.getBlockNum() != 2) throw new ProtodomainCreationException("unknown", afpChain.getName2(),
 				"The AFPChain did not contain exactly 2 blocks.");
 		return fromAfpChain(afpChain.getName1(), afpChain, ca, 2, 0, cache);
 	}
 
+	public static Protodomain append(AtomPositionMap map, AtomCache cache, Protodomain... protodomains) {
+		if (protodomains.length == 0) return null;
+		if (protodomains.length == 1) return new Protodomain(protodomains[0]);
+		String scopId = protodomains[0].getScopId();
+		List<ResidueRange> ranges = new ArrayList<ResidueRange>();
+		int previousEnd = 0;
+		for (Protodomain p : protodomains) {
+			if (!p.getScopId().equalsIgnoreCase(scopId)) {
+				throw new IllegalArgumentException("Protodomains do not belong to the same enclosing structure");
+			}
+			int start = map.getPosition(p.getRanges().get(p.getRanges().size()-1).getStart());
+			if (start < previousEnd) {
+				throw new IllegalArgumentException("Protodomains must be in order");
+			}
+			previousEnd = map.getPosition(p.getRanges().get(p.getRanges().size()-1).getEnd());
+			ranges.addAll(p.getRanges());
+		}
+		int length = ResidueRange.calcLength(ranges);
+		Protodomain protodomain = new Protodomain(scopId, protodomains[0].getPdbId(), ranges, length, cache);
+		return protodomain;		
+	}
+	
 	/**
 	 * From a list of residue ranges {@code residueRanges} and a number of residues wanted {@code numResiduesWant} (
 	 * <em>which includes any alignment gaps</em>), returns a new list of residue ranges that contains the first
@@ -357,22 +389,43 @@ public class Protodomain {
 	 * @param navMap
 	 *            An ordered map returned from {@link ResidueRange#orderByAtoms(Map)}.
 	 * @param index
-	 *            <strong>Currently ignored.</strong> TODO: Implement.
+	 *           TODO Write a comment
 	 * @return
 	 */
 	private static List<ResidueRange> calcSubstruct(List<ResidueRange> residueRanges, AtomPositionMap map, int order,
 			int index) {
 
+		if (order < 1) throw new IllegalArgumentException("Can't compute substructure if order is " + order);
+		
 		List<ResidueRange> part = new ArrayList<ResidueRange>(); // the parts we want to keep
 
 		int numResiduesHave = 0;
+		int numResiduesSkipped = 0;
 
 		int numResiduesWant = ResidueRange.calcLength(residueRanges) / order;
+
+		int numResiduesWantToSkip = numResiduesWant * index;
+		if (index > 0) numResiduesWantToSkip++; // this is because we don't want overlap
 
 		final NavigableMap<ResidueNumber, Integer> navMap = map.getNavMap();
 
 		outer: for (ResidueRange rr : residueRanges) {
 
+			if (numResiduesSkipped + rr.getLength() <= numResiduesWantToSkip) {
+				numResiduesSkipped += rr.getLength();
+				continue; // skip all of it
+			} else if (numResiduesSkipped <= numResiduesWantToSkip) {
+				// we only want part
+				// we'll execute the block below
+				// but before doing this, we'll redefine rr to remove the unwanted residues
+				ResidueNumber redefStart = rr.getStart();
+				for (int j = 0; j < numResiduesWantToSkip - numResiduesSkipped; j++) {
+					redefStart = navMap.higherEntry(redefStart).getKey();
+				}
+				rr = new ResidueRange(rr.getChainId(), redefStart, rr.getEnd(), rr.getLength() - (numResiduesWantToSkip - numResiduesSkipped));
+				numResiduesSkipped += rr.getLength();
+			}
+			
 			// note that getLength() here DOES INCLUDE gaps (and it should)
 			if (numResiduesHave + rr.getLength() <= numResiduesWant) {
 				// no problem: we can fit the entire residue range in
@@ -416,7 +469,8 @@ public class Protodomain {
 		try {
 			// We cannot use CA atoms only here because sometimes the C-alpha atom is missing
 			// Our AtomPositionMap should use something more liberal (see the AtomPositionMap constructor)
-			final Atom[] allAtoms = StructureTools.getAllAtomArray(cache.getStructure(pdbId)); // TODO is using scopId
+			Structure structure = StructureTools.getStructure(pdbId, null, cache);
+			final Atom[] allAtoms = StructureTools.getAllAtomArray(structure); // TODO is using scopId
 			// ok here?
 			return new AtomPositionMap(allAtoms);
 		} catch (IOException e) {
@@ -486,7 +540,7 @@ public class Protodomain {
 			ResidueNumber domainStartR = rr.getStart();
 			ResidueNumber domainEndR = rr.getEnd();
 			int domainStart, domainEnd;
-			
+
 			// these are the insertion-code-independent positions
 			Integer domainStartO = map.getPosition(domainStartR);
 			if (domainStartO == null) throw new ProtodomainCreationException("unknown", scopId,
@@ -596,18 +650,31 @@ public class Protodomain {
 		ranges = sb.toString();
 	}
 
+	public Protodomain(Protodomain protodomain) {
+		this.cache = protodomain.cache;
+		this.enclosingName = protodomain.enclosingName;
+		this.length = protodomain.length;
+		this.list = protodomain.list;
+		this.pdbId = protodomain.pdbId;
+		this.structure = protodomain.structure;
+		this.ranges = protodomain.ranges;
+	}
+
+
 	/**
 	 * Builds the structure of this Protodomain so that it can be returned by {@link #getStructure()}.
 	 * 
 	 * @throws IOException
 	 * @throws StructureException
 	 * @see #getStructure()
+	 * @return The structure
 	 */
-	public void buildStructure() throws IOException, StructureException {
+	public Structure buildStructure() throws IOException, StructureException {
 		if (structure == null) {
 			structure = cache.getStructure(toString());
 			structure.setName(toString());
 		}
+		return structure;
 	}
 
 	/**
@@ -620,10 +687,25 @@ public class Protodomain {
 	 * @throws ProtodomainCreationException
 	 */
 	public Protodomain createSubstruct(int order) throws ProtodomainCreationException {
+		return createSubstruct(order, 0);
+	}
+
+	/**
+	 * Creates a new Protodomain corresponding to this Protodomain cut by {@code order}. For example, if this
+	 * Protodomain contains 6 symmetry subunits, calling this.createSubgroup(3) will return the Protodomain
+	 * corresponding to the first 2 symmetry subunits.
+	 * 
+	 * @param order
+	 * @param index TODO Write a comment
+	 * @return
+	 * @throws ProtodomainCreationException
+	 */
+	public Protodomain createSubstruct(int order, int index) throws ProtodomainCreationException {
 		AtomPositionMap map = Protodomain.getAminoAcidPositions(cache, pdbId, enclosingName);
-		List<ResidueRange> rrs = calcSubstruct(list, map, order, 1);
+		List<ResidueRange> rrs = calcSubstruct(list, map, order, index);
 		return new Protodomain(pdbId, enclosingName, rrs, ResidueRange.calcLength(rrs), cache);
 	}
+
 
 	@Override
 	public boolean equals(Object obj) {

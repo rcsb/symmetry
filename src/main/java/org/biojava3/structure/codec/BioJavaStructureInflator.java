@@ -70,13 +70,19 @@ public class BioJavaStructureInflator implements StructureInflatorInterface {
 			group = new HetatomImpl();
 		}
 				
-		try {
+
 			group.setPDBName(groupName);
-		} catch (PDBParseException e1) {
-		}
+
 		group.setResidueNumber(chain.getChainID().trim(), groupNumber, insertionCode);
 		group.setAtoms(new ArrayList<Atom>(atomCount));
-		chain.addGroup(group);		
+	//	System.out.println("getting group: " + group);
+		if (polymerType != 0) {
+			chain.getSeqResGroups().add(group);
+		}
+		if (atomCount > 0) {
+		
+			chain.addGroup(group);	
+		}
 	}
 
 	@Override
@@ -85,6 +91,7 @@ public class BioJavaStructureInflator implements StructureInflatorInterface {
 			String element) {
 		Atom atom = new AtomImpl();	
 		atom.setPDBserial(atomCount++);
+//		System.out.println("BioJavaStructureInflator: " + atomCount);
 		atom.setFullName(atomName);	
 		atom.setName(atomName.trim());
 		atom.setElement(Element.valueOfIgnoreCase(element));

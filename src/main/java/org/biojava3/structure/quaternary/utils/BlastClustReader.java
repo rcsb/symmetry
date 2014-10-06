@@ -47,36 +47,39 @@ public class BlastClustReader {
 	
 	public String getRepresentativeChain(String pdbId, String chainId) {
 		loadClusters(sequenceIdentity);
-	
-		// check if chain id is lower case. In that case double the chain id, i.e. "o" becomes "oo" (example PDB 1VU1_oo)
-		// This appears to be the convention in the BlastClust files for lower case letters
-		String cId = new String(chainId);
-        String chainIdLc = cId.toLowerCase();
-//        if (chainIdLc.equals(chainId) && Character.isAlphabetic(chainId.codePointAt(0))) { // not available in Java 5
-        if (chainIdLc.equals(chainId) && !Character.isDigit(chainId.codePointAt(0))) {
-        	cId = pdbId + "_" + chainIdLc + chainIdLc;
-        } else {
-        	cId = pdbId + "_" + chainId;
-        }
+
+		String pdbChainId = pdbId.toUpperCase() + "." + chainId;   
 		
 		for (List<String> cluster: clusters) {
-			for (String chnId: cluster) {
-				if (chnId.equals(cId)) {
-					return cluster.get(0);
-				}
+			if (cluster.contains(pdbChainId)) {
+				return cluster.get(0);
 			}
 		}
 		return "";
 	}
 	
+	public int indexOf(String pdbId, String chainId) {
+		loadClusters(sequenceIdentity);
+
+		String pdbChainId = pdbId.toUpperCase() + "." + chainId;   
+		
+		for (int i = 0; i < clusters.size(); i++) {
+			List<String> cluster = clusters.get(i);
+			if (cluster.contains(pdbChainId)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
 	public List<List<String>> getPdbChainIdClusters(String pdbId) {
 		loadClusters(sequenceIdentity);
-		String pdbIdUc = pdbId.toUpperCase();
+		String pdbIdUpper = pdbId.toUpperCase();
 
 		List<List<String>> matches = new ArrayList<List<String>>();
 		for (List<String> cluster: clusters) {
 			for (String chainId: cluster) {
-				if (chainId.startsWith(pdbIdUc)) {
+				if (chainId.startsWith(pdbIdUpper)) {
 					matches.add(cluster);
 					break;
 				}
@@ -87,14 +90,13 @@ public class BlastClustReader {
 	
 	public List<List<String>> getChainIdsInEntry(String pdbId) {
 		loadClusters(sequenceIdentity);
-		String pdbIdUc = pdbId.toUpperCase();
 		
 		List<List<String>> matches = new ArrayList<List<String>>();
 		List<String> match = null;
 		
 		for (List<String> cluster: clusters) {
 			for (String chainId: cluster) {
-				if (chainId.startsWith(pdbIdUc)) {
+				if (chainId.startsWith(pdbId)) {
 					if (match == null) {
 						match = new ArrayList<String>();
 					}
@@ -135,7 +137,7 @@ public class BlastClustReader {
 				String line = null;
 				try {
 					while ((line = reader.readLine()) != null) {
-	//					line = line.replace('_', '.');
+						line = line.replaceAll("_", ".");
 						List<String> cluster = Arrays.asList(line.split(" "));	
 						clusters.add(cluster);
 					}

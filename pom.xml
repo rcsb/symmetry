@@ -2,9 +2,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>symmetry</artifactId>
-	<version>0.3.3-SNAPSHOT</version>
+	<version>0.4.0-SNAPSHOT</version>
 	<name>RCSB Symmetry</name>
-	
+
 	<properties>
 		<jdk.version>1.6</jdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -12,7 +12,7 @@
 		<maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
 		<timestamp>${maven.build.timestamp}</timestamp>
 	</properties>
-	
+
 	<repositories>
 		<repository>
 			<id>maven2-repository.dev.java.net</id>
@@ -24,15 +24,7 @@
 			<name>Java.net Maven 1 Repository (legacy)</name>
 			<url>http://download.java.net/maven/1</url>
 		</repository>
-		
-			
-		<!--  for vecmath... -->
-		<repository>
-            <id>geotoolkit</id>
-            <name>geotoolkit Repository</name>
-            <url>http://maven.geotoolkit.org/</url>
-        </repository>
-		
+
 		<repository>
 			<id>biojava-maven-repo</id>
 			<name>BioJava repository</name>
@@ -44,83 +36,78 @@
 				<enabled>true</enabled>
 			</releases>
 		</repository>
-		<repository>
-			<id>rcsb-pdb-maven-repo</id>
-			<name>RCSB PDB Maven Repository</name>
-			<url>http://nexus.rcsb.org/nexus/content/groups/public/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	        
+		
 	</repositories>
-	
+
 	<scm>
-		<developerConnection>https://github.com/rcsb/symmetry</developerConnection>
-		<connection>git://github.com/rcsb/symmetry.git</connection>
+		<connection>scm:git:git@github.com:rcsb/symmetry.git</connection>
+		<developerConnection>scm:git:git@github.com:rcsb/symmetry.git</developerConnection>
 		<url>https://github.com/rcsb/symmetry</url>
-	</scm>
+	  <tag>HEAD</tag>
+  </scm>
 	<issueManagement>
 		<url>https://github.com/rcsb/symmetry/issues</url>
 		<system>Github</system>
 	</issueManagement>
 
-	  	<!-- where Maven deploy will deploy project jars/wars -->
+	<!-- where Maven deploy will deploy project jars/wars -->
 	<distributionManagement>
-		<downloadUrl>http://nexus.rcsb.org/nexus/content/repositories/releases/</downloadUrl>
-		<repository>			
-			<id>releases</id>
-			<name>RCSB PDB Maven Repository</name>			
-			<url>http://nexus.rcsb.org/nexus/content/repositories/releases</url>
-
+		<downloadUrl>http://www.biojava.org/download/maven/</downloadUrl>
+		<repository>
+			<uniqueVersion>false</uniqueVersion>
+			<id>biojava-maven-repo</id>
+			<name>BioJava Maven Repository</name>
+			<url>scp://cloudportal.open-bio.org/home/websites/biojava.org/html/static/download/maven/</url>
+			<layout>default</layout>
 		</repository>
-		 <snapshotRepository>
-    		<id>snapshots</id>
-    		<url>http://nexus.rcsb.org/nexus/content/repositories/snapshots</url>
-    		<uniqueVersion>false</uniqueVersion>
-  		</snapshotRepository>
+		<snapshotRepository>
+			<uniqueVersion>false</uniqueVersion>
+			<id>biojava-maven-repo</id>
+			<name>BioJava Maven Repository</name>
+			<url>scp://cloudportal.open-bio.org/home/websites/biojava.org/html/static/download/maven/</url>
+			<layout>default</layout>
+		</snapshotRepository>
 	</distributionManagement>
-	
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>java3d</groupId>
 			<artifactId>vecmath</artifactId>
-			<version>1.5.2</version>
+			<version>1.3.1</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-structure</artifactId>
-			<version>3.0.8-SNAPSHOT</version>
-			
+
+			<version>4.0.0-SNAPSHOT</version>
+
+
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-structure-gui</artifactId>
-			<version>3.0.8-SNAPSHOT</version>
-			
+
+			<version>4.0.0-SNAPSHOT</version>
+
 		</dependency>
 		<dependency>
-			<groupId>org.rcsb</groupId>
-			<artifactId>ava-core</artifactId>
-			<version>2012-05-21-SNAPSHOT</version>
-			
+			<groupId>org.biojava</groupId>
+			<artifactId>biojava3-ws</artifactId>
+
+			<version>4.0.0-SNAPSHOT</version>
+
 		</dependency>
+		
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.15</version>
-			
 		</dependency>
 		<dependency>
 			<groupId>jfree</groupId>
 			<artifactId>jfreechart</artifactId>
 			<version>1.0.12</version>
-			
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -135,23 +122,16 @@
 			<version>1.9.5</version>
 		</dependency>
 
-
-		<dependency>
-			<groupId>commons-cli</groupId>
-			<artifactId>commons-cli</artifactId>
-			<version>1.2</version>
-		</dependency>
-		
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.0-beta9</version>
+			<version>2.0.2</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
-			<version>2.0-beta9</version>
+			<version>2.0.2</version>
 		</dependency>
 
 		<dependency>
@@ -166,33 +146,58 @@
 			<version>3.2</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.rcsb</groupId>
+			<artifactId>structurecodec</artifactId>
+			<version>0.2.0-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.5.1</version>
+				<version>3.1</version>
 				<configuration>
-				<fork>true</fork>
-						<source>${jdk.version}</source>
+					<fork>true</fork>
+					<source>${jdk.version}</source>
 					<target>${jdk.version}</target>
 					<maxmem>2000m</maxmem>
 				</configuration>
 			</plugin>
-					
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.4</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.5</version>
+				<version>2.6</version>
 			</plugin>
-			
+
 			<plugin>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.14.1</version>
-					<configuration>
-						<argLine>-Xms256m -Xmx2000M</argLine>
-					</configuration>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.17</version>
+				<configuration>
+					<argLine>-Xms256m -Xmx2000M</argLine>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5</version>
 			</plugin>
 
 		</plugins>
@@ -223,7 +228,7 @@
 				<version>2.3</version>
 			</extension>
 		</extensions>
-		
+
 	</build>
 	<url>https://github.com/rcsb/symmetry</url>
 	<description>Detect, analyze, and visualize protein symmetry
@@ -235,4 +240,56 @@
 		<name>RCSB</name>
 		<url>http://www.rcsb.org</url>
 	</organization>
+	
+	<profiles>
+
+		<!-- Note: before you can use this build profile you need to set up an 
+			environment that contains correctly signed keys. Configure the keystore properties 
+			and the profile in ~/.m2/settings.xml -->
+		<profile>
+			<id>codesigning</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-jarsigner-plugin</artifactId>
+						<version>1.3.1</version>
+						<executions>
+							<execution>
+								<id>sign</id>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+
+						<configuration>
+
+							<verbose>true</verbose>
+							<certs>true</certs>
+							<storetype>${keystore.type}</storetype>
+							<keystore>${keystore.path}</keystore>
+							<alias>${keystore.alias}</alias>
+							<storepass>${keystore.store.password}</storepass>
+							<keypass>${keystore.key.password}</keypass>
+							<signedjar>${project.build.directory}/${project.build.finalName}.jar</signedjar>
+							<verify>true</verify>
+							<verbose>true</verbose>
+							<goal>sign</goal>
+							<arguments>
+								<argument>-tsa</argument>
+								<argument>https://timestamp.geotrust.com/tsa</argument>
+							</arguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+	
+	
 </project>

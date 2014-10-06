@@ -18,6 +18,7 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
+import org.biojava.bio.structure.xtal.SpaceGroup;
 
 public class FindStructurePairs {
 	private static String PDB_PATH = "C:/Users/Peter/Documents/PDB/";
@@ -93,7 +94,7 @@ public class FindStructurePairs {
 						continue;
 					}
 					PDBCrystallographicInfo info1 = s1.getCrystallographicInfo();
-					String sp1 = info1.getSpaceGroup();
+					SpaceGroup sp1 = info1.getSpaceGroup();
 					PDBHeader header1 = s1.getPDBHeader();
 					String t1 = header1.getTechnique();
 					float r1 = header1.getResolution();
@@ -112,7 +113,7 @@ public class FindStructurePairs {
 						System.out.println("pdbIdJ: " + pdbId2);
 						PDBCrystallographicInfo info2 = s2.getCrystallographicInfo();
 						PDBHeader header2 = s2.getPDBHeader();
-						String sp2 = info2.getSpaceGroup();
+						SpaceGroup sp2 = info2.getSpaceGroup();
 						String t2 = header2.getTechnique();
 						float r2 = header2.getResolution();
 						String c2 = header2.getClassification();

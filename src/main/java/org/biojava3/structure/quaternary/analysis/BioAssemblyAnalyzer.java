@@ -1,56 +1,37 @@
 package org.biojava3.structure.quaternary.analysis;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.URL;
-import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import org.biojava.bio.structure.Chain;
 import org.biojava.bio.structure.PDBHeader;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.io.mmcif.AllChemCompProvider;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
-import org.biojava3.genome.homology.BlastHomologyHits;
+import org.biojava.bio.structure.xtal.SpaceGroup;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
-import org.biojava3.structure.quaternary.core.AxisAligner;
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
 import org.biojava3.structure.quaternary.core.Subunits;
-import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava3.structure.quaternary.misc.BioassemblyCheck;
-import org.biojava3.structure.quaternary.misc.PdbBlastHit;
-import org.biojava3.structure.quaternary.misc.PdbBlastXMLParser;
 import org.biojava3.structure.quaternary.misc.FindPdbRepresentatives;
+import org.biojava3.structure.quaternary.misc.PdbBlastHit;
 import org.biojava3.structure.quaternary.misc.ProteinComplexSignature;
-import org.biojava3.structure.quaternary.misc.SimpleCsvReader;
 import org.biojava3.structure.quaternary.utils.BlastClustReader;
 
 public class BioAssemblyAnalyzer implements Runnable {
-	//	private static String PDB_PATH = "C:/Users/Peter/Documents/PDB/";
 	public static final String SERVICELOCATION="http://www.rcsb.org/pdb/rest/postBLAST";
 	private AtomCache cache = null;
-	private static String RESULT_DIR = "C:/Users/Peter/Documents/QuatStructureComparison/";
+	private static String RESULT_DIR = "/Users/peter/Results/BioAssemblyAnalyzer/";
 
 
 	public BioAssemblyAnalyzer () {
@@ -105,26 +86,13 @@ public class BioAssemblyAnalyzer implements Runnable {
 		boolean skip = false;
 		String restartId = "10MH";
 
-//		for (String pdbId: set) {
-		for (String pdbId: testCase) {
-//	    for (String pdbId: helix20130916) {
-//					for (String pdbId: helixExamples) {
-//		for (String pdbId: collagenExamples) {
+		for (String pdbId: set) {
 			if (skip && pdbId.equals(restartId)) {
 				skip = false;
 			} 
 			if (skip) {
 				continue;
 			}
-
-			// exclude the following examples (out of memory exception)		
-//			if (pdbId.equals("1M4X")) continue;
-			if (pdbId.equals("3HQV")) continue;
-			if (pdbId.equals("3HR2")) continue;
-			if (pdbId.equals("4A8B")) continue; 
-			if (pdbId.equals("4D8Q")) continue;
-
-			if (pdbId.equals("4A0W")) continue;
 
 			System.out.println("------------- " + pdbId  + "-------------");
 
@@ -137,7 +105,7 @@ public class BioAssemblyAnalyzer implements Runnable {
 				bioAssemblyId = 1;
 			}
 
-			// TODO
+			// TODO for 
 //			bioAssemblyId = 0;
 			System.out.println("bioAssemblyId: " + bioAssemblyId);
 			//			for (int i = 0; i < bioAssemblyCount; i++) {	
@@ -159,16 +127,13 @@ public class BioAssemblyAnalyzer implements Runnable {
 			long ts1 = System.nanoTime(); 	
 
 			try {
-				String spaceGroup = "";
+				SpaceGroup spaceGroup = null;
 				float resolution = 0.0f;
 				if (structure != null) {
 					spaceGroup = structure.getCrystallographicInfo().getSpaceGroup();
 					 structure.getCrystallographicInfo().getA();
 					PDBHeader pdbHeader = structure.getPDBHeader();
 					resolution = pdbHeader.getResolution();	
-					System.out.println("resolution: " + resolution);
-					System.out.println("space group: " + spaceGroup);
-					;
 				}
 				FindPdbRepresentatives finder = new FindPdbRepresentatives(structure);
 				List<PdbBlastHit> representatives = finder.findBestBlastHits();
@@ -189,8 +154,7 @@ public class BioAssemblyAnalyzer implements Runnable {
 							check.BioassemblyCheck(representatives, result.getSubunits().getStoichiometry(), result.getSymmetry());
 						}
 					}
-					
-//					
+										
 					printToCsv(reader95, reader30, out, pdbId,
 							bioAssemblyId, time, globalResults, spaceGroup);
 					
@@ -225,7 +189,8 @@ public class BioAssemblyAnalyzer implements Runnable {
 
 	private void printToCsv(BlastClustReader reader95,
 			BlastClustReader reader30, PrintWriter out, String pdbId,
-			int bioAssemblyId, int time, List<QuatSymmetryResults> resultsList, String spaceGroup) {
+			int bioAssemblyId, int time, List<QuatSymmetryResults> resultsList, SpaceGroup spaceGroup) {
+		
 		for (QuatSymmetryResults results: resultsList) {
 			ProteinComplexSignature s95 = new ProteinComplexSignature(pdbId, results.getSubunits().getChainIds(), reader95);
 			String signature95 = s95.getComplexSignature();
@@ -233,16 +198,11 @@ public class BioAssemblyAnalyzer implements Runnable {
 			ProteinComplexSignature s30 = new ProteinComplexSignature(pdbId, results.getSubunits().getChainIds(), reader30);
 			String signature30 = s30.getComplexSignature();
 			String stoich30 = s30.getComplexStoichiometry();
+			
 			int order = 1;
 			if (!results.getSymmetry().equals("H")) {
 				order = results.getRotationGroup().getOrder();
 			}
-			AxisAligner aligner = AxisAligner.getInstance(results);
-			JmolSymmetryScriptGenerator script = JmolSymmetryScriptGenerator.getInstance(aligner, "g");
-			String color = script.colorBySymmetry();
-			String orient = script.getOrientationWithZoom(0);
-			String axis = script.drawAxes();
-			String polyhedron = script.drawPolyhedron();
 
 			out.println("PDB" + pdbId +"," + bioAssemblyId + "," + results.isLocal() +
 					"," + results.getSubunits().isPseudoStoichiometric() +
@@ -271,11 +231,7 @@ public class BioAssemblyAnalyzer implements Runnable {
 					"," + stoich95 +
 					"," + signature30 +
 					"," + stoich30 +
-					"," + spaceGroup +
-					"," + "\"" + orient +  "\"" +
-					"," +  "\"" + color +  "\"" +
-					"," +  "\"" + axis +  "\"" +
-					"," +  "\"" + polyhedron +  "\""
+					"," + spaceGroup
 					);
 		}
 	}
@@ -302,6 +258,4 @@ public class BioAssemblyAnalyzer implements Runnable {
 		ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
 	}
 	
-	private static String[] testCase = {"3W5A","1B4F","1A0J","4G2N","3TDK","4JIB","3ZRY","3O9V","1NMT","3HP3","1NF4","3R8R","1F33","1YG8"};
-
 }

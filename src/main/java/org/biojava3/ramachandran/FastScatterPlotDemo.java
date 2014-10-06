@@ -6,6 +6,7 @@ import java.util.SortedSet;
 
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.client.JFatCatClient;
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.secstruc.SecStruc;
 import org.biojava.bio.structure.secstruc.SecStrucGroup;
@@ -17,7 +18,6 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.FastScatterPlot;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
-import org.rcsb.fatcat.server.PdbChainKey;
 
 /**
  * A demo of the fast scatter plot.
@@ -102,7 +102,7 @@ public class FastScatterPlotDemo extends ApplicationFrame {
 			System.out.println("#" +count + "/" + repres.size() + " " + repre + " " + knownStructures.size());
 
 			try {
-				PdbChainKey key = PdbChainKey.fromName(repre);
+				StructureName key = new StructureName(repre);
 				if ( knownStructures.contains(key.getPdbId()))
 					continue;
 				knownStructures.add(key.getPdbId());

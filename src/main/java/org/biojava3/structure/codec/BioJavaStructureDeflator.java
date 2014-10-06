@@ -54,8 +54,8 @@ public class BioJavaStructureDeflator {
 		return writeTime;
 	}
 
-	public void deflate(Structure structure, String fileName, int compressionLevel) throws IOException {
-		this.compressionMethod = compressionLevel;
+	public void deflate(Structure structure, String fileName, int compressionMethod) throws IOException {
+		this.compressionMethod = compressionMethod;
 		
 		fileSize = 0;
 		fileSizeCompressed = 0;

@@ -3,23 +3,20 @@ package org.biojava3.structure.dbscan;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
 import java.net.URL;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.SortedSet;
-
 import java.util.TreeSet;
 
 import org.biojava.bio.structure.align.client.JFatCatClient;
-
+import org.biojava.bio.structure.align.client.StructureName;
 import org.biojava.bio.structure.align.util.HTTPConnectionTools;
-
 import org.biojava.bio.structure.align.xml.RepresentativeXMLConverter;
 
-import org.rcsb.fatcat.server.PdbChainKey;
-
+/**
+ * TODO Move this to {@link Representatives}.
+ */
 public class GetRepresentatives {
 
 	private static String clusterUrl = "http://www.rcsb.org/pdb/rest/representatives?cluster=";
@@ -35,7 +32,7 @@ public class GetRepresentatives {
 	 * @return PdbChainKey set of representatives
 	 * @deprecated
 	 */
-	public static SortedSet<PdbChainKey> getRepresentatives() {
+	public static SortedSet<StructureName> getRepresentatives() {
         return getRepresentatives(40);
 	}
 
@@ -46,8 +43,8 @@ public class GetRepresentatives {
 	 * @param sequenceIdentity sequence identity threshold
 	 * @return PdbChainKey set of representatives
 	 */
-	public static SortedSet<PdbChainKey> getRepresentatives(int sequenceIdentity) {
-		SortedSet<PdbChainKey> representatives = new TreeSet<PdbChainKey>();
+	public static SortedSet<StructureName> getRepresentatives(int sequenceIdentity) {
+		SortedSet<StructureName> representatives = new TreeSet<StructureName>();
 
 		if (!seqIdentities.contains(sequenceIdentity)) {
 			System.err.println("Error: representative chains are not available for %sequence identity: "
@@ -70,7 +67,7 @@ public class GetRepresentatives {
 				SortedSet<String> reps = RepresentativeXMLConverter.fromXML(xml);
 
 				for (String s : reps) {
-					PdbChainKey k = PdbChainKey.fromName(s);
+					StructureName k = new StructureName(s);
 					representatives.add(k);
 				}
 

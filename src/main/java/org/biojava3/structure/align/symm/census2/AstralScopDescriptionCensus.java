@@ -34,23 +34,27 @@ import org.biojava.bio.structure.scop.Astral;
 import org.biojava.bio.structure.scop.Astral.AstralSet;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.census2.representatives.ScopSupport;
+import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
 
 /**
  * A census that takes a list of sun Ids and a sequence clustering. Uses sequence clustering provided by ASTRAL.
  * 
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 
-	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(Census.class.getName());
 
 	public static void buildDefault(File censusFile, AstralSet astral, int[] sunIds) {
 		try {
 			int maxThreads = Runtime.getRuntime().availableProcessors() - 1;
 			AstralScopDescriptionCensus census = new AstralScopDescriptionCensus(maxThreads, astral, sunIds);
 			census.setOutputWriter(censusFile);
-			census.setCache(new AtomCache());
+			AtomCache cache = new AtomCache();
+			cache.setFetchFileEvenIfObsolete(true);
+			census.setCache(cache);
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
@@ -96,7 +100,7 @@ public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 		for (int sunId : sunIds) {
 			
 			List<ScopDomain> putative = new ArrayList<ScopDomain>();
-			ScopDescriptionCensus.getDomainsUnder(sunId, putative);
+			ScopSupport.getInstance().getAllDomainsUnder(sunId, putative, false);
 
 			for (ScopDomain domain : putative) {
 				if (clusterRepresentatives.contains(domain.getScopId())) domains.add(domain);

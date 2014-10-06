@@ -24,6 +24,13 @@
  */
 package org.biojava3.structure.align.symm.census2;
 
+/**
+ * For now, just used to represent a {@link Result} as a simple bean with only primitives and strings as fields.
+ * This was needed for the servlet.
+ * @author dmyersturnbull
+ * @deprecated
+ */
+@Deprecated
 public class SimpleResult {
 
 	public SimpleResult(Result r) {

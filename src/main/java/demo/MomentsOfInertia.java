@@ -142,7 +142,7 @@ public class MomentsOfInertia {
 		for (int i = 0, n = ca.length; i < n; i++) {
 			Atom a = ca[i];
 			float mass = a.getElement().getAtomicMass();
-			p = Calc.substract(ca[i], com);
+			p = Calc.subtract(ca[i], com);
 
 
 			tensor[0][0] += mass * (p.getY() * p.getY() + p.getZ() * p.getZ());

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:CensusResultList xmlns:ns2="http://source.rcsb.org">
+    <entry id="d1be7a_">
+        <alignedUnit>1be7.A_5-43</alignedUnit>
+        <group>C1</group>
+        <scores>
+            <alignLength>46</alignLength>
+            <gapLength>7</gapLength>
+            <identity>0.10869565</identity>
+            <rmsd>4.887143</rmsd>
+            <similarity>0.2173913</similarity>
+            <tmScore>0.22366627</tmScore>
+            <zScore>2.58</zScore>
+        </scores>
+    </entry>
+    <entry id="d1fp4a_">
+        <scores>
+            <alignLength>164</alignLength>
+            <gapLength>63</gapLength>
+            <identity>0.036585364</identity>
+            <rmsd>3.8502235</rmsd>
+            <similarity>0.1402439</similarity>
+            <tmScore>0.17754917</tmScore>
+            <zScore>3.89</zScore>
+        </scores>
+    </entry>
+    <entry id="d1fp4a_">
+        <scores>
+            <alignLength>164</alignLength>
+            <gapLength>63</gapLength>
+            <identity>0.036585364</identity>
+            <rmsd>3.8502235</rmsd>
+            <similarity>0.1402439</similarity>
+            <tmScore>0.17754917</tmScore>
+            <zScore>3.89</zScore>
+        </scores>
+    </entry>
+    <entry id="d1frxa_">
+        <alignedUnit>1frx.A_9-9,A_16-33,A_45-82</alignedUnit>
+        <group>C1</group>
+        <scores>
+            <alignLength>105</alignLength>
+            <gapLength>48</gapLength>
+            <identity>0.057142857</identity>
+            <rmsd>6.2227964</rmsd>
+            <similarity>0.15238096</similarity>
+            <tmScore>0.21740295</tmScore>
+            <zScore>2.3</zScore>
+        </scores>
+    </entry>
+    <entry id="d1g20e_">
+        <alignedUnit>1g20.E_17-43,E_75-152,E_160-197,E_207-211,E_238-252</alignedUnit>
+        <group>C1</group>
+        <scores>
+            <alignLength>299</alignLength>
+            <gapLength>147</gapLength>
+            <identity>0.04347826</identity>
+            <rmsd>5.258831</rmsd>
+            <similarity>0.110367894</similarity>
+            <tmScore>0.37002462</tmScore>
+            <zScore>3.5</zScore>
+        </scores>
+    </entry>
+    <entry id="d1g20e_">
+        <alignedUnit>1g20.E_17-43,E_75-152,E_160-197,E_207-211,E_238-252</alignedUnit>
+        <group>C1</group>
+        <scores>
+            <alignLength>299</alignLength>
+            <gapLength>147</gapLength>
+            <identity>0.04347826</identity>
+            <rmsd>5.258831</rmsd>
+            <similarity>0.110367894</similarity>
+            <tmScore>0.37002462</tmScore>
+            <zScore>3.5</zScore>
+        </scores>
+    </entry>
+    <entry id="d1js2a_">
+        <alignedUnit>1js2.A_10-24,A_30-57,A_67-78</alignedUnit>
+        <group>C3</group>
+        <scores>
+            <alignLength>80</alignLength>
+            <gapLength>25</gapLength>
+            <identity>0.075</identity>
+            <rmsd>5.1866245</rmsd>
+            <similarity>0.1375</similarity>
+            <tmScore>0.26369005</tmScore>
+            <zScore>1.99</zScore>
+        </scores>
+    </entry>
+    <entry id="d1js2a_">
+        <alignedUnit>1js2.A_10-24,A_30-57,A_67-78</alignedUnit>
+        <group>C3</group>
+        <scores>
+            <alignLength>80</alignLength>
+            <gapLength>25</gapLength>
+            <identity>0.075</identity>
+            <rmsd>5.1866245</rmsd>
+            <similarity>0.1375</similarity>
+            <tmScore>0.26369005</tmScore>
+            <zScore>1.99</zScore>
+        </scores>
+    </entry>
+    <entry id="d1js2a_">
+        <alignedUnit>1js2.A_10-24,A_30-57,A_67-78</alignedUnit>
+        <group>C3</group>
+        <scores>
+            <alignLength>80</alignLength>
+            <gapLength>25</gapLength>
+            <identity>0.075</identity>
+            <rmsd>5.1866245</rmsd>
+            <similarity>0.1375</similarity>
+            <tmScore>0.26369005</tmScore>
+            <zScore>1.99</zScore>
+        </scores>
+    </entry>
+    <entry id="d1js2a_">
+        <alignedUnit>1js2.A_10-24,A_30-57,A_67-78</alignedUnit>
+        <group>C3</group>
+        <scores>
+            <alignLength>80</alignLength>
+            <gapLength>25</gapLength>
+            <identity>0.075</identity>
+            <rmsd>5.1866245</rmsd>
+            <similarity>0.1375</similarity>
+            <tmScore>0.26369005</tmScore>
+            <zScore>1.99</zScore>
+        </scores>
+    </entry>
+    <entry id="d1m2ba_">
+        <alignedUnit>1m2b.A_24-59,A_64-72,A_88-99</alignedUnit>
+        <group>C2</group>
+        <scores>
+            <alignLength>98</alignLength>
+            <gapLength>41</gapLength>
+            <identity>0.020408163</identity>
+            <rmsd>6.1871157</rmsd>
+            <similarity>0.040816326</similarity>
+            <tmScore>0.18905598</tmScore>
+            <zScore>1.99</zScore>
+        </scores>
+    </entry>
+    <meanSecondsTaken>0.0</meanSecondsTaken>
+    <startingTime>2013-11-27 12:35:55</startingTime>
+</ns2:CensusResultList>

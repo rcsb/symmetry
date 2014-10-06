@@ -139,13 +139,12 @@ public class LigandInteractions {
 			boolean inContact = false;
 			for (Group g: chain.getAtomGroups()) {
 				for (Atom a: g.getAtoms()) {
-					try {
+
 						if (Calc.getDistanceFast(a, l) < 25) {
 							inContact = true;
 							break;
 						}
-					} catch (StructureException e) {
-					}
+
 				}
 				if (inContact) {
 					break;

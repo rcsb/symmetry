@@ -74,6 +74,9 @@ public class ResourceListTest {
 		long modAfter = provider.getAlignmentFile(alg.getAlgorithmName(), name1, name2).lastModified();
 		assertEquals("Existing alignment was recreated", modBefore, modAfter);
 		
+		// clean up
+		provider.getAlignmentFile(alg.getAlgorithmName(), name1, name2).delete();
+
 		return acaa;
 	}
 	

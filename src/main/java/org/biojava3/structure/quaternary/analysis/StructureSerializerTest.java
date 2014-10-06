@@ -32,8 +32,8 @@ import org.rcsb.codec.StructureInflator;
 
 public class StructureSerializerTest implements Runnable {
 	private AtomCache cache = null;
-	private static String RESULT_DIR = "C:/Users/Peter/Documents/StructureSerializer";
-	private static String RESULT_DIR_R = "C:/Users/Peter/Documents/StructureSerializerResults/";
+	private static String RESULT_DIR = "/Users/Peter/Documents/StructureSerializerCache";
+	private static String RESULT_DIR_R = "/Users/Peter/Documents/StructureSerializerResults/";
 	boolean useFile = false;
 
 	public StructureSerializerTest () {
@@ -56,7 +56,7 @@ public class StructureSerializerTest implements Runnable {
 		}
 		out.println("pdbID,io,type,gzipped,compressionLevel,atomCount,fileSize,time");
 	
-		boolean write = false;
+		boolean write = true;
 		boolean read = true;
 		boolean shuffle = false;
 		boolean useFile = false;
@@ -64,7 +64,7 @@ public class StructureSerializerTest implements Runnable {
 		List<String> pdb = new ArrayList<String>(GetRepresentatives.getAll());
 //		List<String> pdb = new ArrayList<String>();
 //		pdb.add("100D");
-//		pdb = pdb.subList(0, 100);
+		pdb = pdb.subList(0, 100);
 
 		if (shuffle) {
 			Collections.shuffle(pdb);

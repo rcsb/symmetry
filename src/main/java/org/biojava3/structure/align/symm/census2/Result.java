@@ -31,112 +31,26 @@ import java.io.Serializable;
  * 
  * @author Andreas Prlic
  * 
+ * @deprecated
  */
+@Deprecated
 public class Result implements Serializable {
 
 	private static final long serialVersionUID = 2282745910618366982L;
 
-	private Axis axis;
 	private Alignment alignment;
+	private AlignmentMapping alignmentMapping;
+	private Axis axis;
 	private String classification;
 	private String description;
+	private Float fractionHelical;
 	private Boolean isSignificant;
 	private Integer order;
 	private String protodomain;
 	private Integer rank;
 	private String scopId;
 	private Integer sunId;
-	private Float fractionHelical;
-	public Axis getAxis() {
-		return axis;
-	}
-	public Float getFractionHelical() {
-		return fractionHelical;
-	}
-	public void setFractionHelical(Float fractionHelical) {
-		this.fractionHelical = fractionHelical;
-	}
-	public void setAxis(Axis axis) {
-		this.axis = axis;
-	}
-	public Alignment getAlignment() {
-		return alignment;
-	}
-	public void setAlignment(Alignment alignment) {
-		this.alignment = alignment;
-	}
-	public String getClassification() {
-		return classification;
-	}
-	public void setClassification(String classification) {
-		this.classification = classification;
-	}
-	public String getDescription() {
-		return description;
-	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	public Boolean getIsSignificant() {
-		return isSignificant;
-	}
-	public void setIsSignificant(Boolean isSignificant) {
-		this.isSignificant = isSignificant;
-	}
-	public Integer getOrder() {
-		return order;
-	}
-	public void setOrder(Integer order) {
-		this.order = order;
-	}
-	public String getProtodomain() {
-		return protodomain;
-	}
-	public void setProtodomain(String protodomain) {
-		this.protodomain = protodomain;
-	}
-	public Integer getRank() {
-		return rank;
-	}
-	public void setRank(Integer rank) {
-		this.rank = rank;
-	}
-	public String getScopId() {
-		return scopId;
-	}
-	public void setScopId(String scopId) {
-		this.scopId = scopId;
-	}
-	public Integer getSunId() {
-		return sunId;
-	}
-	public void setSunId(Integer sunId) {
-		this.sunId = sunId;
-	}
-	@Override
-	public String toString() {
-		return "Result [axis=" + axis + ", alignment=" + alignment + ", classification=" + classification
-				+ ", description=" + description + ", isSignificant=" + isSignificant + ", order=" + order
-				+ ", protodomain=" + protodomain + ", rank=" + rank + ", scopId=" + scopId + ", sunId=" + sunId
-				+ ", fractionHelical=" + fractionHelical + "]";
-	}
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((alignment == null) ? 0 : alignment.hashCode());
-		result = prime * result + ((axis == null) ? 0 : axis.hashCode());
-		result = prime * result + ((classification == null) ? 0 : classification.hashCode());
-		result = prime * result + ((description == null) ? 0 : description.hashCode());
-		result = prime * result + ((fractionHelical == null) ? 0 : fractionHelical.hashCode());
-		result = prime * result + ((isSignificant == null) ? 0 : isSignificant.hashCode());
-		result = prime * result + ((order == null) ? 0 : order.hashCode());
-		result = prime * result + ((protodomain == null) ? 0 : protodomain.hashCode());
-		result = prime * result + ((rank == null) ? 0 : rank.hashCode());
-		result = prime * result + ((scopId == null) ? 0 : scopId.hashCode());
-		result = prime * result + ((sunId == null) ? 0 : sunId.hashCode());
-		return result;
-	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -202,6 +116,102 @@ public class Result implements Serializable {
 		} else if (!sunId.equals(other.sunId))
 			return false;
 		return true;
+	}
+	public Alignment getAlignment() {
+		return alignment;
+	}
+	public AlignmentMapping getAlignmentMapping() {
+		return alignmentMapping;
+	}
+	public Axis getAxis() {
+		return axis;
+	}
+	public String getClassification() {
+		return classification;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public Float getFractionHelical() {
+		return fractionHelical;
+	}
+	public Boolean getIsSignificant() {
+		return isSignificant;
+	}
+	public Integer getOrder() {
+		return order;
+	}
+	public String getProtodomain() {
+		return protodomain;
+	}
+	public Integer getRank() {
+		return rank;
+	}
+	public String getScopId() {
+		return scopId;
+	}
+	public Integer getSunId() {
+		return sunId;
+	}
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((alignment == null) ? 0 : alignment.hashCode());
+		result = prime * result + ((axis == null) ? 0 : axis.hashCode());
+		result = prime * result + ((classification == null) ? 0 : classification.hashCode());
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((fractionHelical == null) ? 0 : fractionHelical.hashCode());
+		result = prime * result + ((isSignificant == null) ? 0 : isSignificant.hashCode());
+		result = prime * result + ((order == null) ? 0 : order.hashCode());
+		result = prime * result + ((protodomain == null) ? 0 : protodomain.hashCode());
+		result = prime * result + ((rank == null) ? 0 : rank.hashCode());
+		result = prime * result + ((scopId == null) ? 0 : scopId.hashCode());
+		result = prime * result + ((sunId == null) ? 0 : sunId.hashCode());
+		return result;
+	}
+	public void setAlignment(Alignment alignment) {
+		this.alignment = alignment;
+	}
+	public void setAlignmentMapping(AlignmentMapping afpChain) {
+		this.alignmentMapping = afpChain;
+	}
+	public void setAxis(Axis axis) {
+		this.axis = axis;
+	}
+	public void setClassification(String classification) {
+		this.classification = classification;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public void setFractionHelical(Float fractionHelical) {
+		this.fractionHelical = fractionHelical;
+	}
+	public void setIsSignificant(Boolean isSignificant) {
+		this.isSignificant = isSignificant;
+	}
+	public void setOrder(Integer order) {
+		this.order = order;
+	}
+	public void setProtodomain(String protodomain) {
+		this.protodomain = protodomain;
+	}
+	public void setRank(Integer rank) {
+		this.rank = rank;
+	}
+	public void setScopId(String scopId) {
+		this.scopId = scopId;
+	}
+	public void setSunId(Integer sunId) {
+		this.sunId = sunId;
+	}
+	@Override
+	public String toString() {
+		return "Result [axis=" + axis + ", alignment=" + alignment + ", classification=" + classification
+				+ ", description=" + description + ", isSignificant=" + isSignificant + ", order=" + order
+				+ ", protodomain=" + protodomain + ", rank=" + rank + ", scopId=" + scopId + ", sunId=" + sunId
+				+ ", fractionHelical=" + fractionHelical + "]";
 	}
 	
 }

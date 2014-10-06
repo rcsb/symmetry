@@ -36,7 +36,7 @@ import org.biojava3.structure.align.symm.census2.Results;
 
 /**
  * Converts {@link Results} XML serializations to HTML files.
- * @author dmyerstu
+ * @author dmyersturnbull
  */
 public class ResultConverter {
 

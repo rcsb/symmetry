@@ -1,7 +1,35 @@
 package org.biojava3.structure.codec;
 
-import static org.rcsb.codec.CodecConstants.*;
-
+import static org.rcsb.codec.CodecConstants.AMINO_ACID;
+import static org.rcsb.codec.CodecConstants.BFACTOR;
+import static org.rcsb.codec.CodecConstants.BLANK;
+import static org.rcsb.codec.CodecConstants.BYTE2_INTEGER_MARKER;
+import static org.rcsb.codec.CodecConstants.BYTE2_ENCODED_MARKER;
+import static org.rcsb.codec.CodecConstants.BYTE2_MAX_VALUE;
+import static org.rcsb.codec.CodecConstants.BYTE2_MIN_VALUE;
+import static org.rcsb.codec.CodecConstants.BYTE4_SHORT_MARKER;
+import static org.rcsb.codec.CodecConstants.BYTE4_ENCODED_MARKER;
+import static org.rcsb.codec.CodecConstants.BYTE4_MAX_VALUE;
+import static org.rcsb.codec.CodecConstants.SHORT_COORDINATE_TYPE;
+import static org.rcsb.codec.CodecConstants.INTEGER_COORDINATE_TYPE;
+import static org.rcsb.codec.CodecConstants.ENCODED_COORDINATE_TYPE;
+import static org.rcsb.codec.CodecConstants.BO_SCALE;
+import static org.rcsb.codec.CodecConstants.CHAIN;
+import static org.rcsb.codec.CodecConstants.COORD;
+import static org.rcsb.codec.CodecConstants.END;
+import static org.rcsb.codec.CodecConstants.GINFO;
+import static org.rcsb.codec.CodecConstants.GROUP;
+import static org.rcsb.codec.CodecConstants.HEAD;
+import static org.rcsb.codec.CodecConstants.NON_POLYMER;
+import static org.rcsb.codec.CodecConstants.MODEL;
+import static org.rcsb.codec.CodecConstants.NUCLEOTIDE;
+import static org.rcsb.codec.CodecConstants.NUCLEOTIDE_BOND_LENGTH;
+import static org.rcsb.codec.CodecConstants.OCCUPANCY;
+import static org.rcsb.codec.CodecConstants.PEPTIDE_BOND_LENGTH;
+import static org.rcsb.codec.CodecConstants.SEQUENCE;
+import static org.rcsb.codec.CodecConstants.STRUCTURE;
+import static org.rcsb.codec.CodecConstants.TAIL;
+import static org.rcsb.codec.CodecConstants.XYZ_SCALE;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -83,12 +111,11 @@ import org.rcsb.codec.BitEncoder;
  *
  */
 public class StructureEncoderImpl1 extends StructureEncoder {
+	
+	public static final boolean DEBUG = false;
+	
 	private DataOutputStream outStream = null;
 	
-//	long byteCount = 0;
-//	long totalCount = 0;
-//	private int bCount = 0;
-	private long time = 0;
 	private int atomCount = 0;
 	private int xyzSize = 0;
 	private int bFactorSize = 0;
@@ -98,6 +125,8 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 	private List<Integer> groupArray = null;
 	private List<int[]> bondInfo = null;
 	private int[] intBuffer = new int[1];
+	
+	private static final int MAX_GROUP_SIZE = 1024;
 
 	public StructureEncoderImpl1(DataOutputStream outStream) {
 		this.outStream = outStream;
@@ -112,12 +141,14 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 		outStream.writeByte(END);
 	}
 	
-	public void writeInfo(Structure structure) throws IOException {
+	private void writeInfo(Structure structure) throws IOException {
 		preCheck(structure);	
 		outStream.writeByte(STRUCTURE);
 		outStream.writeByte(5);
 		outStream.writeInt(structure.nrModels());	
 		outStream.writeBoolean(homogeneousModels);
+		
+		System.out.println("homogeneous model: " + homogeneousModels);
 		
 		LinkedHashMap<String, Integer> groupMap = new LinkedHashMap<String, Integer>();
 		LinkedHashMap<String, Integer> sequenceMap = new LinkedHashMap<String, Integer>();
@@ -155,25 +186,34 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 				outStream.writeByte(12);
 				outStream.writeInt(seqIndex);
 				writeFixedLengthString(4, c.getChainID());		
-		//		List<Group> groups = c.getAtomGroups();
-				List<Group> groups = c.getSeqResGroups();
+
+				// TODO handle alternative locations
+//				List<Group> groups = getCombinedGroups(c);
+				List<Group> groups = getCombinedGroupsWithAltLoc(c);
 				outStream.writeInt(groups.size());
 				
 				
 				for (Group g: groups) {
+	//				System.out.println("adding group: " + g);
 					StringBuilder buffer = new StringBuilder();
 					buffer.append(toFixedLengthString(3, g.getPDBName()));
 					ResidueNumber rn = g.getResidueNumber();
-					Character insCode = rn.getInsCode() == null ? ' ' : rn.getInsCode().charValue();
+					Character insCode = ' ';
+					if (rn != null) {
+					    insCode = rn.getInsCode() == null ? ' ' : rn.getInsCode().charValue();
+					}
 					buffer.append(insCode.toString());
 					
 					List<Atom> atoms = g.getAtoms();
 					atomCount += atoms.size();
-				
+
 					for (Atom a: atoms) {
 						buffer.append(a.getFullName());
 						buffer.append(toFixedLengthString(2, a.getElement().name()));
 						buffer.append(a.getAltLoc().toString());
+						if (g.hasAltLoc()) {
+							System.out.println("alternative location: " + a.getAltLoc().toString());
+						}
 					}
 					
 					String gInfo = buffer.toString();
@@ -183,39 +223,31 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 						byte flags = 0;
 						if (g instanceof AminoAcid) {
 							flags |= AMINO_ACID;
-							Atom head = null;
-							try {
-								head = ((AminoAcid) g).getN(); // outch, this has a nasty side effect of adding atoms
-							} catch (StructureException e) {
-							} 
+							Atom head = ((AminoAcid) g).getN(); // outch, this has a nasty side effect of adding atoms
+
 							if (head != null) {
 								flags |= HEAD;
 							}
-							Atom tail = null;
-							try {
-								tail = ((AminoAcid) g).getC();
-							} catch (StructureException e) {
-							} 
+							Atom tail = ((AminoAcid) g).getC();
+
 							if (tail != null) {
 								flags |= TAIL;
 							}	
 						}
 						if (g instanceof NucleotideImpl) {
 							flags |= NUCLEOTIDE;
-							Atom head = null;
-							head = ((NucleotideImpl) g).getP();
+							Atom head = ((NucleotideImpl) g).getP();
 							if (head != null) {
 								flags |= HEAD;
 							}
-							Atom tail = null;
-							tail = ((NucleotideImpl) g).getO3Prime();
+							Atom tail = ((NucleotideImpl) g).getO3Prime();
 							if (tail != null) {
 								flags |= TAIL;
 							}	
 						}
-						// this may return amino for an non-std amino acid
+						// TODO this may return amino for an non-std amino acid
 						if (g.getType().equals("HETATM")) {
-							flags |= HETATOM;
+							flags |= NON_POLYMER;
 						}
 					
 						gIndex = groupIndex;
@@ -227,17 +259,22 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 						outStream.writeShort(atoms.size());
 						outStream.writeByte(flags);
 						outStream.write(gInfo.getBytes());
+
 						int[] bondList = createBondList(g);
+	//					System.out.println("create bond index for: " + g + " gIndex: " + gIndex + " bondlist length: " + bondList.length);
 						for (int bl: bondList) {
 						    outStream.writeShort(bl);
 						}
 						bondInfo.add(bondList);
 					}
 		
+					if ( DEBUG)
+						System.out.println("info: " + groups.indexOf(g) + ": " + g + " gIndex: " + gIndex);
+					
 					groupArray.add(gIndex);			
 					outStream.writeByte(GROUP);
 
-					if (groupNumber == 0 || rn.getSeqNum() != groupNumber + 1) {
+					if (rn != null && (groupNumber == 0 || rn.getSeqNum() != groupNumber + 1)) {
 						// beginning of a chain or group numbers are discontinuous, save number
 						groupNumber = rn.getSeqNum();
 						outStream.writeByte(8);
@@ -255,14 +292,74 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 		if (homogeneousModels) {
 			atomCount *= structure.nrModels();
 		}
-//		System.out.println("groupArray: " + groupArray.size());
-//		System.out.println("homogeneous: " + homogeneousModels);
-//		System.out.println("useBfactor: " + useBfactor);
-//		System.out.println("useOccupancy: " + useOccupancy);
-//		System.out.println("models: " + structure.nrModels());
+		System.out.println("total atom count: " + atomCount);
 	}
 
-	public void writeAtomInfo(Structure structure) throws IOException {
+	/**
+	 * Returns a list of all groups for a chain. It merges the groups (residues) of the 
+	 * biopolymers with the non-polymer groups (ligands)
+	 * @param chain
+	 * @return
+	 */
+	private List<Group> getCombinedGroups(Chain chain) {
+		// get list of groups of the biopolymer, this includes groups that do
+		// not have ATOM records, i.e., group in gaps.
+		List<Group> combined = new ArrayList<Group>(chain.getSeqResGroups());
+		// get list of groups that have ATOM/HETATM records, this list includes
+		// biopolymer residues and ligands
+		List<Group> nonPolymerGroups = new ArrayList<Group>(chain.getAtomGroups());
+		// remove groups that are in common among the two lists
+		nonPolymerGroups.removeAll(combined);
+		// finally, create a combined list without duplicate groups
+		combined.addAll(nonPolymerGroups);
+
+		return combined;
+	}
+	
+	private List<Group> getCombinedGroupsWithAltLoc(Chain chain) {
+		// get list of groups of the biopolymer, this includes groups that do
+		// not have ATOM records, i.e., group in gaps.
+		List<Group> combined = new ArrayList<Group>();
+		for (Group g: chain.getSeqResGroups()) {
+			combined.add(g);
+			if (g.hasAltLoc()) {
+				System.out.println("Found alternative location groups");
+				System.out.println("Original group:" + g.getPDBName() + g.getResidueNumber());
+				for (Atom a: g.getAtoms()) {
+					System.out.println(a);
+				}
+				System.out.println(g);
+				for (Group ag: g.getAltLocs()) {
+					System.out.println("AltLoc group: " + ag.getPDBName() + ag.getResidueNumber());
+					System.out.println(ag);
+					for (Atom a: ag.getAtoms()) {
+						System.out.println(a);
+					}
+					combined.add(ag);
+				}
+			}	
+		}
+		// get list of groups that have ATOM/HETATM records, this list includes
+		// biopolymer residues and ligands
+		List<Group> nonPolymerGroups = new ArrayList<Group>(chain.getAtomGroups());
+		// remove groups that are in common among the two lists
+		nonPolymerGroups.removeAll(combined);
+		// finally, create a combined list without duplicate groups
+		combined.addAll(nonPolymerGroups);
+
+		System.out.println("Combined group size: " + combined.size());
+		return combined;
+	}
+	
+	/**
+	 * Writes atom information in compressed from to output stream.
+	 * Atomic coordinates are always written. B factor and occupancy
+	 * data are written optionally, based on flag values. This saves
+	 * space for structures that have constant B factors or occupancies.
+	 * @param structure
+	 * @throws IOException
+	 */
+	private void writeAtomInfo(Structure structure) throws IOException {
 		List<Integer> xyz = new ArrayList<Integer>((int)((float)atomCount*3.6));
 		int xyzType = 4;
 		
@@ -277,157 +374,153 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 		   occupancy = new ArrayList<Integer>((int)((float)atomCount));
 		}
 		
-		int[] x = new int[1024];
-		int[] y = new int[1024];
-		int[] z = new int[1024];
-		int[] b = new int[1024];
+		int[] x = new int[MAX_GROUP_SIZE];
+		int[] y = new int[MAX_GROUP_SIZE];
+		int[] z = new int[MAX_GROUP_SIZE];
+		int[] b = new int[MAX_GROUP_SIZE];
 		
 		int groupCount = 0;
 		
 		for (int m = 0 ; m < structure.nrModels(); m++) {
+			int modelNumber = m;
 			if (homogeneousModels) {
 			    groupCount = 0;
+			    modelNumber = 0;
 			}
 			
-			for (Chain c: structure.getChains(m)) {	
+			List<Chain> referenceChains = structure.getChains(modelNumber);
+			List<Chain> actualChains = structure.getChains(m);
+			for (int i = 0; i < referenceChains.size(); i++) {	
+				Chain referenceChain = referenceChains.get(i); // TODO only the first (reference chain contains SeqRes groups, they are missing in the othe models (why?)
+				Chain actualChain = actualChains.get(i);
+				System.out.println("Encoding chain: " + " model: " + m + " id: " + referenceChain.getChainID());
 				// integer atom coordinates and b-factor for previous atom
 				int xOffset = 0;
 				int yOffset = 0;
 				int zOffset = 0;
 				int bOffset = 0;
 				
-				// integer atom coordinates and b-factor for previous 
-				// link atom (Calpha for proteins, P for nucleic acids)
-				int xLink = 0;
-				int yLink = 0;
-				int zLink = 0;
-				int bLink = 0;
+				// integer atom coordinates and b-factor for the 
+				// polymer tail atom from the previous group (residue)
+				int xTail = 0;
+				int yTail = 0;
+				int zTail = 0;
+				int bTail = 0;
 				boolean hasTail = false;
 				
 //				for (Group g: c.getAtomGroups()) {
-					for (Group g: c.getSeqResGroups()) {
+//				for (Group g: c.getSeqResGroups()) {
+//				for (Group g: getCombinedGroups(actualChain)) {
+				for (Group g: getCombinedGroupsWithAltLoc(actualChain)) {
 					int gIndex = groupArray.get(groupCount);
-					int[] bondList = bondInfo.get(gIndex);
-		
+					if ( DEBUG)
+						System.out.println("atoms: " + groupCount + ": " + g + " gIndex: " + gIndex);
+					int[] bondList = bondInfo.get(gIndex);	
+					
 					List<Atom> atoms = g.getAtoms();
-					System.out.println("atomCount: " + atoms.size());
 					Atom tail = null;
 					Atom head = null;
 					boolean isAminoAcid = false;
 					boolean isNucleotide = false;
-					if (g instanceof AminoAcid) {
-						head = null;
-						try {
-							head = ((AminoAcid) g).getN();
-							
-						} catch (StructureException e) {
-						} 
-						try {
-							tail = ((AminoAcid) g).getC();
-						} catch (StructureException e) {
-						} 	
-						isAminoAcid = true;
+                    if (g instanceof AminoAcid) {
+                        head = ((AminoAcid) g).getN();
+                        tail = ((AminoAcid) g).getC();
+                        isAminoAcid = true;
 					} else if (g instanceof NucleotideImpl) {
 						tail = ((NucleotideImpl) g).getO3Prime(); 
 						head = ((NucleotideImpl) g).getP();
 						isNucleotide = true;
 					}
 				
-					if (atoms.size() > 1024) {
+					// no group is larger than MAX_GROUP_SIZE, but
+					// just in case that ever changes, accommodate large sizes
+					if (atoms.size() > MAX_GROUP_SIZE) {
 						x = new int[atoms.size()];
 						y = new int[atoms.size()];
 						z = new int[atoms.size()];
 						b = new int[atoms.size()];
 					}
 					
-					long t1 = System.nanoTime();
 					for (int k = 0; k < atoms.size(); k++) {
 						Atom a = atoms.get(k);
 					
-						x[k] = (int)Math.round(a.getX() * XYZ_PRECISION);
-						y[k] = (int)Math.round(a.getY() * XYZ_PRECISION);
-						z[k] = (int)Math.round(a.getZ() * XYZ_PRECISION);
-						b[k] = (int)Math.round(a.getTempFactor() * B_PRECISION);
+						// convert doubles to fixed precision by scaling and rounding to nearest integer
+						x[k] = (int)Math.round(a.getX() * XYZ_SCALE);
+						y[k] = (int)Math.round(a.getY() * XYZ_SCALE);
+						z[k] = (int)Math.round(a.getZ() * XYZ_SCALE);
+						b[k] = (int)Math.round(a.getTempFactor() * BO_SCALE);
 			
 						int deltaX = 0;
 						int deltaY = 0;
 						int deltaZ = 0;
 						int deltaB = 0;
-						int distance = 0;
+						int bondLength = 0;
 				
+						// values in the bond list indicate how to perform delta coding
 						if (bondList[k] >=0) {
-							// use bond length from reference bond
+							// find index to reference atom that atom k is bonded to
 							int reference = bondList[k];
-							distance = bondList[atoms.size()+k];
-							// calculate difference to previous bonded atom
+							// calculate difference to reference atom
 							deltaX = x[k] - x[reference];
 							deltaY = y[k] - y[reference];
 							deltaZ = z[k] - z[reference];
 							deltaB = b[k] - b[reference];
+							// bond length from from reference group is used as the standard bond length 
+							// for encoding the atom coordinates
+							bondLength = bondList[atoms.size()+k];
 						} else if (k == 0 && head != null && hasTail) {
-							// use standard polymer bond to previous residue, if it has a tail atom
+							// use standard polymer bond to previous residue, if it has a tail atom		
+							// calculate difference between head atom of current group and tail atom from the previous group
+							deltaX = x[k] - xTail;
+							deltaY = y[k] - yTail;
+							deltaZ = z[k] - zTail;
+							deltaB = b[k] - bTail;
 							if (isAminoAcid) {
-								distance = PEPTIDE_BOND_LENGTH;
+								bondLength = PEPTIDE_BOND_LENGTH;
 							} else if (isNucleotide) {
-								distance = NUCLEOTIDE_BOND_LENGTH;
+								bondLength = NUCLEOTIDE_BOND_LENGTH;
 							}
-							// Calculate difference between link atom and link atom from previous group
-							deltaX = x[k] - xLink;
-							deltaY = y[k] - yLink;
-							deltaZ = z[k] - zLink;
-							deltaB = b[k] - bLink;
 						} else {
-							// calculate difference to previous atom
-						
+							// calculate difference to previous atom positions and b-factors (offsets)					
 							deltaX = x[k] - xOffset;
 							deltaY = y[k] - yOffset;
 							deltaZ = z[k] - zOffset;
 							deltaB = b[k] - bOffset;
-						}
-						
-//						if (Math.abs(a.getZ() - 123.062) < 0.001) {
-//							System.out.println("Atom: " + a);
-//							System.out.println("k: " + k);
-//							System.out.println("distance: " + distance);
-//							System.out.println("Link atom: " + tail + " dist: " + distance);
-//							System.out.println("offset: " + xOffset+","+yOffset+","+zOffset+","+bOffset);
-//							System.out.println("delta: " + deltaX+","+deltaY+","+deltaZ+","+deltaB);
-//							System.out.println("xyzb: " + x[k]+","+y[k]+","+z[k]+","+b[k]);
-//							
-//							
-//							System.out.println("link: " + xLink+","+yLink+","+zLink);
-//							System.out.println("------------------------------------");
-//						}
+						}			
 
-						xyzType = encodeCoords(deltaX, deltaY, deltaZ, distance, xyzType, xyz);
+						// encode coordinates
+						xyzType = encodeCoords(deltaX, deltaY, deltaZ, bondLength, xyzType, xyz);
 
 						if (useBfactor) {
+							// encode b-factor
 							bFactorType = addVarIntBfactor(deltaB, bFactorType, bFactor);
 						}
 
 						if (useOccupancy) {
-							occupancy.add(Math.round((float)a.getOccupancy() * B_PRECISION));
+							// encode occupancy
+							occupancy.add(Math.round((float)a.getOccupancy() * BO_SCALE));
 						}			
 					
+						// store offsets for current atom
 						xOffset = x[k];
 						yOffset = y[k];
 						zOffset = z[k];
 						bOffset = b[k];
 					}
-					time += System.nanoTime()-t1;
 			
+					// Store tail information is the tail atom is present
 					if (tail != null) {
 						hasTail = true;
-						xLink = (int)Math.round(tail.getX() * XYZ_PRECISION);
-						yLink = (int)Math.round(tail.getY() * XYZ_PRECISION);
-						zLink = (int)Math.round(tail.getZ() * XYZ_PRECISION);
-						bLink = (int)Math.round(tail.getTempFactor() * B_PRECISION);
+						xTail = (int)Math.round(tail.getX() * XYZ_SCALE);
+						yTail = (int)Math.round(tail.getY() * XYZ_SCALE);
+						zTail = (int)Math.round(tail.getZ() * XYZ_SCALE);
+						bTail = (int)Math.round(tail.getTempFactor() * BO_SCALE);
 					} else {
 						hasTail = false;
-						xLink = 0;
-						yLink = 0;
-						zLink = 0;
-						bLink = 0;
+						xTail = 0;
+						yTail = 0;
+						zTail = 0;
+						bTail = 0;
 					}	
 					groupCount++;
 				}
@@ -439,31 +532,34 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 		groupArray = null;
 		
 		if (useBfactor) {
-			outStream.writeByte(BFACTOR);
-			outStream.writeInt(bFactorSize);
-//			for (int bf: bFactor) {
-//				System.out.println("b: " + bf);
-//			}
-			writeVarIntArray(bFactor);
+			writeBFactors(bFactor);
 		}
 		if (useOccupancy) {
-			outStream.writeByte(OCCUPANCY);
-			outStream.writeInt(atomCount*2);
-			for (int o: occupancy) {
-				outStream.writeShort(o);
-			}
+			writeOccupancy(occupancy);
 		}
 		
+		writeCoordinates(xyz);
+		System.out.println("SturctureEncoderImpl1: atomCount: " + atomCount);
+	}
+
+	private void writeCoordinates(List<Integer> xyz) throws IOException {
 		outStream.writeByte(COORD);
-//		System.out.println("writing coord record: " + xyzSize);
 		outStream.writeInt(xyzSize);
 		writeVarIntArray(xyz);
-		
-//		System.out.println("atomTime: " + (int)(time/1E6));
-//		System.out.println("atomCount: " + atomCount);
-//		System.out.println("xyzCount: " + xyz.size());
-//		System.out.println("writeCoordlen: " + xyzSize);
-//		System.out.println("bFactorSize: " + bFactorSize);
+	}
+
+	private void writeOccupancy(List<Integer> occupancy) throws IOException {
+		outStream.writeByte(OCCUPANCY);
+		outStream.writeInt(atomCount*2);
+		for (int o: occupancy) {
+			outStream.writeShort(o);
+		}
+	}
+
+	private void writeBFactors(List<Integer> bFactor) throws IOException {
+		outStream.writeByte(BFACTOR);
+		outStream.writeInt(bFactorSize);
+		writeVarIntArray(bFactor);
 	}
 	
 	/**
@@ -481,10 +577,10 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 	private int encodeCoords(int deltaX, int deltaY, int deltaZ, int distance, int intType, List<Integer> array) throws IOException {
 		// if a standard bond distance is available, try encoding delta coordinates into a 4 byte integer
 		if (distance != 0 && BitEncoder.toInt(distance, deltaX, deltaY, deltaZ, intBuffer)) {
-			if (intType != 5) {
+			if (intType != ENCODED_COORDINATE_TYPE) {
 				array.add(getMarker(intType, 5));
 				xyzSize += intType;
-				intType = 5;
+				intType = ENCODED_COORDINATE_TYPE;
 			}
 			array.add(intBuffer[0]);
 			xyzSize += 4;
@@ -497,27 +593,27 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 	}
 	
 	private int addVarInt(int value, int intType, List<Integer> array) throws IOException {
-		int size = 2;	
+		int size = SHORT_COORDINATE_TYPE;	
 		if (value < BYTE2_MIN_VALUE || value > BYTE2_MAX_VALUE) {
-			size = 4;
+			size = INTEGER_COORDINATE_TYPE;
 		}
 		if (value > BYTE4_MAX_VALUE) {
-		   throw new IOException("addVarInt exceeds range");
+		   throw new IOException("StructureEncoder: value exceeds maximum: " + value);
 		}
 
 		switch (size) {
-		case 2: 
-			if (intType != 2) {
-				array.add(getMarker(intType, 2));
-				xyzSize += Math.min(intType, 4);
-				intType = 2;
+		case SHORT_COORDINATE_TYPE: 
+			if (intType != SHORT_COORDINATE_TYPE) {
+				array.add(getMarker(intType, SHORT_COORDINATE_TYPE));
+				xyzSize += Math.min(intType, INTEGER_COORDINATE_TYPE);
+				intType = SHORT_COORDINATE_TYPE;
 			}	
 			break;
-		case 4:
-			if (intType != 4) {
-				array.add(getMarker(intType, 4));
-				xyzSize += Math.min(intType, 4);
-				intType = 4;
+		case INTEGER_COORDINATE_TYPE:
+			if (intType != INTEGER_COORDINATE_TYPE) {
+				array.add(getMarker(intType, INTEGER_COORDINATE_TYPE));
+				xyzSize += Math.min(intType, INTEGER_COORDINATE_TYPE);
+				intType = INTEGER_COORDINATE_TYPE;
 			}
 			break;
 		}
@@ -527,16 +623,16 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 		return intType;
 	}
 	
-	private int getMarker(int prevType, int curType) {
+	private int getMarker(int prevType, int curType) throws IOException {
 		switch (prevType) {
-		case 2: 
+		case SHORT_COORDINATE_TYPE: 
 			return BYTE2_MAX_VALUE + curType;
-		case 4:
+		case INTEGER_COORDINATE_TYPE:
 			return BYTE4_MAX_VALUE + curType;
-		case 5:
+		case ENCODED_COORDINATE_TYPE:
 			return BYTE4_MAX_VALUE + curType;
 		}
-		return 8;
+		throw new IOException("StructureEncoder: Invalid maker type: " + prevType);
 	}
 	
 	private void writeVarIntArray(List<Integer> values) throws IOException {
@@ -548,8 +644,8 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 			
 			case 2:
 				switch (v) {
-				case BYTE2_MARKER4:
-				case BYTE2_MARKER5: 
+				case BYTE2_INTEGER_MARKER: // note this case falls "through". This the intended behavior because both marker store 4-byte values.
+				case BYTE2_ENCODED_MARKER: 
 					outStream.writeShort(v);
 					size = 4;
 					v = values.get(++i);
@@ -559,12 +655,12 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 		
 			case 4:
 				switch (v) {
-				case BYTE4_MARKER2: 
+				case BYTE4_SHORT_MARKER: 
 					outStream.writeInt(v);
 					size = 2;
 					v = values.get(++i);
 					break;
-				case BYTE4_MARKER5: 
+				case BYTE4_ENCODED_MARKER: 
 					outStream.writeInt(v);
 					v = values.get(++i);
 					size = 4;
@@ -581,7 +677,7 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 	}
 
 	
-	private int addVarIntBfactor(int value, int intType, List<Integer> bFactors) {
+	private int addVarIntBfactor(int value, int intType, List<Integer> bFactors) throws IOException {
 		int size = 2;
 		if (value < BYTE2_MIN_VALUE || value > BYTE2_MAX_VALUE) {
 			size = 4;
@@ -589,18 +685,18 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 
 		switch (size) {
 		case 2: 
-			if (intType == 4) {
-				bFactors.add(getMarker(intType, 2));
+			if (intType == INTEGER_COORDINATE_TYPE) {
+				bFactors.add(getMarker(intType, SHORT_COORDINATE_TYPE));
 				bFactorSize += intType;
-				intType = 2;
+				intType = SHORT_COORDINATE_TYPE;
 			}	
 			break;
 		
 		case 4:
-			if (intType == 2) {
-				bFactors.add(getMarker(intType, 4));
+			if (intType == SHORT_COORDINATE_TYPE) {
+				bFactors.add(getMarker(intType, INTEGER_COORDINATE_TYPE));
 				bFactorSize += intType;
-				intType = 4;
+				intType = INTEGER_COORDINATE_TYPE;
 			}
 			break;
 		}
@@ -612,6 +708,9 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 	private int[] createBondList(Group g) {
 		List<Atom> atoms = g.getAtoms();
 		int n = atoms.size();
+		if (n == 0) {
+			System.out.println("creating empty bond list");
+		}
 		int[] bondList = new int[2*n];
 		Arrays.fill(bondList, -1);
 
@@ -625,10 +724,9 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 				}
 				if (index > i && bondList[index] == -1) {
 					bondList[index] = i;
-					try {
-						bondList[n+index] = (int)Math.round(Calc.getDistance(a, other)* XYZ_PRECISION);
-					} catch (StructureException e) {
-					}
+
+						bondList[n+index] = (int)Math.round(Calc.getDistance(a, other)* XYZ_SCALE);
+
 				}
 			}
 		}

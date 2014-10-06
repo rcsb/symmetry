@@ -28,6 +28,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,11 +42,13 @@ import org.biojava3.structure.align.symm.protodomain.Protodomain;
 
 /**
  * A census that takes a file containing a line-by-line list of SCOP domains.
- * @author dmyerstu
+ * @author dmyersturnbull
+ * @deprecated
  */
+@Deprecated
 public class NamesCensus extends Census {
 
-	private static final Logger logger = LogManager.getLogger(NamesCensus.class.getPackage().getName());
+	private static final Logger logger = LogManager.getLogger(NamesCensus.class.getSimpleName());
 
 	private List<ScopDomain> domains;
 
@@ -70,6 +73,7 @@ public class NamesCensus extends Census {
 			census.domains = readNames(lineByLine);
 			census.setPrintFrequency(10);
 			census.setAlgorithm(algorithm);
+			census.setRecordAlignmentMapping(true);
 			AtomCache cache = new AtomCache();
 			cache.setFetchFileEvenIfObsolete(true);
 			census.setCache(cache);
@@ -86,8 +90,15 @@ public class NamesCensus extends Census {
 			BufferedReader br = new BufferedReader(new FileReader(lineByLine));
 			String line = "";
 			while ((line = br.readLine()) != null) {
-				if (line.trim().isEmpty()) continue;
-				ScopDomain domain = ScopFactory.getSCOP().getDomainByScopID(line);
+				line = line.trim();
+				if (line.isEmpty()) continue;
+				if(line.matches("^([;#]|//).*")) {
+					continue; //comment
+				}
+				Scanner lineScanner = new Scanner(line);
+				String token = lineScanner.next();
+				lineScanner.close();
+				ScopDomain domain = ScopFactory.getSCOP().getDomainByScopID(token);
 				if (domain == null) {
 					logger.error("No SCOP domain with id " + line + " was found");
 				} else {
@@ -114,7 +125,7 @@ public class NamesCensus extends Census {
 				doRefine = true;
 			}
 		}
-		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A));
+		ScopFactory.setScopDatabase(ScopFactory.getSCOP(ScopFactory.VERSION_1_75A,true));
 		buildDefault(censusFile, lineByLine, doRefine);
 	}
 

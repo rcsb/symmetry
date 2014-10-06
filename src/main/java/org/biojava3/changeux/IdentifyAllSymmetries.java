@@ -28,7 +28,7 @@ import org.biojava3.structure.utils.SymmetryTools;
 /** Try to identify all possible symmetries by iterating resursively over all results and disabling the diagonal of each previous result.
  * 
  * @author andreas
- *
+ * @deprecated
  */
 @Deprecated
 public class IdentifyAllSymmetries  implements MatrixListener {

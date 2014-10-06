@@ -28,7 +28,7 @@ public class QuatSymmetryParameters {
 	private int maximumLocalSubunits = 20; // maximum number of subunits for local symmetry calculations
 	private boolean localSymmetry = true;
 	private double localTimeLimit = 120; // time limit for local calculations in seconds
-	private boolean onTheFly = false;
+	private boolean onTheFly = true;
 	private boolean verbose = false;
 
 	private static final String n = System.getProperty("line.separator");

@@ -14,8 +14,8 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.io.mmcif.AllChemCompProvider;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
+import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava.bio.structure.xtal.SpaceGroup;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
@@ -73,9 +73,6 @@ public class ScanSymmetry implements Runnable {
 		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 
 		Set<String> set = GetRepresentatives.getAll();
-		// pr testing
-		set.clear();
-		set.add("4HHB");
 
 		// set skip to true to restart calculation with a specified PDB ID
 		boolean skip = false;
@@ -232,14 +229,13 @@ public class ScanSymmetry implements Runnable {
 	private void initializeCache() {
 		cache = new AtomCache();
 		FileParsingParameters params = cache.getFileParsingParams();
-		cache.setUseMmCif(true);
 		params.setStoreEmptySeqRes(true);
 		params.setAlignSeqRes(true);
 		params.setParseCAOnly(true);
 //		MmCifBiolAssemblyProvider mmcifProvider = new MmCifBiolAssemblyProvider();
 //		BioUnitDataProviderFactory.setBioUnitDataProvider(mmcifProvider.getClass().getCanonicalName());	
 		params.setLoadChemCompInfo(true);
-		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
-//		ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
+//		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
+		ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
 	}
 }

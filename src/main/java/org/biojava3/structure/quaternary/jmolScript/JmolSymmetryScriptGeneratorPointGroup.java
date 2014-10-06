@@ -39,7 +39,7 @@ public abstract class JmolSymmetryScriptGeneratorPointGroup extends JmolSymmetry
 	private Polyhedron polyhedron = null;
 	private String name = "";
 	private String defaultColoring = "";
-	private boolean onTheFly = false;
+	private boolean onTheFly = true;
 	
 	public JmolSymmetryScriptGeneratorPointGroup(RotationAxisAligner rotationAxisAligner, String name) {
 		this.rotationAxisAligner = rotationAxisAligner;
@@ -493,6 +493,7 @@ public abstract class JmolSymmetryScriptGeneratorPointGroup extends JmolSymmetry
 //  --- private methods ---
 	
 	private String getChainSpecification(List<Integer> modelNumbers, List<String> chainIds, int subunit) {
+		System.out.println("JmolSymmetryScriptGeneratorPointGroup: onTheFly: " + onTheFly);
 		if (onTheFly) {
 			return chainIds.get(subunit) + "&symop=" + (modelNumbers.get(subunit)+1);
 		} else {

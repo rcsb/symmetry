@@ -34,14 +34,13 @@ import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
-
+import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
 import org.biojava3.structure.quaternary.core.AxisAligner;
 import org.biojava3.structure.quaternary.core.RotationAxisAligner;
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
-
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 
@@ -52,7 +51,7 @@ public class DemoOrientBioAssembly {
 
 		//String[] pdbIDs = new String[]{"4HHB","4AQ5","1LTI","1STP","4F88","2W6E","2LXC","3OE7","4INU","4D8s","4EAR","4IYQ","3ZKR"};
 
-		String[] pdbIDs = new String[]{"1B47"};
+		String[] pdbIDs = new String[]{"4KGV"};
 
 		int bioAssemblyNr = 1;
 
@@ -104,7 +103,7 @@ public class DemoOrientBioAssembly {
 		Structure s = readStructure(pdbID, bioAssemblyNr);
 
 		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
-
+        parameters.setOnTheFly(true);
 		parameters.setVerbose(true);
 
 
@@ -226,31 +225,44 @@ public class DemoOrientBioAssembly {
 		// initialize the PDB_DIR env variable
 		AtomCache cache = new AtomCache();
 
-		FileParsingParameters p = new FileParsingParameters();
-		p.setStoreEmptySeqRes(true);
-		p.setLoadChemCompInfo(true);
-		p.setAtomCaThreshold(Integer.MAX_VALUE);
-		//p.setAcceptedAtomNames(new String[]{" CA "});
-		p.setParseBioAssembly(true);
+		FileParsingParameters params = new FileParsingParameters();
+		params.setStoreEmptySeqRes(true);
+		params.setParseCAOnly(true);
+		params.setLoadChemCompInfo(true);
+		params.setAtomCaThreshold(Integer.MAX_VALUE);
+		cache.setFileParsingParams(params);
 
-
-
-		PDBFileReader pdbreader = new PDBFileReader();
-		pdbreader.setPath(cache.getPath());
-		pdbreader.setFileParsingParameters(p);
-		pdbreader.setAutoFetch(true);
-		pdbreader.setBioAssemblyId(bioAssemblyId);
-		pdbreader.setBioAssemblyFallback(false);
-		Structure structure = null;
-		try { 
-			structure = pdbreader.getStructureById(pdbId);
-			if ( bioAssemblyId > 0 )
-				structure.setBiologicalAssembly(true);
-			structure.setPDBCode(pdbId);
-		} catch (Exception e){
+        Structure structure = null;
+		try {
+			structure = StructureIO.getBiologicalAssembly(pdbId, bioAssemblyId);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.exit(-1);
+		} catch (StructureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		
+		//p.setAcceptedAtomNames(new String[]{" CA "});
+//		p.setParseBioAssembly(true);
+
+
+//		PDBFileReader pdbreader = new PDBFileReader();
+//		pdbreader.setPath(cache.getPath());
+//		pdbreader.setFileParsingParameters(p);
+//		pdbreader.setAutoFetch(true);
+//		pdbreader.setBioAssemblyId(bioAssemblyId);
+//		pdbreader.setBioAssemblyFallback(false);
+//		Structure structure = null;
+//		try { 
+//			structure = pdbreader.getStructureById(pdbId);
+//			if ( bioAssemblyId > 0 )
+//				structure.setBiologicalAssembly(true);
+//			structure.setPDBCode(pdbId);
+//		} catch (Exception e){
+//			e.printStackTrace();
+//			System.exit(-1);
+//		}
 		return structure;
 	}
 

@@ -187,7 +187,9 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 				outStream.writeInt(seqIndex);
 				writeFixedLengthString(4, c.getChainID());		
 
-				List<Group> groups = getCombinedGroups(c);
+				// TODO handle alternative locations
+//				List<Group> groups = getCombinedGroups(c);
+				List<Group> groups = getCombinedGroupsWithAltLoc(c);
 				outStream.writeInt(groups.size());
 				
 				
@@ -209,6 +211,9 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 						buffer.append(a.getFullName());
 						buffer.append(toFixedLengthString(2, a.getElement().name()));
 						buffer.append(a.getAltLoc().toString());
+						if (g.hasAltLoc()) {
+							System.out.println("alternative location: " + a.getAltLoc().toString());
+						}
 					}
 					
 					String gInfo = buffer.toString();
@@ -218,32 +223,24 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 						byte flags = 0;
 						if (g instanceof AminoAcid) {
 							flags |= AMINO_ACID;
-							Atom head = null;
-							try {
-								head = ((AminoAcid) g).getN(); // outch, this has a nasty side effect of adding atoms
-							} catch (StructureException e) {
-							} 
+							Atom head = ((AminoAcid) g).getN(); // outch, this has a nasty side effect of adding atoms
+
 							if (head != null) {
 								flags |= HEAD;
 							}
-							Atom tail = null;
-							try {
-								tail = ((AminoAcid) g).getC();
-							} catch (StructureException e) {
-							} 
+							Atom tail = ((AminoAcid) g).getC();
+
 							if (tail != null) {
 								flags |= TAIL;
 							}	
 						}
 						if (g instanceof NucleotideImpl) {
 							flags |= NUCLEOTIDE;
-							Atom head = null;
-							head = ((NucleotideImpl) g).getP();
+							Atom head = ((NucleotideImpl) g).getP();
 							if (head != null) {
 								flags |= HEAD;
 							}
-							Atom tail = null;
-							tail = ((NucleotideImpl) g).getO3Prime();
+							Atom tail = ((NucleotideImpl) g).getO3Prime();
 							if (tail != null) {
 								flags |= TAIL;
 							}	
@@ -319,6 +316,41 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 		return combined;
 	}
 	
+	private List<Group> getCombinedGroupsWithAltLoc(Chain chain) {
+		// get list of groups of the biopolymer, this includes groups that do
+		// not have ATOM records, i.e., group in gaps.
+		List<Group> combined = new ArrayList<Group>();
+		for (Group g: chain.getSeqResGroups()) {
+			combined.add(g);
+			if (g.hasAltLoc()) {
+				System.out.println("Found alternative location groups");
+				System.out.println("Original group:" + g.getPDBName() + g.getResidueNumber());
+				for (Atom a: g.getAtoms()) {
+					System.out.println(a);
+				}
+				System.out.println(g);
+				for (Group ag: g.getAltLocs()) {
+					System.out.println("AltLoc group: " + ag.getPDBName() + ag.getResidueNumber());
+					System.out.println(ag);
+					for (Atom a: ag.getAtoms()) {
+						System.out.println(a);
+					}
+					combined.add(ag);
+				}
+			}	
+		}
+		// get list of groups that have ATOM/HETATM records, this list includes
+		// biopolymer residues and ligands
+		List<Group> nonPolymerGroups = new ArrayList<Group>(chain.getAtomGroups());
+		// remove groups that are in common among the two lists
+		nonPolymerGroups.removeAll(combined);
+		// finally, create a combined list without duplicate groups
+		combined.addAll(nonPolymerGroups);
+
+		System.out.println("Combined group size: " + combined.size());
+		return combined;
+	}
+	
 	/**
 	 * Writes atom information in compressed from to output stream.
 	 * Atomic coordinates are always written. B factor and occupancy
@@ -378,7 +410,8 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 				
 //				for (Group g: c.getAtomGroups()) {
 //				for (Group g: c.getSeqResGroups()) {
-				for (Group g: getCombinedGroups(actualChain)) {
+//				for (Group g: getCombinedGroups(actualChain)) {
+				for (Group g: getCombinedGroupsWithAltLoc(actualChain)) {
 					int gIndex = groupArray.get(groupCount);
 					if ( DEBUG)
 						System.out.println("atoms: " + groupCount + ": " + g + " gIndex: " + gIndex);
@@ -389,18 +422,10 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 					Atom head = null;
 					boolean isAminoAcid = false;
 					boolean isNucleotide = false;
-					if (g instanceof AminoAcid) {
-						head = null;
-						try {
-							head = ((AminoAcid) g).getN();
-							
-						} catch (StructureException e) {
-						} 
-						try {
-							tail = ((AminoAcid) g).getC();
-						} catch (StructureException e) {
-						} 	
-						isAminoAcid = true;
+                    if (g instanceof AminoAcid) {
+                        head = ((AminoAcid) g).getN();
+                        tail = ((AminoAcid) g).getC();
+                        isAminoAcid = true;
 					} else if (g instanceof NucleotideImpl) {
 						tail = ((NucleotideImpl) g).getO3Prime(); 
 						head = ((NucleotideImpl) g).getP();
@@ -699,10 +724,9 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 				}
 				if (index > i && bondList[index] == -1) {
 					bondList[index] = i;
-					try {
+
 						bondList[n+index] = (int)Math.round(Calc.getDistance(a, other)* XYZ_SCALE);
-					} catch (StructureException e) {
-					}
+
 				}
 			}
 		}

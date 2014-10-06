@@ -16,7 +16,7 @@ import java.util.TreeMap;
 import org.biojava3.structure.quaternary.utils.BlastClustReader;
 
 public class BioassemblyCheck {
-	private static String RESULT_DIR = "C:/Users/Peter/Documents/QuatStructureComparison/";
+	private static String RESULT_DIR = "/Users/Peter/Documents/QuatStructureComparison/";
 	
 	private List<String> pdbids = Collections.emptyList();
 	private List<String> signatures =  Collections.emptyList();

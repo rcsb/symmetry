@@ -24,15 +24,15 @@ import org.rcsb.codec.StructureInflator;
 public class DeflateInflateAll {
 
 
-	public void test() throws Exception {
+	public static void main(String[] args) throws Exception {
 		List<String> pdbIds = new ArrayList<String>(GetRepresentatives.getAll());
-		pdbIds.remove("11GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-		pdbIds.remove("12GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-		pdbIds.remove("13GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-		pdbIds.remove("14GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-		pdbIds.remove("16GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-		pdbIds.remove("17GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
-		pdbIds.remove("18GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+//		pdbIds.remove("11GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+//		pdbIds.remove("12GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+//		pdbIds.remove("13GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+//		pdbIds.remove("14GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+//		pdbIds.remove("16GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+//		pdbIds.remove("17GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
+//		pdbIds.remove("18GS"); // PRO A-2 listed twice in seqres groups (issue with alignment)
 		pdbIds.remove("136D"); // issue with irregular numbering of inserted residues, or missing seq. res. residues in model 1??
 		pdbIds.remove("177D"); // multiple model issue
 		pdbIds.remove("176D"); // B: GAGUUC: UUC added twice, once without atoms, once with atoms? Problem handling nucleotides??
@@ -86,9 +86,23 @@ public class DeflateInflateAll {
 				e.printStackTrace();
 				continue;
 			} 
-			String fileName = deflate(original, pdbId);
+			
+			// skip structures with multiple models for now
+			if (original.nrModels() > 1) {
+				continue;
+			}
+			
+			File file = deflate(original, pdbId);
+			Structure copy = null;
+			try {
+				copy = inflate(file);
+			} catch (Exception e){
+				file.delete();
+				e.printStackTrace();
+			}
+			file.delete();
+			// it is just a tmp file, clean up..
 
-			Structure copy = inflate(fileName);
 
 			int expectedCount =  StructureTools.getNrAtoms(original);
 			int actualCount = StructureTools.getNrAtoms(copy);	
@@ -105,23 +119,25 @@ public class DeflateInflateAll {
 		}
 	}
 	
-	public static String deflate(Structure structure, String pdbId) throws IOException {
+	public static File deflate(Structure structure, String pdbId) throws IOException {
 		File temp = File.createTempFile(pdbId, CodecConstants.CODEC_FILE_EXTENSION);
-		String fileName = temp.getName();
+
+		String fileName = temp.getPath();
+		System.out.println(fileName);
 		int compressionMethod = 1;
 		
 		BioJavaStructureDeflator deflator = new BioJavaStructureDeflator();
 		deflator.deflate(structure, fileName, compressionMethod);
+		System.out.println("Compressed file size: " + deflator.getFileSizeCompressed());
 		
-		return fileName;
+		return temp;
 	}
 	
-	public static Structure inflate(String fileName) throws Exception {
+	public static Structure inflate(File file) throws Exception {
 		BioJavaStructureInflator inflator = new BioJavaStructureInflator();
 		StructureInflator def = new StructureInflator(inflator);
-	    FileInputStream inputStream = new FileInputStream(fileName);
+	    FileInputStream inputStream = new FileInputStream(file);
 		def.read(inputStream);
-		inputStream.close();
 		return inflator.getStructure();
 	}
 	
@@ -130,12 +146,12 @@ public class DeflateInflateAll {
 		return StructureIO.getStructure(pdbId);
 	}
 	
-	private String maskSerialNumber(String atomRecord) {
+	private static String maskSerialNumber(String atomRecord) {
 		atomRecord = replaceMinusZero(atomRecord);
 		return atomRecord.substring(0,  6) + "     " + atomRecord.substring(11, atomRecord.length());
 	}
 	
-	private String replaceMinusZero(String atomRecord) {
+	private static String replaceMinusZero(String atomRecord) {
 		StringBuffer sb = new StringBuffer(atomRecord);
 		int index = sb.indexOf("-0.000"); // negative zero of coordinates
 		while (index > 0) {
@@ -163,13 +179,13 @@ public class DeflateInflateAll {
 		StructureIO.setAtomCache(cache);
 	}
 
-	private void assertEquals(String maskSerialNumber, String maskSerialNumber2) {
+	private static void assertEquals(String maskSerialNumber, String maskSerialNumber2) {
 		if (! maskSerialNumber.equals(maskSerialNumber2))
 			throw new RuntimeException(maskSerialNumber + " != " + maskSerialNumber2);
 		
 	}
 
-	private void assertEquals(int expectedCount, int actualCount) {
+	private static void assertEquals(int expectedCount, int actualCount) {
 		if (expectedCount != actualCount)
 			throw new RuntimeException(expectedCount + " != " + actualCount);
 		

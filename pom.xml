@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>symmetry</artifactId>
-	<version>0.3.4-SNAPSHOT</version>
+	<version>0.4.0-SNAPSHOT</version>
 	<name>RCSB Symmetry</name>
 
 	<properties>
@@ -85,18 +85,18 @@
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-structure</artifactId>
-			<version>3.0.8</version>
+			<version>4.0.0-SNAPSHOT</version>
 
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-structure-gui</artifactId>
-			<version>3.0.8</version>
+			<version>4.0.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava3-ws</artifactId>
-			<version>3.0.8</version>
+			<version>4.0.0-SNAPSHOT</version>
 		</dependency>
 		
 		<dependency>

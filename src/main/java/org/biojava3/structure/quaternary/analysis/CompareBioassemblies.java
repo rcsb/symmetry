@@ -28,7 +28,7 @@ import org.biojava3.structure.dbscan.GetRepresentatives;
 
 public class CompareBioassemblies {
 	private AtomCache cache = null;
-	private static String RESULT_DIR = "C:/Users/Peter/Documents/QuatStructureComparison/";
+	private static String RESULT_DIR = "/Users/peter/Results/QuatStructureComparison/";
 
 
 	public CompareBioassemblies() {

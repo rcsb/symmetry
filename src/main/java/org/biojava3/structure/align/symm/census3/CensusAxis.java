@@ -42,7 +42,7 @@ public class CensusAxis implements Serializable {
 		private Float z;
 
 		public SymmetryAxisVector() {
-			super();
+			this(0f,0f,0f);
 		}
 
 		public SymmetryAxisVector(Float x, Float y, Float z) {

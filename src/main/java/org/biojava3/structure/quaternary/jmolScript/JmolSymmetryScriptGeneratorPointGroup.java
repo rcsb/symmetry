@@ -493,7 +493,6 @@ public abstract class JmolSymmetryScriptGeneratorPointGroup extends JmolSymmetry
 //  --- private methods ---
 	
 	private String getChainSpecification(List<Integer> modelNumbers, List<String> chainIds, int subunit) {
-		System.out.println("JmolSymmetryScriptGeneratorPointGroup: onTheFly: " + onTheFly);
 		if (onTheFly) {
 			return chainIds.get(subunit) + "&symop=" + (modelNumbers.get(subunit)+1);
 		} else {

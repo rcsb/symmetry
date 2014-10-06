@@ -174,7 +174,7 @@ public class CEMirrorSymm extends CeSymm {
 		for (Atom a : ca2){
 			Group g = (Group) a.getGroup().clone(); // works because each group has only a CA atom
 			c.addGroup(g);
-			ca2clone[pos] = g.getAtom(StructureTools.caAtomName);
+			ca2clone[pos] = g.getAtom(StructureTools.CA_ATOM_NAME);
 
 			pos--;
 		}

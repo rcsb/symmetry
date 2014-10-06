@@ -42,7 +42,7 @@ public class LigandFinder {
 		@Override
 		public boolean matches(Group group) {
 			ResidueType type = group.getChemComp().getResidueType();
-			return group.hasAtom(StructureTools.caAtomName)
+			return group.hasAtom(StructureTools.CA_ATOM_NAME)
 					|| AtomPositionMap.AMINO_ACID_NAMES.contains(group.getPDBName())
 					|| type == ResidueType.lPeptideLinking || type == ResidueType.glycine
 					|| type == ResidueType.lPeptideAminoTerminus || type == ResidueType.lPeptideCarboxyTerminus

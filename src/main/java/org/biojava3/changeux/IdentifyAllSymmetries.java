@@ -67,7 +67,7 @@ public class IdentifyAllSymmetries  implements MatrixListener {
 		boolean isSplit = config.isSplit();
 			
 		int fragmentLength = 8;
-		AtomCache cache = new AtomCache(pdbPath, isSplit);
+		AtomCache cache = new AtomCache(pdbPath,pdbPath, isSplit);
 
 		//1JQZ.A -  beta trefoil
 		//1MSO - insulin

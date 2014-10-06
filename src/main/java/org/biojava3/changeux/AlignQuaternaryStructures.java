@@ -184,7 +184,7 @@ public class AlignQuaternaryStructures {
 		s2.getPDBHeader().setTitle("Biological Unit of " + member.getPdbId());
 		s1.setPDBCode(repre.getPdbId());
 		s2.setPDBCode(member.getPdbId());
-		String[] atomNames = {StructureTools.caAtomName };
+		String[] atomNames = {StructureTools.CA_ATOM_NAME };
 		Atom[] ca1 = StructureTools.getAtomArrayAllModels(s1,atomNames);
 		Atom[] ca2 = StructureTools.getAtomArrayAllModels(s2,atomNames);
 

@@ -271,7 +271,7 @@ public class ResourceList {
 		if (pdbDir == null) {
 			cache = new AtomCache();
 		} else {
-			cache = new AtomCache(pdbDir, false);
+			cache = new AtomCache(pdbDir,pdbDir,false);
 		}
 	}
 

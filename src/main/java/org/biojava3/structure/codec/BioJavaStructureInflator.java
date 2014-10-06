@@ -92,7 +92,6 @@ public class BioJavaStructureInflator implements StructureInflatorInterface {
 		Atom atom = new AtomImpl();	
 		atom.setPDBserial(atomCount++);
 //		System.out.println("BioJavaStructureInflator: " + atomCount);
-		atom.setFullName(atomName);	
 		atom.setName(atomName.trim());
 		atom.setElement(Element.valueOfIgnoreCase(element));
 		atom.setAltLoc(alternativeLocationId);

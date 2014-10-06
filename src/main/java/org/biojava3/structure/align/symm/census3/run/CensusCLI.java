@@ -307,7 +307,7 @@ public class CensusCLI {
 				cache.setFetchFileEvenIfObsolete(true);
 				census.setCache(cache);
 			} else {
-				AtomCache cache = new AtomCache(pdbDir, false);
+				AtomCache cache = new AtomCache(pdbDir,pdbDir, false);
 				cache.setFetchFileEvenIfObsolete(true);
 				census.setCache(cache);
 				System.setProperty(UserConfiguration.PDB_DIR, pdbDir);

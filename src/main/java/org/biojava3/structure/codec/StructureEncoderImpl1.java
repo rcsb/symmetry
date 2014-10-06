@@ -208,7 +208,7 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 					atomCount += atoms.size();
 
 					for (Atom a: atoms) {
-						buffer.append(a.getFullName());
+						buffer.append(a.getName());
 						buffer.append(toFixedLengthString(2, a.getElement().name()));
 						buffer.append(a.getAltLoc().toString());
 						if (g.hasAltLoc()) {

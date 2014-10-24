@@ -99,7 +99,7 @@ public final class SuperPosition {
         axisAngle.set(q);
         Vector3d axis = new Vector3d(axisAngle.x, axisAngle.y, axisAngle.z);
         if (axis.lengthSquared() < 1.0E-6) {
-        	System.err.println("Error: SuperPosition.superposeAtOrigin: axis vector undefined!");
+ //       	System.err.println("Error: SuperPosition.superposeAtOrigin: axis vector undefined!");
         	axisAngle.x = 0;
             axisAngle.y = 0;
             axisAngle.z = 1;

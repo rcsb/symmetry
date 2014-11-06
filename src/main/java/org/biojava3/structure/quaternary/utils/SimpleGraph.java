@@ -5,7 +5,7 @@ import java.util.List;
 
 
 /**
- *
+ * A simple nondirected graph implementation based on a list of edges for each vertex
  * @author Peter
  */
 public class SimpleGraph<V> implements Graph<V>, Cloneable {
@@ -73,11 +73,25 @@ public class SimpleGraph<V> implements Graph<V>, Cloneable {
         return vertices;
     }
     
+    public List<Edge<V>> getEdges() {
+        List<Edge<V>> edges = new ArrayList<Edge<V>>();
+        for(int index1 = 0; index1 < size(); index1++) {
+            for(int index2 : getNeighborIndices(index1)) {
+                if(index1 < index2) {
+                    Edge<V> e = new Edge<V>(vertices.get(index1),vertices.get(index2));
+                    edges.add(e);
+                }
+            }
+        }
+        return edges;
+    }
+    
     public V getVertex(int index) {
         return vertices.get(index);
     }
     
-    public String toString() {
+    @Override
+	public String toString() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < vertices.size(); i++) {
             sb.append(vertices.get(i));

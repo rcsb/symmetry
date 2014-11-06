@@ -25,6 +25,8 @@ public interface Graph<V> {
     
     public int getEdgeCount();
     
+    public List<Edge<V>> getEdges();
+    
     public int getValence(V vertex);
     
     public int getValence(int index);

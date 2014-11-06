@@ -28,6 +28,7 @@ import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.alignment.template.Profile;
 import org.biojava3.alignment.template.SubstitutionMatrix;
+import org.biojava3.core.exceptions.CompoundNotFoundException;
 import org.biojava3.core.sequence.ProteinSequence;
 import org.biojava3.core.sequence.template.Compound;
 import org.biojava3.core.sequence.template.Sequence;
@@ -76,7 +77,19 @@ public class ConservedSequenceFinder {
 		this.cache = cache;
 	}
 
-	public List<String> getConservedPfamNames(String alignedUnit, int order, String scopId, float score) throws IOException, ProtodomainCreationException, StructureException {
+	/**
+	 * 
+	 * @param alignedUnit
+	 * @param order
+	 * @param scopId
+	 * @param score
+	 * @return
+	 * @throws IOException
+	 * @throws ProtodomainCreationException
+	 * @throws StructureException
+	 * @throws CompoundNotFoundException If the Protein structure contained an unrecognized amino acid
+	 */
+	public List<String> getConservedPfamNames(String alignedUnit, int order, String scopId, float score) throws IOException, ProtodomainCreationException, StructureException, CompoundNotFoundException {
 
 		Protodomain[]  protodomains;
 		Atom[][] ca;

@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>symmetry</artifactId>
@@ -45,15 +46,15 @@
 				<enabled>true</enabled>
 			</releases>
 		</repository>
-		
+
 	</repositories>
 
 	<scm>
 		<connection>scm:git:git@github.com:rcsb/symmetry.git</connection>
 		<developerConnection>scm:git:git@github.com:rcsb/symmetry.git</developerConnection>
 		<url>https://github.com/rcsb/symmetry</url>
-	  <tag>HEAD</tag>
-  </scm>
+		<tag>HEAD</tag>
+	</scm>
 	<issueManagement>
 		<url>https://github.com/rcsb/symmetry/issues</url>
 		<system>Github</system>
@@ -107,7 +108,7 @@
 			<version>4.0.0-SNAPSHOT</version>
 
 		</dependency>
-		
+
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
@@ -134,13 +135,20 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.0.2</version>
+			<version>2.1</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
-			<version>2.0.2</version>
+			<version>2.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<version>2.1</version>
+			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
@@ -222,14 +230,12 @@
 				<directory>src/main/resources</directory>
 				<filtering>false</filtering>
 				<includes>
-					<!-- <include>**/*.cif.gz</include>
-					<include>**/*.pdb</include>
-					<include>**/*.mat</include> -->
+					<!-- <include>**/*.cif.gz</include> <include>**/*.pdb</include> <include>**/*.mat</include> -->
 				</includes>
 			</resource>
 		</resources>
-		
-		
+
+
 		<extensions>
 			<extension>
 				<groupId>org.apache.maven.wagon</groupId>
@@ -249,7 +255,7 @@
 		<name>RCSB</name>
 		<url>http://www.rcsb.org</url>
 	</organization>
-	
+
 	<profiles>
 
 		<!-- Note: before you can use this build profile you need to set up an 
@@ -299,6 +305,6 @@
 			</build>
 		</profile>
 	</profiles>
-	
-	
+
+
 </project>

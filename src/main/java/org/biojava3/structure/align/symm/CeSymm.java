@@ -56,34 +56,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 	}
 
 	public static void main(String[] args) {
-
-		// used only for printing help...
-		CeSymm ce = new CeSymm();
-
-		if (args.length < 2) {
-
-			System.out.println(ce.printHelp());
-			return;
-		}
-
-		if (args.length == 0) {
-			System.out.println(ce.printHelp());
-			return;
-		}
-
-		if (args.length == 1) {
-			if (args[0].equalsIgnoreCase("-h")
-					|| args[0].equalsIgnoreCase("-help")
-					|| args[0].equalsIgnoreCase("--help")) {
-				System.out.println(ce.printHelp());
-				return;
-			}
-
-		}
-
 		// Responsible for creating a CeMain instance
 		CeSymmUserArgumentProcessor processor = new CeSymmUserArgumentProcessor(); 
-
 		processor.process(args);
 	}
 

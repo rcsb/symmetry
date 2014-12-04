@@ -12,8 +12,6 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
@@ -24,6 +22,8 @@ import org.biojava3.structure.align.symm.census3.stats.StructureClassificationGr
 import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
 import org.biojava3.structure.align.symm.census3.stats.order.ConsensusDecider;
 import org.biojava3.structure.align.symm.census3.stats.order.OrderHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * Finds statistics for the relationship(s) between symmetry and Enzyme Commission (EC) number.
  * Statistics are normalized using {@link StructureClassificationGrouping Groupings}. For brevity and concreteness, the
@@ -32,6 +32,8 @@ import org.biojava3.structure.align.symm.census3.stats.order.OrderHelper;
  * @author dmyersturnbull
  */
 public class CensusEnzymeStats {
+
+	private final static Logger logger = LoggerFactory.getLogger(CensusEnzymeStats.class);
 
 	/**
 	 * A helper class that collects potential examples as determined by {@code exampler}.
@@ -121,8 +123,6 @@ public class CensusEnzymeStats {
 		}
 	}
 
-	private static final Logger logger = LogManager.getLogger(CensusEnzymeStats.class.getName());
-	
 	public static void main(String[] args) throws IOException {
 		if (args.length != 2) {
 			System.err.println("Usage: " + CensusEnzymeStats.class.getSimpleName() + " census-file.xml ecs-file.tsv");

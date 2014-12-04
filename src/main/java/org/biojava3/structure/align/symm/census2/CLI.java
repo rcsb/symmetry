@@ -34,8 +34,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.scop.Astral;
@@ -44,7 +42,10 @@ import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.census2.utils.CensusChecker;
 import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Decent command-line interface to Census. Combines aspects of many of the other census subclasses.
@@ -55,7 +56,7 @@ import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
 @Deprecated
 public class CLI {
 
-	private static final Logger logger = LogManager.getLogger(Census.class.getPackage().getName());
+	private final static Logger logger = LoggerFactory.getLogger(CLI.class);
 
 	/**
 	 * See {@link #run(String, String, String, String, String, PrintStream)}.
@@ -160,7 +161,7 @@ public class CLI {
 					restart, prefetch, storeMapping, scopVersion, diverse, allProteins, sigClass, sigMethod, start, stop, reverse);
 
 		} catch (RuntimeException e) {
-			logger.fatal(e);
+			logger.error(e.getLocalizedMessage(),e);
 		}
 	}
 

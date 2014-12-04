@@ -34,14 +34,14 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava.bio.structure.scop.ScopNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utilities working with SCOP. A memory-intensive class that stores information from SCOP to save time. Uses a
@@ -50,6 +50,7 @@ import org.biojava.bio.structure.scop.ScopNode;
  * @author dmyersturnbull
  */
 public class ScopSupport {
+	private final static Logger logger = LoggerFactory.getLogger(ScopSupport.class);
 
 	public static final int[] ALL_SCOP_CLASSES = new int[] { 46456, 48724, 51349, 53931, 56572, 56835, 56992, 57942, 58117, 58231, 58788 };
 	public static final int[] TRUE_SCOP_CLASSES = new int[] { 46456, 48724, 51349, 53931, 56572, 56835 };
@@ -77,8 +78,6 @@ public class ScopSupport {
 
 	private static ScopSupport instance;
 	private Map<ScopCategory, SoftReference<List<ScopDescription>>> categories = new HashMap<ScopCategory, SoftReference<List<ScopDescription>>>();
-
-	private static final Logger logger = LogManager.getLogger(ScopSupport.class.getPackage().getName());
 
 	private HashMap<String, Integer> descriptionsToSunIds = new HashMap<String, Integer>();
 

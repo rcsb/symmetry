@@ -3,8 +3,6 @@ package org.biojava3.structure.align.symm.census3.utils;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
@@ -19,14 +17,17 @@ import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusScoreList;
 import org.biojava3.structure.align.symm.census3.CensusSymmetryGroup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts a census2 XML file to a census3 one.
  * @author dmyersturnbull
  */
+@SuppressWarnings("deprecation")
 public class Census2Adaptor {
 
-	private static final Logger logger = LogManager.getLogger(Census2Adaptor.class.getSimpleName());
+	private final static Logger logger = LoggerFactory.getLogger(Census2Adaptor.class);
 
 	public static void main(String[] args) throws IOException {
 		

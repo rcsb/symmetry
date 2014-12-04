@@ -26,12 +26,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A census that takes a list of sun Ids.
@@ -39,7 +39,7 @@ import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
  */
 public class ScopDescriptionCensus extends Census {
 
-	private static final Logger logger = LogManager.getLogger(ScopDescriptionCensus.class.getName());
+	private final static Logger logger = LoggerFactory.getLogger(ScopDescriptionCensus.class);
 
 	protected int[] sunIds;
 
@@ -54,7 +54,7 @@ public class ScopDescriptionCensus extends Census {
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
-			logger.fatal(e.getMessage(), e);
+			logger.error(e.getMessage(), e);
 		}
 	}
 

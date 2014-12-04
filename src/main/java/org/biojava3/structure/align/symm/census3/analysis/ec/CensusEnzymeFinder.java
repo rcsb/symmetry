@@ -14,8 +14,6 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.rcsb.RCSBDescription;
 import org.biojava.bio.structure.rcsb.RCSBDescriptionFactory;
 import org.biojava.bio.structure.rcsb.RCSBPolymer;
@@ -26,6 +24,8 @@ import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusSignificance;
 import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Classify symmetry by Enzyme Commission number.
@@ -39,7 +39,7 @@ import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
  */
 public class CensusEnzymeFinder {
 
-	private static final Logger logger = LogManager.getLogger(CensusEnzymeFinder.class.getName());
+	private final static Logger logger = LoggerFactory.getLogger(CensusEnzymeFinder.class);
 
 	private Set<String> ecsByUnknownDomain = new HashSet<String>();
 	private Map<String,String> ecsBySymmDomain = new HashMap<String,String>();
@@ -193,8 +193,7 @@ public class CensusEnzymeFinder {
 				}
 
 			} catch (RuntimeException e) {
-				e.printStackTrace();
-				logger.error(e);
+				logger.error(e.getMessage(),e);
 			} finally {
 				i++;
 			}

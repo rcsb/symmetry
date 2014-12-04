@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
@@ -14,6 +12,8 @@ import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.stats.StructureClassificationGrouping;
 import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tabulate symmetry by order, where symmetry order is determined by consensus over domains in a SCOP category.
@@ -21,6 +21,7 @@ import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
  * @author dmyersturnbull
  */
 public class FoldOrder {
+	private final static Logger logger = LoggerFactory.getLogger(FoldOrder.class);
 
 	public void setConsensusDecider(ConsensusDecider consensusDecider) {
 		this.consensusDecider = consensusDecider;
@@ -31,8 +32,6 @@ public class FoldOrder {
 	public FoldOrder() {
 		consensusDecider = ErrorMatrixDecider.fromMatrixFile();
 	}
-
-	private static final Logger logger = LogManager.getLogger(SymmetryOrder.class.getName());
 
 	/**
 	 * @param args

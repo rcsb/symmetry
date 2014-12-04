@@ -27,14 +27,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopCategory;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A census that runs on some specified number of domains in each superfamily, optionally randomized.
@@ -44,7 +44,7 @@ import org.biojava.bio.structure.scop.ScopFactory;
 @Deprecated
 public class RandomCensus extends Census {
 
-	private static final Logger logger = LogManager.getLogger(RandomCensus.class.getName());
+	private final static Logger logger = LoggerFactory.getLogger(RandomCensus.class);
 
 	private final int domainsPerSf;
 	private final boolean shuffle;

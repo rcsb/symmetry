@@ -18,8 +18,6 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
@@ -42,6 +40,8 @@ import org.biojava3.structure.align.symm.protodomain.ProtodomainCreationExceptio
 import org.biojava3.ws.hmmer.HmmerResult;
 import org.biojava3.ws.hmmer.HmmerScan;
 import org.biojava3.ws.hmmer.RemoteHmmerScan;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Find sequence motifs that correspond to symmetry subunits or protodomains.
@@ -49,7 +49,7 @@ import org.biojava3.ws.hmmer.RemoteHmmerScan;
  */
 public class ConservedSequenceFinder {
 
-	private static final Logger logger = LogManager.getLogger(ConservedSequenceFinder.class.getName());
+	private final static Logger logger = LoggerFactory.getLogger(ConservedSequenceFinder.class);
 
 	public static void main(String[] args) throws IOException {
 		if (args.length < 2 || args.length > 4) {

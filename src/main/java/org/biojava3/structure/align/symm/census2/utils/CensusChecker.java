@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava3.structure.align.symm.census2.Result;
 import org.biojava3.structure.align.symm.census2.Results;
 import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Finds missing and extra SCOP Ids in a census file.
@@ -17,7 +17,7 @@ import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
  */
 public class CensusChecker {
 
-	private static final Logger logger = LogManager.getLogger(CensusChecker.class.getSimpleName());
+	private final static Logger logger = LoggerFactory.getLogger(CensusChecker.class);
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 1) {

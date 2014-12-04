@@ -20,8 +20,6 @@ package org.biojava3.structure.align.symm.census3.representatives;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.scop.ScopDomain;
 
 /**
@@ -31,8 +29,6 @@ import org.biojava.bio.structure.scop.ScopDomain;
  * @author dmyersturnbull
  */
 public class SuperfamilyRepresentatives extends Representatives {
-
-	private static final Logger logger = LogManager.getLogger(SuperfamilyRepresentatives.class.getPackage().getName());
 
 	private List<ScopDomain> domains;
 

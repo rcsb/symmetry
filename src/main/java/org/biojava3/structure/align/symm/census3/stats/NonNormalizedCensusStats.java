@@ -6,8 +6,6 @@ import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusSignificance;
@@ -20,9 +18,6 @@ import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
  * @author dmyersturnbull
  */
 public class NonNormalizedCensusStats {
-
-	private static final Logger logger = LogManager.getLogger(NonNormalizedCensusStats.class.getName());
-
 	private static CensusSignificance ord = CensusSignificanceFactory.forCeSymmOrd();
 
 	private static CensusSignificance tm = CensusSignificanceFactory.forCeSymmTm();

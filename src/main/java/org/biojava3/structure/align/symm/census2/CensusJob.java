@@ -20,8 +20,6 @@ package org.biojava3.structure.align.symm.census2;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
@@ -41,9 +39,12 @@ import org.biojava.bio.structure.secstruc.SecStruc;
 import org.biojava.bio.structure.secstruc.SecStrucGroup;
 import org.biojava.bio.structure.secstruc.SecStrucState;
 import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
+import org.biojava3.structure.align.symm.census2.utils.CensusChecker;
 import org.biojava3.structure.align.symm.order.OrderDetector;
 import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava3.structure.align.symm.protodomain.Protodomain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * One run of CE-Symm in the census.
@@ -56,7 +57,7 @@ public class CensusJob implements Callable<Result> {
 
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector();
 	
-	private static final Logger logger = LogManager.getLogger(CensusJob.class.getSimpleName());
+	private final static Logger logger = LoggerFactory.getLogger(CensusJob.class);
 
 	private AlgorithmGiver algorithm;
 	private Significance significance;

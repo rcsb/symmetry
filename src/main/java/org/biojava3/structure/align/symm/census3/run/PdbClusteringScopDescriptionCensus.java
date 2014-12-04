@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.MissingResourceException;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.client.FarmJobParameters;
 import org.biojava.bio.structure.align.client.JFatCatClient;
 import org.biojava.bio.structure.align.client.StructureName;
@@ -37,6 +35,8 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A census that takes a list of sun Ids and a sequence clustering. Uses the sequence-clusteirng provided by RCSB.
@@ -45,7 +45,7 @@ import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
  */
 public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 
-	private static final Logger logger = LogManager.getLogger(PdbClusteringScopDescriptionCensus.class.getName());
+	private final static Logger logger = LoggerFactory.getLogger(PdbClusteringScopDescriptionCensus.class);
 
 	private static final String SERVER_LOCATION = FarmJobParameters.DEFAULT_SERVER_URL;
 
@@ -62,7 +62,7 @@ public class PdbClusteringScopDescriptionCensus extends ScopDescriptionCensus {
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
-			logger.fatal(e.getMessage(), e);
+			logger.error(e.getMessage(), e);
 		}
 	}
 

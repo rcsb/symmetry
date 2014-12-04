@@ -36,8 +36,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.align.StructureAlignment;
@@ -55,6 +53,8 @@ import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.order.OrderDetector;
 import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava3.structure.utils.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Runs the symmetry census on every domain. The work is done in order of superfamily (since we're using multiple cores,
@@ -64,7 +64,7 @@ import org.biojava3.structure.utils.FileUtils;
  */
 public class Census {
 
-	private static final Logger logger = LogManager.getLogger(Census.class.getSimpleName());
+	private final static Logger logger = LoggerFactory.getLogger(Census.class);
 
 	/**
 	 * A class that creates a new {@link StructureAlignment StructureAlignments} for each {@link CensusJob}, to avoid
@@ -254,7 +254,7 @@ public class Census {
 					continue;
 				}
 				logger.debug("Result was returned for " + census.size() + " / " + domains.size());
-				logger.debug(result);
+				logger.debug(result.toString());
 				census.add(result);
 				if (census.size() % printFrequency == 0) {
 					logger.debug("Printing to stream ");

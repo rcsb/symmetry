@@ -12,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Element;
 import org.biojava.bio.structure.ElementType;
 import org.biojava.bio.structure.scop.ScopDatabase;
@@ -21,6 +19,8 @@ import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census3.stats.StructureClassificationGrouping;
 import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Prints statistics about {@link LigandList LigandLists}.
@@ -37,7 +37,7 @@ public class LigandStats {
 					LigandMatcher.hasElementType(ElementType.POST_TRANSITION_METAL),
 					LigandMatcher.hasElementType(ElementType.METALLOID)));
 
-	private static final Logger logger = LogManager.getLogger(LigandStats.class.getName());
+	private final static Logger logger = LoggerFactory.getLogger(LigandStats.class);
 
 	private static final LigandMatcher METALLIC_NON_SALT = LigandMatcher.and(LigandMatcher.hasMetal(), LigandMatcher
 			.isTrueSalt().not());

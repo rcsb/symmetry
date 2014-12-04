@@ -29,12 +29,12 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusSignificance;
 import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Calculates % symmetry, % rotationally symmetric, and other statistics comprehensively per-family, per-superamily, and
@@ -51,7 +51,7 @@ public class MajorityVotedCensusStats {
 
 	public static final String NEWLINE;
 
-	private static final Logger logger = LogManager.getLogger(MajorityVotedCensusStats.class.getPackage().getName());
+	private final static Logger logger = LoggerFactory.getLogger(MajorityVotedCensusStats.class);
 	private static final int MAX_FRACTION_DIGITS = 2;
 
 	private static NumberFormat nf = new DecimalFormat();

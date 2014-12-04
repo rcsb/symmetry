@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Calculates statistics. To decide whether, say, a family is symmetric, it requires that the mean TM-score over each
@@ -44,7 +44,7 @@ public class AveragedCensusStats {
 
 	private static double DEFAULT_TM_SCORE_THRESHOLD = 0.4;
 
-	private static final Logger logger = LogManager.getLogger(AveragedCensusStats.class.getPackage().getName());
+	private final static Logger logger = LoggerFactory.getLogger(AveragedCensusStats.class);
 
 	Map<String, Integer> nDomainsInFolds = new TreeMap<String, Integer>();
 

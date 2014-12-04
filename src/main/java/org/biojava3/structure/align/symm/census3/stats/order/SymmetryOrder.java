@@ -11,8 +11,6 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDescription;
 import org.biojava.bio.structure.scop.ScopDomain;
@@ -22,6 +20,8 @@ import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusSignificance;
 import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
 import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Tabulate symmetry by order.
@@ -29,6 +29,8 @@ import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
  * @author dmyersturnbull
  */
 public class SymmetryOrder {
+	private final static Logger logger = LoggerFactory.getLogger(SymmetryOrder.class);
+
 
 	public static enum ExampleType {
 		FOLD, SUPERFAMILY, FAMILY, DOMAIN;
@@ -165,7 +167,6 @@ public class SymmetryOrder {
 		}
 	}
 
-	private static final Logger logger = LogManager.getLogger(SymmetryOrder.class.getName());
 
 	/**
 	 * @param args

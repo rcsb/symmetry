@@ -47,8 +47,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A census of symmetry; that is, a list of {@link CensusResult CensusResults}.
@@ -58,7 +58,7 @@ import org.apache.logging.log4j.Logger;
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public class CensusResultList implements Serializable {
 
-	private static final Logger logger = LogManager.getLogger(CensusResultList.class.getSimpleName());
+	private final static Logger logger = LoggerFactory.getLogger(CensusResultList.class);
 
 	private static final long serialVersionUID = -5517546595033480440L;
 	private static JAXBContext jaxbContext;

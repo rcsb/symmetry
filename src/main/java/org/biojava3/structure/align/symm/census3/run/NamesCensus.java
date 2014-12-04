@@ -30,14 +30,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.CESymmParameters;
 import org.biojava3.structure.align.symm.CeSymm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A census that takes a file containing a line-by-line list of SCOP domains.
@@ -45,7 +45,7 @@ import org.biojava3.structure.align.symm.CeSymm;
  */
 public class NamesCensus extends Census {
 
-	private static final Logger logger = LogManager.getLogger(NamesCensus.class.getSimpleName());
+	private final static Logger logger = LoggerFactory.getLogger(NamesCensus.class);
 
 	private List<ScopDomain> domains;
 
@@ -77,7 +77,7 @@ public class NamesCensus extends Census {
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
-			logger.fatal(e.getMessage(), e);
+			logger.error(e.getMessage(), e);
 		}
 	}
 

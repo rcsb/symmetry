@@ -46,9 +46,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.census2.utils.ResultConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A census (list of census {@link Result Results}).
@@ -60,7 +60,7 @@ import org.biojava3.structure.align.symm.census2.utils.ResultConverter;
 @XmlAccessorType(XmlAccessType.PUBLIC_MEMBER)
 public class Results implements Serializable {
 
-	private static final Logger logger = LogManager.getLogger(Results.class.getSimpleName());
+	private final static Logger logger = LoggerFactory.getLogger(Results.class);
 
 	private static final long serialVersionUID = -5517546595033480440L;
 	private static JAXBContext jaxbContext;

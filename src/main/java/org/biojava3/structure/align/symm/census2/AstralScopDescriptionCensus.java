@@ -27,14 +27,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.scop.Astral;
 import org.biojava.bio.structure.scop.Astral.AstralSet;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.census2.utils.CensusChecker;
 import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A census that takes a list of sun Ids and a sequence clustering. Uses sequence clustering provided by ASTRAL.
@@ -45,7 +46,7 @@ import org.biojava3.structure.align.symm.census3.representatives.ScopSupport;
 @Deprecated
 public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 
-	private static final Logger logger = LogManager.getLogger(Census.class.getName());
+	private final static Logger logger = LoggerFactory.getLogger(AstralScopDescriptionCensus.class);
 
 	public static void buildDefault(File censusFile, AstralSet astral, int[] sunIds) {
 		try {
@@ -58,7 +59,7 @@ public class AstralScopDescriptionCensus extends ScopDescriptionCensus {
 			census.run();
 			System.out.println(census);
 		} catch (RuntimeException e) {
-			logger.fatal(e.getMessage(), e);
+			logger.error(e.getMessage(), e);
 		}
 	}
 

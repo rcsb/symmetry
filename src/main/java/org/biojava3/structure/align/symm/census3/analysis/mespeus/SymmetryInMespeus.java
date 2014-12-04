@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusSignificance;
@@ -23,7 +21,6 @@ import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
  */
 public class SymmetryInMespeus {
 
-	private static final Logger logger = LogManager.getLogger(SymmetryInMespeus.class.getName());
 
 	private CensusSignificance significance;
 	private List<MespeusEntry> entries;

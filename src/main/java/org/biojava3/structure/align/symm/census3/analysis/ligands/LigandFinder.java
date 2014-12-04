@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.AtomPositionMap;
 import org.biojava.bio.structure.AtomPositionMap.GroupMatcher;
@@ -28,6 +26,8 @@ import org.biojava3.structure.align.symm.census3.CensusResult;
 import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusSignificance;
 import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Find ligands near the centroids of symmetric domains.
@@ -36,7 +36,7 @@ import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
  */
 public class LigandFinder {
 
-	private static final Logger logger = LogManager.getLogger(LigandFinder.class.getName());
+	private final static Logger logger = LoggerFactory.getLogger(LigandFinder.class);
 
 	private GroupMatcher exclusionMatcher = new GroupMatcher() {
 		@Override

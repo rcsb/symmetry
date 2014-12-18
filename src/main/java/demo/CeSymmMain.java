@@ -33,18 +33,25 @@ import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureException;
 import org.biojava.bio.structure.StructureTools;
+import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
+import org.biojava.bio.structure.align.ce.CeParameters;
+import org.biojava.bio.structure.align.ce.CeParameters.ScoringStrategy;
 import org.biojava.bio.structure.align.gui.DisplayAFP;
 import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.model.AfpChainWriter;
 import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.bio.structure.align.util.CliTools;
+import org.biojava.bio.structure.align.util.ConfigurationException;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.align.util.UserConfiguration;
 import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.io.util.FileDownloadUtils;
 import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava3.structure.align.symm.CESymmParameters;
+import org.biojava3.structure.align.symm.CESymmParameters.OrderDetectorMethod;
 import org.biojava3.structure.align.symm.CeSymm;
 import org.biojava3.structure.align.symm.census3.AdditionalScoreList;
 import org.biojava3.structure.align.symm.census3.CensusResult;
@@ -52,6 +59,7 @@ import org.biojava3.structure.align.symm.census3.CensusResultList;
 import org.biojava3.structure.align.symm.census3.CensusScoreList;
 import org.biojava3.structure.align.symm.census3.MapScoreList;
 import org.biojava3.structure.align.symm.census3.run.Census;
+import org.biojava3.structure.align.symm.census3.run.Census.AlgorithmGiver;
 import org.biojava3.structure.align.symm.census3.run.CensusJob;
 import org.biojava3.structure.align.symm.order.OrderDetector;
 import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
@@ -88,7 +96,7 @@ public class CeSymmMain {
 			}
 		} );
 
-		CommandLine cli;
+		final CommandLine cli;
 		try {
 			cli = parser.parse(options,args,false);
 		} catch (ParseException e) {
@@ -182,12 +190,6 @@ public class CeSymmMain {
 			pdbDirSplit = true;
 		}
 
-		//TODO threads
-		//		Integer threads = null;
-		//		if(cli.hasOption("threads")) {
-		//			threads = new Integer(cli.getOptionValue("threads"));
-		//		}
-
 		// SCOP version
 		if( cli.hasOption("scopversion")) {
 			String scopVersion = cli.getOptionValue("scopversion");
@@ -272,6 +274,129 @@ public class CeSymmMain {
 			writers.add(new PDBWriter(filespec));
 		}
 
+		// Misc Parameters
+		//TODO multithread
+		//		Integer threads = null;
+		//		if(cli.hasOption("threads")) {
+		//			threads = new Integer(cli.getOptionValue("threads"));
+		//		}
+		
+		AlgorithmGiver giver = new AlgorithmGiver() {
+			@Override
+			public StructureAlignment getAlgorithm() {
+				CeSymm ceSymm = new CeSymm();
+				CESymmParameters params = (CESymmParameters)ceSymm.getParameters();
+				
+				if(cli.hasOption("maxgapsize")) {
+					String gapStr = cli.getOptionValue("maxgapsize");
+					try {
+						int gap = Integer.parseInt(gapStr);
+						if(gap < 1) {
+							System.err.println("Invalid maxgapsize: "+gap);
+							System.exit(1); return null;
+						}
+						params.setMaxGapSize(gap);
+					} catch( NumberFormatException e) {
+						System.err.println("Invalid maxgapsize: "+gapStr);
+						System.exit(1); return null;
+					}
+				}
+				if(cli.hasOption("scoringstrategy")) {
+					String stratStr = cli.getOptionValue("scoringstrategy");
+					ScoringStrategy strat;
+					try {
+						strat = ScoringStrategy.valueOf( stratStr.toUpperCase());
+						params.setScoringStrategy(strat);
+					} catch (IllegalArgumentException e) {
+						//give up
+						System.err.println("Illegal scoringstrategy. Requires on of "+
+								CliTools.getEnumValuesAsString(ScoringStrategy.class));
+						System.exit(1); return null;
+					}
+				}
+				if(cli.hasOption("winsize")) {
+					String winStr = cli.getOptionValue("winsize");
+					try {
+						int win = Integer.parseInt(winStr);
+						if(win < 1) {
+							System.err.println("Invalid winsize: "+winStr);
+							System.exit(1); return null;
+						}
+						params.setWinSize(win);
+					} catch( NumberFormatException e) {
+						System.err.println("Invalid winsize: "+winStr);
+						System.exit(1); return null;
+					}
+
+				}
+				if(cli.hasOption("maxrmsd")) {
+					String strVal = cli.getOptionValue("maxrmsd");
+					try {
+						double val = Integer.parseInt(strVal);
+						if(val < 0) {
+							System.err.println("Invalid maxrmsd: "+strVal);
+							System.exit(1); return null;
+						}
+						params.setMaxOptRMSD(val);
+					} catch( NumberFormatException e) {
+						System.err.println("Invalid maxrmsd: "+strVal);
+						System.exit(1); return null;
+					}
+
+				}
+				if(cli.hasOption("gapopen")) {
+					String strVal = cli.getOptionValue("gapopen");
+					try {
+						double val = Integer.parseInt(strVal);
+						if(val < 0) {
+							System.err.println("Invalid gapopen: "+strVal);
+							System.exit(1); return null;
+						}
+						params.setGapOpen(val);
+					} catch( NumberFormatException e) {
+						System.err.println("Invalid gapopen: "+strVal);
+						System.exit(1); return null;
+					}
+
+				}
+				if(cli.hasOption("gapextension")) {
+					String strVal = cli.getOptionValue("gapextension");
+					try {
+						double val = Integer.parseInt(strVal);
+						if(val < 0) {
+							System.err.println("Invalid gapextension: "+strVal);
+							System.exit(1); return null;
+						}
+						params.setGapExtension(val);
+					} catch( NumberFormatException e) {
+						System.err.println("Invalid gapextension: "+strVal);
+						System.exit(1); return null;
+					}
+
+				}
+				if(cli.hasOption("ordermethod")) {
+					String strVal = cli.getOptionValue("ordermethod");
+					OrderDetectorMethod val;
+					try {
+						val = OrderDetectorMethod.valueOf( strVal.toUpperCase());
+						params.setOrderDetectorMethod(val);
+					} catch (IllegalArgumentException e) {
+						//give up
+						System.err.println("Illegal ordermethod. Requires on of "+
+								CliTools.getEnumValuesAsString(OrderDetectorMethod.class));
+						System.exit(1); return null;
+					}
+				}
+				if(cli.hasOption("refineresult")) {
+					params.setRefineResult(true);
+				} else if(cli.hasOption("norefineresult")) {
+					params.setRefineResult(false);
+				}
+
+				return ceSymm;
+			}
+		};
+
 		// Done parsing arguments
 
 		// Configure atomcache
@@ -304,7 +429,7 @@ public class CeSymmMain {
 		for(String name: names) {
 			try {
 
-				final CensusJob calc = CensusJob.setUpJob(name, 1, Census.AlgorithmGiver.getDefault(),
+				final CensusJob calc = CensusJob.setUpJob(name, 1, giver,
 						Census.getDefaultAfpChainCensusRestrictor(), cache);
 				calc.setRecordAlignmentMapping(true);
 				calc.setStoreAfpChain(true);
@@ -575,12 +700,81 @@ public class CeSymmMain {
 		grp.addOption(opt);
 		options.addOptionGroup(grp);
 
-		// misc
-		//TODO threads
+		// misc parameters
+		//TODO multithread
 		//		options.addOption( OptionBuilder.withLongOpt("threads")
 		//				.hasArg(true)
 		//				.withDescription("Number of threads [default cores-1]")
 		//				.create());
+		//		optionOrder.put("threads", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("maxgapsize")
+				.hasArg(false)
+				.withDescription("This parameter configures the maximum gap size "
+						+ "G, that is applied during the AFP extension. The "
+						+ "larger the value, the longer the calculation time "
+						+ "can become, Default value is 30. Set to 0 for no limit.")
+				.create()
+				);
+		optionOrder.put("maxgapsize", optionNum++);
+
+		options.addOption( OptionBuilder.withLongOpt("scoringstrategy")
+				.hasArg(true)
+				.withDescription("Which scoring function to use: ")
+				.create()
+				);
+		optionOrder.put("scoringstrategy", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("winsize")
+				.hasArg(false)
+				.withDescription("This configures the fragment size m of Aligned Fragment Pairs (AFPs).")
+				.create()
+				);
+		optionOrder.put("winsize", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("maxrmsd")
+				.hasArg(false)
+				.withDescription("The maximum RMSD at which to stop alignment "
+						+ "optimization. (default: unlimited=99)")
+				.create()
+				);
+		optionOrder.put("maxrmsd", optionNum++);
+
+		options.addOption( OptionBuilder.withLongOpt("gapopen")
+				.hasArg(true)
+				.withDescription("Gap opening penalty during alignment optimization [default: 5.0].")
+				.create()
+				);
+		optionOrder.put("gapopen", optionNum++);
+
+		options.addOption( OptionBuilder.withLongOpt("gapextension")
+				.hasArg(true)
+				.withDescription("Gap extension penalty during alignment optimization [default: 0.5].\n")
+				.create()
+				);
+		optionOrder.put("gapextension", optionNum++);
+
+
+		options.addOption( OptionBuilder.withLongOpt("ordermethod")
+				.hasArg(true)
+				.withDescription("Order detection method (experimental): ")
+				.create()
+				);
+		optionOrder.put("ordermethod", optionNum++);
+
+		options.addOption( OptionBuilder.withLongOpt("refineresult")
+				.hasArg(false)
+				.withDescription("Refine the result to a multiple alignment (experimental)")
+				.create()
+				);
+		optionOrder.put("refineresult", optionNum++);
+		options.addOption( OptionBuilder.withLongOpt("norefineresult")
+				.hasArg(false)
+				.withDescription("Don't refine the result. Leave as a pairwise alignment. [default]")
+				.create()
+				);
+		optionOrder.put("norefineresult", optionNum++);
+
 		options.addOption( OptionBuilder.withLongOpt("scopversion")
 				.hasArg(true)
 				.withArgName("version")

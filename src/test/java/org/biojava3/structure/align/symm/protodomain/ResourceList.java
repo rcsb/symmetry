@@ -33,6 +33,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -44,6 +45,7 @@ import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.ce.CeCPMain;
 import org.biojava.bio.structure.align.ce.CeMain;
 import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.bio.structure.align.util.AlignmentTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.align.xml.AFPChainXMLParser;
@@ -70,6 +72,9 @@ import org.xml.sax.SAXException;
  */
 public class ResourceList {
 
+	/**
+	 * Used to ignore certain fields of XML (e.g. timestamps)
+	 */
 	public static class ElementTextIgnoringDifferenceListener implements DifferenceListener {
 
 		private String[] ignoredNames;
@@ -104,6 +109,59 @@ public class ResourceList {
 		public void skippedComparison(Node control, Node test) {
 		}
 
+	}
+	
+	/**
+	 * Used to compare XML generated from a CensusResultList.
+	 * 
+	 * Ignores the "startingTime" and "meanSecondsTaken" fields.
+	 * Compares alignments based on their underlying alignment maps, rather
+	 * than according to the concise string representation.
+	 * @author Spencer Bliven
+	 *
+	 */
+	public static class CensusResultListDifferenceListener extends ElementTextIgnoringDifferenceListener {
+		public CensusResultListDifferenceListener() {
+			super("startingTime", "meanSecondsTaken","timestamp");
+		}
+		@Override
+		public int differenceFound(Difference difference) {
+			Node controlNode = difference.getControlNodeDetail().getNode();
+			Node parent = controlNode.getParentNode();
+			if (controlNode != null && parent != null) {
+				String name = parent.getNodeName();
+				Node grandparent = parent.getParentNode();
+				if(grandparent != null) {
+					String grandpaName = grandparent.getNodeName();
+					
+					// apply to entry.alignment for census3
+					// and alignmentMapping.simpleFunction for census2
+					if( name.equalsIgnoreCase("alignment") &&
+							grandpaName.equalsIgnoreCase("entry") ||
+							name.equalsIgnoreCase("simpleFunction") &&
+							grandpaName.equalsIgnoreCase("alignmentMapping"))
+					{
+						// entry.alignment should be compared using the expanded map
+						String val1 = difference.getControlNodeDetail().getValue();
+						String val2 = difference.getTestNodeDetail().getValue();
+						
+						val1 = val1.replaceAll("=", ">");
+						val2 = val2.replaceAll("=", ">");
+						
+						Map<Integer,Integer> map1 = AlignmentTools.fromConciseAlignmentString(val1);
+						Map<Integer,Integer> map2 = AlignmentTools.fromConciseAlignmentString(val2);
+						
+						if( map1.equals(map2)) {
+							return RETURN_IGNORE_DIFFERENCE_NODES_IDENTICAL;
+						} else {
+							return RETURN_ACCEPT_DIFFERENCE;
+						}
+					}
+				}
+			}
+
+			return super.differenceFound(difference);
+		}
 	}
 
 	/**

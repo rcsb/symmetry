@@ -14,7 +14,7 @@ import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopDomain;
 import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.protodomain.ResourceList;
-import org.biojava3.structure.align.symm.protodomain.ResourceList.ElementTextIgnoringDifferenceListener;
+import org.biojava3.structure.align.symm.protodomain.ResourceList.CensusResultListDifferenceListener;
 import org.biojava3.structure.align.symm.protodomain.ResourceList.NameProvider;
 import org.custommonkey.xmlunit.DifferenceListener;
 import org.junit.Before;
@@ -71,7 +71,7 @@ public class CensusTest {
 		census.setRecordAlignmentMapping(true);
 		census.run();
 		// unfortunately, the timestamp will be different
-		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp", "meanSecondsTaken");
+		DifferenceListener listener = new CensusResultListDifferenceListener();
 		File expectedFile = ResourceList.get().openFile("census2/expected1_with_map.xml");
 		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
 		assertTrue(similar);
@@ -91,7 +91,7 @@ public class CensusTest {
 		census.setOutputWriter(actualFile);
 		census.run();
 		// unfortunately, the timestamp will be different
-		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp", "meanSecondsTaken");
+		DifferenceListener listener = new CensusResultListDifferenceListener();
 		File expectedFile = ResourceList.get().openFile("census2/expected1.xml");
 		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
 		assertTrue(similar);
@@ -149,7 +149,7 @@ public class CensusTest {
 		census.setOutputWriter(actualFile);
 		census.run();
 		// unfortunately, the timestamp will be different
-		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("timestamp", "meanSecondsTaken");
+		DifferenceListener listener = new CensusResultListDifferenceListener();
 		File expectedFile = ResourceList.get().openFile("census2/expected2.xml");
 		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
 		assertTrue(similar);

@@ -17,7 +17,7 @@ import org.biojava.bio.structure.scop.ScopFactory;
 import org.biojava3.structure.align.symm.census3.run.AfpChainCensusRestrictor;
 import org.biojava3.structure.align.symm.census3.run.Census;
 import org.biojava3.structure.align.symm.protodomain.ResourceList;
-import org.biojava3.structure.align.symm.protodomain.ResourceList.ElementTextIgnoringDifferenceListener;
+import org.biojava3.structure.align.symm.protodomain.ResourceList.CensusResultListDifferenceListener;
 import org.biojava3.structure.align.symm.protodomain.ResourceList.NameProvider;
 import org.custommonkey.xmlunit.DifferenceListener;
 import org.junit.Before;
@@ -157,7 +157,7 @@ public class CensusTest {
 		census.setOutputWriter(actualFile);
 		census.run();
 		// unfortunately, the timestamp will be different
-		DifferenceListener listener = new ElementTextIgnoringDifferenceListener("startingTime", "meanSecondsTaken");
+		DifferenceListener listener = new CensusResultListDifferenceListener();
 		File expectedFile = ResourceList.get().openFile("census3/expected2.xml");
 		boolean similar = ResourceList.compareXml(expectedFile, actualFile, listener);
 		assertTrue(similar);

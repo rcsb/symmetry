@@ -44,6 +44,7 @@ import org.biojava.bio.structure.Bond;
 import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.Chain;
 import org.biojava.bio.structure.Group;
+import org.biojava.bio.structure.GroupType;
 import org.biojava.bio.structure.NucleotideImpl;
 import org.biojava.bio.structure.ResidueNumber;
 import org.biojava.bio.structure.Structure;
@@ -246,7 +247,7 @@ public class StructureEncoderImpl1 extends StructureEncoder {
 							}	
 						}
 						// TODO this may return amino for an non-std amino acid
-						if (g.getType().equals("HETATM")) {
+						if (g.getType() == GroupType.HETATM) {
 							flags |= NON_POLYMER;
 						}
 					

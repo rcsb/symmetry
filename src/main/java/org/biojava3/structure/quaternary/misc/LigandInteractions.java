@@ -2,7 +2,6 @@ package org.biojava3.structure.quaternary.misc;
 
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -11,10 +10,9 @@ import java.util.TreeMap;
 import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Calc;
 import org.biojava.bio.structure.Chain;
-import org.biojava.bio.structure.Compound;
 import org.biojava.bio.structure.Group;
+import org.biojava.bio.structure.GroupType;
 import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.StructureException;
 
 public class LigandInteractions {
 	private Structure structure = null;
@@ -51,9 +49,9 @@ public class LigandInteractions {
 		// TODO ligands could be in their own chains, they would be ignored here!!!
 		for (Chain c: structure.getChains()) {
 			for (Group g: c.getAtomLigands()) {
-				String type = g.getType();
+				GroupType type = g.getType();
 				double mass = getGroupMass(g);
-				if (type.equals("hetatm") && mass > 100) {
+				if (type == GroupType.HETATM && mass > 100) {
 					ligs.add(g);
 					System.out.println("Ligand: " + g + " mass: " + mass);
 				}
@@ -62,7 +60,7 @@ public class LigandInteractions {
 		return ligs;
 	}
 	
-	private void run() {	
+	private void run() {
 		if (modified) {
 			interactionType = 0;
 			boolean intraSubunit = false;

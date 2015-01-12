@@ -3,30 +3,22 @@ package org.biojava3.structure.quaternary.analysis;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
-import org.biojava.bio.structure.Atom;
 import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.io.MMCIFFileReader;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
-import org.biojava.bio.structure.quaternary.io.BioUnitDataProviderFactory;
-import org.biojava.bio.structure.quaternary.io.MmCifBiolAssemblyProvider;
-import org.biojava3.core.util.InputStreamProvider;
 import org.biojava3.structure.StructureIO;
-import org.biojava3.structure.codec.BioJavaStructureInflator;
 import org.biojava3.structure.codec.BioJavaStructureDeflator;
+import org.biojava3.structure.codec.BioJavaStructureInflator;
 import org.biojava3.structure.dbscan.GetRepresentatives;
 import org.rcsb.codec.StructureInflator;
 
@@ -44,6 +36,7 @@ public class StructureSerializerTest implements Runnable {
 		new StructureSerializerTest().run();
 	}
 
+	@Override
 	public void run() {
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
@@ -59,7 +52,7 @@ public class StructureSerializerTest implements Runnable {
 		boolean write = true;
 		boolean read = true;
 		boolean shuffle = false;
-		boolean useFile = false;
+//		boolean useFile = false;
 		
 		List<String> pdb = new ArrayList<String>(GetRepresentatives.getAll());
 //		List<String> pdb = new ArrayList<String>();
@@ -116,7 +109,7 @@ public class StructureSerializerTest implements Runnable {
 		int success = 0;
 		int fail = 0;
 		long totalAtomCount = 0;
-		long totalCAAtomCount = 0;
+//		long totalCAAtomCount = 0;
 		long totalTimeGz = 0;
 		long totalTimeLz = 0;
 
@@ -129,13 +122,12 @@ public class StructureSerializerTest implements Runnable {
 				boolean caOnly = false;
 				params.setParseCAOnly(caOnly);
 
-				long t1 = System.nanoTime(); 
-				//		Structure structureAll = readLargeStructure(pdbId);
+				//long t1 = System.nanoTime(); 
 				Structure structureAll = StructureIO.getStructure(pdbId);
-				long t2 = System.nanoTime();
+				//long t2 = System.nanoTime();
 				int atomCount = StructureTools.getNrAtoms(structureAll);
 				totalAtomCount += atomCount;
-				long time = t2 - t1;
+				//long time = t2 - t1;
 				//			System.out.println("pdb read time: " + (t2-t1) + " atomCount: " + atomCount);
 				//		//		out.println("PDB_" + pdbId + "," + "c" + "," + "all" + "," + "TRUE" + "," + "-1" + "," + atomCount + "," + "" + "," + time/1E6);
 				//		//		out.flush();
@@ -164,39 +156,6 @@ public class StructureSerializerTest implements Runnable {
 //		System.out.println("Total CA atom count     : " + totalCAAtomCount);
 		System.out.println("Total gz time           : " + totalTimeGz/1000000);
 		System.out.println("Total lz time           : " + totalTimeLz/1000000);
-	}
-	
-	private Structure readLargeStructure(String pdbId) throws MalformedURLException {
-		// initialize the PDB_DIR env variable
-		AtomCache cache = new AtomCache();
-		
-		FileParsingParameters p = new FileParsingParameters();
-		p.setStoreEmptySeqRes(true);
-		p.setLoadChemCompInfo(true);
-		p.setParseCAOnly(true);
-		p.setAtomCaThreshold(Integer.MAX_VALUE);
-		ChemCompGroupFactory.setChemCompProvider(new DownloadChemCompProvider());
-		MmCifBiolAssemblyProvider mmcifProvider = new MmCifBiolAssemblyProvider();
-		BioUnitDataProviderFactory.setBioUnitDataProvider(mmcifProvider.getClass().getCanonicalName());	
-
-	//	PDBFileReader pdbreader = new PDBFileReader();
-		MMCIFFileReader mmcifReader = new MMCIFFileReader();
-		mmcifReader.setFileParsingParameters(p);
-		
-		URL url = new URL("ftp://ftp.wwpdb.org/pub/pdb/data/large_structures/mmCIF/" + pdbId + ".cif.gz");
-
-		Structure structure = null;
-		try { 
-			InputStreamProvider provider = new InputStreamProvider();
-			InputStream inStream = provider.getInputStream(url);
-			structure = mmcifReader.parseFromInputStream(inStream);
-			structure.setBiologicalAssembly(true);
-			inStream.close();
-		} catch (Exception e){
-			e.printStackTrace();
-			System.exit(-1);
-		}
-		return structure;
 	}
 
 	private void write(PrintWriter out, String pdbId, Structure structure, int compressionMethod, boolean caOnly, boolean gzipped) throws IOException {
@@ -261,12 +220,14 @@ public class StructureSerializerTest implements Runnable {
 		out.flush();
 	}
 
+	/*
 	private void printAtoms(Structure structure) {
 		Atom[] atoms = StructureTools.getAllAtomArray(structure);
 		for (Atom a: atoms) {
 			System.out.println(a.toPDB());
 		}
 	}
+	*/
 
 	private void initializeCache() {
 		cache = new AtomCache();
@@ -299,7 +260,7 @@ public class StructureSerializerTest implements Runnable {
 	//	private static String[] testCase = {"1BPV"};
 	//	private static String[] testCase = {"1CDG"};
 	//	private static String[] testCase = {"3NHD"};
-		private static String[] testCase = {"1STP"};
+	//	private static String[] testCase = {"1STP"};
 	//	private static String[] testCase = {"3j3q"};
 	//	private static String[] testCase = {"2K8M","1HTQ","1STP","2KU2","1VU4"};
 	// static String[] testCase = {"1VU4","2AAZ","4HHB","2KU2","1BPV","2WDK"};

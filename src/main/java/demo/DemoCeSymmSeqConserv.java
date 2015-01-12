@@ -18,7 +18,7 @@ public class DemoCeSymmSeqConserv {
 	public static void main(String[] args){
 		
 		String tmpDir = System.getProperty("java.io.tmpdir");
-		AtomCache cache = new AtomCache(tmpDir,tmpDir, true);
+		AtomCache cache = new AtomCache(tmpDir,tmpDir);
 
 		String name = "d1jlya1";
 

@@ -31,13 +31,12 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.io.PDBFileReader;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
-import org.biojava3.structure.quaternary.core.RotationAxisAligner;
 import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
 import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
+import org.biojava3.structure.quaternary.core.RotationAxisAligner;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 
@@ -77,10 +76,6 @@ public class Demo3ZDY {
 			StructureIO.setAtomCache(cache);
 
 			s = StructureIO.getBiologicalAssembly(pdbID, biolAssemblyNr);
-
-			// Alternative access to structure:			
-			//
-			//s = readStructure(pdbID, biolAssemblyNr);
 
 			String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; " +
 					"backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; " +
@@ -218,37 +213,4 @@ public class Demo3ZDY {
 
 		return script;
 	}
-
-	private static Structure  readStructure(String pdbId, int bioAssemblyId) {
-		// initialize the PDB_DIR env variable
-		AtomCache cache = new AtomCache();
-
-		FileParsingParameters p = new FileParsingParameters();
-		p.setStoreEmptySeqRes(true);
-		p.setLoadChemCompInfo(true);
-		p.setAtomCaThreshold(Integer.MAX_VALUE);
-		//p.setAcceptedAtomNames(new String[]{" CA "});
-		p.setParseBioAssembly(true);
-
-
-
-		PDBFileReader pdbreader = new PDBFileReader();
-		pdbreader.setPath(cache.getPath());
-		pdbreader.setFileParsingParameters(p);
-		pdbreader.setAutoFetch(true);
-		pdbreader.setBioAssemblyId(bioAssemblyId);
-		pdbreader.setBioAssemblyFallback(false);
-		Structure structure = null;
-		try { 
-			structure = pdbreader.getStructureById(pdbId);
-			if ( bioAssemblyId > 0 )
-				structure.setBiologicalAssembly(true);
-			structure.setPDBCode(pdbId);
-		} catch (Exception e){
-			e.printStackTrace();
-			System.exit(-1);
-		}
-		return structure;
-	}
-
 }

@@ -209,7 +209,7 @@ public class TestLoadingManyStoichs {
 	 */
 	public static InputStream doPOST(URL url, String data)
 			throws IOException 
-			{
+	{
 
 		// Send data
 
@@ -223,38 +223,5 @@ public class TestLoadingManyStoichs {
 		// Get the response
 		return conn.getInputStream();
 
-			}
-
-	private static Structure  readStructure(String pdbId, int bioAssemblyId) {
-		// initialize the PDB_DIR env variable
-		AtomCache cache = new AtomCache();
-
-		FileParsingParameters p = new FileParsingParameters();
-		p.setStoreEmptySeqRes(true);
-		p.setLoadChemCompInfo(true);
-		p.setAtomCaThreshold(Integer.MAX_VALUE);
-		//p.setAcceptedAtomNames(new String[]{" CA "});
-		p.setParseBioAssembly(true);
-
-
-
-		PDBFileReader pdbreader = new PDBFileReader();
-		pdbreader.setPath(cache.getPath());
-		pdbreader.setFileParsingParameters(p);
-		pdbreader.setAutoFetch(true);
-		pdbreader.setBioAssemblyId(bioAssemblyId);
-		pdbreader.setBioAssemblyFallback(false);
-		Structure structure = null;
-		try { 
-			structure = pdbreader.getStructureById(pdbId);
-			if ( bioAssemblyId > 0 )
-				structure.setBiologicalAssembly(true);
-			structure.setPDBCode(pdbId);
-		} catch (Exception e){
-			e.printStackTrace();
-			System.exit(-1);
-		}
-		return structure;
 	}
-
 }

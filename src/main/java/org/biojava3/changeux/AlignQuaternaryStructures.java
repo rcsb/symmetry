@@ -10,7 +10,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.SortedSet;
 import java.util.zip.GZIPOutputStream;
@@ -22,21 +21,16 @@ import org.biojava.bio.structure.StructureTools;
 import org.biojava.bio.structure.align.StructureAlignment;
 import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.ce.CeMain;
-import org.biojava.bio.structure.align.ce.CeParameters;
-import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.seq.SmithWaterman3Daligner;
 import org.biojava.bio.structure.align.util.AFPChainScorer;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.align.xml.AFPChainXMLParser;
 import org.biojava3.core.util.InputStreamProvider;
-
 import org.rcsb.fatcat.server.PdbChainKey;
 import org.rcsb.fatcat.server.dao.PdbDAO;
 import org.rcsb.fatcat.server.dao.SequenceClusterDAO;
-import org.rcsb.fatcat.server.util.SetupJNDIDataSource;
 
 public class AlignQuaternaryStructures {
 
@@ -88,21 +82,20 @@ public class AlignQuaternaryStructures {
 			String xml = null;
 			String outputFileName = "/Users/ap3/WORK/PDB/bio/"+ repre.getPdbId() + "_" + member.getPdbId()+".xml.gz";
 			File f = new File(outputFileName);
-			if ( false) {
 			//if ( f.exists()){
-				System.out.println("loading results from previous calculation for " + f);
-				xml = showPrecalcResult(repre, member,f, logFile);
-			} else {
+			//	System.out.println("loading results from previous calculation for " + f);
+			//	xml = showPrecalcResult(repre, member,f, logFile);
+			//} else {
 
-				
-				try {
-					xml = align(repre, member,algo,logFile,false);
-					writeXML2File(f, xml);
-				} catch (Exception e){
-					//e.printStackTrace();
-					System.err.println(e.getMessage());
-				}
+
+			try {
+				xml = align(repre, member,algo,logFile,false);
+				writeXML2File(f, xml);
+			} catch (Exception e){
+				//e.printStackTrace();
+				System.err.println(e.getMessage());
 			}
+			//}
 		}
 
 

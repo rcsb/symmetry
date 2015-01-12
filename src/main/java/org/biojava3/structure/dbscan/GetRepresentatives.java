@@ -32,6 +32,7 @@ public class GetRepresentatives {
 	 * @return PdbChainKey set of representatives
 	 * @deprecated
 	 */
+	@Deprecated
 	public static SortedSet<StructureName> getRepresentatives() {
         return getRepresentatives(40);
 	}

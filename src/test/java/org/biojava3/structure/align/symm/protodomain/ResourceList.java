@@ -47,6 +47,7 @@ import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.bio.structure.align.xml.AFPChainXMLParser;
+import org.biojava.bio.structure.io.LocalPDBDirectory.FetchBehavior;
 import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
 import org.biojava.bio.structure.scop.ScopDatabase;
 import org.biojava.bio.structure.scop.ScopFactory;
@@ -271,7 +272,8 @@ public class ResourceList {
 		if (pdbDir == null) {
 			cache = new AtomCache();
 		} else {
-			cache = new AtomCache(pdbDir,pdbDir,false);
+			cache = new AtomCache(pdbDir,pdbDir);
+			cache.setFetchBehavior(FetchBehavior.LOCAL_ONLY);
 		}
 	}
 

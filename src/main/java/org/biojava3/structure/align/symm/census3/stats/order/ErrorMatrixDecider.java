@@ -12,6 +12,7 @@ import org.apache.commons.math3.linear.RealVector;
  * @author dmyersturnbull
  * @deprecated This was being used, but now we're focusing on trying to improve the order-detector instead
  */
+@Deprecated
 public class ErrorMatrixDecider implements ConsensusDecider {
 
 	private RealMatrix matrix;

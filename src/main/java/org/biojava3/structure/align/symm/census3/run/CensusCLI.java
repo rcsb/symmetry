@@ -38,6 +38,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.UserConfiguration;
+import org.biojava.bio.structure.io.LocalPDBDirectory.FetchBehavior;
+import org.biojava.bio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.biojava.bio.structure.scop.Astral;
 import org.biojava.bio.structure.scop.Astral.AstralSet;
 import org.biojava.bio.structure.scop.ScopCategory;
@@ -304,11 +306,12 @@ public class CensusCLI {
 			// this actually gets called first
 			if (pdbDir == null) {
 				AtomCache cache = new AtomCache();
-				cache.setFetchFileEvenIfObsolete(true);
+				cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
 				census.setCache(cache);
 			} else {
-				AtomCache cache = new AtomCache(pdbDir,pdbDir, false);
-				cache.setFetchFileEvenIfObsolete(true);
+				AtomCache cache = new AtomCache(pdbDir,pdbDir);
+				cache.setFetchBehavior(FetchBehavior.LOCAL_ONLY);
+				cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
 				census.setCache(cache);
 				System.setProperty(UserConfiguration.PDB_DIR, pdbDir);
 			}

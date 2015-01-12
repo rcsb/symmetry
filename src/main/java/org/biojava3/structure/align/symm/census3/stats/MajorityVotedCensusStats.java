@@ -46,6 +46,7 @@ import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
  *      TM-score, and that the order is at least the order threshold
  * @deprecated
  */
+@Deprecated
 public class MajorityVotedCensusStats {
 
 	public static final String NEWLINE;

@@ -199,13 +199,17 @@ public class DetectOrder {
 			if(outfile != null) {
 				PrintStream out = null;
 				try {
-					out = new PrintStream(outfile);
+					if(outfile.equals("-")) {
+						out = System.out;
+					} else {
+						out = new PrintStream(outfile);
+					}
 					out.println("Angle\tDistance");
 					printSuperpositionDistance(ca1,axis,angleIncr*Calc.radiansPerDegree,out);
 				} catch(FileNotFoundException e) {
 					e.printStackTrace();
 				} finally {
-					if(out != null) {
+					if(out != null && out != System.out) {
 						out.close();
 					}
 				}

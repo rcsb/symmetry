@@ -440,62 +440,6 @@ public class QuatSymmetryDetector {
 		return subClusters;
 	}
 	
-	private List<List<Integer>> decomposeClustersOld(List<Point3d[]> caCoords, List<Integer> clusterIds) {
-		List<List<Integer>> subClusters = new ArrayList<List<Integer>>();
-
-		int last = getLastMultiSubunit(clusterIds);
-		List<Point3d[]> subList = caCoords;
-		if (last < caCoords.size()) {
-			subList = caCoords.subList(0, last);
-		} else {
-			last = caCoords.size();
-		}
-
-		SubunitGraph subunitGraph = new SubunitGraph(subList);
-		Graph<Integer> graph = subunitGraph.getProteinGraph();
-//		System.out.println("Graph: " + graph);
-
-		for (int i = last; i > 1; i--) {
-			CombinationGenerator generator = new CombinationGenerator(last, i);
-			int[] indices = null;
-			Integer[] subCluster = new Integer[i];
-			
-			// avoid combinatorial explosion, i.e. for 1FNT
-			BigInteger maxCombinations = BigInteger.valueOf(parameters.getMaximumLocalCombinations());
-//			System.out.println("decomposeClusters:maxCombinations" + maxCombinations);
-		    if (generator.getTotal().compareTo(maxCombinations) > 0) {
-		    	continue;
-		    }
-			
-			while (generator.hasNext()) {
-				indices = generator.getNext();	
-				List<Integer> subSet = new ArrayList<Integer>(indices.length);
-				for (int index: indices) {
-					subSet.add(index);
-				}
-				System.out.println("subSet: " + subSet);
-				Graph<Integer> subGraph = graph.extractSubGraph(subSet);		
-				//			System.out.println("Subgraph: " + subGraph);
-
-				if (isConnectedGraph(subGraph)) {		
-					for (int j = 0; j < indices.length; j++) {
-						subCluster[j] = clusterIds.get(indices[j]);
-					}		
-					List<Integer> folds = getFolds(subCluster, last);
-					if (folds.size() > 1) {
-						subClusters.add(subSet);
-						if (subClusters.size() > parameters.getMaximumLocalResults()) {
-							return subClusters;
-						}
-					}
-				}
-			}
-		}
-		System.out.println("QuatSymmetryDetector: decomposeClusters: " + subClusters.size());
-
-		return subClusters;
-	}
-
 	private static int getLastMultiSubunit(List<Integer> clusterIds) {
 		for (int i = 0, n = clusterIds.size(); i < n; i++) {
 			if (i < n-2) {

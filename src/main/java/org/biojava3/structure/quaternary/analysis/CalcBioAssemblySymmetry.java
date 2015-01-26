@@ -97,10 +97,10 @@ public class CalcBioAssemblySymmetry {
 //					System.out.println(generator.getDefaultOrientation());
 //					System.out.println(generator.getZoom());
 //					System.out.println(generator.drawPolyhedron());
-//					System.out.println(generator.drawAxes());
-//					System.out.println(generator.colorBySubunit());
-//					System.out.println(generator.colorBySequenceCluster());
-//					System.out.println(generator.colorBySymmetry());
+					System.out.println(generator.drawAxes());
+					System.out.println(generator.colorBySubunit());
+					System.out.println(generator.colorBySequenceCluster());
+					System.out.println(generator.colorBySymmetry());
 				}
 				
 			}

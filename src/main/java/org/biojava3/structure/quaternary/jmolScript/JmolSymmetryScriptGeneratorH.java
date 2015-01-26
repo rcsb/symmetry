@@ -487,7 +487,12 @@ public class JmolSymmetryScriptGeneratorH extends JmolSymmetryScriptGenerator {
 	
 	private String getChainSpecification(List<Integer> modelNumbers, List<String> chainIds, int subunit) {
 		if (onTheFly) {
-			return chainIds.get(subunit) + "&symop=" + (modelNumbers.get(subunit)+1);
+			if (Collections.max(modelNumbers) > 1) {
+				return chainIds.get(subunit) + "&symop=" + (modelNumbers.get(subunit)+1);
+			} else {
+				// if there is only a single symop, Jmol does not accept the symop syntax
+				return chainIds.get(subunit);
+			}
 		} else {
 		    return chainIds.get(subunit) + "/" + (modelNumbers.get(subunit)+1);
 		}

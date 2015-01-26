@@ -1,4 +1,4 @@
-package org.biojava3.structure.quaternary.analysis;
+package org.biojava3.structure.codec;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -20,8 +20,6 @@ import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.dbscan.GetRepresentatives;
-
-import org.biojava3.structure.quaternary.misc.RcsbPdbInMemoryDatabase;
 
 
 public class InMemoryDbTester implements Runnable {

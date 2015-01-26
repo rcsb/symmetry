@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.biojava3.structure.quaternary.misc;
+package org.biojava3.structure.codec;
 
 import java.io.DataInputStream;
 import java.io.File;

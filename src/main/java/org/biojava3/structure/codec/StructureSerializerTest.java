@@ -1,4 +1,4 @@
-package org.biojava3.structure.quaternary.analysis;
+package org.biojava3.structure.codec;
 
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -17,8 +17,6 @@ import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
 import org.biojava3.structure.StructureIO;
-import org.biojava3.structure.codec.BioJavaStructureDeflator;
-import org.biojava3.structure.codec.BioJavaStructureInflator;
 import org.biojava3.structure.dbscan.GetRepresentatives;
 import org.rcsb.codec.StructureInflator;
 

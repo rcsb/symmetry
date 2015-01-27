@@ -39,10 +39,10 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.PDBFileReader;
+import org.biojava.bio.structure.symmetry.analysis.CalcBioAssemblySymmetry;
+import org.biojava.bio.structure.symmetry.core.QuatSymmetryDetector;
+import org.biojava.bio.structure.symmetry.core.QuatSymmetryParameters;
 import org.biojava3.structure.StructureIO;
-import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
-import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
-import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
 
 public class TestLoadingManyStoichs {
 	public static final String SERVICELOCATION="http://www.rcsb.org/pdb/rest";

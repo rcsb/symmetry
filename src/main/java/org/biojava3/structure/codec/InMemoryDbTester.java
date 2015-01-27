@@ -18,8 +18,8 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
+import org.biojava.bio.structure.rcsb.GetRepresentatives;
 import org.biojava3.structure.StructureIO;
-import org.biojava3.structure.dbscan.GetRepresentatives;
 
 
 public class InMemoryDbTester implements Runnable {

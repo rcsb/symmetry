@@ -31,14 +31,14 @@ import org.biojava.bio.structure.Structure;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
+import org.biojava.bio.structure.symmetry.analysis.CalcBioAssemblySymmetry;
+import org.biojava.bio.structure.symmetry.core.QuatSymmetryDetector;
+import org.biojava.bio.structure.symmetry.core.QuatSymmetryParameters;
+import org.biojava.bio.structure.symmetry.core.QuatSymmetryResults;
+import org.biojava.bio.structure.symmetry.core.RotationAxisAligner;
+import org.biojava.bio.structure.symmetry.jmolScript.JmolSymmetryScriptGenerator;
+import org.biojava.bio.structure.symmetry.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 import org.biojava3.structure.StructureIO;
-import org.biojava3.structure.quaternary.analysis.CalcBioAssemblySymmetry;
-import org.biojava3.structure.quaternary.core.QuatSymmetryDetector;
-import org.biojava3.structure.quaternary.core.QuatSymmetryParameters;
-import org.biojava3.structure.quaternary.core.QuatSymmetryResults;
-import org.biojava3.structure.quaternary.core.RotationAxisAligner;
-import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGenerator;
-import org.biojava3.structure.quaternary.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 
 public class Demo3ZDY {
 

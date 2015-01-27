@@ -14,10 +14,10 @@ import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.io.FileParsingParameters;
 import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
+import org.biojava.bio.structure.rcsb.GetRepresentatives;
 import org.biojava3.structure.StructureIO;
 import org.biojava3.structure.codec.BioJavaStructureDeflator;
 import org.biojava3.structure.codec.BioJavaStructureInflator;
-import org.biojava3.structure.dbscan.GetRepresentatives;
 import org.rcsb.codec.CodecConstants;
 import org.rcsb.codec.StructureInflator;
 

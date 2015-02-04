@@ -9,7 +9,7 @@
 		<root level="info">
 			<appender-ref ref="Console"/>
 		</root>
-<!-- 		<logger name="org.biojava3" level="debug"> -->
+<!-- 		<logger name="org.biojava.nbio" level="debug"> -->
 <!-- 			<appender-ref ref="Console"/> -->
 <!-- 		</logger> -->
 	</loggers>

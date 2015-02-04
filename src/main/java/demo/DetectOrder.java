@@ -15,19 +15,19 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Calc;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.order.OrderDetectionFailedException;
-import org.biojava3.structure.align.symm.order.OrderDetector;
-import org.biojava3.structure.align.symm.order.RotationOrderDetector;
-import org.biojava3.structure.align.symm.order.RotationOrderDetector.RotationOrderMethod;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Calc;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
+import org.biojava.nbio.structure.align.symm.order.OrderDetector;
+import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector;
+import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector.RotationOrderMethod;
 
 public class DetectOrder {
 
@@ -199,13 +199,17 @@ public class DetectOrder {
 			if(outfile != null) {
 				PrintStream out = null;
 				try {
-					out = new PrintStream(outfile);
+					if(outfile.equals("-")) {
+						out = System.out;
+					} else {
+						out = new PrintStream(outfile);
+					}
 					out.println("Angle\tDistance");
 					printSuperpositionDistance(ca1,axis,angleIncr*Calc.radiansPerDegree,out);
 				} catch(FileNotFoundException e) {
 					e.printStackTrace();
 				} finally {
-					if(out != null) {
+					if(out != null && out != System.out) {
 						out.close();
 					}
 				}

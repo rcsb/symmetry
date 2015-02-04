@@ -14,7 +14,7 @@
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<slf4j.version>1.7.7</slf4j.version>
 		<log4j.version>2.1</log4j.version>
-		<biojava.version>4.0.0-SNAPSHOT</biojava.version>
+		<biojava.version>4.0.0</biojava.version>
 	</properties>
 
 	<repositories>
@@ -91,17 +91,17 @@
 
 		<dependency>
 			<groupId>org.biojava</groupId>
-			<artifactId>biojava3-structure</artifactId>
+			<artifactId>biojava-structure</artifactId>
 			<version>${biojava.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
-			<artifactId>biojava3-structure-gui</artifactId>
+			<artifactId>biojava-structure-gui</artifactId>
 			<version>${biojava.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
-			<artifactId>biojava3-ws</artifactId>
+			<artifactId>biojava-ws</artifactId>
 			<version>${biojava.version}</version>
 		</dependency>
 

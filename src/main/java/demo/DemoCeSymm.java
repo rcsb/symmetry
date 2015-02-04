@@ -1,14 +1,14 @@
 package demo;
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.model.AfpChainWriter;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.model.AfpChainWriter;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 
 /**
  * Quick demo of how to call CE-Symm programmatically.

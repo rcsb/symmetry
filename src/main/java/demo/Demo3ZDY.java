@@ -27,18 +27,18 @@ package demo;
 
 import java.util.List;
 
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.symmetry.analysis.CalcBioAssemblySymmetry;
-import org.biojava.bio.structure.symmetry.core.QuatSymmetryDetector;
-import org.biojava.bio.structure.symmetry.core.QuatSymmetryParameters;
-import org.biojava.bio.structure.symmetry.core.QuatSymmetryResults;
-import org.biojava.bio.structure.symmetry.core.RotationAxisAligner;
-import org.biojava.bio.structure.symmetry.jmolScript.JmolSymmetryScriptGenerator;
-import org.biojava.bio.structure.symmetry.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
-import org.biojava3.structure.StructureIO;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.io.FileParsingParameters;
+import org.biojava.nbio.structure.symmetry.analysis.CalcBioAssemblySymmetry;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
+import org.biojava.nbio.structure.symmetry.core.RotationAxisAligner;
+import org.biojava.nbio.structure.symmetry.jmolScript.JmolSymmetryScriptGenerator;
+import org.biojava.nbio.structure.symmetry.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
+import org.biojava.nbio.structure.StructureIO;
 
 public class Demo3ZDY {
 

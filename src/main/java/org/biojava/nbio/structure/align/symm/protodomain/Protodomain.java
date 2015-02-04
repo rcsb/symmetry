@@ -37,7 +37,8 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.AtomPositionMap;
 import org.biojava.nbio.structure.Group;
 import org.biojava.nbio.structure.ResidueNumber;
-import org.biojava.nbio.structure.ResidueRange;
+import org.biojava.nbio.structure.ResidueRangeAndLength;
+import org.biojava.nbio.structure.ResidueRangeAndLength;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
@@ -54,38 +55,42 @@ import org.biojava.nbio.structure.scop.ScopFactory;
  * formatted string or an {@link AFPChain} and {@link Atom} array, and for determining a unique name for this
  * Protodomain. This class is useful for insisting that a protodomain created from an alignment remains within the
  * confines of its domain. A Protodomain created from an AFPChain is guaranteed to have this property (but not one
- * created from a String). To get the protodomain structure string using CE-Symm, do: <code>
- * 		AFPChain afpChain = ceSymm.align(ca1, ca2);
-		int order = CeSymm.getSymmetryOrder(afpChain)
-		String s = Protodomain.fromSymmetryAlignment(afpChain, ca1, order, atomCache).toString();
- * </code> To get the protdomain structure string by using CE to align a structure against a protodomain of known
- * symmetry (and symmetry order), do: <code>
- * 		AFPChain afpChain = ceSymm.align(ca1, ca2);
-		String s = Protodomain.fromReferral(afpChain, ca2, order, atomCache).toString(); // note that we pass in ca2
- * </code>
+ * created from a String). To get the protodomain structure string using CE-Symm, do:
+ * <pre>
+ *  AFPChain afpChain = ceSymm.align(ca1, ca2);
+ *  int order = CeSymm.getSymmetryOrder(afpChain)
+ *  String s = Protodomain.fromSymmetryAlignment(afpChain, ca1, order, atomCache).toString();
+ * </pre>
+ * 
+ * <p>To get the protdomain structure string by using CE to align a structure against a protodomain of known
+ * symmetry (and symmetry order), do:
+ * <pre>
+ *  AFPChain afpChain = ceSymm.align(ca1, ca2);
+ *  String s = Protodomain.fromReferral(afpChain, ca2, order, atomCache).toString(); // note that we pass in ca2
+ * </pre>
  * 
  * @author dmyerstu
  */
 public class Protodomain {
 
 	/**
-	 * A helper class to create {@link ResidueRange ResidueRanges} without making a mistake.
+	 * A helper class to create {@link ResidueRangeAndLength ResidueRanges} without making a mistake.
 	 * 
 	 * @author dmyerstu
 	 */
 	private static class RangeBuilder {
-		private Character currentChain;
+		private String currentChain;
 		private ResidueNumber currentStart;
-		private List<ResidueRange> list = new ArrayList<ResidueRange>();
+		private List<ResidueRangeAndLength> list = new ArrayList<ResidueRangeAndLength>();
 
-		void addChain(char chainId) {
+		void addChain(String chainId) {
 			if (currentChain != null) throw new IllegalStateException();
 			currentChain = chainId;
 		}
 
 		void addEnd(ResidueNumber end, int length) {
 			if (currentStart == null) throw new IllegalStateException();
-			list.add(new ResidueRange(currentChain, currentStart, end, length));
+			list.add(new ResidueRangeAndLength(currentChain, currentStart, end, length));
 			clearCurrent();
 		}
 
@@ -100,13 +105,13 @@ public class Protodomain {
 			currentStart = null;
 		}
 
-		List<ResidueRange> getList() {
+		List<ResidueRangeAndLength> getList() {
 			return list;
 		}
 	}
 
 	/**
-	 * If two {@link ResidueRange ResidueRanges} consecutive in the {@link #getRanges() list of ranges} differ by no
+	 * If two {@link ResidueRangeAndLength ResidueRanges} consecutive in the {@link #getRanges() list of ranges} differ by no
 	 * more than this number, they will be spliced together.
 	 */
 	private static final int APPROX_CONSECUTIVE = 4;
@@ -115,7 +120,7 @@ public class Protodomain {
 
 	private int length;
 
-	private final List<ResidueRange> list;
+	private final List<ResidueRangeAndLength> list;
 
 	private final String pdbId;
 
@@ -128,7 +133,7 @@ public class Protodomain {
 	/**
 	 * Client code should avoid calling this method if either fromSymmetryAlignment or fromReferral is more appropriate.
 	 * The created Protodomain will include a gap in the alignment if and only if it is no greater than {@link #APPROX_CONSECUTIVE} residues.
-	 * That is, the Protodomain will have two {@link ResidueRange ResidueRanges} for every gap that contains {@code APPROX_CONSECUTIVE} residues.
+	 * That is, the Protodomain will have two {@link ResidueRangeAndLength ResidueRanges} for every gap that contains {@code APPROX_CONSECUTIVE} residues.
 	 * Currently, {@code APPROX_CONSECUTIVE} is 4; a subsequent change will break the interface.
 	 * 
 	 * @param enclosingName
@@ -174,8 +179,8 @@ public class Protodomain {
 				chains.add(atom.getGroup().getChainId());
 			}
 			for (String chain : chains) domainRanges.add(chain + ":");
-		} else if (  name.hasRanges()){
-			domainRanges = name.getRanges();
+//		} else if (  name.hasRanges()){
+//			domainRanges = name.getRanges();
 		} else {
 			throw new ProtodomainCreationException(enclosingName, "","Don't know how to interpret " + enclosingName + " !");
 		}
@@ -187,7 +192,7 @@ public class Protodomain {
 	/**
 	 * Client code should avoid calling this method if either fromSymmetryAlignment or fromReferral is more appropriate.
 	 * The created Protodomain will include a gap in the alignment if and only if it is no greater than {@link #APPROX_CONSECUTIVE} residues.
-	 * That is, the Protodomain will have two {@link ResidueRange ResidueRanges} for every gap that contains {@code APPROX_CONSECUTIVE} residues.
+	 * That is, the Protodomain will have two {@link ResidueRangeAndLength ResidueRanges} for every gap that contains {@code APPROX_CONSECUTIVE} residues.
 	 * Currently, {@code APPROX_CONSECUTIVE} is 4; a subsequent change will break the interface.
 	 * 
 	 * @param enclosingName
@@ -228,7 +233,7 @@ public class Protodomain {
 		// we can deal with this by splitting each block into singleton sequential residues (e.g. A_7-7)
 		// then we can splice these back together as we would with blocks
 
-		final List<ResidueRange> totalRanges = new ArrayList<ResidueRange>();
+		final List<ResidueRangeAndLength> totalRanges = new ArrayList<ResidueRangeAndLength>();
 
 		for (int block = 0; block < numBlocks; block++) {
 			if (block + 1 > afpChain.getOptLen().length) {
@@ -248,7 +253,7 @@ public class Protodomain {
 				final ResidueNumber protodomainEndR = endGroup.getResidueNumber();
 				final int protodomainStart = map.getPosition(protodomainStartR);
 				final int protodomainEnd = map.getPosition(protodomainEndR);
-				final List<ResidueRange> blockRanges = getBlockRanges(protodomainStart, protodomainEnd, domainRanges,
+				final List<ResidueRangeAndLength> blockRanges = getBlockRanges(protodomainStart, protodomainEnd, domainRanges,
 						protodomainStartR, protodomainEndR, startGroup, endGroup, map, enclosingName);
 				if (blockRanges != null) { // should this always be true?
 					totalRanges.addAll(blockRanges);
@@ -256,14 +261,14 @@ public class Protodomain {
 			}
 		}
 
-		final List<ResidueRange> splicedRanges;
+		final List<ResidueRangeAndLength> splicedRanges;
 		if (totalRanges.isEmpty()) {
 			splicedRanges = totalRanges;
 		} else {
 			splicedRanges = spliceApproxConsecutive(map, totalRanges, APPROX_CONSECUTIVE);
 		}
 
-		final int length = ResidueRange.calcLength(splicedRanges);
+		final int length = ResidueRangeAndLength.calcLength(splicedRanges);
 
 		Protodomain protodomain = new Protodomain(pdbId, enclosingName, splicedRanges, length, cache);
 
@@ -327,9 +332,9 @@ public class Protodomain {
 		String pdbId = new StructureName(enclosingName).getPdbId().toLowerCase();
 
 		final AtomPositionMap map = Protodomain.getAminoAcidPositions(cache, pdbId, enclosingName);
-		final List<ResidueRange> list = ResidueRange.parseMultiple(string.substring(string.indexOf('.') + 1), map);
+		final List<ResidueRangeAndLength> list = ResidueRangeAndLength.parseMultiple(string.substring(string.indexOf('.') + 1), map);
 
-		int length = ResidueRange.calcLength(list);
+		int length = ResidueRangeAndLength.calcLength(list);
 
 		Protodomain protodomain = new Protodomain(pdbId, enclosingName, list, length, cache);
 		return protodomain;
@@ -360,7 +365,7 @@ public class Protodomain {
 		if (protodomains.length == 0) return null;
 		if (protodomains.length == 1) return new Protodomain(protodomains[0]);
 		String scopId = protodomains[0].getScopId();
-		List<ResidueRange> ranges = new ArrayList<ResidueRange>();
+		List<ResidueRangeAndLength> ranges = new ArrayList<ResidueRangeAndLength>();
 		int previousEnd = 0;
 		for (Protodomain p : protodomains) {
 			if (!p.getScopId().equalsIgnoreCase(scopId)) {
@@ -373,7 +378,7 @@ public class Protodomain {
 			previousEnd = map.getPosition(p.getRanges().get(p.getRanges().size()-1).getEnd());
 			ranges.addAll(p.getRanges());
 		}
-		int length = ResidueRange.calcLength(ranges);
+		int length = ResidueRangeAndLength.calcLength(ranges);
 		Protodomain protodomain = new Protodomain(scopId, protodomains[0].getPdbId(), ranges, length, cache);
 		return protodomain;		
 	}
@@ -385,79 +390,78 @@ public class Protodomain {
 	 * 
 	 * @param residueRanges
 	 * @param groupPositions
-	 *            A map returned from {@link ResidueRange#getAminoAcidPositions(Atom[])}.
+	 *            A map returned from {@link ResidueRangeAndLength#getAminoAcidPositions(Atom[])}.
 	 * @param navMap
-	 *            An ordered map returned from {@link ResidueRange#orderByAtoms(Map)}.
+	 *            An ordered map returned from {@link ResidueRangeAndLength#orderByAtoms(Map)}.
 	 * @param index
 	 *           TODO Write a comment
 	 * @return
 	 */
-	private static List<ResidueRange> calcSubstruct(List<ResidueRange> residueRanges, AtomPositionMap map, int order,
+	private static List<ResidueRangeAndLength> calcSubstruct(List<ResidueRangeAndLength> residueRanges, AtomPositionMap map, int order,
 			int index) {
 
 		if (order < 1) throw new IllegalArgumentException("Can't compute substructure if order is " + order);
+		if (index > order) throw new IndexOutOfBoundsException("Illegal index "+index+" out of "+order+" rotations");
 		
-		List<ResidueRange> part = new ArrayList<ResidueRange>(); // the parts we want to keep
+		List<ResidueRangeAndLength> part = new ArrayList<ResidueRangeAndLength>(); // the parts we want to keep
 
 		int numResiduesHave = 0;
 		int numResiduesSkipped = 0;
+		final int totalLen = ResidueRangeAndLength.calcLength(residueRanges);
 
-		int numResiduesWant = ResidueRange.calcLength(residueRanges) / order;
-
-		int numResiduesWantToSkip = numResiduesWant * index;
-		if (index > 0) numResiduesWantToSkip++; // this is because we don't want overlap
+		// Number of residues to skip before the requested block
+		final int numResiduesWantToSkip = Math.round((float)totalLen * index / order);
+		// Size of requested block
+		final int numResiduesWant = Math.round((float)totalLen * (index+1)/ order) - numResiduesWantToSkip;
 
 		final NavigableMap<ResidueNumber, Integer> navMap = map.getNavMap();
 
-		outer: for (ResidueRange rr : residueRanges) {
+		outer: for (ResidueRangeAndLength rr : residueRanges) {
 
+			// Skip residues
 			if (numResiduesSkipped + rr.getLength() <= numResiduesWantToSkip) {
 				numResiduesSkipped += rr.getLength();
 				continue; // skip all of it
 			} else if (numResiduesSkipped <= numResiduesWantToSkip) {
 				// we only want part
 				// we'll execute the block below
-				// but before doing this, we'll redefine rr to remove the unwanted residues
+				// but before doing this, we'll redefine rr to remove the skipped residues
 				ResidueNumber redefStart = rr.getStart();
 				for (int j = 0; j < numResiduesWantToSkip - numResiduesSkipped; j++) {
 					redefStart = navMap.higherEntry(redefStart).getKey();
 				}
-				rr = new ResidueRange(rr.getChainId(), redefStart, rr.getEnd(), rr.getLength() - (numResiduesWantToSkip - numResiduesSkipped));
-				numResiduesSkipped += rr.getLength();
+				rr = new ResidueRangeAndLength(rr.getChainId(), redefStart, rr.getEnd(), rr.getLength() - (numResiduesWantToSkip - numResiduesSkipped));
+				numResiduesSkipped = numResiduesWantToSkip;
 			}
 			
+			// Add residues
 			// note that getLength() here DOES INCLUDE gaps (and it should)
 			if (numResiduesHave + rr.getLength() <= numResiduesWant) {
 				// no problem: we can fit the entire residue range in
 				part.add(rr);
-
+				numResiduesHave += rr.getLength();
 			} else if (numResiduesHave <= numResiduesWant) {
 				// okay, so we can only fit some of rr in (and then we'll end)
 				// we'll insert rr from rr.getStart() to rr.getStart() + numResiduesWant - numResiduesHave
 				// unfortunately, this is harder because of insertion codes
-				for (Map.Entry<ResidueNumber, Integer> entry : navMap.entrySet()) { // this is in
-					// insertion-code-independent order
-					if (entry.getKey().equals(rr.getStart())) {
-						ResidueNumber endResidueNumber = entry.getKey(); // where we want to end this last residue range
-						// okay, we got to the end of rr
-						// now we need to go back by numResiduesWant - numResiduesTraversed
-						for (int j = 0; j < numResiduesWant - numResiduesHave; j++) {
-							endResidueNumber = navMap.higherEntry(endResidueNumber).getKey();
-						}
-						part.add(new ResidueRange(rr.getChainId(), rr.getStart(), endResidueNumber, numResiduesWant
-								- numResiduesHave));
-						break outer; // we filled up numResiduesTraversed, so we won't be able to add further residue
-						// ranges
-					}
+				ResidueNumber endResidueNumber = rr.getStart();
+				// okay, we got to the end of rr
+				// now we need to go forward by numResiduesWant - numResiduesTraversed
+				for (numResiduesHave++; numResiduesHave < numResiduesWant; numResiduesHave++) {
+					endResidueNumber = navMap.higherEntry(endResidueNumber).getKey();
 				}
+				part.add(new ResidueRangeAndLength(rr.getChainId(),
+						rr.getStart(), endResidueNumber,
+						numResiduesWant - numResiduesHave));
+				break outer; // we filled up numResiduesTraversed, so we won't be able to add further residue ranges
+
 			}
-			numResiduesHave += rr.getLength();
 		}
 		return part;
 	}
 
 	/**
-	 * Really just calls {@link ResidueRange#getAminoAcidPositions(Atom[])}.
+	 * Really just calls {@link ResidueRangeAndLength#getAminoAcidPositions(Atom[])}.
 	 * 
 	 * @param cache
 	 * @param scopDomain
@@ -502,14 +506,14 @@ public class Protodomain {
 	 * @param blockEndGroup
 	 *            The {@link Group} at the end of a block in the the alignment
 	 * @param posns
-	 *            A HashMap from {@link ResidueRange#getAminoAcidPositions(Atom[])}.
+	 *            A HashMap from {@link ResidueRangeAndLength#getAminoAcidPositions(Atom[])}.
 	 * @param navMap
-	 *            A NavigableMap from {@link ResidueRange#orderByAtoms(Map)}.
-	 * @return A list of {@link ResidueRange ResidueRanges} within the overlap (intersection) of the relevant block of
+	 *            A NavigableMap from {@link ResidueRangeAndLength#orderByAtoms(Map)}.
+	 * @return A list of {@link ResidueRangeAndLength ResidueRanges} within the overlap (intersection) of the relevant block of
 	 *         the alignment corresponding to this Protodomain, and its ScopDomain's boundaries.
 	 * @throws ProtodomainCreationException
 	 */
-	private static List<ResidueRange> getBlockRanges(int protodomainStart, int protodomainEnd,
+	private static List<ResidueRangeAndLength> getBlockRanges(int protodomainStart, int protodomainEnd,
 			List<String> domainRanges, ResidueNumber protodomainStartR, ResidueNumber protodomainEndR,
 			Group blockStartGroup, Group blockEndGroup, AtomPositionMap map, String scopId)
 					throws ProtodomainCreationException {
@@ -536,7 +540,7 @@ public class Protodomain {
 		for (String domainRange : domainRanges) {
 
 			// a range is of the form: A:05-117 (chain:start-end) OR just A:
-			ResidueRange rr = ResidueRange.parse(domainRange, map);
+			ResidueRangeAndLength rr = ResidueRangeAndLength.parse(domainRange, map);
 			ResidueNumber domainStartR = rr.getStart();
 			ResidueNumber domainEndR = rr.getEnd();
 			int domainStart, domainEnd;
@@ -555,7 +559,7 @@ public class Protodomain {
 
 			if (domainStart > domainEnd) return null; // in this case, there's something wrong with the SCOP definition
 
-			final char chain = domainRange.charAt(0);
+			final String chain = domainRange.substring(0, 1);
 			rangeBuilder.addChain(chain);
 
 			if (domainEnd < protodomainStart) { // the domain part starts and ends before the start of the protodomain
@@ -565,10 +569,10 @@ public class Protodomain {
 				// ends after the protodomain starts
 				rangeBuilder.addStart(protodomainStartR); // protodomain start
 				if (domainEnd <= protodomainEnd) { // the domain part ends before the protodomain ends
-					rangeBuilder.addEnd(domainEndR, map.calcLength(domainEnd, protodomainStart, chain)); // domain
+					rangeBuilder.addEnd(domainEndR, map.getLength(domainEnd, protodomainStart, chain)); // domain
 					// end
 				} else { // the domain part ends after the protodomain ends
-					rangeBuilder.addEnd(protodomainEndR, map.calcLength(protodomainEnd, protodomainStart, chain)); // protodomain
+					rangeBuilder.addEnd(protodomainEndR, map.getLength(protodomainEnd, protodomainStart, chain)); // protodomain
 					// end
 				}
 			} else if (domainStart > protodomainEnd) { // domain part ends before the protodomain starts
@@ -578,10 +582,10 @@ public class Protodomain {
 				// after it starts
 				rangeBuilder.addStart(domainStartR); // domain start
 				if (domainEnd <= protodomainEnd) {
-					rangeBuilder.addEnd(domainEndR, map.calcLength(domainEnd, domainStart, chain)); // domain
+					rangeBuilder.addEnd(domainEndR, map.getLength(domainEnd, domainStart, chain)); // domain
 					// end
 				} else {
-					rangeBuilder.addEnd(protodomainEndR, map.calcLength(protodomainEnd, domainStart, chain)); // protodomain
+					rangeBuilder.addEnd(protodomainEndR, map.getLength(protodomainEnd, domainStart, chain)); // protodomain
 					// end
 				}
 			} else { // this can't happen
@@ -595,25 +599,32 @@ public class Protodomain {
 	/**
 	 * @see #spliceApproxConsecutive(int)
 	 */
-	private static List<ResidueRange> spliceApproxConsecutive(AtomPositionMap map, List<ResidueRange> old,
+	private static List<ResidueRangeAndLength> spliceApproxConsecutive(AtomPositionMap map, List<ResidueRangeAndLength> old,
 			int approxConsecutive) {
-		List<ResidueRange> spliced = new ArrayList<ResidueRange>(old.size());
+		List<ResidueRangeAndLength> spliced = new ArrayList<ResidueRangeAndLength>(old.size());
 
-		ResidueRange growing = old.get(0);
+		ResidueRangeAndLength growing = old.get(0);
 
 		for (int i = 1; i < old.size(); i++) {
 
-			final ResidueRange next = old.get(i);
+			final ResidueRangeAndLength next = old.get(i);
 
-			final int dist = map.calcLengthDirectional(growing.getEnd(), next.getStart());
-
-			// if they're of different chains, CANNOT splice safely, so don't
-			if (dist > approxConsecutive || !growing.getChainId().equals(next.getChainId())) {
+			if(growing.getChainId().equals(next.getChainId())) {
+				final int dist = map.getLengthDirectional(growing.getEnd(), next.getStart())-2;
+				
+				if (dist >= approxConsecutive) {
+					// Start a new residue range
+					spliced.add(growing);
+					growing = next;
+				} else {
+					// Extend growing range
+					growing = new ResidueRangeAndLength(growing.getChainId(), growing.getStart(), next.getEnd(), growing.getLength()
+							+ next.getLength() + dist);
+				}
+			} else {
+				// Different chains force new range
 				spliced.add(growing);
 				growing = next;
-			} else {
-				growing = new ResidueRange(growing.getChainId(), growing.getStart(), next.getEnd(), growing.getLength()
-						+ next.getLength() + dist);
 			}
 
 		}
@@ -627,23 +638,23 @@ public class Protodomain {
 	 * @param pdbId
 	 * @param enclosingName
 	 * @param list
-	 *            A list of {@link ResidueRange ResidueRanges} that define this Protodomain.
+	 *            A list of {@link ResidueRangeAndLength ResidueRanges} that define this Protodomain.
 	 * @param length
 	 *            The number of amino acids contained in this Protodomain, <em>including any alignment gaps</em>. If
-	 *            each ResidueRange in {@code list} has a non-null {@link ResidueRange#getLength() length}, the sum of
+	 *            each ResidueRangeAndLength in {@code list} has a non-null {@link ResidueRangeAndLength#getLength() length}, the sum of
 	 *            these lengths should be equal to this argument.
 	 * @param cache
 	 */
-	public Protodomain(String pdbId, String enclosingName, List<ResidueRange> list, int length, AtomCache cache) {
+	public Protodomain(String pdbId, String enclosingName, List<ResidueRangeAndLength> list, int length, AtomCache cache) {
 		this.pdbId = pdbId;
 		this.enclosingName = enclosingName;
 		this.list = list;
 		this.cache = cache;
 		this.length = length;
 		StringBuilder sb = new StringBuilder();
-		Iterator<ResidueRange> iter = list.iterator();
+		Iterator<ResidueRangeAndLength> iter = list.iterator();
 		while (iter.hasNext()) {
-			ResidueRange t = iter.next();
+			ResidueRangeAndLength t = iter.next();
 			sb.append(t);
 			if (iter.hasNext()) sb.append(",");
 		}
@@ -702,8 +713,8 @@ public class Protodomain {
 	 */
 	public Protodomain createSubstruct(int order, int index) throws ProtodomainCreationException {
 		AtomPositionMap map = Protodomain.getAminoAcidPositions(cache, pdbId, enclosingName);
-		List<ResidueRange> rrs = calcSubstruct(list, map, order, index);
-		return new Protodomain(pdbId, enclosingName, rrs, ResidueRange.calcLength(rrs), cache);
+		List<ResidueRangeAndLength> rrs = calcSubstruct(list, map, order, index);
+		return new Protodomain(pdbId, enclosingName, rrs, ResidueRangeAndLength.calcLength(rrs), cache);
 	}
 
 
@@ -738,14 +749,14 @@ public class Protodomain {
 	}
 
 	/**
-	 * @return The list of {@link ResidueRange ResidueRanges} in this Protodomain.
+	 * @return The list of {@link ResidueRangeAndLength ResidueRanges} in this Protodomain.
 	 */
-	public List<ResidueRange> getRanges() {
+	public List<ResidueRangeAndLength> getRanges() {
 		return list;
 	}
 
 	/**
-	 * @return A String describing the list of {@link ResidueRange ResidueRanges} of this Protodomain of the format
+	 * @return A String describing the list of {@link ResidueRangeAndLength ResidueRanges} of this Protodomain of the format
 	 *         chain_start-end,chain.start-end, ... For example, <code>A_5-100,110-144</code>.
 	 */
 	public String getRangeString() {
@@ -817,7 +828,7 @@ public class Protodomain {
 
 	/**
 	 * Splices residues that are approximately consecutive, within some distance. That is, from a list of
-	 * {@link ResidueRange ResidueRanges}, returns a new list of ResidueRanges containing every range from {@code old},
+	 * {@link ResidueRangeAndLength ResidueRanges}, returns a new list of ResidueRanges containing every range from {@code old},
 	 * but with consecutive ranges starting and ending within {@code approxConsecutive} amino acids spliced together.
 	 * Note that ranges from different chains are assigned infinite distance, so they cannot be spliced together. For
 	 * example: 1dkl.A_1-100,A_102-200 would be spliced into 1dkl.A_1-200 for {@code approxConsecutive=2} or higher.
@@ -831,7 +842,7 @@ public class Protodomain {
 	 */
 	public Protodomain spliceApproxConsecutive(int approxConsecutive) {
 		try {
-			List<ResidueRange> ranges = spliceApproxConsecutive(getAminoAcidPositions(cache, pdbId, enclosingName), list,
+			List<ResidueRangeAndLength> ranges = spliceApproxConsecutive(getAminoAcidPositions(cache, pdbId, enclosingName), list,
 					approxConsecutive);
 			return new Protodomain(pdbId, enclosingName, ranges, 1, cache);
 		} catch (ProtodomainCreationException e) { // this really shouldn't happen, unless the AtomCache has changed
@@ -841,7 +852,7 @@ public class Protodomain {
 	}
 
 	/**
-	 * @return A String describing the list of {@link ResidueRange ResidueRanges} of this Protodomain of the format
+	 * @return A String describing the list of {@link ResidueRangeAndLength ResidueRanges} of this Protodomain of the format
 	 *         pdbId.chain_start-end,chain.start-end, ... For example, <code>1w0p.A_5-100,110-144</code>.
 	 */
 	@Override

@@ -29,10 +29,8 @@ import java.io.IOException;
 
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.align.symm.protodomain.Protodomain;
-import org.biojava.nbio.structure.align.symm.protodomain.ProtodomainCreationException;
 import org.biojava.nbio.structure.align.symm.protodomain.ResourceList.NameProvider;
+import org.biojava.nbio.structure.align.util.AtomCache;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -97,6 +95,7 @@ public class ProtodomainTest {
 	public void testSplicing() throws Exception {
 		// with consecutive = 4, this is "3iek.A_17-28,A_56-82,A_87-128,A_133-134,A_150-166,A_173-239,A_244-265,A_273-294,A_320-352,A_369-377"
 		AFPChainAndAtoms storedAcaa = ResourceList.get().loadSymm("d3ieka_");
+
 		Protodomain protodomain = Protodomain.fromSymmetryAlignment(storedAcaa.getAfpChain(), storedAcaa.getCa1(), 1, cache);
 		Protodomain spliced5 = protodomain.spliceApproxConsecutive(5);
 		assertEquals("3iek.A_17-28,A_56-134,A_150-166,A_173-265,A_273-294,A_320-352,A_369-377", spliced5.toString());
@@ -117,10 +116,15 @@ public class ProtodomainTest {
 	public void testSubstructure() throws Exception {
 		AFPChainAndAtoms storedAcaa = ResourceList.get().loadSim("1qdm.A_3S-37S,A_65S-99S", "d2biba2");
 		Protodomain protodomain = Protodomain.fromReferral(storedAcaa.getAfpChain(), storedAcaa.getCa2(), cache);
-		checkSubstruct("2bib.A_56-79", protodomain, 2, 0); // note that the protodomain is rounded down in all of these
+		checkSubstruct("2bib.A_56-79", protodomain, 2, 0);
+		checkSubstruct("2bib.A_80-103", protodomain, 2, 1);
 		checkSubstruct("2bib.A_56-71", protodomain, 3, 0);
 		checkSubstruct("2bib.A_56-67", protodomain, 4, 0);
 		checkSubstruct("2bib.A_56-65", protodomain, 5, 0);
+		checkSubstruct("2bib.A_66-74", protodomain, 5, 1);
+		checkSubstruct("2bib.A_75-84", protodomain, 5, 2);
+		checkSubstruct("2bib.A_85-93", protodomain, 5, 3);
+		checkSubstruct("2bib.A_94-103", protodomain, 5, 4);
 		checkSubstruct("2bib.A_56-63", protodomain, 6, 0);
 	}
 
@@ -128,15 +132,19 @@ public class ProtodomainTest {
 	public void testSubstructureWithIndex() throws Exception {
 		/*
 		 * Should be:
-		 * ngk.B_10-33,B_38-58,B_77-126
-		 * ngk.B_10-33,B_38-58,B_77-80
-		 * 1ngk.B_81-126
+		 * ngk.B_10-33,B_38-58,B_77-126 (all)
+		 * ngk.B_10-33,B_38-58,B_77-79 (first half, 48 res)
+		 * 1ngk.B_80-126 (second half, 47 res)
 		 */
 		AFPChainAndAtoms storedAcaa = ResourceList.get().loadSymm("1ngk.B");
+
 		// order here shouldn't affect the ability to create a substructure, so just say 5
 		Protodomain protodomain = Protodomain.fromSymmetryAlignment(storedAcaa.getAfpChain(), storedAcaa.getCa1(), 5, cache);
-		checkSubstruct("1ngk.B_10-33,B_38-58,B_77-80", protodomain, 2, 0);
-		checkSubstruct("1ngk.B_81-126", protodomain, 2, 1);
+		checkSubstruct("1ngk.B_10-33,B_38-58,B_77-79", protodomain, 2, 0);
+		checkSubstruct("1ngk.B_80-126", protodomain, 2, 1);
+		checkSubstruct("1ngk.B_10-33,B_38-45", protodomain, 3, 0);
+		checkSubstruct("1ngk.B_46-58,B_77-94", protodomain, 3, 1);
+		checkSubstruct("1ngk.B_95-126", protodomain, 3, 2);
 		// TODO check other orders
 	}
 	

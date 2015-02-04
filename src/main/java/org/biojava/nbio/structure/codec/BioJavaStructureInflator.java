@@ -2,18 +2,18 @@ package org.biojava.nbio.structure.codec;
 
 import java.util.ArrayList;
 
-import org.biojava.bio.structure.AminoAcidImpl;
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.AtomImpl;
-import org.biojava.bio.structure.Chain;
-import org.biojava.bio.structure.ChainImpl;
-import org.biojava.bio.structure.Element;
-import org.biojava.bio.structure.Group;
-import org.biojava.bio.structure.HetatomImpl;
-import org.biojava.bio.structure.NucleotideImpl;
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.StructureImpl;
-import org.biojava.bio.structure.io.PDBParseException;
+import org.biojava.nbio.structure.AminoAcidImpl;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.AtomImpl;
+import org.biojava.nbio.structure.Chain;
+import org.biojava.nbio.structure.ChainImpl;
+import org.biojava.nbio.structure.Element;
+import org.biojava.nbio.structure.Group;
+import org.biojava.nbio.structure.HetatomImpl;
+import org.biojava.nbio.structure.NucleotideImpl;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.StructureImpl;
+import org.biojava.nbio.structure.io.PDBParseException;
 import org.rcsb.codec.StructureInflatorInterface;
 
 public class BioJavaStructureInflator implements StructureInflatorInterface {

@@ -11,12 +11,12 @@ import java.util.Random;
 
 import junit.framework.TestCase;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
  * @author Spencer Bliven

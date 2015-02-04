@@ -3,13 +3,13 @@ package org.biojava.nbio.structure.align.symm.order;
 import java.util.Arrays;
 
 import org.apache.commons.math3.util.Pair;
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Calc;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava.bio.structure.jama.Matrix;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Calc;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.jama.Matrix;
 
 /**
  * Detects order by analyzing the goodness of fit as the protein is rotated

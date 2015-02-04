@@ -10,16 +10,16 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
-import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
-import org.biojava.bio.structure.rcsb.GetRepresentatives;
-import org.biojava3.structure.StructureIO;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.io.FileParsingParameters;
+import org.biojava.nbio.structure.io.mmcif.ChemCompGroupFactory;
+import org.biojava.nbio.structure.io.mmcif.DownloadChemCompProvider;
+import org.biojava.nbio.structure.rcsb.GetRepresentatives;
+import org.biojava.nbio.structure.StructureIO;
 
 
 public class InMemoryDbTester implements Runnable {

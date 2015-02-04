@@ -24,13 +24,13 @@
  */
 package org.biojava.nbio.structure.align.symm;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Calc;
-import org.biojava.bio.structure.SVDSuperimposer;
-import org.biojava.bio.structure.align.ce.CECalculator;
-import org.biojava.bio.structure.align.ce.CeParameters;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.jama.Matrix;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Calc;
+import org.biojava.nbio.structure.SVDSuperimposer;
+import org.biojava.nbio.structure.align.ce.CECalculator;
+import org.biojava.nbio.structure.align.ce.CeParameters;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.jama.Matrix;
 
 public class CESymmCalculator extends CECalculator {
 

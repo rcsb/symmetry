@@ -7,25 +7,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.AtomPositionMap;
-import org.biojava.bio.structure.AtomPositionMap.GroupMatcher;
-import org.biojava.bio.structure.Calc;
-import org.biojava.bio.structure.Group;
-import org.biojava.bio.structure.ResidueNumber;
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.AlignmentTools;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava.bio.structure.io.mmcif.chem.ResidueType;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.AtomPositionMap;
+import org.biojava.nbio.structure.AtomPositionMap.GroupMatcher;
+import org.biojava.nbio.structure.Calc;
+import org.biojava.nbio.structure.Group;
+import org.biojava.nbio.structure.ResidueNumber;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.census3.CensusAlignment;
 import org.biojava.nbio.structure.align.symm.census3.CensusResult;
 import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificance;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
+import org.biojava.nbio.structure.align.util.AlignmentTools;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,18 +38,7 @@ public class LigandFinder {
 
 	private final static Logger logger = LoggerFactory.getLogger(LigandFinder.class);
 
-	private GroupMatcher exclusionMatcher = new GroupMatcher() {
-		@Override
-		public boolean matches(Group group) {
-			ResidueType type = group.getChemComp().getResidueType();
-			return group.hasAtom(StructureTools.CA_ATOM_NAME)
-					|| AtomPositionMap.AMINO_ACID_NAMES.contains(group.getPDBName())
-					|| type == ResidueType.lPeptideLinking || type == ResidueType.glycine
-					|| type == ResidueType.lPeptideAminoTerminus || type == ResidueType.lPeptideCarboxyTerminus
-					|| type == ResidueType.dPeptideLinking || type == ResidueType.dPeptideAminoTerminus
-					|| type == ResidueType.dPeptideCarboxyTerminus;
-		}
-	};
+	private GroupMatcher exclusionMatcher = AtomPositionMap.AMINO_ACID_MATCHER;
 	private File output;
 	private int printFrequency = 100;
 	private CensusSignificance significance = CensusSignificanceFactory.forCeSymmOrd();
@@ -106,7 +95,7 @@ public class LigandFinder {
 		}
 
 		AtomCache cache = new AtomCache();
-		cache.setFetchFileEvenIfObsolete(true);
+		cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
 
 		int i = 0;
 		for (CensusResult result : census.getEntries()) {

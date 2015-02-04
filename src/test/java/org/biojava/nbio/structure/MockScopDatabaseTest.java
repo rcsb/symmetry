@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 
-import org.biojava.bio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopDomain;
 import org.junit.Test;
 
 

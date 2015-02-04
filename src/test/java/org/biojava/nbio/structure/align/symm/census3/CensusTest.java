@@ -9,11 +9,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.scop.ScopDatabase;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.census3.CensusResult;
 import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
 import org.biojava.nbio.structure.align.symm.census3.run.AfpChainCensusRestrictor;

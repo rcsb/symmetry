@@ -3,10 +3,10 @@ package org.biojava.nbio.structure.align.symm.census3.utils;
 import java.io.File;
 import java.io.IOException;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.symm.census2.Alignment;
 import org.biojava.nbio.structure.align.symm.census2.Result;
 import org.biojava.nbio.structure.align.symm.census2.Results;
@@ -16,7 +16,7 @@ import org.biojava.nbio.structure.align.symm.census3.CensusResult;
 import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
 import org.biojava.nbio.structure.align.symm.census3.CensusScoreList;
 import org.biojava.nbio.structure.align.symm.census3.CensusSymmetryGroup;
-import org.biojava3.core.sequence.io.util.IOUtils;
+import org.biojava.nbio.core.sequence.io.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

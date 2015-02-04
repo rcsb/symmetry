@@ -20,7 +20,7 @@ package org.biojava.nbio.structure.align.symm.census3.representatives;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.biojava.bio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopDomain;
 
 /**
  * A {@link Representatives} that contains domains under a list of SCOP Sun Ids, only including a specified number of

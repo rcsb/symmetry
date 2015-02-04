@@ -7,12 +7,12 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector;

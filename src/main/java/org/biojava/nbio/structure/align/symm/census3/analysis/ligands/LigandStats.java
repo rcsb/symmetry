@@ -12,11 +12,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.biojava.bio.structure.Element;
-import org.biojava.bio.structure.ElementType;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.Element;
+import org.biojava.nbio.structure.ElementType;
+import org.biojava.nbio.structure.scop.ScopDatabase;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.census3.stats.CensusStatUtils;
 import org.biojava.nbio.structure.align.symm.census3.stats.StructureClassificationGrouping;
 import org.slf4j.Logger;

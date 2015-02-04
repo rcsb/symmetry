@@ -35,14 +35,14 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.io.PDBFileReader;
-import org.biojava.bio.structure.symmetry.analysis.CalcBioAssemblySymmetry;
-import org.biojava.bio.structure.symmetry.core.QuatSymmetryDetector;
-import org.biojava.bio.structure.symmetry.core.QuatSymmetryParameters;
-import org.biojava3.structure.StructureIO;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.io.FileParsingParameters;
+import org.biojava.nbio.structure.io.PDBFileReader;
+import org.biojava.nbio.structure.symmetry.analysis.CalcBioAssemblySymmetry;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
+import org.biojava.nbio.structure.StructureIO;
 
 public class TestLoadingManyStoichs {
 	public static final String SERVICELOCATION="http://www.rcsb.org/pdb/rest";

@@ -21,10 +21,10 @@ import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlAttribute;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.AtomImpl;
-import org.biojava.bio.structure.Calc;
-import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.AtomImpl;
+import org.biojava.nbio.structure.Calc;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
  * An axis of rotation.

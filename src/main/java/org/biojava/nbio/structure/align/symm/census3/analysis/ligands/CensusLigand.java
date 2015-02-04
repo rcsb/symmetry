@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.biojava.bio.structure.Atom;
+import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**

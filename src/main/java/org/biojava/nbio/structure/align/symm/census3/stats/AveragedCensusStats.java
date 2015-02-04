@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.census3.CensusResult;
 import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
 import org.slf4j.Logger;

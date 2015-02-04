@@ -10,7 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPOutputStream;
 
-import org.biojava.bio.structure.Structure;
+import org.biojava.nbio.structure.Structure;
 import static org.rcsb.codec.CodecConstants.*;
 
 /**

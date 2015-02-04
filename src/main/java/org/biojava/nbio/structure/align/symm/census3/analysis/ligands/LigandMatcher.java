@@ -3,8 +3,8 @@ package org.biojava.nbio.structure.align.symm.census3.analysis.ligands;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.biojava.bio.structure.Element;
-import org.biojava.bio.structure.ElementType;
+import org.biojava.nbio.structure.Element;
+import org.biojava.nbio.structure.ElementType;
 
 /**
  * Something to decide "yes" or "no" given a {@link CensusLigand}.

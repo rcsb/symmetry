@@ -8,11 +8,11 @@ import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.ResidueNumber;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.AlignmentTools;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.ResidueNumber;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.AlignmentTools;
 
 /**
  * An alignment function.

@@ -29,12 +29,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import junit.framework.TestCase;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.align.StructureAlignment;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.align.StructureAlignment;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.scop.ScopDatabase;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.census3.CensusResult;
 import org.biojava.nbio.structure.align.symm.census3.run.AfpChainCensusRestrictor;

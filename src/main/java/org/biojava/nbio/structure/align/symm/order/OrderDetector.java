@@ -1,7 +1,7 @@
 package org.biojava.nbio.structure.align.symm.order;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.align.model.AFPChain;
 
 /**
  * A method to decide the order of symmetry given a self-alignment.

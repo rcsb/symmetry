@@ -1,8 +1,8 @@
 package org.biojava.nbio.structure.align.symm.order;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
  * Guesses an order of rotational symmetry from the angle.

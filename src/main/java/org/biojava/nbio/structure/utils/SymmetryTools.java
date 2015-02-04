@@ -3,15 +3,15 @@ package org.biojava.nbio.structure.utils;
 
 import javax.swing.JFrame;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Group;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.ce.CECalculator;
-import org.biojava.bio.structure.align.helper.AlignTools;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.gui.ScaleableMatrixPanel;
-import org.biojava.bio.structure.jama.Matrix;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Group;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.ce.CECalculator;
+import org.biojava.nbio.structure.align.helper.AlignTools;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.gui.ScaleableMatrixPanel;
+import org.biojava.nbio.structure.jama.Matrix;
 
 
 public class SymmetryTools {

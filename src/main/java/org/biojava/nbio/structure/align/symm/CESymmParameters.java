@@ -2,8 +2,8 @@ package org.biojava.nbio.structure.align.symm;
 
 import java.util.List;
 
-import org.biojava.bio.structure.align.ce.CeCPMain;
-import org.biojava.bio.structure.align.ce.CeParameters;
+import org.biojava.nbio.structure.align.ce.CeCPMain;
+import org.biojava.nbio.structure.align.ce.CeParameters;
 
 /**
  * Provides parameters to {@link CeCPMain}

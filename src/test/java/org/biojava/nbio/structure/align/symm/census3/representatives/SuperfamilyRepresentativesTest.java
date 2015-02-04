@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.scop.ScopDescription;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.scop.ScopDescription;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.census3.representatives.SuperfamilyRepresentatives;
 import org.biojava.nbio.structure.align.symm.protodomain.ResourceList;
 import org.biojava.nbio.structure.align.symm.protodomain.ResourceList.NameProvider;

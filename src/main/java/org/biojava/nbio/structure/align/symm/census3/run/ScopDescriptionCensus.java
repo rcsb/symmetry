@@ -26,9 +26,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.census3.representatives.ScopSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

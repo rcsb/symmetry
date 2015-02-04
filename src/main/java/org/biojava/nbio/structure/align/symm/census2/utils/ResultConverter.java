@@ -30,7 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import org.biojava.bio.structure.align.util.SynchronizedOutFile;
+import org.biojava.nbio.structure.align.util.SynchronizedOutFile;
 import org.biojava.nbio.structure.align.symm.census2.Result;
 import org.biojava.nbio.structure.align.symm.census2.Results;
 

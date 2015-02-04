@@ -1,9 +1,9 @@
 package org.biojava.nbio.structure.align.symm.order;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Calc;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Calc;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
  * A more intelligent order-detection that uses angle, screw vector magnitude, and Spencer's method.

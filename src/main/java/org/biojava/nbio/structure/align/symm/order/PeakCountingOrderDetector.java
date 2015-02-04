@@ -2,10 +2,10 @@ package org.biojava.nbio.structure.align.symm.order;
 
 import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
 import org.apache.commons.math3.util.Pair;
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.census3.stats.CensusStatUtils;
 

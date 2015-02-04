@@ -2,10 +2,10 @@ package org.biojava.nbio.structure.align.symm.order;
 
 import java.util.Map;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.AlignmentTools;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.AlignmentTools;
 
 /**
  * Calls Spencer's method for determining order.

@@ -19,8 +19,8 @@ package org.biojava.nbio.structure.align.symm.census2;
 
 import java.io.Serializable;
 
-import org.biojava.bio.structure.Calc;
-import org.biojava.bio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.Calc;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
  * An axis of rotation.

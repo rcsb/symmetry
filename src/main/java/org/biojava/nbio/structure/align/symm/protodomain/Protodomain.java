@@ -33,20 +33,20 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Set;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.AtomPositionMap;
-import org.biojava.bio.structure.Group;
-import org.biojava.bio.structure.ResidueNumber;
-import org.biojava.bio.structure.ResidueRange;
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.client.StructureName;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.io.util.FileDownloadUtils;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.AtomPositionMap;
+import org.biojava.nbio.structure.Group;
+import org.biojava.nbio.structure.ResidueNumber;
+import org.biojava.nbio.structure.ResidueRange;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.client.StructureName;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.io.util.FileDownloadUtils;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
 
 /**
  * A symmetry subunit for some {@link ScopDomain SCOP domain}. Optionally contains a {@link Structure} as

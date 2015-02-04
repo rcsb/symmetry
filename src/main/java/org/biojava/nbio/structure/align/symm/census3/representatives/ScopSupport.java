@@ -34,12 +34,12 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import org.biojava.bio.structure.scop.ScopCategory;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDescription;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava.bio.structure.scop.ScopNode;
+import org.biojava.nbio.structure.scop.ScopCategory;
+import org.biojava.nbio.structure.scop.ScopDatabase;
+import org.biojava.nbio.structure.scop.ScopDescription;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.scop.ScopNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -28,12 +28,12 @@ import java.util.List;
 import java.util.MissingResourceException;
 import java.util.Set;
 
-import org.biojava.bio.structure.align.client.FarmJobParameters;
-import org.biojava.bio.structure.align.client.JFatCatClient;
-import org.biojava.bio.structure.align.client.StructureName;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.align.client.FarmJobParameters;
+import org.biojava.nbio.structure.align.client.JFatCatClient;
+import org.biojava.nbio.structure.align.client.StructureName;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.census3.representatives.ScopSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

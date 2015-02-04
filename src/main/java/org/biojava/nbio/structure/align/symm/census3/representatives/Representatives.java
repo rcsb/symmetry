@@ -20,10 +20,10 @@ package org.biojava.nbio.structure.align.symm.census3.representatives;
 import java.util.HashMap;
 import java.util.List;
 
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDescription;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.scop.ScopDatabase;
+import org.biojava.nbio.structure.scop.ScopDescription;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
 
 /**
  * A list of {@link ScopDomain ScopDomains} to be used as representatives.

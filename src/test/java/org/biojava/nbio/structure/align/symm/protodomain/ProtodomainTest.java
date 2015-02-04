@@ -27,9 +27,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.symm.protodomain.Protodomain;
 import org.biojava.nbio.structure.align.symm.protodomain.ProtodomainCreationException;
 import org.biojava.nbio.structure.align.symm.protodomain.ResourceList.NameProvider;

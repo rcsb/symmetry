@@ -22,7 +22,7 @@
  */
 package org.biojava.nbio.structure.align.symm.census2;
 
-import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.census2.Result;
 import org.biojava.nbio.structure.align.symm.census2.Significance;
 import org.biojava.nbio.structure.align.symm.protodomain.Protodomain;

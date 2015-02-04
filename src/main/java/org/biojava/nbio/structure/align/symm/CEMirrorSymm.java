@@ -5,19 +5,19 @@ package org.biojava.nbio.structure.align.symm;
 
 import java.io.IOException;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Chain;
-import org.biojava.bio.structure.ChainImpl;
-import org.biojava.bio.structure.Group;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.ce.CeParameters;
-import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava.bio.structure.jama.Matrix;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Chain;
+import org.biojava.nbio.structure.ChainImpl;
+import org.biojava.nbio.structure.Group;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.ce.CeParameters;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.jama.Matrix;
 
 /**
  * @author Spencer Bliven
@@ -57,7 +57,7 @@ public class CEMirrorSymm extends CeSymm {
 	 * @param ca1 The first protein
 	 * @param ca2 The second protein, typically a clone of the first protein
 	 * @param param A {@link CeParameters} object
-	 * @see org.biojava.nbio.structure.align.symm.CeSymm#align(org.biojava.bio.structure.Atom[], org.biojava.bio.structure.Atom[], java.lang.Object)
+	 * @see org.biojava.nbio.structure.align.symm.CeSymm#align(org.biojava.nbio.structure.Atom[], org.biojava.nbio.structure.Atom[], java.lang.Object)
 	 */
 	@Override
 	public AFPChain align(Atom[] ca1, Atom[] ca2, Object param)

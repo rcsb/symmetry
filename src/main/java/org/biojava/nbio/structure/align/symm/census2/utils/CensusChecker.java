@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.biojava.bio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopDomain;
 import org.biojava.nbio.structure.align.symm.census2.Result;
 import org.biojava.nbio.structure.align.symm.census2.Results;
 import org.biojava.nbio.structure.align.symm.census3.representatives.ScopSupport;

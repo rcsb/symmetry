@@ -26,7 +26,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
-import org.biojava3.core.sequence.io.util.IOUtils;
+import org.biojava.nbio.core.sequence.io.util.IOUtils;
 
 /**
  * A utility that combines multiple census files into one census file.

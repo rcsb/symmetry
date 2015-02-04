@@ -29,7 +29,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 
-import org.biojava.bio.structure.scop.ScopInstallation;
+import org.biojava.nbio.structure.scop.ScopInstallation;
 
 /**
  * A simple {@link ScopDatabase} for mocking so that tests won't break just because SCOP changes.

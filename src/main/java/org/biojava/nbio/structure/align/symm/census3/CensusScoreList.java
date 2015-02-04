@@ -26,7 +26,7 @@ import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.model.AFPChain;
 
 /**
  * The results of a symmetry alignment. Includes information for CE-Symm or

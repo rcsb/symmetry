@@ -37,22 +37,22 @@ import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.align.StructureAlignment;
-import org.biojava.bio.structure.align.StructureAlignmentFactory;
-import org.biojava.bio.structure.align.ce.CeCPMain;
-import org.biojava.bio.structure.align.ce.CeMain;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.AlignmentTools;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
-import org.biojava.bio.structure.align.xml.AFPChainXMLParser;
-import org.biojava.bio.structure.io.LocalPDBDirectory.FetchBehavior;
-import org.biojava.bio.structure.scop.BerkeleyScopInstallation;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.align.StructureAlignment;
+import org.biojava.nbio.structure.align.StructureAlignmentFactory;
+import org.biojava.nbio.structure.align.ce.CeCPMain;
+import org.biojava.nbio.structure.align.ce.CeMain;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.AlignmentTools;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.xml.AFPChainXMLConverter;
+import org.biojava.nbio.structure.align.xml.AFPChainXMLParser;
+import org.biojava.nbio.structure.io.LocalPDBDirectory.FetchBehavior;
+import org.biojava.nbio.structure.scop.BerkeleyScopInstallation;
+import org.biojava.nbio.structure.scop.ScopDatabase;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.custommonkey.xmlunit.DetailedDiff;
 import org.custommonkey.xmlunit.Diff;
@@ -66,7 +66,7 @@ import org.xml.sax.SAXException;
 /**
  * A singleton handler for testing resources, particularly alignment results but also other files. For every file, it's nice way to avoid hardcoding the resource path. Loads an alignment result if
  * they're available; otherwise, performs the alignment, saves it, and then loads it. When using ResourceList, avoid using hardcoded paths, and use {@link #getCache()} when an AtomCache is needed.
- * Uses {@link BerkeleyScopInstallation}, and as a <em>side effect calls {@link ScopFactory#setScopDatabase(org.biojava.bio.structure.scop.ScopDatabase)}</em>.
+ * Uses {@link BerkeleyScopInstallation}, and as a <em>side effect calls {@link ScopFactory#setScopDatabase(org.biojava.nbio.structure.scop.ScopDatabase)}</em>.
  * 
  * @author dmyerstu
  */
@@ -298,7 +298,7 @@ public class ResourceList {
 
 	/**
 	 * Sets the singleton ResourceList to a new ResourceList with the given NameProvider and PDB directory. As a
-	 * <em>side effect calls {@link ScopFactory#setScopDatabase(org.biojava.bio.structure.scop.ScopDatabase)}</em>.
+	 * <em>side effect calls {@link ScopFactory#setScopDatabase(org.biojava.nbio.structure.scop.ScopDatabase)}</em>.
 	 */
 	public static void set(NameProvider nameProvider, String pdbDir) {
 		ResourceList.singleton = new ResourceList(nameProvider, pdbDir);

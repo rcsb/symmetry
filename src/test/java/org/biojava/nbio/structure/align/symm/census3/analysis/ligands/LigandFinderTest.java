@@ -3,13 +3,13 @@ package org.biojava.nbio.structure.align.symm.census3.analysis.ligands;
 
 import junit.framework.TestCase;
 
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.io.FileParsingParameters;
-import org.biojava.bio.structure.io.mmcif.ChemCompGroupFactory;
-import org.biojava.bio.structure.io.mmcif.ChemCompProvider;
-import org.biojava.bio.structure.io.mmcif.DownloadChemCompProvider;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.io.FileParsingParameters;
+import org.biojava.nbio.structure.io.mmcif.ChemCompGroupFactory;
+import org.biojava.nbio.structure.io.mmcif.ChemCompProvider;
+import org.biojava.nbio.structure.io.mmcif.DownloadChemCompProvider;
+import org.biojava.nbio.structure.scop.ScopDatabase;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.census3.analysis.ligands.LigandFinder;
 import org.junit.Before;
 import org.junit.Test;

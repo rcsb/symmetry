@@ -6,7 +6,7 @@ package org.biojava.nbio.structure.codec;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.biojava.bio.structure.Structure;
+import org.biojava.nbio.structure.Structure;
 
 /**
  * @author Peter

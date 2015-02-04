@@ -23,8 +23,8 @@
 
 package org.biojava.nbio.structure.align.symm.protodomain;
 
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.align.model.AFPChain;
 
 /**
  * Contains the information required to uniquely identify an alignment and information resulting from the alignment.

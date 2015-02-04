@@ -26,9 +26,9 @@ package org.biojava.nbio.structure.align.symm.protodomain;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.biojava.bio.structure.align.StructureAlignment;
-import org.biojava.bio.structure.align.ce.CeCPMain;
-import org.biojava.bio.structure.align.ce.CeMain;
+import org.biojava.nbio.structure.align.StructureAlignment;
+import org.biojava.nbio.structure.align.ce.CeCPMain;
+import org.biojava.nbio.structure.align.ce.CeMain;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.protodomain.ResourceList.NameProvider;
 import org.junit.Test;

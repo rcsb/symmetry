@@ -1,6 +1,6 @@
 package org.biojava.nbio.structure.align.symm.census3.run;
 
-import org.biojava.bio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.model.AFPChain;
 
 /**
  * A method to determine whether CE-Symm should do additional analysis, such as order-detection.

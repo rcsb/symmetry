@@ -9,14 +9,13 @@ import java.util.TreeSet;
 
 import javax.swing.JPanel;
 
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.align.client.JFatCatClient;
-import org.biojava.bio.structure.align.client.StructureName;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.secstruc.SecStruc;
-import org.biojava.bio.structure.secstruc.SecStrucGroup;
-import org.biojava.bio.structure.secstruc.SecStrucState;
-import org.biojava3.structure.StructureIO;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.StructureIO;
+import org.biojava.nbio.structure.align.client.JFatCatClient;
+import org.biojava.nbio.structure.align.client.StructureName;
+import org.biojava.nbio.structure.secstruc.SecStruc;
+import org.biojava.nbio.structure.secstruc.SecStrucGroup;
+import org.biojava.nbio.structure.secstruc.SecStrucState;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
@@ -145,9 +144,6 @@ public class XYShapeRendererDemo1 extends ApplicationFrame {
 	 */
 	public static XYZDataset createDataset() {
 
-		AtomCache cache = new AtomCache();
-		
-
 		SortedSet<String> repres = JFatCatClient.getRepresentatives("http://emmy.rcsb.org/jfatcatserver/align/", 40);
 
 		List<String> knownStructures = new ArrayList<String>();
@@ -221,7 +217,7 @@ public class XYShapeRendererDemo1 extends ApplicationFrame {
 			i++;
 			x[i] = m.getPhi();
 			y[i] = m.getPsi();
-			z[i] = m.getCount()/(double)maxCount *100.0;
+			z[i] = m.getCount()/maxCount *100.0;
 
 			//if ( m.getCount() > maxCount)
 			//	maxCount = m.getCount();

@@ -10,8 +10,8 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.align.util.AlignmentTools;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.symm.SymmRefiner;
 
 /**

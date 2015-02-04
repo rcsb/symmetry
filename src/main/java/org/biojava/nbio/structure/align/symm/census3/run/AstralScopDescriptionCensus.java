@@ -27,11 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.Astral;
-import org.biojava.bio.structure.scop.Astral.AstralSet;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.scop.Astral;
+import org.biojava.nbio.structure.scop.Astral.AstralSet;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.census3.representatives.ScopSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

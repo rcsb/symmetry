@@ -10,7 +10,7 @@ import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.gui.ScaleableMatrixPanel;
 import org.biojava.bio.structure.jama.Matrix;
-import org.biojava3.structure.utils.SymmetryTools;
+import org.biojava.nbio.structure.utils.SymmetryTools;
 
 
 

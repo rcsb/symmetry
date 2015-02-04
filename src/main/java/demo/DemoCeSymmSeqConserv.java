@@ -5,7 +5,7 @@ import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.model.AfpChainWriter;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava3.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.CeSymm;
 
 
 /** an example of CeSymm that is using sequence conservation as part of the alignment

@@ -23,11 +23,11 @@ import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.order.OrderDetectionFailedException;
-import org.biojava3.structure.align.symm.order.OrderDetector;
-import org.biojava3.structure.align.symm.order.RotationOrderDetector;
-import org.biojava3.structure.align.symm.order.RotationOrderDetector.RotationOrderMethod;
+import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
+import org.biojava.nbio.structure.align.symm.order.OrderDetector;
+import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector;
+import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector.RotationOrderMethod;
 
 public class DetectOrder {
 

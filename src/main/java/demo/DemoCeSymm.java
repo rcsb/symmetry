@@ -7,8 +7,8 @@ import org.biojava.bio.structure.align.model.AfpChainWriter;
 import org.biojava.bio.structure.align.util.AtomCache;
 import org.biojava.bio.structure.align.util.RotationAxis;
 import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
+import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 
 /**
  * Quick demo of how to call CE-Symm programmatically.

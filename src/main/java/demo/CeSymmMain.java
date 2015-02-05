@@ -29,32 +29,32 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.Structure;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.StructureAlignmentFactory;
-import org.biojava.bio.structure.align.gui.DisplayAFP;
-import org.biojava.bio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.bio.structure.align.gui.jmol.StructureAlignmentJmol;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.model.AfpChainWriter;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.align.util.RotationAxis;
-import org.biojava.bio.structure.align.util.UserConfiguration;
-import org.biojava.bio.structure.align.xml.AFPChainXMLConverter;
-import org.biojava.bio.structure.io.util.FileDownloadUtils;
-import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.census3.AdditionalScoreList;
-import org.biojava3.structure.align.symm.census3.CensusResult;
-import org.biojava3.structure.align.symm.census3.CensusResultList;
-import org.biojava3.structure.align.symm.census3.CensusScoreList;
-import org.biojava3.structure.align.symm.census3.MapScoreList;
-import org.biojava3.structure.align.symm.census3.run.Census;
-import org.biojava3.structure.align.symm.census3.run.CensusJob;
-import org.biojava3.structure.align.symm.order.OrderDetector;
-import org.biojava3.structure.align.symm.order.SequenceFunctionOrderDetector;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.StructureAlignmentFactory;
+import org.biojava.nbio.structure.align.gui.DisplayAFP;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.model.AfpChainWriter;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.align.util.UserConfiguration;
+import org.biojava.nbio.structure.align.xml.AFPChainXMLConverter;
+import org.biojava.nbio.structure.io.util.FileDownloadUtils;
+import org.biojava.nbio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.census3.AdditionalScoreList;
+import org.biojava.nbio.structure.align.symm.census3.CensusResult;
+import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
+import org.biojava.nbio.structure.align.symm.census3.CensusScoreList;
+import org.biojava.nbio.structure.align.symm.census3.MapScoreList;
+import org.biojava.nbio.structure.align.symm.census3.run.Census;
+import org.biojava.nbio.structure.align.symm.census3.run.CensusJob;
+import org.biojava.nbio.structure.align.symm.order.OrderDetector;
+import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 
 /**
  * Main executable for running CE-Symm
@@ -174,13 +174,6 @@ public class CeSymmMain {
 			pdbFilePath = cli.getOptionValue("pdbfilepath");
 			pdbFilePath = FileDownloadUtils.expandUserHome(pdbFilePath);
 		}
-		Boolean pdbDirSplit = null;
-		if( cli.hasOption("nopdbdirsplit") ) {
-			pdbDirSplit = false;
-		}
-		if( cli.hasOption("pdbdirsplit") ) {
-			pdbDirSplit = true;
-		}
 
 		//TODO threads
 		//		Integer threads = null;
@@ -280,9 +273,6 @@ public class CeSymmMain {
 			cacheConfig.setPdbFilePath(pdbFilePath);
 			cacheConfig.setCacheFilePath(pdbFilePath);
 		}
-		if(pdbDirSplit != null) {
-			cacheConfig.setSplit(pdbDirSplit);
-		}
 		AtomCache cache = new AtomCache(cacheConfig);
 
 		// Add as option to background alignment GUI
@@ -322,7 +312,7 @@ public class CeSymmMain {
 				AdditionalScoreList moreScores = new MapScoreList( scoreMap );
 				result.getScoreList().setAdditionalScoreList(moreScores);
 
-				results.setMeanSecondsTaken((float) (totalTimeTaken / (float) names.size() / 1000.0f));
+				results.setMeanSecondsTaken(totalTimeTaken / (float) names.size() / 1000.0f);
 
 				// Perform alignment to determine axis
 				Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(result.getId(),null,cache));
@@ -560,8 +550,7 @@ public class CeSymmMain {
 		opt = OptionBuilder
 				.withLongOpt("pdbdirsplit")
 				.hasArg(false)
-				.withDescription("Indicates that --pdbfilepath is split into "
-						+ "multiple subdirs, like the ftp site. [default]")
+				.withDescription("Ignored. For backwards compatibility only. [default]")
 						.create();
 		optionOrder.put(opt.getLongOpt(), optionNum++);
 		grp.addOption(opt);
@@ -569,7 +558,7 @@ public class CeSymmMain {
 		opt = OptionBuilder
 				.withLongOpt("nopdbdirsplit")
 				.hasArg(false)
-				.withDescription("Indicates that --pdbfilepath should be a single directory.")
+				.withDescription("Ignored. For backwards compatibility only.")
 				.create();
 		optionOrder.put(opt.getLongOpt(), optionNum++);
 		grp.addOption(opt);

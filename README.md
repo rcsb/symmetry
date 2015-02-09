@@ -50,12 +50,12 @@ System.out.println(finder);
 ```
 
 ### Package documentation
-The core classes and subpackages are contained in ```org.biojava3.structure.align.symm.benchmark```, which contains ```Sample``` and ```SampleBuilder```.
- - ```org.biojava3.structure.align.symm.benchmark.comparison``` compares predictions against known results.
- - ```org.biojava3.structure.align.symm.benchmark.comparison.order``` compares predictions of symmetry order against known orders.
- - ```org.biojava3.structure.align.symm.benchmark.external``` was used to benchmark the CE-Symm competitor SymD.
- - ```org.biojava3.structure.align.symm.benchmark.folds``` was used to reproduce the secondary benchmark.
- - ```org.biojava3.structure.align.symm.benchmark.set``` was used to generate and verify the benchmark set itself, irrespective of predictions.
+The core classes and subpackages are contained in ```org.biojava.nbio.structure.align.symm.benchmark```, which contains ```Sample``` and ```SampleBuilder```.
+ - ```org.biojava.nbio.structure.align.symm.benchmark.comparison``` compares predictions against known results.
+ - ```org.biojava.nbio.structure.align.symm.benchmark.comparison.order``` compares predictions of symmetry order against known orders.
+ - ```org.biojava.nbio.structure.align.symm.benchmark.external``` was used to benchmark the CE-Symm competitor SymD.
+ - ```org.biojava.nbio.structure.align.symm.benchmark.folds``` was used to reproduce the secondary benchmark.
+ - ```org.biojava.nbio.structure.align.symm.benchmark.set``` was used to generate and verify the benchmark set itself, irrespective of predictions.
 
 
 ### Build Status

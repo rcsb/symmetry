@@ -10,8 +10,8 @@ import org.biojava.bio.structure.align.StructureAlignmentFactory;
 import org.biojava.bio.structure.align.client.PdbPair;
 import org.biojava.bio.structure.align.model.AFPChain;
 import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava3.benchmark.Benchmark;
-import org.biojava3.benchmark.FisherBenchmark;
+import org.biojava.nbio.benchmark.Benchmark;
+import org.biojava.nbio.benchmark.FisherBenchmark;
 
 public class RunFisherBenchmark {
 

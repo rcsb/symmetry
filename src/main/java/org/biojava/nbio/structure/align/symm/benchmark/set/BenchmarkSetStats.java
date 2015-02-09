@@ -6,7 +6,7 @@ import java.util.LinkedHashMap;
 
 import org.biojava.nbio.structure.align.symm.benchmark.KnownInfo;
 import org.biojava.nbio.structure.align.symm.benchmark.SampleBuilder;
-import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
+import org.biojava.nbio.structure.align.symm.census3.stats.CensusStatUtils;
 
 /**
  * Finds basic statistics about the benchmark set itself (known info).

@@ -5,9 +5,9 @@ import java.io.IOException;
 
 import org.biojava.nbio.structure.align.symm.benchmark.KnownInfo;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census3.CensusResult;
-import org.biojava3.structure.align.symm.census3.CensusSignificance;
-import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
+import org.biojava.nbio.structure.align.symm.census3.CensusResult;
+import org.biojava.nbio.structure.align.symm.census3.CensusSignificance;
+import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
 
 public class BenchmarkTable {
 

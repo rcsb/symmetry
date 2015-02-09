@@ -8,11 +8,11 @@ import java.io.StringWriter;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava.bio.structure.jama.Matrix;
+import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.align.symm.benchmark.Case;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census3.CensusSignificance;
-import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
+import org.biojava.nbio.structure.align.symm.census3.CensusSignificance;
+import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
 
 /**
  * Builds a matrix indexed by the correct order and the order CE-Symm found.

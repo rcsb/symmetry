@@ -5,13 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import org.biojava.bio.structure.align.StructureAlignment;
-import org.biojava.bio.structure.jama.Matrix;
+import org.biojava.nbio.structure.align.StructureAlignment;
+import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
 import org.biojava.nbio.structure.align.symm.benchmark.SampleBuilder;
-import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
-import org.biojava3.structure.align.symm.census2.NamesCensus;
+import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.census2.Census.AlgorithmGiver;
+import org.biojava.nbio.structure.align.symm.census2.NamesCensus;
 
 /**
  * Finds optimal minMetricChange.

@@ -19,10 +19,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.align.symm.benchmark.Case;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census3.CensusSignificance;
-import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
-import org.biojava3.structure.align.symm.census3.stats.CensusStatUtils;
-import org.biojava3.structure.utils.SymmetryTools;
+import org.biojava.nbio.structure.align.symm.census3.CensusSignificance;
+import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
+import org.biojava.nbio.structure.align.symm.census3.stats.CensusStatUtils;
+import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
  * Uses a benchmark {@link Sample} to generate a transition kernel (as a matrix)

@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.biojava3.structure.align.symm.census3.CensusResultList;
+import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
 
 
 /**

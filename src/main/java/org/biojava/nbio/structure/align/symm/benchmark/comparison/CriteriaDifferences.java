@@ -31,9 +31,9 @@ import java.util.TreeSet;
 
 import org.biojava.nbio.structure.align.symm.benchmark.Case;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census2.Results;
-import org.biojava3.structure.align.symm.census3.CensusResult;
-import org.biojava3.structure.align.symm.census3.CensusResultList;
+import org.biojava.nbio.structure.align.symm.census2.Results;
+import org.biojava.nbio.structure.align.symm.census3.CensusResult;
+import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
 
 /**
  * Finds (significant) differences between different {@link Criterion Criteria} on either a {@link Sample} object or a {@link Results} object.

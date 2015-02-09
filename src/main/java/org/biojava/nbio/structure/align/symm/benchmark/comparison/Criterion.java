@@ -24,8 +24,8 @@ package org.biojava.nbio.structure.align.symm.benchmark.comparison;
 
 import java.util.Random;
 
-import org.biojava3.structure.align.symm.census2.Result;
-import org.biojava3.structure.align.symm.census3.CensusResult;
+import org.biojava.nbio.structure.align.symm.census2.Result;
+import org.biojava.nbio.structure.align.symm.census3.CensusResult;
 
 
 /**

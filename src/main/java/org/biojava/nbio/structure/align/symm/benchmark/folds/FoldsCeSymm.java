@@ -6,13 +6,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import org.biojava.bio.structure.scop.ScopFactory;
-import org.biojava.bio.structure.scop.ScopInstallation;
-import org.biojava3.structure.align.symm.census2.NamesCensus;
-import org.biojava3.structure.align.symm.census2.Result;
-import org.biojava3.structure.align.symm.census2.Results;
-import org.biojava3.structure.align.symm.census2.Significance;
-import org.biojava3.structure.align.symm.census2.SignificanceFactory;
+import org.biojava.nbio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.scop.ScopInstallation;
+import org.biojava.nbio.structure.align.symm.census2.NamesCensus;
+import org.biojava.nbio.structure.align.symm.census2.Result;
+import org.biojava.nbio.structure.align.symm.census2.Results;
+import org.biojava.nbio.structure.align.symm.census2.Significance;
+import org.biojava.nbio.structure.align.symm.census2.SignificanceFactory;
 
 /**
  * Runs CE-Symm on a list of domains specified in the SymD paper (Kim et. al.).

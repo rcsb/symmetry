@@ -40,9 +40,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava3.structure.align.symm.census2.Alignment;
-import org.biojava3.structure.align.symm.census2.Result;
-import org.biojava3.structure.align.symm.census2.Results;
+import org.biojava.nbio.structure.align.symm.census2.Alignment;
+import org.biojava.nbio.structure.align.symm.census2.Result;
+import org.biojava.nbio.structure.align.symm.census2.Results;
 
 /**
  * Results of SymD.

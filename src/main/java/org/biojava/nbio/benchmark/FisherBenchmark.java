@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.biojava.bio.structure.align.client.PdbPair;
+import org.biojava.nbio.structure.align.client.PdbPair;
 
 public class FisherBenchmark implements Benchmark {
 

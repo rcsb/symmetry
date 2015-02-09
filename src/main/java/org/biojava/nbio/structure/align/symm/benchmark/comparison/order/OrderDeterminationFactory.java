@@ -1,6 +1,6 @@
 package org.biojava.nbio.structure.align.symm.benchmark.comparison.order;
 
-import org.biojava3.structure.align.symm.census3.CensusResult;
+import org.biojava.nbio.structure.align.symm.census3.CensusResult;
 
 
 /**

@@ -26,8 +26,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.align.symm.benchmark.Case;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
-import org.biojava3.structure.align.symm.census3.CensusSignificance;
-import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
+import org.biojava.nbio.structure.align.symm.census3.CensusSignificance;
+import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
 
 /**
  * Determines the false-positive, true-positive, false-negative, and true-negative frequencies of a benchmark

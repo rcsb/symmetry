@@ -4,14 +4,14 @@ import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava.bio.structure.Atom;
-import org.biojava.bio.structure.StructureException;
-import org.biojava.bio.structure.StructureTools;
-import org.biojava.bio.structure.align.model.AFPChain;
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava3.structure.align.symm.census3.CensusResult;
-import org.biojava3.structure.align.symm.order.OrderDetectionFailedException;
-import org.biojava3.structure.align.symm.order.OrderDetector;
+import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.symm.census3.CensusResult;
+import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
+import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 
 /**
  * An adaptor for symmetry-benchmark order analysis code ({@link OrderDetermination}) that uses order-detection code in the symmetry project ({@link OrderDetector}).

@@ -5,7 +5,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.biojava.bio.structure.align.client.PdbPair;
+import org.biojava.nbio.structure.align.client.PdbPair;
 import org.biojava.nbio.benchmark.Benchmark;
 import org.biojava.nbio.benchmark.FisherBenchmark;
 

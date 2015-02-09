@@ -31,14 +31,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.biojava.bio.structure.align.util.AtomCache;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.scop.ScopDatabase;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.benchmark.external.SymDException;
 import org.biojava.nbio.structure.align.symm.benchmark.external.SymDResults;
-import org.biojava3.structure.align.symm.census2.Alignment;
-import org.biojava3.structure.align.symm.census2.Result;
+import org.biojava.nbio.structure.align.symm.census2.Alignment;
+import org.biojava.nbio.structure.align.symm.census2.Result;
 
 /**
  * Some Mac OS-specific tests for {@link SymDResults}, which gets results from running a SymD executable.

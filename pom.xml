@@ -88,7 +88,7 @@
         <dependency>
             <groupId>org.biojava</groupId>
             <artifactId>symmetry</artifactId>
-            <version>0.3.4-SNAPSHOT</version>
+            <version>1.1.0-SNAPSHOT</version>
         </dependency>
 		<dependency>
 			<groupId>java3d</groupId>
@@ -98,20 +98,20 @@
 		
 		<dependency>
 			<groupId>org.biojava</groupId>
-			<artifactId>biojava3-structure</artifactId>
-			<version>3.0.8-SNAPSHOT</version>
+			<artifactId>biojava-structure</artifactId>
+			<version>4.0.0</version>
 			
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
-			<artifactId>biojava3-structure-gui</artifactId>
-			<version>3.0.8-SNAPSHOT</version>
+			<artifactId>biojava-structure-gui</artifactId>
+			<version>4.0.0</version>
 			
 		</dependency>
 		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>ava-core</artifactId>
-			<version>2012-05-21-SNAPSHOT</version>
+			<version>2013-11-1-SNAPSHOT</version>
 			
 		</dependency>
 		<dependency>

@@ -34,14 +34,14 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava.bio.structure.align.StructureAlignment;
+import org.biojava.nbio.structure.align.StructureAlignment;
 import org.biojava.nbio.structure.align.symm.benchmark.comparison.AccuracyFinder;
 import org.biojava.nbio.structure.align.symm.benchmark.comparison.Criterion;
 import org.biojava.nbio.structure.align.symm.benchmark.comparison.ROCCurves;
-import org.biojava3.structure.align.symm.CeSymm;
-import org.biojava3.structure.align.symm.census2.Census.AlgorithmGiver;
-import org.biojava3.structure.align.symm.census2.NamesCensus;
-import org.biojava3.structure.align.symm.census3.CensusSignificanceFactory;
+import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.census2.Census.AlgorithmGiver;
+import org.biojava.nbio.structure.align.symm.census2.NamesCensus;
+import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
 
 /**
  * Runs CE-Symm with different gradient penalties on the main diagonal, and benchmark the results.

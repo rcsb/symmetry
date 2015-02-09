@@ -32,9 +32,9 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava3.structure.align.symm.census2.Results;
-import org.biojava3.structure.align.symm.census3.CensusResult;
-import org.biojava3.structure.align.symm.census3.CensusResultList;
+import org.biojava.nbio.structure.align.symm.census2.Results;
+import org.biojava.nbio.structure.align.symm.census3.CensusResult;
+import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
 
 /**
  * Converts a {@link Results} (see symmetry project) to a {@link Sample}. In other words, takes a table of known space

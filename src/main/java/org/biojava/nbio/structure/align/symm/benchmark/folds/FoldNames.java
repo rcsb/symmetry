@@ -12,10 +12,10 @@ import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava.bio.structure.scop.Astral;
-import org.biojava.bio.structure.scop.ScopDatabase;
-import org.biojava.bio.structure.scop.ScopDomain;
-import org.biojava.bio.structure.scop.ScopInstallation;
+import org.biojava.nbio.structure.scop.Astral;
+import org.biojava.nbio.structure.scop.ScopDatabase;
+import org.biojava.nbio.structure.scop.ScopDomain;
+import org.biojava.nbio.structure.scop.ScopInstallation;
 
 /**
  * Generates the list of domains specified in the SymD paper (Kim et. al.) as the intersection of ASTRAL40 1.73 and SCOP 1.73.

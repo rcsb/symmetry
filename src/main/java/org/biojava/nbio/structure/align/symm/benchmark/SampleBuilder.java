@@ -30,11 +30,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.align.symm.census2.Results;
 import org.biojava.nbio.structure.align.symm.census3.CensusResult;
 import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts a {@link Results} (see symmetry project) to a {@link Sample}. In other words, takes a table of known space
@@ -45,7 +45,7 @@ import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
  */
 public class SampleBuilder {
 
-	private static final Logger logger = LogManager.getLogger(SampleBuilder.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( SampleBuilder.class );
 
 	public static void buildSample(File input, File output, File ordersFile) throws IOException {
 		buildSample(input, output, getOrders(ordersFile.getPath()));
@@ -117,7 +117,7 @@ public class SampleBuilder {
 			try {
 				ordersFile = new File(filename.toURI());
 			} catch (URISyntaxException e) {
-				logger.fatal("Unable to locate groups file",e);
+				logger.error("Unable to locate groups file",e);
 				System.exit(1);
 				return;
 			}

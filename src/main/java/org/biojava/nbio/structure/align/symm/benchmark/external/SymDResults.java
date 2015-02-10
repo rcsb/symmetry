@@ -38,11 +38,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.align.symm.census2.Alignment;
 import org.biojava.nbio.structure.align.symm.census2.Result;
 import org.biojava.nbio.structure.align.symm.census2.Results;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Results of SymD.
@@ -56,7 +56,7 @@ public class SymDResults extends Results {
 
 	private static JAXBContext jaxbContext;
 
-	private static final Logger logger = LogManager.getLogger(SymDResults.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( SymDResults.class );
 
 	private static final long serialVersionUID = -6877332751979209323L;
 

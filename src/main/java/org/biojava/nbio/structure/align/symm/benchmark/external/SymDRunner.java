@@ -9,18 +9,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.symm.benchmark.SampleBuilder;
+import org.biojava.nbio.structure.align.symm.census2.Result;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.scop.ScopDatabase;
 import org.biojava.nbio.structure.scop.ScopDomain;
 import org.biojava.nbio.structure.scop.ScopFactory;
-import org.biojava.nbio.structure.align.symm.benchmark.SampleBuilder;
-import org.biojava.nbio.structure.align.symm.census2.Result;
 import org.biojava.nbio.structure.utils.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Builds {@link SymDResults} by running SymD on a list of domains.
@@ -29,7 +29,7 @@ import org.biojava.nbio.structure.utils.FileUtils;
  */
 public class SymDRunner {
 
-	private static final Logger logger = LogManager.getLogger(SymDRunner.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( SymDRunner.class );
 
 	private static SymDResults getResultsFromPrevRun(File file) {
 		if (file.exists() && file.length() > 0) {
@@ -106,7 +106,7 @@ public class SymDRunner {
 				process.waitFor();
 				break;
 			} catch (InterruptedException e) {
-				logger.warn(e);
+				logger.warn(e.getMessage(),e);
 			}
 		}
 

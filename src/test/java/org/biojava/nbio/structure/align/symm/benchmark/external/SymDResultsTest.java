@@ -22,23 +22,6 @@
  */
 package org.biojava.nbio.structure.align.symm.benchmark.external;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.scop.ScopDatabase;
-import org.biojava.nbio.structure.scop.ScopDomain;
-import org.biojava.nbio.structure.scop.ScopFactory;
-import org.biojava.nbio.structure.align.symm.benchmark.external.SymDException;
-import org.biojava.nbio.structure.align.symm.benchmark.external.SymDResults;
-import org.biojava.nbio.structure.align.symm.census2.Alignment;
-import org.biojava.nbio.structure.align.symm.census2.Result;
 
 /**
  * Some Mac OS-specific tests for {@link SymDResults}, which gets results from running a SymD executable.

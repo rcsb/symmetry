@@ -15,14 +15,14 @@ import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.primes.Primes;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.align.symm.benchmark.Case;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificance;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
 import org.biojava.nbio.structure.align.symm.census3.stats.CensusStatUtils;
 import org.biojava.nbio.structure.utils.SymmetryTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Uses a benchmark {@link Sample} to generate a transition kernel (as a matrix)
@@ -51,9 +51,10 @@ import org.biojava.nbio.structure.utils.SymmetryTools;
  * @author dmyerstu
  * @deprecated
  */
+@Deprecated
 public class ErrorKernel {
 
-	private static final Logger logger = LogManager.getLogger(ErrorKernel.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( ErrorKernel.class );
 
 	public static void main(String[] args) throws IOException {
 		if (args.length < 1 || args.length > 2) {

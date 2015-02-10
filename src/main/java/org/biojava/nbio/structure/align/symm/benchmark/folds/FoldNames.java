@@ -10,12 +10,12 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.scop.Astral;
 import org.biojava.nbio.structure.scop.ScopDatabase;
 import org.biojava.nbio.structure.scop.ScopDomain;
 import org.biojava.nbio.structure.scop.ScopInstallation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generates the list of domains specified in the SymD paper (Kim et. al.) as the intersection of ASTRAL40 1.73 and SCOP 1.73.
@@ -24,7 +24,7 @@ import org.biojava.nbio.structure.scop.ScopInstallation;
  */
 public class FoldNames {
 
-	private static final Logger logger = LogManager.getLogger(FoldNames.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( FoldNames.class );
 
 	public static void main(String[] args) throws IOException {
 		URL url = new URL("http://scop.berkeley.edu/downloads/scopseq-1.73/astral-scopdom-seqres-gd-sel-gs-bib-95-1.73.fa");
@@ -53,7 +53,7 @@ public class FoldNames {
 			try {
 				pw = new PrintWriter(new BufferedWriter(new FileWriter(output)));
 			} catch (IOException e) {
-				logger.error(e);
+				logger.error(e.getMessage(),e);
 				continue;
 			}
 			for (String i : in) {

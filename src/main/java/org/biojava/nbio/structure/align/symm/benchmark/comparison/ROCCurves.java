@@ -36,8 +36,6 @@ import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.align.symm.benchmark.Case;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
 import org.jfree.chart.ChartFactory;
@@ -46,6 +44,8 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generates and plots ROC curves for {@link Criterion Criteria} on a benchmark {@link Sample}.
@@ -54,7 +54,7 @@ import org.jfree.data.xy.XYSeriesCollection;
  */
 public class ROCCurves {
 
-	private static final Logger logger = LogManager.getLogger(ROCCurves.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( ROCCurves.class );
 
 	private static final int DEFAULT_HEIGHT = 1600;
 
@@ -173,7 +173,7 @@ public class ROCCurves {
 				c.getKnownInfo().hasRotationalSymmetry();
 				cases.add(c); // only add if the known/benchmark result is known
 			} catch (RuntimeException e) {
-				logger.fatal("Encountered an error on " + c.getScopId(), e);
+				logger.error("Encountered an error on " + c.getScopId(), e);
 				throw e; // just be safe
 			}
 		}

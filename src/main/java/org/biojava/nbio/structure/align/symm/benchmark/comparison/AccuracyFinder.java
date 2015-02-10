@@ -22,12 +22,12 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.align.symm.benchmark.Case;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificance;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Determines the false-positive, true-positive, false-negative, and true-negative frequencies of a benchmark
@@ -38,7 +38,7 @@ import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
  */
 public class AccuracyFinder {
 
-	private static final Logger logger = LogManager.getLogger(AccuracyFinder.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( AccuracyFinder.class );
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 1 && args.length != 2) {

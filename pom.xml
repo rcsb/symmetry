@@ -4,13 +4,16 @@
 	<artifactId>symmetry-benchmark</artifactId>
 	<version>0.1.31-SNAPSHOT</version>
 	<name>RCSB Symmetry Benchmark</name>
-	
+
 	<properties>
 		<jdk.version>1.6</jdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.targetEncoding>UTF-8</project.build.targetEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
 		<timestamp>${maven.build.timestamp}</timestamp>
+		<slf4j.version>1.7.7</slf4j.version>
+		<log4j.version>2.1</log4j.version>
+		<biojava.version>4.0.0</biojava.version>
 	</properties>
 	
 	<repositories>
@@ -99,13 +102,13 @@
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava-structure</artifactId>
-			<version>4.0.0</version>
+			<version>${biojava.version}</version>
 			
 		</dependency>
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava-structure-gui</artifactId>
-			<version>4.0.0</version>
+			<version>${biojava.version}</version>
 			
 		</dependency>
 		<dependency>
@@ -152,17 +155,36 @@
 			<version>3.2</version>
 		</dependency>
 
+		<!-- SLF4J API, for compiling -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<!-- binding for log4j 2 at runtime-->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>2.0-beta9</version>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<version>${log4j.version}</version>
+			<!-- runtime scope includes the test scope as well -->
+			<scope>runtime</scope>
 		</dependency>
-		
+		<!-- Log4j API and Core implementation required for binding -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
-			<version>2.0-beta9</version>
+			<version>${log4j.version}</version>
+			<!-- runtime scope includes the test scope as well -->
+			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${log4j.version}</version>
+			<!-- runtime scope includes the test scope as well -->
+			<scope>runtime</scope>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>

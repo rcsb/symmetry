@@ -32,25 +32,26 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.align.StructureAlignment;
+import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.benchmark.comparison.AccuracyFinder;
 import org.biojava.nbio.structure.align.symm.benchmark.comparison.Criterion;
 import org.biojava.nbio.structure.align.symm.benchmark.comparison.ROCCurves;
-import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.census2.Census.AlgorithmGiver;
 import org.biojava.nbio.structure.align.symm.census2.NamesCensus;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Runs CE-Symm with different gradient penalties on the main diagonal, and benchmark the results.
  * @author dmyerstu
  * @deprecated We found using a gradient to do very little
  */
+@Deprecated
 public class GradientSampler {
 
-	private static final Logger logger = LogManager.getLogger(GradientSampler.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( GradientSampler.class );
 
 	private double[][] gradients;
 
@@ -95,7 +96,7 @@ public class GradientSampler {
 		criteria.add(Criterion.combine(Criterion.tmScore(), Criterion.hasOrder(1), 1, 1));
 		for (int i = 0; i < n; i++) {
 			System.out.println("SAMPING: " + i);
-			final int j = i;
+//			final int j = i;
 			AlgorithmGiver algorithm = new AlgorithmGiver() {
 				@Override
 				public StructureAlignment getAlgorithm() {

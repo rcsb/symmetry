@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.biojava.nbio.structure.align.symm.benchmark.SampleBuilder;
 import org.biojava.nbio.structure.scop.ScopCategory;
 import org.biojava.nbio.structure.scop.ScopDatabase;
 import org.biojava.nbio.structure.scop.ScopDomain;
 import org.biojava.nbio.structure.scop.ScopFactory;
-import org.biojava.nbio.structure.align.symm.benchmark.SampleBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Takes a list of SCOP Ids and searches their SCOP comments (in dir.com files) for particular words.
@@ -19,7 +19,7 @@ import org.biojava.nbio.structure.align.symm.benchmark.SampleBuilder;
  */
 public class ScopNameMiner {
 
-	private static final Logger logger = LogManager.getLogger(ScopNameMiner.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( ScopNameMiner.class );
 
 	/**
 	 * @param args

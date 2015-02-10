@@ -1,17 +1,14 @@
 package org.biojava.nbio.structure.align.symm.benchmark.comparison.order;
 
-import java.io.IOException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.symm.census3.CensusResult;
-import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An adaptor for symmetry-benchmark order analysis code ({@link OrderDetermination}) that uses order-detection code in the symmetry project ({@link OrderDetector}).
@@ -19,7 +16,7 @@ import org.biojava.nbio.structure.align.symm.order.OrderDetector;
  */
 public class OrderDetectorDeterminationAdaptor implements OrderDetermination {
 
-	private static final Logger logger = LogManager.getLogger(OrderDetectorDeterminationAdaptor.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(OrderDetectorDeterminationAdaptor.class);
 
 	private OrderDetector detector;
 	private AtomCache cache;

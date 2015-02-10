@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.biojava.nbio.structure.align.symm.benchmark.KnownInfo;
+import org.biojava.nbio.structure.align.symm.benchmark.SampleBuilder;
 import org.biojava.nbio.structure.scop.ScopDatabase;
 import org.biojava.nbio.structure.scop.ScopDomain;
 import org.biojava.nbio.structure.scop.ScopFactory;
-import org.biojava.nbio.structure.align.symm.benchmark.KnownInfo;
-import org.biojava.nbio.structure.align.symm.benchmark.SampleBuilder;
 
 /**
  * Checks the benchmark set against per-fold or per-superfamily expectations for symmetry.

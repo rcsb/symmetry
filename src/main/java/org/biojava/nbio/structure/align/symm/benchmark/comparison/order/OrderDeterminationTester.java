@@ -3,9 +3,9 @@ package org.biojava.nbio.structure.align.symm.benchmark.comparison.order;
 import java.io.File;
 import java.io.IOException;
 
-import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
 import org.biojava.nbio.structure.align.symm.census3.stats.CensusStatUtils;
+import org.biojava.nbio.structure.jama.Matrix;
 
 /**
  * Test the <em>performance</em> of order-detection methods.

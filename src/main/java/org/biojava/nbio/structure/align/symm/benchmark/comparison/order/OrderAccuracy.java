@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.align.symm.benchmark.Case;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificance;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A class to determine the accuracy of CE-Symm for determining order of rotational symmetry.
@@ -19,7 +19,7 @@ import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
  */
 public class OrderAccuracy {
 
-	private static final Logger logger = LogManager.getLogger(OrderAccuracy.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( OrderAccuracy.class );
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 1) {

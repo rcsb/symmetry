@@ -30,12 +30,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.scop.ScopCategory;
 import org.biojava.nbio.structure.scop.ScopDatabase;
 import org.biojava.nbio.structure.scop.ScopDomain;
 import org.biojava.nbio.structure.scop.ScopFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Finds duplicates in a benchmark set (list of SCOP Ids).
@@ -43,7 +43,7 @@ import org.biojava.nbio.structure.scop.ScopFactory;
  */
 public class DuplicateFinder {
 
-	private static final Logger logger = LogManager.getLogger(DuplicateFinder.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( DuplicateFinder.class );
 
 	/**
 	 * @param args

@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.benchmark.Case;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
 import org.biojava.nbio.structure.align.symm.census3.CensusResult;
@@ -16,6 +14,8 @@ import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.PeakCountingOrderDetector;
 import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.scop.ScopFactory;
 
 /**
  * Test the performance of a {@link OrderDetector} against a benchmark.

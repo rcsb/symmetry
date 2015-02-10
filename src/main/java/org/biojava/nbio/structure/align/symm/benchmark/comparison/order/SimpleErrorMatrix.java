@@ -6,13 +6,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.align.symm.benchmark.Case;
 import org.biojava.nbio.structure.align.symm.benchmark.Sample;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificance;
 import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
+import org.biojava.nbio.structure.jama.Matrix;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Builds a matrix indexed by the correct order and the order CE-Symm found.
@@ -22,7 +22,7 @@ import org.biojava.nbio.structure.align.symm.census3.CensusSignificanceFactory;
  */
 public class SimpleErrorMatrix {
 
-	private static final Logger logger = LogManager.getLogger(SimpleErrorMatrix.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( SimpleErrorMatrix.class );
 
 	public static void main(String[] args) throws IOException {
 		if (args.length < 1 || args.length > 2) {

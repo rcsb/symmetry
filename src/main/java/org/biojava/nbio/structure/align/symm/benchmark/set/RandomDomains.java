@@ -27,8 +27,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.scop.ScopCategory;
 import org.biojava.nbio.structure.scop.ScopDatabase;
@@ -36,6 +34,8 @@ import org.biojava.nbio.structure.scop.ScopDescription;
 import org.biojava.nbio.structure.scop.ScopDomain;
 import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.scop.ScopNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A set of random SCOP domains generated according to the distribution of some {@link ScopCategory}. The most basic
@@ -45,7 +45,7 @@ import org.biojava.nbio.structure.scop.ScopNode;
  */
 public class RandomDomains {
 
-	private static final Logger logger = LogManager.getLogger(RandomDomains.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger( RandomDomains.class );
 
 	private List<ScopDomain> domains;
 

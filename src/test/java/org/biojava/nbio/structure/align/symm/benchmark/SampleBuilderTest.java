@@ -22,16 +22,12 @@
  */
 package org.biojava.nbio.structure.align.symm.benchmark;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import org.biojava.nbio.structure.align.symm.benchmark.KnownInfo;
-import org.biojava.nbio.structure.align.symm.benchmark.Sample;
-import org.biojava.nbio.structure.align.symm.benchmark.SampleBuilder;
 import org.junit.Test;
 
 

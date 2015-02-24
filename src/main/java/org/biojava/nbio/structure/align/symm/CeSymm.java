@@ -218,7 +218,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 		while ((afpChain == null) && i < params.getMaxNrAlternatives()) {
 
-			afpChain = myAFP;
 			if (origM != null) {
 				myAFP.setDistanceMatrix((Matrix) origM.clone());
 			}
@@ -229,6 +228,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 			i++;
 		}
+		afpChain = myAFP;
 
 		try {
 			afpChain = CeCPMain.postProcessAlignment(afpChain, ca1, ca2,

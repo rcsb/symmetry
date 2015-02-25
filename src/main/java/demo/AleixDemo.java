@@ -15,7 +15,7 @@ public class AleixDemo {
 	public static void main(String[] args) {
 		try {
 			
-			Structure structure = StructureIO.getStructure("4HHB");
+			Structure structure = StructureIO.getStructure("4DOU");
 			StructureAlignmentJmol jmolPanel = new StructureAlignmentJmol();
 			
 			jmolPanel.setStructure(structure);

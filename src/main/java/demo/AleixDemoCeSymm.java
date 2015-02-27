@@ -26,7 +26,9 @@ public class AleixDemoCeSymm {
 	
 		AtomCache cache = new AtomCache();
 
-		String name = "4HHB";
+		String name = "1JTD.B";
+		
+		int order = 7;
 		
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75);
 
@@ -38,7 +40,7 @@ public class AleixDemoCeSymm {
 			Atom[] ca2 = cache.getAtoms(name);
 			
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-			params.setMaxNrAlternatives(2);
+			params.setMaxNrAlternatives(order-1);
 			
 
 			AFPChain afpChain = ceSymm.align(ca1, ca2, params);

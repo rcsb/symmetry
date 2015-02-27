@@ -1,6 +1,5 @@
 package demo;
 
-import java.util.Vector;
 import java.util.Arrays;
 
 import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
@@ -25,23 +24,23 @@ import org.junit.runner.manipulation.Sorter;
  * (Assumes the new align function for the CeSymm class that accepts an AFPChain array as input.)
  * Then show in jmol the structure with the subunits colored differently.
  * 
- * Tried and worked for: {4DOU, 3HDP, 4HHB, 1SQU, 2F9H, 3DDV, 1VYM (takes long), 4FI3.F}
- * Did not work for: {2FEE, 1VYM.A}
+ * Tried and worked for: {4DOU, 3HDP, 4HHB, 1SQU, 2F9H, 3DDV, 1VYM (takes long), 4FI3.F, 1H9M.A, 1MP9.A, 1JTD.B, 1G61
+ *                        }
+ * Did not work for: {2FEE, 1VYM.A, 1TL2}
  * 
  * @author aleix
  *
  */
 public class AleixCeSymmMNrColorResidues {
 
-	@SuppressWarnings("null")
 	public static void main(String[] args){
 
 		//Set the name of the protein structure to analyze
 		AtomCache cache = new AtomCache();
-		String name = "4DOU";
+		String name = "d1yqha1";
 		
 		//Set the order of symmetry of the protein
-		int order = 10;
+		int order = 1;
 
 		try {
 			
@@ -83,6 +82,7 @@ public class AleixCeSymmMNrColorResidues {
 				afpResidues[k+1] = ca1[afpAlignments[k].getOptAln()[0][0][n-1]].getGroup().getResidueNumber().getSeqNum();
 				System.out.println(afpResidues[k+1]);
 			}
+			Arrays.sort(afpResidues);
 			
 			//Display the structure in jmol
 			Structure structure = StructureIO.getStructure(name);
@@ -102,6 +102,10 @@ public class AleixCeSymmMNrColorResidues {
 			//Set the rotation axis of the symmetry
 			RotationAxis axis = new RotationAxis(afpAlignments[0]);
 			jmol.evalString(axis.getJmolScript(ca1));
+			
+			//Also display the last alignment of the subunits
+			StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afpAlignments[afpAlignments.length-1], ca1, ca2);
+			jmolPanel.evalString(axis.getJmolScript(ca1));
 			
 		} catch (Exception e){
 			e.printStackTrace();

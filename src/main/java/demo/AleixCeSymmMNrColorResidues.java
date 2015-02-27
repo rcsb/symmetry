@@ -1,29 +1,37 @@
 package demo;
 
+import java.util.Vector;
 import java.util.Arrays;
 
+import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureIO;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.model.AfpChainWriter;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
+import org.junit.runner.manipulation.Sorter;
 
 /**
  * Demo for the CE-symm coloring subunits.
- * With the order of symmetry given, perform multiple alignments and calculate the start and end atoms of each subunit.
+ * With the order of symmetry given, perform multiple alignments and calculate the aligned residues of each subunit.
+ * (Assumes the new align function for the CeSymm class that accepts an AFPChain array as input.)
  * Then show in jmol the structure with the subunits colored differently.
  * 
- * Tried and worked for: 4DOU, 3HDP, 4HHB, 1SQU, 2F9H, 3DDV, 1VYM (takes long), 4FI3.F
- * Did not work for: 2FEE, 1VYM.A
+ * Tried and worked for: {4DOU, 3HDP, 4HHB, 1SQU, 2F9H, 3DDV, 1VYM (takes long), 4FI3.F}
+ * Did not work for: {2FEE, 1VYM.A}
  * 
  * @author aleix
  *
  */
-public class AleixCeSymmMaxNrColoring {
+public class AleixCeSymmMNrColorResidues {
 
 	@SuppressWarnings("null")
 	public static void main(String[] args){
@@ -33,7 +41,7 @@ public class AleixCeSymmMaxNrColoring {
 		String name = "4DOU";
 		
 		//Set the order of symmetry of the protein
-		int order = 3;
+		int order = 10;
 
 		try {
 			
@@ -65,18 +73,16 @@ public class AleixCeSymmMaxNrColoring {
 				i++;
 			}
 			
-			//Get the atom numbers (start and end) for each subunit
-			int[] afpResidues = new int[order]; //array containing the atom indices
-			afpResidues[0] = ca1[0].getPDBserial();
+			//Get the residue numbers for each subunit - increment the loop to get all the residue numbers
+			int[] afpResidues = new int[order]; //array containing the residue indices
+			afpResidues[0] = ca1[0].getGroup().getResidueNumber().getSeqNum();
 			System.out.println(ca1.length);
-			System.out.println(ca2.length);
 					
 			for (int k=0; k<order-1; k++){
 				int n = afpAlignments[k].getOptAln()[0][0].length;
-				afpResidues[k+1] = ca1[afpAlignments[k].getOptAln()[0][0][n-1]].getPDBserial();
+				afpResidues[k+1] = ca1[afpAlignments[k].getOptAln()[0][0][n-1]].getGroup().getResidueNumber().getSeqNum();
 				System.out.println(afpResidues[k+1]);
 			}
-			Arrays.sort(afpResidues); //sort the atom indices from lower to higher
 			
 			//Display the structure in jmol
 			Structure structure = StructureIO.getStructure(name);
@@ -90,7 +96,7 @@ public class AleixCeSymmMaxNrColoring {
 			for (int k=0; k<order-1; k++){
 				int colorb = (200-(k+1)*(200/(order)));
 				int colorg = ((k+1)*(200/(order-1)));
-				jmol.evalString("select atomno >= "+afpResidues[k]+" and atomno <= "+afpResidues[k+1]+"; color [0,"+colorg+","+colorb+"]");
+				jmol.evalString("select "+afpResidues[k]+"-"+afpResidues[k+1]+"; color [0,"+colorg+","+colorb+"]");
 			}
 						
 			//Set the rotation axis of the symmetry

@@ -256,6 +256,79 @@ public class CeSymm extends AbstractStructureAlignment implements
 		return afpChain;
 
 	}
+	
+	//New method that stores all the successive alignments in allAlignments array before each blackout.
+	//Does not work, presumably because the AFPChain stored in allAlignments is a pointer that changes and all the\
+	//things inside allAlignments are the same in the end.
+	public AFPChain align(Atom[] ca1, Atom[] ca2O, Object param, AFPChain[] allAlignments)
+			throws StructureException {
+		if (!(param instanceof CESymmParameters))
+			throw new IllegalArgumentException(
+					"CE algorithm needs an object of call CESymmParameters as argument.");
+
+		this.params = (CESymmParameters) param;
+
+		this.ca1 = ca1;
+		this.ca2 = ca2O;
+
+		ca2 = StructureTools.duplicateCA2(ca2O);
+		rows = ca1.length;
+		cols = ca2.length;
+
+		Matrix origM = null;
+
+		AFPChain myAFP = new AFPChain();
+
+		calculator = new CECalculator(params);
+		calculator.addMatrixListener(this);
+
+		int i = 0;
+
+		while ((afpChain == null) && i < params.getMaxNrAlternatives()-1) {
+
+			if (origM != null) {
+				myAFP.setDistanceMatrix((Matrix) origM.clone());
+			}
+			origM = align(myAFP, ca1, ca2, params, origM, calculator, i);
+
+			double tmScore2 = AFPChainScorer.getTMScore(myAFP, ca1, ca2);
+			myAFP.setTMScore(tmScore2);
+			
+			//Create a new AFPChain instance with the current alignment information and append it to allAlignments.
+			AFPChain newAFPchain = new AFPChain();
+			newAFPchain = myAFP;
+			allAlignments[i] = newAFPchain;
+
+			i++;
+		}
+		afpChain = myAFP;
+
+		try {
+			afpChain = CeCPMain.postProcessAlignment(afpChain, ca1, ca2,
+					calculator);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return afpChain;
+		}
+
+		if (params.isRefineResult()) {
+			int order;
+			try {
+				order = orderDetector.calculateOrder(myAFP, ca1);
+				afpChain = SymmRefiner.refineSymmetry(afpChain, ca1, ca2O,
+						order);
+			} catch (OrderDetectionFailedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
+		afpChain.setTMScore(tmScore2);
+
+		return afpChain;
+
+	}
 
 	@Override
 	public ConfigStrucAligParams getParameters() {

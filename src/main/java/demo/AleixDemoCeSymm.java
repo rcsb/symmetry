@@ -14,6 +14,9 @@ import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector
 
 /**
  * Demo for the CE-symm with recursive symmetry detection.
+ * Given the order of symmetry 
+ * 
+ * @author aleix
  *
  */
 public class AleixDemoCeSymm {
@@ -23,7 +26,7 @@ public class AleixDemoCeSymm {
 	
 		AtomCache cache = new AtomCache();
 
-		String name = "4DOU";
+		String name = "4HHB";
 		
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75);
 
@@ -35,7 +38,7 @@ public class AleixDemoCeSymm {
 			Atom[] ca2 = cache.getAtoms(name);
 			
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-			params.setMaxNrAlternatives(3);
+			params.setMaxNrAlternatives(2);
 			
 
 			AFPChain afpChain = ceSymm.align(ca1, ca2, params);

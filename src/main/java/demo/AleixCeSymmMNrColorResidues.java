@@ -1,6 +1,7 @@
 package demo;
 
 import java.util.ArrayList;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureIO;
@@ -9,6 +10,7 @@ import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 
@@ -21,8 +23,8 @@ import org.biojava.nbio.structure.align.util.RotationAxis;
  * 
  * Assumes the new align function for the CeSymm class that accepts a list of AFP alignments as input.
  * 
- * Tried and worked for: {4DOU-3, 3HDP-2, 4HHB-2m, 1SQU-2m, 2F9H-2m, 3DDV-4m, 1VYM (takes long), 4FI3.F-2, 1H9M.A-2, 1MP9.A-2}
- * Did not work for: {1JTD.B-7, 1G61.A-5, 2FEE, 1VYM.A, 1TL2}
+ * Tried and worked for: {4DOU-3, 3HDP-2, 1TL2-5, 4HHB-2, 1SQU-2, 2F9H-2, 3DDV-4, 4FI3.F-2, 1H9M.A-2, 1MP9.A-2, 1JTD.B-7, 1G61.A-5}
+ * Did not work for: {2FEE (takes long), 1VYM.A (buggy rotation axis), 1VYM (takes long, buggy intervals)}
  * 
  * @author aleix
  *
@@ -34,10 +36,10 @@ public class AleixCeSymmMNrColorResidues {
 
 		//Set the name of the protein structure to analyze
 		AtomCache cache = new AtomCache();
-		String name = "4DOU";
+		String name = "1TL2";
 		
 		//Set the order of symmetry of the protein
-		int order = 3;
+		int order = 5;
 
 		try {
 			
@@ -53,7 +55,7 @@ public class AleixCeSymmMNrColorResidues {
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 			AFPChain afpChain = new AFPChain();
 			
-			//Set the number of alternatives (blackouts) for this iteration
+			//Set the number of alternatives (blackouts)
 			params.setMaxNrAlternatives(order);
 			
 			//Perform the alignment and store it in allAlignments
@@ -65,8 +67,8 @@ public class AleixCeSymmMNrColorResidues {
 				System.out.println("Alignment has length of "+afp.getOptLength());
 			}
 			
-			//Use the method defined below to extract the subunit residues from the alignments
-			ArrayList<ArrayList<Integer>> subunits = extractSubunits(ca1, afpAlignments);
+			///Use the method defined below to extract the subunit residues from the alignments
+			ArrayList<ArrayList<Integer>> subunits = SubunitTools.extractSubunits(ca1, afpAlignments);
 			System.out.println("Number of subunits: "+subunits.size());
 			
 			//Display the protein structure in jmol
@@ -85,7 +87,7 @@ public class AleixCeSymmMNrColorResidues {
 				//Get the total number of residues of the kth subunit
 				int n = subunits.get(k).size();
 				System.out.println("Number of residues of subunit "+(k+1)+" is "+n);
-				String[] colors = {"cornflowerblue","green","lightcoral","lightyellow","indianred","lightskyblue","lightsalmon","purple"};
+				String[] colors = {"cornflowerblue","green","mediumpurple","gold","indianred","lightskyblue","lightsalmon","lightcoral"};
 				int residue = 0;
 				String chain = "";
 				

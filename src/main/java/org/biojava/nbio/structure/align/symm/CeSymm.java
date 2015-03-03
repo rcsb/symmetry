@@ -23,7 +23,7 @@ import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
- * Try to identify all possible symmetries by iterating resursively over all
+ * Try to identify all possible symmetries by iterating recursively over all
  * results and disabling the diagonal of each previous result.
  * 
  * @author andreas

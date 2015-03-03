@@ -23,147 +23,69 @@
 package org.biojava.nbio.structure.align.symm.gui;
 
 
-import java.util.Arrays;
-
-import javax.swing.JOptionPane;
-
+import java.util.ArrayList;
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.Calc;
-import org.biojava.nbio.structure.ResidueNumber;
-import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.StructureAlignment;
-import org.biojava.nbio.structure.align.StructureAlignmentFactory;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.align.util.RotationAxis;
-import org.biojava.nbio.structure.jama.Matrix;
+import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
 
 /**
- * Prompts the user for a structure, then displays a two subunit alignment of the protein.
- * 
- * Further alignments can be made through the menus, but they will not include
- * rotation axis graphics.
- * 
+ * Displays a two subunit alignment of the protein by simply displaying the alignment and only coloring one aligned part.
+ * TODO: identify the subunits that overlap in the displayed alignment to color them only.
+ *  
  * @author Aleix Lafita
  *
  */
 public class CEsymmSubunitGUI {
-	private static final long serialVersionUID = -1124973530190871875L;
+	public static void main(String[] args){
 
-	public static void main(String[] args) {
-		
-		//Add CeSymm to the top of the algorithm list
-		StructureAlignment[] algorithms = StructureAlignmentFactory.getAllAlgorithms();
-		StructureAlignmentFactory.clearAlgorithms();
-		StructureAlignmentFactory.addAlgorithm(new CeSymm());
-		for(StructureAlignment alg: algorithms) {
-			StructureAlignmentFactory.addAlgorithm(alg);
-		}
-
-		//Get the pdb name from the user
-		String pdb = null;
+		//Set the name of the protein structure to analyze
 		AtomCache cache = new AtomCache();
-		Atom[] ca1 = null;
-		Atom[] ca2 = null;
-		Atom[] caInter = null;
+		String name = "4dou";
 		
-		final String default_prompt = "Input PDB ID or domain name.\n\nExamples: 3C1G, 3JUT.A, d1bwua_";
-		String prompt=default_prompt;
-		while(ca1 == null) {
-//			pdb = "1VR8";
-//			pdb = "3C1G";
-//			pdb = "3JUT.A";
-//			pdb = "d1bwua_";
-//			pdb = "d2biba1"; // screw symmetry
-//			pdb = "d1lghb_"; // negative screw symmetry
-//			pdb = "d1v3wa_"; // purely translational
-//			pdb = "d1yqha1"; // buggy case
-//			pdb = "d1fwka2";
-//			pdb = "d1ewfa1";
+		//Set the order of symmetry of the protein
+		int order = 3;
 
-			pdb = (String)JOptionPane.showInputDialog(
-					null,
-					prompt,
-					"CE-Symm",
-					JOptionPane.PLAIN_MESSAGE);
-			
-			if(pdb == null) return; //User cancel
-			else if(pdb.length()==0) continue; // Empty
-			
-			try {
-				ca1 = cache.getAtoms(pdb);
-				ca2 = cache.getAtoms(pdb);
-				caInter = cache.getAtoms(pdb);
-			} catch (Exception e) {
-				String error = e.getMessage();
-				if(error == null) {
-					error = "Error";
-				}
-				prompt = String.format("%s%n%s", error,default_prompt);
-				pdb = null;
-			}
-
-		}
-		
-		// Perform the CESymm alignment
 		try {
-			StructureAlignment cesymm = StructureAlignmentFactory.getAlgorithm(CeSymm.algorithmName);
-
-			AFPChain afp = cesymm.align(ca1, ca2);
-			afp.setName1(pdb);
-			afp.setName2(pdb);
 			
-			Matrix mat = afp.getBlockRotationMatrix()[0];
-			for( Atom atom:caInter) {
-				Calc.rotate(atom, mat);
-			}
+			//Parse atoms of the protein into two DS
+			Atom[] ca1 = cache.getAtoms(name); 
+			Atom[] ca2 = cache.getAtoms(name);
 			
-			RotationAxis axis = new RotationAxis(afp);
-			StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afp, ca1, ca2);
+			//List that contains all the AFP alignments
+			ArrayList<AFPChain> afpAlignments= new ArrayList<AFPChain>();
 			
-			String cmd = axis.getJmolScript(ca1);
-			jmolPanel.evalString(cmd);
+			//Initialize a new CeSymm class and its parameters and a new alignment class
+			CeSymm ceSymm = new CeSymm();
+			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
+			AFPChain afpChain = new AFPChain();
 			
-			//Find a way to select only the superimposed subunits of the alignment.
-			//Another approach could be to modify afpChain to contain only the aligned subunits.
-			jmolPanel.evalString("restrict A: 120-200");
+			//Set the number of alternatives (blackouts)
+			params.setMaxNrAlternatives(order);
 			
-			System.out.println("Theta="+axis.getAngle());
-		} catch(StructureException e) {
+			//Perform the alignment and store it in allAlignments
+			afpChain = ceSymm.align(ca1, ca2, params, afpAlignments);
+			afpChain.setName1(name);
+			afpChain.setName2(name);
+			
+			//Use the method defined below to extract the subunit residues from the alignments
+			ArrayList<ArrayList<Integer>> afpResidues = SubunitTools.processMultipleAFP(afpAlignments);
+			ArrayList<Integer> intervals = SubunitTools.calculateIntervals(ca1, afpResidues, order);
+			
+			//Also display the last alignment of the subunits, to evaluate the correctness of all alignments
+			StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afpAlignments.get(0), ca1, ca2);
+			
+			jmolPanel.evalString("select *; spacefill off; wireframe off; backbone off");
+			jmolPanel.evalString("select model=1.1 and (atomno >= "+ca1[intervals.get(0)].getPDBserial()+" and atomno <= "+ca1[intervals.get(1)].getPDBserial()+"); cartoon on");
+			jmolPanel.evalString("select model=1.2 and (atomno >= "+ca1[intervals.get(2)].getPDBserial()+" and atomno <= "+ca1[intervals.get(3)].getPDBserial()+"); cartoon on");
+		
+		} catch (Exception e){
 			e.printStackTrace();
 		}
-
-
-	}
-	
-	public static void showCurrentAlig(AFPChain myAFP, Atom[] ca1, Atom[] ca2)
-			throws StructureException {
-		AFPChain c = (AFPChain) myAFP.clone();
-		StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(c, ca1,
-				ca2);
-
-		// draw a line from center of gravity to N terminus
-
-		ResidueNumber res1 = ca1[0].getGroup().getResidueNumber();
-		ResidueNumber res2 = ca2[0].getGroup().getResidueNumber();
-		String chainId1 = ca1[0].getGroup().getChain().getChainID();
-		String chainId2 = ca2[0].getGroup().getChain().getChainID();
-
-		Atom centroid1 = Calc.getCentroid(ca1);
-		Atom centroid2 = Calc.getCentroid(ca2);
-
-		String cs1 = "{" + centroid1.getX() + " " + centroid1.getY() + " "
-				+ centroid1.getZ() + "}";
-		String cs2 = "{" + centroid2.getX() + " " + centroid2.getY() + " "
-				+ centroid2.getZ() + "}";
-
-		jmol.evalString("draw l1 line 100 " + cs1 + " (" + res1.getSeqNum()
-				+ ":" + chainId1 + ".CA/1) ; draw l2 line 100 " + cs2 + " ("
-				+ res2.getSeqNum() + ":" + chainId2 + ".CA/2);");
-
 	}
 	
 }

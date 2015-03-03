@@ -76,7 +76,9 @@ public class AleixCeSymmMaxNrColoring {
 				afpResidues[k+1] = ca1[afpAlignments[k].getOptAln()[0][0][n-1]].getPDBserial();
 				System.out.println(afpResidues[k+1]);
 			}
-			Arrays.sort(afpResidues); //sort the atom indices from lower to higher
+			//Sort the atom indices from lower to higher
+			//Issue: it does not ensure correctness, because different alignments can start at the same atom
+			Arrays.sort(afpResidues);
 			
 			//Display the structure in jmol
 			Structure structure = StructureIO.getStructure(name);

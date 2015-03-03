@@ -1,7 +1,7 @@
 package org.biojava.nbio.structure.align.symm;
 
 import java.io.IOException;
-
+import java.util.ArrayList;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.StructureException;
@@ -257,10 +257,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 	}
 	
-	//New method that stores all the successive alignments in allAlignments array before each blackout.
-	//Does not work, presumably because the AFPChain stored in allAlignments is a pointer that changes and all the\
-	//things inside allAlignments are the same in the end.
-	public AFPChain align(Atom[] ca1, Atom[] ca2O, Object param, AFPChain[] allAlignments)
+	//New method that stores all the successive alignment arrays in the allAlignments list before each blackout.
+	public AFPChain align(Atom[] ca1, Atom[] ca2O, Object param, ArrayList<AFPChain> allAlignments)
 			throws StructureException {
 		if (!(param instanceof CESymmParameters))
 			throw new IllegalArgumentException(
@@ -282,9 +280,9 @@ public class CeSymm extends AbstractStructureAlignment implements
 		calculator = new CECalculator(params);
 		calculator.addMatrixListener(this);
 
-		int i = 0;
+		int i = 1;
 
-		while ((afpChain == null) && i < params.getMaxNrAlternatives()-1) {
+		while ((afpChain == null) && i < params.getMaxNrAlternatives()) {
 
 			if (origM != null) {
 				myAFP.setDistanceMatrix((Matrix) origM.clone());
@@ -293,14 +291,29 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 			double tmScore2 = AFPChainScorer.getTMScore(myAFP, ca1, ca2);
 			myAFP.setTMScore(tmScore2);
-			
-			//Create a new AFPChain instance with the current alignment information and append it to allAlignments.
-			AFPChain newAFPchain = new AFPChain();
-			newAFPchain = myAFP;
-			allAlignments[i] = newAFPchain;
 
 			i++;
+			
+			//Clone the AFPChain
+			AFPChain newAFP = (AFPChain) myAFP.clone();
+			
+			//Post process the alignment
+			try {
+				newAFP = CeCPMain.postProcessAlignment(newAFP, ca1, ca2,
+						calculator);
+			} catch (Exception e) {
+				e.printStackTrace();
+				allAlignments.add(newAFP);
+				return afpChain;
+			}
+
+			double tmScore3 = AFPChainScorer.getTMScore(newAFP, ca1, ca2);
+			newAFP.setTMScore(tmScore3);
+			
+			//Add the alignment to the allAlignments list
+			allAlignments.add(newAFP);
 		}
+		
 		afpChain = myAFP;
 
 		try {

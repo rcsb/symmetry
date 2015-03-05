@@ -23,8 +23,8 @@ import org.biojava.nbio.structure.align.util.RotationAxis;
  * 
  * Assumes the new align function for the CeSymm class that accepts a list of AFP alignments as input.
  * 
- * Tried and worked for: {4DOU-3, 3HDP-2, 1TL2-5, 4HHB-2, 1SQU-2, 2F9H-2, 3DDV-4, 4FI3.F-2, 1H9M.A-2, 1MP9.A-2, 1JTD.B-7, 1G61.A-5}
- * Did not work for: {2FEE (takes long), 1VYM.A (buggy rotation axis), 1VYM-6 (buggy intervals)}
+ * Tried and worked for: {4DOU-3, 3HDP-2, 1TL2-5, 4HHB-2, 1SQU-2, 2F9H-2, 3DDV-4, 4FI3.F-2, 1H9M.A-2, 1MP9.A-2, 1VYM-3}
+ * Did not work for: {1G61.A-5 (bug in alignment, early termination), 1JTD.B-7 (buggy 8th alignment), 2FEE (takes long), 1VYM.A (buggy rotation axis)}
  * 
  * @author Aleix Lafita
  * 
@@ -37,10 +37,10 @@ public class CEsymmColorGUI {
 
 		//Set the name of the protein structure to analyze
 		AtomCache cache = new AtomCache();
-		String name = "4dou";
+		String name = "4DOU";
 		
 		//Set the order of symmetry of the protein
-		int order = 3;
+		int order = 8;
 
 		try {
 			
@@ -54,15 +54,14 @@ public class CEsymmColorGUI {
 			//Initialize a new CeSymm class and its parameters and a new alignment class
 			CeSymm ceSymm = new CeSymm();
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-			AFPChain afpChain = new AFPChain();
 			
 			//Set the number of alternatives (blackouts) for this iteration
 			params.setMaxNrAlternatives(order);
 			
 			//Perform the alignment and store it in allAlignments
-			afpChain = ceSymm.align(ca1, ca2, params, afpAlignments);
-			afpChain.setName1(name);
-			afpChain.setName2(name);
+			ceSymm.align(ca1, ca2, params, afpAlignments);
+			afpAlignments.get(0).setName1(name);
+			afpAlignments.get(0).setName2(name);
 			System.out.println("There are "+afpAlignments.size()+" alignments.");
 			for (AFPChain afp:afpAlignments){
 				System.out.println("Alignment has length of "+afp.getOptLength());
@@ -83,7 +82,7 @@ public class CEsymmColorGUI {
 			jmol.evalString("select ligands; cartoon off;");
 			
 			//Loop through every subunit identified and through all its residues and color them differently
-			for (int k=0; k<order; k++){
+			for (int k=0; k<subunits.size(); k++){
 				
 				//Get the total number of residues of the kth subunit
 				int n = subunits.get(k).size();
@@ -100,11 +99,11 @@ public class CEsymmColorGUI {
 			}
 						
 			//Set the rotation axis of the symmetry
-			RotationAxis axis = new RotationAxis(afpChain);
+			RotationAxis axis = new RotationAxis(afpAlignments.get(0));
 			jmol.evalString(axis.getJmolScript(ca1));
 			
 			//Also display the last alignment of the subunits, to evaluate the correctness of all alignments
-			StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+			StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afpAlignments.get(afpAlignments.size()-1), ca1, ca2);
 			jmolPanel.evalString(axis.getJmolScript(ca1));
 			
 		} catch (Exception e){

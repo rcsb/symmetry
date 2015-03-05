@@ -24,20 +24,24 @@ package org.biojava.nbio.structure.align.symm.gui;
 
 
 import java.util.ArrayList;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
 
 /**
- * Displays a two subunit alignment of the protein by simply displaying the alignment and only coloring one aligned part.
+ * Displays the alignment of the protein with the modified OptAln with the subunit blocks.
  * TODO: identify the subunits that overlap in the displayed alignment to color them only.
  *  
  * @author Aleix Lafita
+ * 
+ * Last modified: 05.03.2015
  *
  */
 public class CEsymmSubunitGUI {
@@ -68,21 +72,28 @@ public class CEsymmSubunitGUI {
 			params.setMaxNrAlternatives(order);
 			
 			//Perform the alignment and store it in allAlignments
-			afpChain = ceSymm.align(ca1, ca2, params, afpAlignments);
+			ceSymm.align(ca1, ca2, params, afpAlignments);
 			afpChain.setName1(name);
 			afpChain.setName2(name);
 			
-			//Use the method defined below to extract the subunit residues from the alignments
-			ArrayList<ArrayList<Integer>> afpResidues = SubunitTools.processMultipleAFP(afpAlignments);
-			ArrayList<Integer> intervals = SubunitTools.calculateIntervals(ca1, afpResidues, order);
+			//Use the method to extract the subunit residues and modify the afpChain
+			afpChain = SubunitTools.replaceOptAln(afpAlignments, ca1, ca2);
+			afpChain.setName1(name);
+			afpChain.setName2(name);
 			
-			//Also display the last alignment of the subunits, to evaluate the correctness of all alignments
-			StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afpAlignments.get(0), ca1, ca2);
+			//Display the alignment of the subunits, to evaluate the correctness of all alignments
+			StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
 			
+			//Set the rotation axis of the symmetry
+			RotationAxis axis = new RotationAxis(afpChain);
+			jmolPanel.evalString(axis.getJmolScript(ca1));
+			
+			/*
 			jmolPanel.evalString("select *; spacefill off; wireframe off; backbone off");
 			jmolPanel.evalString("select model=1.1 and (atomno >= "+ca1[intervals.get(0)].getPDBserial()+" and atomno <= "+ca1[intervals.get(1)].getPDBserial()+"); cartoon on");
 			jmolPanel.evalString("select model=1.2 and (atomno >= "+ca1[intervals.get(2)].getPDBserial()+" and atomno <= "+ca1[intervals.get(3)].getPDBserial()+"); cartoon on");
-		
+			 */
+			
 		} catch (Exception e){
 			e.printStackTrace();
 		}

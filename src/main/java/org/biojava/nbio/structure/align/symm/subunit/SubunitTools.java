@@ -1,6 +1,7 @@
 package org.biojava.nbio.structure.align.symm.subunit;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -112,7 +113,7 @@ public class SubunitTools {
 		}
 		
 		//Sort the interval numbers and take the most distant ones until there are <2*order> numbers
-		intervals.sort(null);
+		Collections.sort(intervals);
 		List<Integer> selectedInter = new ArrayList<Integer>();
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		while (selectedInter.size()<2*order){
@@ -130,7 +131,7 @@ public class SubunitTools {
 			selectedInter.add(intervals.get(selected));
 			selectedInter.add(intervals.get(selected-1));
 		}
-		selectedInter.sort(null);
+		Collections.sort(selectedInter);
 		
 		//Temporal: analyze the intervals
 		System.out.println("Number of interval residues: "+selectedInter.size());
@@ -180,7 +181,7 @@ public class SubunitTools {
 			}
 		}
 		//Sort the residues increasingly
-		intersectionResidues.sort(null);
+		Collections.sort(intersectionResidues);
 		return intersectionResidues;
 	}
 	
@@ -367,9 +368,7 @@ public class SubunitTools {
 		
 		//Temporal: print the sizes to check correctness
 		System.out.println("Number of subunits: "+optAlgn.length);
-		for (int i=0; i<optAlgn.length; i++){
-			System.out.println("Subunit length: "+optAlgn[i][0].length);
-		}
+		System.out.println("Subunit length: "+optAlgn[0][0].length);
 		
 		//Create a new AFPChain and set everything needed from the optimal alignment (allAlignments.get(0))
 		AFPChain refinedAFP = new AFPChain();
@@ -447,6 +446,9 @@ public class SubunitTools {
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		int order = allAlignments.size()+1;
 		
+		List<Integer> lastGroup = new ArrayList<Integer>();
+		
+		
 		//Loop through all the residues (vertices) in the graph
 		for (int i=0; i<graph.size(); i++){
 			if (!alreadySeen.contains(i)){
@@ -475,6 +477,7 @@ public class SubunitTools {
 						
 						for (int k=0; k<graph.get(vertex.get(0)).size(); k++){
 							//Only add to the stack the nodes not included in the current path
+							//Provisional: only if the connected vertices are lower than the current one, so i
 							if (!path.contains(graph.get(vertex.get(0)).get(k)) && !alreadySeen.contains(graph.get(vertex.get(0)).get(k))){
 								List<Integer> node = new ArrayList<Integer>();
 								node.add(graph.get(vertex.get(0)).get(k));
@@ -491,7 +494,7 @@ public class SubunitTools {
 										group.add(p);
 										alreadySeen.add(p);
 									}
-									group.sort(null);
+									Collections.sort(group);
 									for (int e:group){
 										System.out.println(e);
 									}

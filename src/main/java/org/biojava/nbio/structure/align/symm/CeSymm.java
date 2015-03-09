@@ -145,10 +145,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 		// that's the matrix to run the alignment on..
 		calculator.setMatMatrix(clone.getArray());
-		//System.out.println("origM: matrix set to calculator correct...");
 
 		calculator.traceFragmentMatrix(afpChain, ca1, ca2clone);
-		//System.out.println("origM: trace fragment matrix correct...");
 
 		calculator.nextStep(afpChain, ca1, ca2clone);
 		//System.out.println("origM: next step correct...");
@@ -305,7 +303,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 		Integer OptAlgnLenth = null;
 		
 		int i = 1;
-		System.out.println("Start of the loop CeSym align...");
 
 		while ((afpChain == null) && i < params.getMaxNrAlternatives()) {
 
@@ -324,7 +321,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 			
 			//Post process the alignment
 			try {
-				System.out.println("Post process alignment "+i+"...");
 				newAFP = CeCPMain.postProcessAlignment(newAFP, ca1, ca2,
 						calculator);
 			} catch (Exception e) {
@@ -348,8 +344,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 			
 			i++;
 		}
-		
-		System.out.println("CeSym align completed...");
 	}
 
 	/**
@@ -385,41 +379,31 @@ public class CeSymm extends AbstractStructureAlignment implements
 		Integer OptAlgnLen = null;
 		
 		int i = 1;
-		System.out.println("Start of the loop CeSym align...");
 
-		while (afpChain == null) {
+		while (afpChain == null && i < params.getMaxNrAlternatives()) {
 
 			if (origM != null) {
 				myAFP.setDistanceMatrix((Matrix) origM.clone());
 			}
-			System.out.println("Align matrix number "+i+"...");
+			
 			origM = align(myAFP, ca1, ca2, params, origM, calculator, i+5);
 			
-			System.out.println("Get TM score number "+i+"...");
 			double tmScore2 = AFPChainScorer.getTMScore(myAFP, ca1, ca2);
 			myAFP.setTMScore(tmScore2);
-			
-			System.out.println("myAFP alignment "+i+" has length "+myAFP.getOptAln()[0][0].length+"...");
-		
+				
 			//Clone the AFPChain
 			AFPChain newAFP = (AFPChain) myAFP.clone();
-			System.out.println("AFPChain cloned number "+i+"...");
 			
 			//Post process the alignment
 			try {
-				System.out.println("Post process alignment "+i+"...");
 				newAFP = CeCPMain.postProcessAlignment(newAFP, ca1, ca2,
 						calculator);
 			} catch (Exception e) {
-				System.out.println("Post process alignment in CeSym align failed...");
 				e.printStackTrace();
 				allAlignments.add(newAFP.getOptAln().clone());
 			}
 			
-			System.out.println("newAFP alignment "+i+" has length "+newAFP.getOptAln()[0][0].length+"...");
-			
 			//NEEDED...?
-			System.out.println("Set TM score number "+i+"...");
 			double tmScore3 = AFPChainScorer.getTMScore(newAFP, ca1, ca2);
 			newAFP.setTMScore(tmScore3);
 			
@@ -430,7 +414,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 			//If not check for a drop in the alignment length and break the loop
 			else if (newAFP.getOptLength() < (OptAlgnLen-OptAlgnLen/10)){
 				System.out.println("Order of symmetry detected: "+i);
-				System.out.println("Optimal Alignment Lenth: "+OptAlgnLen+", Last alignment length: "+newAFP.getOptLength());
+				System.out.println("Optimal alignment length: "+OptAlgnLen+", Last alignment length: "+newAFP.getOptLength());
 				break;
 			}
 			//Add the alignment to the allAlignments list otherwise
@@ -438,10 +422,9 @@ public class CeSymm extends AbstractStructureAlignment implements
 			System.out.println("Alignment "+i+" completed...");
 			
 			i++;
-			
 		}
 		
-		System.out.println("CeSym align completed...");
+		System.out.println("CeSymm align completed...");
 		
 		afpChain = SubunitTools.refinedAFP(allAlignments, ca1);
 		return afpChain;
@@ -452,6 +435,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 		if (params == null)
 			params = new CESymmParameters();
+			//The maximum order of symmetry known is 8, but can be set to any value.
+			params.setMaxNrAlternatives(8);
 
 		return alignMultiple(ca1, ca2, params);
 	}

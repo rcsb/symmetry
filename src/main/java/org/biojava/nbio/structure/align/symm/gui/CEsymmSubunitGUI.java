@@ -36,12 +36,16 @@ import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
 
 /**
- * Displays the alignment of the protein with the modified OptAln with the subunit blocks.
- * TODO: identify the subunits that overlap in the displayed alignment to color them only.
+ * Displays the alignment of the protein with the refined optimal alignment with the subunit blocks.
+ * 
+ * Tried and worked for: {4DOU-3, 3HDP-2, 4HHB-2, 1SQU-2, 2F9H-2, 3DDV-2, 3DDV.A-2, 4FI3.F-2, 1H9M.A-2, 1MP9.A-2, 1VYM-3}
+ * Array out of bounds: 1TL2-2
+ * Did not work for: {1G61.A-5 (bug in alignment, early termination), 1JTD.B-7 (buggy 8th alignment, not correct order detection), 
+ *                    2FEE (takes long), 1VYM.A (buggy rotation axis)}
  *  
  * @author Aleix Lafita
  * 
- * Last modified: 05.03.2015
+ * Last modified: 09.03.2015
  *
  */
 public class CEsymmSubunitGUI {
@@ -49,35 +53,21 @@ public class CEsymmSubunitGUI {
 
 		//Set the name of the protein structure to analyze
 		AtomCache cache = new AtomCache();
-		String name = "4dou";
-		
-		//Set the order of symmetry of the protein
-		int order = 3;
+		String name = "1G61.A";
 
 		try {
 			
 			//Parse atoms of the protein into two DS
 			Atom[] ca1 = cache.getAtoms(name); 
 			Atom[] ca2 = cache.getAtoms(name);
-			
-			//List that contains all the AFP alignments
-			ArrayList<AFPChain> afpAlignments= new ArrayList<AFPChain>();
-			
+			System.out.println("Structure downloaded...");
+						
 			//Initialize a new CeSymm class and its parameters and a new alignment class
 			CeSymm ceSymm = new CeSymm();
-			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 			AFPChain afpChain = new AFPChain();
 			
-			//Set the number of alternatives (blackouts)
-			params.setMaxNrAlternatives(order);
-			
 			//Perform the alignment and store it in allAlignments
-			ceSymm.align(ca1, ca2, params, afpAlignments);
-			afpChain.setName1(name);
-			afpChain.setName2(name);
-			
-			//Use the method to extract the subunit residues and modify the afpChain
-			afpChain = SubunitTools.replaceOptAln(afpAlignments, ca1, ca2);
+			afpChain = ceSymm.alignMultiple(ca1, ca2);
 			afpChain.setName1(name);
 			afpChain.setName2(name);
 			
@@ -93,6 +83,7 @@ public class CEsymmSubunitGUI {
 			jmolPanel.evalString("select model=1.1 and (atomno >= "+ca1[intervals.get(0)].getPDBserial()+" and atomno <= "+ca1[intervals.get(1)].getPDBserial()+"); cartoon on");
 			jmolPanel.evalString("select model=1.2 and (atomno >= "+ca1[intervals.get(2)].getPDBserial()+" and atomno <= "+ca1[intervals.get(3)].getPDBserial()+"); cartoon on");
 			 */
+			
 			
 		} catch (Exception e){
 			e.printStackTrace();

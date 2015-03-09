@@ -1,6 +1,7 @@
 package org.biojava.nbio.structure.align.symm.gui;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
@@ -37,7 +38,7 @@ public class CEsymmColorGUI {
 
 		//Set the name of the protein structure to analyze
 		AtomCache cache = new AtomCache();
-		String name = "4DOU";
+		String name = "3DDV.A";
 		
 		//Set the order of symmetry of the protein
 		int order = 8;
@@ -68,7 +69,7 @@ public class CEsymmColorGUI {
 			}
 			
 			//Use the method defined above to extract the subunit residues from the alignments
-			ArrayList<ArrayList<Integer>> subunits = SubunitTools.extractSubunits(ca1, afpAlignments);
+			List<List<Integer>> subunits = SubunitTools.extractSubunits(ca1, afpAlignments);
 			System.out.println("Number of subunits: "+subunits.size());
 			
 			//Display the protein structure in jmol

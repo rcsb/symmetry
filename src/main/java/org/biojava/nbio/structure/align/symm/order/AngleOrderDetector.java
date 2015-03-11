@@ -5,19 +5,34 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
- * Guesses an order of rotational symmetry from the angle.
+ * Guesses an order of rotational symmetry from the angle. The second method
+ * described in Myers-Turnbull (2014).
+ * 
+ * Searches for an order k such that the angle observed closely matches 2pi/k.
+ * This misses many valid rotations, and is only retained for reproducing paper
+ * results.
+ * @deprecated Use {@link AngleOrderDetector3} instead
  * @author dmyersturnbull
  */
+@Deprecated
 public class AngleOrderDetector implements OrderDetector {
 
 	private int maxOrder = 8;
 	private final double angleError;
 
+	/**
+	 * @param angleError maximum angular error, in radians
+	 */
 	public AngleOrderDetector(double angleError) {
 		super();
 		this.angleError = angleError;
 	}
 
+	/**
+	 * 
+	 * @param maxOrder maximum order to consider
+	 * @param angleError maximum angular error, in radians
+	 */
 	public AngleOrderDetector(int maxOrder, double angleError) {
 		super();
 		this.maxOrder = maxOrder;
@@ -46,5 +61,8 @@ public class AngleOrderDetector implements OrderDetector {
 		}
 	}
 
-
+	@Override
+	public String toString() {
+		return getClass().getSimpleName()+"[angleError="+angleError+",maxOrder="+maxOrder+"]";
+	}
 }

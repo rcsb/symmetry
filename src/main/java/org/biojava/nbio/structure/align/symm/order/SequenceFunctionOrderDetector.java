@@ -39,4 +39,9 @@ public class SequenceFunctionOrderDetector implements OrderDetector {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "SequenceFunctionOrderDetector [maxSymmetry=" + maxSymmetry
+				+ ", minimumMetricChange=" + minimumMetricChange + "]";
+	}
 }

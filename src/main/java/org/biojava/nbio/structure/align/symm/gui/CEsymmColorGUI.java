@@ -38,7 +38,7 @@ public class CEsymmColorGUI {
 
 		//Set the name of the protein structure to analyze
 		AtomCache cache = new AtomCache();
-		String name = "1WD3";
+		String name = "3HDP";
 		
 		//Set the order of symmetry of the protein
 		int order = 8;

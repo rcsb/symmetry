@@ -374,7 +374,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		Matrix origM = null;
 		
 		AFPChain myAFP = new AFPChain();
-		List<int[][][]> allAlignments = new ArrayList<int[][][]>();
+		List<AFPChain> allAlignments = new ArrayList<AFPChain>();
 
 		Integer OptAlgnLen = null;
 		
@@ -400,7 +400,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 						calculator);
 			} catch (Exception e) {
 				e.printStackTrace();
-				allAlignments.add(newAFP.getOptAln().clone());
+				allAlignments.add(newAFP);
 			}
 			
 			//NEEDED...?
@@ -418,7 +418,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 				break;
 			}
 			//Add the alignment to the allAlignments list otherwise
-			allAlignments.add(newAFP.getOptAln().clone());
+			allAlignments.add(newAFP);
 			System.out.println("Alignment "+i+" completed...");
 			
 			i++;

@@ -29,6 +29,7 @@ import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 
 /**
@@ -39,35 +40,49 @@ import org.biojava.nbio.structure.align.symm.CeSymm;
  * 		- order 3: 4DOU, 1VYM, 2AFG.A, 1CUN
  *   	- order 4: 
  *  	- order 5: 1G61.A
- *  	- order 6: 
- *      - order 7: 
- *      - helical: 1B3U.A, 1EZG.A, 1DFJ.I
+ *  	- order 6: 1U6D
+ *      - order 7: 1JOF.A, 1JTD.B, 
+ *      - helical: 1B3U.A, 1EZG.A, 1DFJ.I, 1AWC.B
  *      - unknown: 1WD3, 1Z7X, 1DCE,
  *  	
- * Did not work for:  1JTD.B-7 (buggy 8th alignment, not correct order detection)
- *                    2FEE (takes long)
+ * Did not work for:  1TIM.A (symmetric?)
+ * 					  2FEE (takes long)
  *                    1VYM.A (buggy rotation axis)
- *                    1AWC
  *                    1DCE (takes long)
  *                    1QIU (takes long)
- *                    1U6D (no groups selected in the refinement, too strict)
- *                    1WD3 ((no groups selected in the refinement, too strict)
- *                    1FT2.B (refinement not sorted, getAlign fails)
- *                    1JOF.A (refinement not sorted, getAlign fails)
- *                    1VZW (incorrect order detection)
+ *                    1TIM.A (incorrect order detection, order 7)
+ *                    1VZW (incorrect order detection, 4 instead of 8)
+ *                  
+ * BUGS:   1- For the 1JTD.B structure, the blackout is not done properly in the last alignment and the alignment is made
+ *            over a black area, that is why the order of symmetry is incorrectly determined to 8 instead of 7. To reproduce
+ *            the error use CEsymmColorGUI, which displays the dotplot of the last alignment (same with 1TIM.A).
+ *         2*- The 3D alignment deletes some regions in the rotated (second) protein, which may be the unaligned regions between
+ *            the subunits. It might be a problem with AlignmentTools.updateSuperposition. Some examples are: 1G61.A, 3HDP. Solved
+ *            by clonning the AFPChain instead of initializing it from 0, the method needs the original one.
+ *         3- The information of gaps and RMSD in the Sequence Alignment Display is incorrect (it is set to 0). updateSuperposition 
+ *            has to be changed (the dummy code), in order to update the values.
+ *         4*- In the molecule 1G61.A the helices are not aligned although they seem to be symmetric, consider a less restrictive
+ *            last step to select them also as symmetric. Solved with a last step to select the groups that do not form cycles.
+ *         5- The alignment panel does not color correctly the alignment, because it considers a " " in the symb alignment not as 
+ *            a mismatch (when the alignment is not FatCat only) but rather as an aligned pair and it colors them (modification in 
+ *            the biojava code DisplayAFP line 76), although they are not really aligned. Possible implications for biojava? 
+ *         
+ *         * Solved!
  *                    
  *  
  * @author Aleix Lafita
  * 
- * Last modified: 09.03.2015
+ * Last modified: 10.03.2015
  *
  */
 public class CEsymmSubunitGUI {
 	public static void main(String[] args) throws Exception{
+		
+		//String[] names = ["4DOU", "1G61.A", "1U6D", "1JOF.A"];
 
 		//Set the name of the protein structure to analyze
 		AtomCache cache = new AtomCache();
-		String name = "1WD3";
+		String name = "4DOU";
 
 		try {
 			
@@ -79,8 +94,13 @@ public class CEsymmSubunitGUI {
 			CeSymm ceSymm = new CeSymm();
 			AFPChain afpChain = new AFPChain();
 			
+			//Set the maximum number of iterations for the cases where the order detection fails
+			int order = 8;
+			CESymmParameters params = new CESymmParameters();
+			params.setMaxNrAlternatives(order);
+			
 			//Perform the alignment and store
-			afpChain = ceSymm.alignMultiple(ca1, ca2);
+			afpChain = ceSymm.alignMultiple(ca1, ca2, params);
 			afpChain.setName1(name);
 			afpChain.setName2(name);
 			

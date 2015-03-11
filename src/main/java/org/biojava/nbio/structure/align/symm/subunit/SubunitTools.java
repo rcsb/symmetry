@@ -7,6 +7,7 @@ import java.util.Stack;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AFPAlignmentDisplay;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
@@ -16,7 +17,7 @@ import org.biojava.nbio.structure.align.util.AlignmentTools;
  * 
  * @author Aleix Lafita
  * 
- * Last modified: 09.03.2015
+ * Last modified: 10.03.2015
  */
 public class SubunitTools {
 	
@@ -79,10 +80,10 @@ public class SubunitTools {
 	}
 
 	/**
-	 * Method that calculates the intervals of every subunit (cutting regions). 
+	 * Method that calculates the intervals of every subunit (cutting regions).
 	 * 
 	 * INPUT: a list of AFP alignments and the array of atoms of the protein.
-	 * OUTPUT: a list containing the cutting intervals (size: order+1).
+	 * OUTPUT: a list containing the cutting intervals (size: 2*order), lower and upper bounds of regions.
 	 * ALGORITHM: It takes all the starting and ending residues from the alignment blocks and clusters them by iteratively
 	 *            deleting the higher of the closest pair of residues. Other approaches to cluster are being considered.
 	 *            Need to be improved in the future, not using the HEURISTIC of most distant pairs.
@@ -133,11 +134,11 @@ public class SubunitTools {
 		}
 		Collections.sort(selectedInter);
 		
-		//Temporal: analyze the intervals
+		/*//Print the intervals
 		System.out.println("Number of interval residues: "+selectedInter.size());
 		for (int intr:selectedInter){
 			System.out.println(intr);
-		}
+		}*/
 		
 		return selectedInter;
 	}
@@ -191,7 +192,7 @@ public class SubunitTools {
 	 * INPUT: an list AFP alignment.
 	 * OUTPUT: a triple list: first index = alignment number, second = chain number, third = position in the alignment.
 	 */
-	public static List<List<List<Integer>>> processMultipleAFP(List<int[][][]> allAlignments){
+	public static List<List<List<Integer>>> processMultipleAFP(List<AFPChain> allAlignments){
 		
 		//Initialize the triple list to be returned
 		List<List<List<Integer>>> alignments = new ArrayList<List<List<Integer>>>();
@@ -205,13 +206,13 @@ public class SubunitTools {
 			for (int x=0; x<2; x++){
 				//Get all the residues in one chain of the alignment and add them to the alignment list
 				ArrayList<Integer> residues = new ArrayList<Integer>();
-				for (int y=0; y<allAlignments.get(k).length; y++){
+				for (int y=0; y<allAlignments.get(k).getOptAln().length; y++){
 					
 					//Get the total number of residues in the group
-					int n = allAlignments.get(k)[y][x].length;
+					int n = allAlignments.get(k).getOptAln()[y][x].length;
 					//Append every residue to a list of residues
 					for (int j=0; j<n; j++){
-						residues.add(allAlignments.get(k)[y][x][j]);
+						residues.add(allAlignments.get(k).getOptAln()[y][x][j]);
 					}
 				}
 				alignment.add(residues);
@@ -247,13 +248,15 @@ public class SubunitTools {
 	}
 	
 	/**
+	 * NOT USED ANYMORE: new method refinedAFP uses only a triple list as an input, instead of the AFP alignments.
+	 * 
 	 * It returns an AFPChain with a segmented optimal alignment, which means that it has <order of symmetry> blocks of
 	 * aligned subunits.
 	 * 
 	 * INPUT: a list of AFP alignments and the Atom[] arrays.
 	 * OUTPUT: the optimal AFPChain alignment divided into the subunits.
 	 */
-	public static AFPChain createOptAln(ArrayList<AFPChain> allAlignments, Atom[] ca1) throws StructureException {
+	public static AFPChain createOptAlgn(List<AFPChain> allAlignments, Atom[] ca1) throws StructureException {
 		
 		//Extract the subunits from the set of alignments
 		List<List<Integer>> subunits = extractSubunits(ca1, allAlignments);
@@ -265,12 +268,12 @@ public class SubunitTools {
 		int[][][] oldAlgn = optimalAFP.getOptAln();
 		
 		//Create a triple list with the optimal alignment divided into the subunits in <order> blocs
-		ArrayList<ArrayList<ArrayList<Integer>>> newAlgn = new ArrayList<ArrayList<ArrayList<Integer>>>();
+		List<List<List<Integer>>> newAlgn = new ArrayList<List<List<Integer>>>();
 		
 		//Loop through all the optimal alignment and subunits and select the pairs of aligned residues for each subunit
 		for (int i=0; i<order; i++){
-			ArrayList<Integer> chain1 = new ArrayList<Integer>();
-			ArrayList<Integer> chain2 = new ArrayList<Integer>();
+			List<Integer> chain1 = new ArrayList<Integer>();
+			List<Integer> chain2 = new ArrayList<Integer>();
 			for (int k=0; k<oldAlgn.length; k++){
 				for (int j=0; j<oldAlgn[k][0].length; j++){
 					if (subunits.get(i).contains(oldAlgn[k][0][j])){
@@ -279,7 +282,7 @@ public class SubunitTools {
 					}
 				}
 			}
-			ArrayList<ArrayList<Integer>> subunit = new ArrayList<ArrayList<Integer>>();
+			List<List<Integer>> subunit = new ArrayList<List<Integer>>();
 			subunit.add(chain1);
 			subunit.add(chain2);
 			newAlgn.add(subunit);
@@ -313,7 +316,7 @@ public class SubunitTools {
 		}
 		
 		//Create a new AFPChain and set everything needed from the optimal alignment (allAlignments.get(0))
-		AFPChain refinedAFP = new AFPChain();
+		AFPChain refinedAFP = (AFPChain) allAlignments.get(0).clone();
 		refinedAFP.setCa1Length(optimalAFP.getCa1Length());
 		refinedAFP.setCa2Length(optimalAFP.getCa2Length());
 		
@@ -327,7 +330,7 @@ public class SubunitTools {
 		//Atom[] ca1clone = StructureTools.cloneCAArray(ca1); // don't modify ca1 positions
 		AlignmentTools.updateSuperposition(refinedAFP, ca1, ca1);
 		
-		//It re-does the sequence alignment strings from the OptAlgn information only (why does not work..?)
+		//It re-does the sequence alignment strings from the OptAlgn information only
 		AFPAlignmentDisplay.getAlign(refinedAFP, ca1, ca1);
 				
 		return refinedAFP;
@@ -335,12 +338,12 @@ public class SubunitTools {
 	
 	/**
 	 * It returns an AFPChain with a segmented optimal alignment, which means that it has <order of symmetry> blocks of
-	 * aligned subunits.
+	 * aligned subunits. The original AFPChain is not modified.
 	 * 
 	 * INPUT: the optimal alignment in a triple list (same format as optAln of AFPChain) and the Atom[] arrays.
 	 * OUTPUT: the optimal AFPChain alignment object divided into the subunits.
 	 */
-	public static AFPChain createOptAln(List<List<List<Integer>>> newAlgn, Atom[] ca1) throws StructureException {
+	public static AFPChain createOptAln(List<List<List<Integer>>> newAlgn, AFPChain afpChain, Atom[] ca1) throws StructureException {
 		
 		//The order is the number of groups in the newAlgn
 		int order = newAlgn.size();
@@ -370,35 +373,39 @@ public class SubunitTools {
 		System.out.println("Number of subunits: "+optAlgn.length);
 		System.out.println("Subunit length: "+optAlgn[0][0].length);
 		
-		//Create a new AFPChain and set everything needed from the optimal alignment (allAlignments.get(0))
-		AFPChain refinedAFP = new AFPChain();
-		refinedAFP.setCa1Length(ca1.length);
-		refinedAFP.setCa2Length(ca1.length);
+		//Create a copy of the original AFPChain and set everything needed for the structure update
+		AFPChain copyAFP = (AFPChain) afpChain.clone();
 		
 		//Set the new parameters of the optimal alignment
-		refinedAFP.setOptLength(optLength);
-		refinedAFP.setOptLen(optLens);
-		refinedAFP.setOptAln(optAlgn);
-		refinedAFP.setBlockNum(order);
+		copyAFP.setOptLength(optLength);
+		copyAFP.setOptLen(optLens);
+		copyAFP.setOptAln(optAlgn);
+		
+		//Set the block information of the new alignment
+		copyAFP.setBlockNum(order);
+		copyAFP.setBlockSize(optLens);
+		copyAFP.setBlockResList(optAlgn);
+		copyAFP.setBlockResSize(optLens);
 		
 		//Recalculate properties: superposition, tm-score, etc
-		//Atom[] ca1clone = StructureTools.cloneCAArray(ca1); // don't modify ca1 positions
-		AlignmentTools.updateSuperposition(refinedAFP, ca1, ca1);
+		Atom[] ca1clone = StructureTools.cloneCAArray(ca1); // don't modify ca1 positions
+		AlignmentTools.updateSuperposition(copyAFP, ca1, ca1clone);
 		
-		//It re-does the sequence alignment strings from the OptAlgn information only (why does not work..?)
-		AFPAlignmentDisplay.getAlign(refinedAFP, ca1, ca1);
-				
-		return refinedAFP;
+		//It re-does the sequence alignment strings from the OptAlgn information only
+		copyAFP.setAlnsymb(null);
+		AFPAlignmentDisplay.getAlign(copyAFP, ca1, ca1clone);
+		
+		return copyAFP;
 	}
 	
 	/**
-	 * Calculates a directed graph in the format of adjacency list from the set of alignments, where each vertex is a 
+	 * Calculates a graph in the format of adjacency list from the set of alignments, where each vertex is a 
 	 * residue and each edge means the connection between the two residues in one of the alignments.
 	 * 
 	 * INPUT: a list of AFP alignments and the Atom[] array.
 	 * OUTPUT: the alignment graph (describing relations between residues). List dimensions: AdjList[vertices][edges]
 	 */
-	public static List<List<Integer>> buildAFPgraph(List<int[][][]> allAlignments, Atom[] ca1) {
+	public static List<List<Integer>> buildAFPgraph(List<AFPChain> allAlignments, Atom[] ca1) {
 		
 		//Initialize the adjacency list that stores the graph
 		List<List<Integer>> adjList = new ArrayList<List<Integer>>();
@@ -419,8 +426,27 @@ public class SubunitTools {
 				if (!adjList.get(vertex).contains(edge)){
 					adjList.get(vertex).add(edge);
 				}
+				//Make the graph undirected (optional feature)
+				if (!adjList.get(edge).contains(vertex)){
+					adjList.get(edge).add(vertex);
+				}
 			}
 		}
+		//Print graph information
+		System.out.println("GRAPH INFORMATION:");
+		System.out.println(" - Vertices: "+adjList.size());
+		int edges = 0;
+		int count = 0;
+		for (List<Integer> v:adjList){
+			edges+=v.size();
+			//Count residues with order-1 edges (connected consistently in all the alignments)
+			if (v.size()==allAlignments.size()){
+				count++;
+			}
+		}
+		System.out.println(" - Edges: "+edges);
+		System.out.println(" - Consistent connected residues: "+count+" out of "+adjList.size());
+		
 		return adjList;
 	}
 	
@@ -433,25 +459,31 @@ public class SubunitTools {
 	 * OUTPUT: an AFP alignment with subunit groups consistent between each other.
 	 * ALGORITHM: from the list of AFP alignments an AFP graph that relates the aligned residues is build and for every
 	 *            residue in the graph it checks whether there is a cycle of size <order> by performing a DFS of order levels 
-	 *            and checking if is possible to return to the first vertex with <order> edges.
+	 *            and checking if is possible to return to the first vertex with <order> edges. Because this selection is 
+	 *            very restrictive and does not select some of the symmetric residues, a last step selecting the residues 
+	 *            with <order> neighbors and its neighbors if they are also consistent can be done.
 	 * RUNNING TIME: order of complexity depending on the order of symmetry and the number of residues (DFS of <order> depth).
 	 */
-	public static AFPChain refinedAFP(List<int[][][]> allAlignments, Atom[] ca1) throws StructureException {
+	public static AFPChain refinedAFP(List<AFPChain> allAlignments, Atom[] ca1) throws StructureException {
 		
 		//Create the alignment graph and initialize a variable to store the groups
 		List<List<Integer>> graph = buildAFPgraph(allAlignments, ca1);
 		List<List<Integer>> groups = new ArrayList<List<Integer>>();
+		List<Integer> intervals = calculateIntervals(ca1, allAlignments);
 		
 		//Initialize a variable to store the residues already in a group (do not take them twice)
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		int order = allAlignments.size()+1;
 		
 		List<Integer> lastGroup = new ArrayList<Integer>();
-		
+		for (int i=0; i<order; i++){
+			lastGroup.add(0);
+		}
 		
 		//Loop through all the residues (vertices) in the graph
 		for (int i=0; i<graph.size(); i++){
 			if (!alreadySeen.contains(i)){
+				//System.out.println("Cycle for residue "+i);
 				
 				//Initialize the variables for the DFS of this residue iteration
 				Stack<Integer> path = new Stack<Integer>(); //stack that stores the current path nodes
@@ -460,47 +492,98 @@ public class SubunitTools {
 				source.add(i);
 				source.add(0);
 				stack.push(source);
+				
 				boolean foundGroup = false; //Do not loop at any other node if you already found a group of connected nodes
 				
 				while (!stack.isEmpty() && !foundGroup){
+					
+					/*//Print path and stack at each iteration
+					System.out.println("Stack: ");
+					for (List<Integer> s:stack){
+						System.out.println(s);
+					}
+					
+					System.out.println("Path: ");
+					for (Integer s:path){
+						System.out.println(s);
+					}*/
+					
 					List<Integer> vertex = stack.pop();
 					
-					//If the vertex level is lower than the past level remove the last element of the path
-					if (vertex.get(1)<=path.size() && path.size()>0){
+					//If the vertex level is lower than the path size remove the last element of the path
+					if (vertex.get(1)<=path.size()-1){
+						//System.out.println("Popped from the path: "+path.pop());
 						path.pop();
 					}
 					
 					//If the vertex has level lower than the order consider its neighbors
-					if (vertex.get(1)<order){
+					if (vertex.get(1)<order && !path.contains(vertex.get(0))){
 						//First add the node to the path
 						path.push(vertex.get(0));
+						//System.out.println("Pushed to the path: "+path.peek());
 						
 						for (int k=0; k<graph.get(vertex.get(0)).size(); k++){
-							//Only add to the stack the nodes not included in the current path
-							//Provisional: only if the connected vertices are lower than the current one, so i
-							if (!path.contains(graph.get(vertex.get(0)).get(k)) && !alreadySeen.contains(graph.get(vertex.get(0)).get(k))){
-								List<Integer> node = new ArrayList<Integer>();
-								node.add(graph.get(vertex.get(0)).get(k));
-								node.add(vertex.get(1)+1);
+							//Extract the next node to be considered (neighbor k of the vertex)
+							List<Integer> node = new ArrayList<Integer>();
+							node.add(graph.get(vertex.get(0)).get(k));
+							node.add(path.size());
+							//Only add to the stack the nodes not included in the current path with level less than the order
+							if (!path.contains(node.get(0)) && !alreadySeen.contains(node.get(0)) && node.get(1)<order){
 								stack.push(node);
-								//If the level=order and the node is equal to the source store the group of residues in the path
-								if (node.get(0)==i && node.get(1)==order){
-									List<Integer> group = new ArrayList<Integer>();
-									path.push(node.get(0));
-									int n = path.size();
-									System.out.println("Path size: "+n);
-									for (int x=0; x<n; x++){
-										int p = path.pop();
-										group.add(p);
+							}
+							//If the level=order and the node is equal to the source store the group of residues in the path
+							else if (node.get(0)==i && node.get(1)==order){
+
+								List<Integer> group = new ArrayList<Integer>();
+								int n = path.size();
+								//System.out.println("Path size: "+n);
+								for (int x=0; x<n; x++){
+									int p = path.get(x);
+									group.add(p);
+								}
+								Collections.sort(group);
+								boolean correct = true;
+								//Check that all the residues are greater than the last group found, otherwise inconsistent
+								for (int e=0; e<group.size()-1; e++){
+									if (!(group.get(e)>lastGroup.get(e)) && lastGroup.get(e+1)!=0){
+										//System.out.println("Inconsistent group: not sequential order...");
+										//System.out.println("Last group "+lastGroup.get(e)+", Current group "+group.get(e));
+										correct = false;
+										break;
+									}
+								}
+								//Check that all the residues are lower than the next residue of the last group found
+								for (int e=0; e<group.size()-1; e++){
+									if (group.get(e)>lastGroup.get(e+1) && lastGroup.get(e+1)!=0 && correct){
+										//System.out.println("Inconsistent group: not consistent with the last group...");
+										//System.out.println("Last group "+lastGroup.get(e+1)+", Current group "+group.get(e));
+										correct = false;
+										break;
+									}
+								}
+								//Also check that the residues are inside its subunit intervals boundaries
+								for (int e=1; e<group.size()+1; e++){
+									if (!((group.get(e-1)>=intervals.get(2*e-2)) && (group.get(e-1)<=intervals.get(2*e-1))) && correct){
+										//System.out.println("Inconsistent group: not inside interval boundaries...");
+										//System.out.println("Residue "+group.get(e-1)+" not in the interval ["+intervals.get(2*e-2)+", "+intervals.get(2*e-1)+"]");
+										correct = false;
+										break;
+									}
+								}
+								if (correct){
+									/*System.out.println("Group size: "+group.size());
+									for (int e=0; e<group.size(); e++){
+										System.out.println(group.get(e));
+									}*/
+									groups.add(group);
+									//Add the vertices of the path to alreadySeen to avoid including them again later groups
+									for (int p:group){
 										alreadySeen.add(p);
 									}
-									Collections.sort(group);
-									for (int e:group){
-										System.out.println(e);
-									}
-									groups.add(group);
 									foundGroup = true;
 									path.clear();
+									//System.out.println("Clearing path...");
+									lastGroup = group;
 									break;
 								}
 							}
@@ -509,6 +592,73 @@ public class SubunitTools {
 				} //end of DFS
 			}
 		} //end of all the residue analysis
+		
+		//Last step to select those residues that do not form a cycle but that are connected in a consistent manner.
+		boolean last_step = true; //set to true if this last step is required
+		if (last_step){
+			for (int i=0; i<graph.size(); i++){
+				if (graph.get(i).size()==order-1 && !alreadySeen.contains(i)){
+					boolean correct = true;
+					List<Integer> group = new ArrayList<Integer>();
+					//Check that all the residues in the group have not been already seen
+					group.add(i);
+					for (int j=0; j<graph.get(i).size(); j++){
+						group.add(graph.get(i).get(j));
+						if (alreadySeen.contains(group.get(j))){
+							correct = false;
+						}
+					}
+					Collections.sort(group);
+					//System.out.println("Considering a group...");
+					/*for (int e=0; e<group.size(); e++){
+						System.out.println(group.get(e));
+					}*/
+					/*
+					//Check that the residues are inside its subunit intervals boundaries (Not needed because it was checked before in the cycle)
+					for (int e=1; e<group.size()+1; e++){
+						if (!((group.get(e-1)>=intervals.get(2*e-2)) && (group.get(e-1)<=intervals.get(2*e-1))) && correct){
+							System.out.println("Inconsistent group: not inside interval boundaries...");
+							System.out.println("Residue "+group.get(e-1)+" not in the interval ["+intervals.get(2*e-2)+", "+intervals.get(2*e-1)+"]");
+							correct = false;
+							break;
+						}
+					}*/
+					//Find the insertion index of the group in the groups list and check that all other residues are consistent
+					int index = 0;
+					for (int k=1; k<groups.size(); k++){
+						if (groups.get(k).get(0)>group.get(0)){
+							index = k;
+							for (int d=0; d<order; d++){
+								if (groups.get(k-1).get(d)>group.get(d) || groups.get(k).get(d)<group.get(d)){
+									correct = false;
+									//System.out.println("Inconsistent group: not accordance with neighbors...");
+									//System.out.println("Residue "+group.get(d)+" not in the neigbors interval ["+groups.get(k-1).get(d)+", "+groups.get(k).get(d)+"]");
+									break;
+								}
+							}
+							break;
+						}
+						if (!correct){
+							break;
+						}
+					}
+					//If the conditions are fulfilled insert the group into the right position and mark the residues as seen
+					if (correct){
+						if (index==0){
+							groups.add(group);
+						}
+						else{
+							groups.add(index, group);
+						}
+						//System.out.println("Extra group added: ");
+						for (int e:group){
+							alreadySeen.add(e);
+							//System.out.println(e);
+						}
+					}
+				}
+			}
+		}
 		
 		//Initialize the optAln variable
 		List<List<List<Integer>>> optAln = new ArrayList<List<List<Integer>>>();
@@ -521,15 +671,13 @@ public class SubunitTools {
 			optAln.add(chains);
 		}
 		
-		//Convert the groups of residues into the optimal alignment (suppose the groups are already sorted by their first residue)		
+		//Convert the groups of residues into the optimal alignment (suppose the groups are already sorted by their first residue)
 		for (List<Integer> group:groups){
 			for (int k=0; k<group.size(); k++){
+				optAln.get(k).get(1).add(group.get((k+1)%order));
 				optAln.get(k).get(0).add(group.get(k));
-				optAln.get(k).get(1).add(group.get((k+1)%group.size()));
 			}
 		}
-		
-		return createOptAln(optAln, ca1);
+		return createOptAln(optAln, allAlignments.get(order-2), ca1);
 	}
-	
 }

@@ -386,6 +386,7 @@ public class SubunitTools {
 		copyAFP.setBlockSize(optLens);
 		copyAFP.setBlockResList(optAlgn);
 		copyAFP.setBlockResSize(optLens);
+		copyAFP.setBlockGap(createBlockGap(optAlgn));
 		
 		//Recalculate properties: superposition, tm-score, etc
 		Atom[] ca1clone = StructureTools.cloneCAArray(ca1); // don't modify ca1 positions
@@ -463,6 +464,7 @@ public class SubunitTools {
 	 *            very restrictive and does not select some of the symmetric residues, a last step selecting the residues 
 	 *            with <order> neighbors and its neighbors if they are also consistent can be done.
 	 * RUNNING TIME: order of complexity depending on the order of symmetry and the number of residues (DFS of <order> depth).
+	 *               The running time is much faster than the multiple alignment so it is not a bottleneck.
 	 */
 	public static AFPChain refinedAFP(List<AFPChain> allAlignments, Atom[] ca1) throws StructureException {
 		
@@ -613,16 +615,15 @@ public class SubunitTools {
 					/*for (int e=0; e<group.size(); e++){
 						System.out.println(group.get(e));
 					}*/
-					/*
-					//Check that the residues are inside its subunit intervals boundaries (Not needed because it was checked before in the cycle)
+					//Check that the residues are inside its subunit intervals boundaries (Needed to avoid discontinuos regions)
 					for (int e=1; e<group.size()+1; e++){
 						if (!((group.get(e-1)>=intervals.get(2*e-2)) && (group.get(e-1)<=intervals.get(2*e-1))) && correct){
-							System.out.println("Inconsistent group: not inside interval boundaries...");
-							System.out.println("Residue "+group.get(e-1)+" not in the interval ["+intervals.get(2*e-2)+", "+intervals.get(2*e-1)+"]");
+							//System.out.println("Inconsistent group: not inside interval boundaries...");
+							//System.out.println("Residue "+group.get(e-1)+" not in the interval ["+intervals.get(2*e-2)+", "+intervals.get(2*e-1)+"]");
 							correct = false;
 							break;
 						}
-					}*/
+					}
 					//Find the insertion index of the group in the groups list and check that all other residues are consistent
 					int index = 0;
 					for (int k=1; k<groups.size(); k++){
@@ -679,5 +680,47 @@ public class SubunitTools {
 			}
 		}
 		return createOptAln(optAln, allAlignments.get(order-2), ca1);
+	}
+	
+	/**
+	 * Method that calculates the number of gaps in each subunit block of an optimal AFP alignment.
+	 * 
+	 * INPUT: an optimal alignment in the format int[][][].
+	 * OUTPUT: an int[] array of <order> length containing the gaps in each block as int[block].
+	 */
+	public static int[] createBlockGap(int[][][] optAln){
+		
+		//Initialize the array to be returned
+		int [] blockGap = new int[optAln.length];
+		
+		//Loop for every block and look in both chains for non-contiguous residues.
+		for (int i=0; i<optAln.length; i++){
+			int gaps = 0; //the number of gaps in that block
+			int last1 = 0; //the last residue position in chain 1
+			int last2 = 0; //the last residue position in chain 2
+			//Loop for every position in the block
+			for (int j=0; j<optAln[i][0].length; j++){
+				//If the first position is evaluated initialize the last positions
+				if (j==0){
+					last1 = optAln[i][0][j];
+					last2 = optAln[i][1][j];
+				}
+				else{
+					//If one of the positions or both are not contiguous increment the number of gaps
+					if (optAln[i][0][j] > last1+1 || optAln[i][1][j] > last2+1){
+						gaps++;
+						last1 = optAln[i][0][j];
+						last2 = optAln[i][1][j];
+					}
+					//Otherwise just set the last position to the current one
+					else{
+						last1 = optAln[i][0][j];
+						last2 = optAln[i][1][j];
+					}
+				}
+			}
+			blockGap[i] = gaps;
+		}
+		return blockGap;
 	}
 }

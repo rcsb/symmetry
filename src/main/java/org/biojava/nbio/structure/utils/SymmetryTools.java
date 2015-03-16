@@ -118,7 +118,7 @@ public class SymmetryTools {
 						if ( i1-k >= 0) {
 							double resetVal = getResetVal(max.get(i1-k, i1-k), 0, gradientPolyCoeff, gradientExpCoeff);
 							dist1[i1-k][i1-k] = resetVal;
-						} else if ( i1+k < rows) { // Why else? -SB
+						} else if ( i1+k < rows) {
 							double resetVal = getResetVal(max.get(i1+k, i1+k), 0, gradientPolyCoeff, gradientExpCoeff);
 							dist1[i1+k][i1+k] = resetVal;
 						}

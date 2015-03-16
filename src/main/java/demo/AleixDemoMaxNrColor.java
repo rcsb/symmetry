@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureIO;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
@@ -32,7 +33,7 @@ public class AleixDemoMaxNrColor {
 		String name = "1JTD.B";
 		
 		//Set the order of symmetry of the protein
-		int order = 5;
+		int order = 8;
 
 		try {
 			
@@ -44,7 +45,7 @@ public class AleixDemoMaxNrColor {
 			AFPChain[] afpAlignments= new AFPChain[order-1];
 			
 			//Iterate for every possible rotation number of the molecule (order) and obtain the AFPchain
-			int i = 1;
+			int i = order-1;
 			while (i<order) {
 				
 				//Initialize a new CeSymm class and its parameters and a new alignment class
@@ -54,6 +55,7 @@ public class AleixDemoMaxNrColor {
 				
 				//Set the number of alternatives (blackouts) for this iteration
 				params.setMaxNrAlternatives(i);
+				//params.setMaxNrIterationsForOptimization(0);
 				
 				//Perform the alignment and store it in allAlignments
 				afpChain = ceSymm.align(ca1, ca2, params);
@@ -61,16 +63,24 @@ public class AleixDemoMaxNrColor {
 				afpChain.setName2(name);
 				System.out.println(afpChain.getOptLength());
 				afpAlignments[i-1] = afpChain;
+				
+				//Display the AFP alignment of the subunits
+				StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+				
+				//Set the rotation axis of the symmetry
+				RotationAxis axis = new RotationAxis(afpChain);
+				jmolPanel.evalString(axis.getJmolScript(ca1));
+				
 				i++;
 			}
-			
+			/*
 			//Get the atom numbers (start and end) for each subunit
 			int[] afpResidues = new int[order]; //array containing the atom indices
 			afpResidues[0] = ca1[0].getPDBserial();
 			System.out.println(ca1.length);
 			System.out.println(ca2.length);
 					
-			for (int k=0; k<order-1; k++){
+			for (int k=0; k<afpAlignments.length; k++){
 				int n = afpAlignments[k].getOptAln()[0][0].length;
 				afpResidues[k+1] = ca1[afpAlignments[k].getOptAln()[0][0][n-1]].getPDBserial();
 				System.out.println(afpResidues[k+1]);
@@ -92,11 +102,8 @@ public class AleixDemoMaxNrColor {
 				int colorb = (200-(k+1)*(200/(order)));
 				int colorg = ((k+1)*(200/(order-1)));
 				jmol.evalString("select atomno >= "+afpResidues[k]+" and atomno <= "+afpResidues[k+1]+"; color [0,"+colorg+","+colorb+"]");
-			}
-						
-			//Set the rotation axis of the symmetry
-			RotationAxis axis = new RotationAxis(afpAlignments[0]);
-			jmol.evalString(axis.getJmolScript(ca1));
+			}*/
+		
 			
 		} catch (Exception e){
 			e.printStackTrace();

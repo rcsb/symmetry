@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JFrame;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.StructureException;
@@ -14,15 +16,16 @@ import org.biojava.nbio.structure.align.ce.CECalculator;
 import org.biojava.nbio.structure.align.ce.CeCPMain;
 import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.ce.MatrixListener;
+import org.biojava.nbio.structure.align.gui.DotPlotPanel;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.util.AFPChainScorer;
-import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.align.util.RotationAxis;
-import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
+import org.biojava.nbio.structure.align.util.AFPChainScorer;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
@@ -147,7 +150,32 @@ public class CeSymm extends AbstractStructureAlignment implements
 		calculator.setMatMatrix(clone.getArray());
 
 		calculator.traceFragmentMatrix(afpChain, ca1, ca2clone);
+		
+		final Matrix origMfinal = (Matrix) origM.clone();
+		//Add a matrix listener to keep the blacked zones in max.
+		calculator.addMatrixListener(new MatrixListener() {
 
+			@Override
+			public double[][] matrixInOptimizer(double[][] max) {
+				
+				//Check every entry of origM for blacked out regions
+				for (int i=0; i<max.length; i++){
+					for (int j=0; j<max[i].length; j++){
+						if (origMfinal.getArray()[i][j]>1e9){
+							max[i][j] = -origMfinal.getArray()[i][j];
+						}
+					}
+				}
+				return max;
+			}
+
+			@Override
+			public boolean[][] initializeBreakFlag(boolean[][] brkFlag) {
+				
+				return brkFlag;
+			}
+		});
+		
 		calculator.nextStep(afpChain, ca1, ca2clone);
 		//System.out.println("origM: next step correct...");
 
@@ -226,6 +254,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 		int i = 0;
 
 		while ((afpChain == null) && i < params.getMaxNrAlternatives()) {
+			
+			System.out.print(">>>> Alignment number: "+i);
 
 			if (origM != null) {
 				myAFP.setDistanceMatrix((Matrix) origM.clone());
@@ -348,7 +378,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 	/**
 	 * New method that creates a multiple block AFP alignment corresponding to the subunits of symmetry.
-	 * Guesses the order of symmetry by detecting a drop in the alignment length of 10% (and score to implement).
+	 * Guesses the order of symmetry by detecting a drop in the alignment length or TM score of 10%.
 	 * 
 	 * @author Aleix Lafita
 	 * 
@@ -376,7 +406,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 		AFPChain myAFP = new AFPChain();
 		List<AFPChain> allAlignments = new ArrayList<AFPChain>();
 
-		Integer OptAlgnLen = null;
+		int optAlgnLen = 0;
+		double optTMscore = 0;
 		
 		int i = 1;
 
@@ -403,18 +434,24 @@ public class CeSymm extends AbstractStructureAlignment implements
 				allAlignments.add(newAFP);
 			}
 			
-			//NEEDED...?
+			//Calculate and set the TM score fot the newAFP alignment before adding it to the list
 			double tmScore3 = AFPChainScorer.getTMScore(newAFP, ca1, ca2);
 			newAFP.setTMScore(tmScore3);
 			
+			//Print alignment length and TM score of the current alignment
+			System.out.println("Alignment "+i+" length: "+newAFP.getOptLength());
+			System.out.println("Alignment "+i+" score: "+newAFP.getTMScore());
+			
 			//If it is the first alignment set the optimal length
-			if (OptAlgnLen==null){
-				OptAlgnLen = newAFP.getOptLength();
+			if (i==1){
+				optAlgnLen = newAFP.getOptLength();
+				optTMscore = newAFP.getTMScore();
 			}
 			//If not check for a drop in the alignment length and break the loop
-			else if (newAFP.getOptLength() < (OptAlgnLen-OptAlgnLen/10)){
+			else if (newAFP.getOptLength() < (optAlgnLen-optAlgnLen/2) || newAFP.getTMScore() < (optTMscore-optTMscore/2)){
 				System.out.println("Order of symmetry detected: "+i);
-				System.out.println("Optimal alignment length: "+OptAlgnLen+", Last alignment length: "+newAFP.getOptLength());
+				System.out.println("Optimal alignment length: "+optAlgnLen+", Last alignment length: "+newAFP.getOptLength());
+				System.out.println("Optimal alignment TM score: "+optTMscore+", Last alignment TM score: "+newAFP.getTMScore());
 				break;
 			}
 			//Add the alignment to the allAlignments list otherwise

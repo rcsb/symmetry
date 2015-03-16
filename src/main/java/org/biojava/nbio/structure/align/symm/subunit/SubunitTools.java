@@ -1,6 +1,7 @@
 package org.biojava.nbio.structure.align.symm.subunit;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
@@ -8,9 +9,12 @@ import java.util.Stack;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AFPAlignmentDisplay;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
  * Methods to process AFPChain multiple alignments and analyze the symmetrical subunits generated.
@@ -223,28 +227,84 @@ public class SubunitTools {
 	}
 	
 	/**
-	 * Method that displays two or all of the superimposed subunits in jmol. In construction...
+	 * Method that displays two superimposed subunits in jmol.
 	 * 
-	 * INPUT: a list of subunits and a list of AFP alignments.
-	 * OUTPUT: a list of residue blocks representing each subunit.
-	 * ALGORITHM: It extracts the subunit intervals from the alignments and then includes as part of every subunit only the 
-	 *            residues that are present in all the alignments that contain that subunit.
+	 * INPUT: an AFP alignment and the protein data.
+	 * OUTPUT: a jmol panel with only one subunit superimposed.
 	 */
-	public static void displaySuperimposedSubunits(ArrayList<ArrayList<Integer>> subunits, ArrayList<AFPChain> allAlignments){
+	public static void displaySuperimposedSubunits(AFPChain afpChain, String name, Atom[] ca1, Atom[] ca2){
 		
-		//TODO
+		//Create the atom arrays corresponding to the first and second subunits only
+		Atom[] ca1block = new Atom[afpChain.getOptLen()[0]];
+		Atom[] ca2block = new Atom[afpChain.getOptLen()[0]];
+		ca1block = Arrays.copyOfRange(ca1, 0, afpChain.getOptAln()[0][0][afpChain.getOptAln()[0][0].length-1]+1);
+		ca2block = Arrays.copyOfRange(ca2, 0, afpChain.getOptAln()[0][1][afpChain.getOptAln()[0][1].length-1]+1);
+		
+		//Modify the optimal alignment to include only one subunit (block)
+		AFPChain displayAFP = (AFPChain) afpChain.clone();
+		int[][][] optAln = new int[1][2][displayAFP.getOptLen()[0]];
+		int[][] block1 = displayAFP.getOptAln()[0];
+		optAln[0] = block1;
+		int[] optLens = new int[1];
+		optLens[0]=optAln[0][0].length;
+		
+		//Modify the AFP chain to adapt the new optimal alignment of two subunits.
+		try {
+			displayAFP = SubunitTools.createOptAln(optAln, displayAFP, ca1block, ca2block);
+		} catch (StructureException e1) {
+			e1.printStackTrace();
+		}
+		
+		//Another array to display is created only with the residues of the second subunit, because all (first and second, are needed to superimpose, but only the second is relevant in the alignment)
+		//DOES NOT WORK, because the second subunit is not colored
+		//Atom[] ca2blockDisplay = Arrays.copyOfRange(ca2, afpChain.getOptAln()[0][1][0], afpChain.getOptAln()[0][1][afpChain.getOptAln()[0][1].length-1]+1);
+
+		//Set the name of the protein
+		displayAFP.setName1(name+" su1");
+		displayAFP.setName2(name+" su2");
+		
+		try {
+			
+			//Display the AFP alignment of the subunits
+			StructureAlignmentJmol jmolPanel;
+			jmolPanel = StructureAlignmentDisplay.display(displayAFP, ca1block, ca2block);
+			jmolPanel.evalString("select *; backbone off; cartoon on; model 1; hide ligand; center;");
+			
+			/*	
+			//Set the rotation axis of the symmetry
+			RotationAxis axis = new RotationAxis(displayAFP);
+			jmolPanel.evalString(axis.getJmolScript(ca1));*/
+			
+		} catch (StructureException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
-	 * Method that displays the optimal structural alignment and colors each subunit differently in jmol. In construction...
+	 * Method that displays the structural alignment with each subunit colored differently.
 	 * 
-	 * INPUT: a list of AFP
-	 * OUTPUT: a list of residue blocks representing each subunit.
-	 * ALGORITHM: It displays the protein with jmol and colors the subunit residues using jmol commands.
+	 * INPUT: an AFP alignment and the protein data.
+	 * OUTPUT: displays the protein alignment with jmol coloring the subunit residues.
 	 */
-	public static void displayColorSubunits(ArrayList<ArrayList<Integer>> subunits, String name){
+	public static void displayColorSubunits(AFPChain afpChain, String name, Atom[] ca1, Atom[] ca2){
 		
-		//TODO
+		//Set the name of the protein
+		afpChain.setName1(name);
+		afpChain.setName2(name);
+		
+		try {
+			
+			//Display the AFP alignment of the subunits
+			StructureAlignmentJmol jmolPanel;
+			jmolPanel = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+				
+			//Set the rotation axis of the symmetry
+			RotationAxis axis = new RotationAxis(afpChain);
+			jmolPanel.evalString(axis.getJmolScript(ca1));
+			
+		} catch (StructureException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -334,6 +394,58 @@ public class SubunitTools {
 		AFPAlignmentDisplay.getAlign(refinedAFP, ca1, ca1);
 				
 		return refinedAFP;
+	}
+	
+	/**
+	 * It returns an AFPChain with a segmented optimal alignment, which means that it has <order of symmetry> blocks of
+	 * aligned subunits. The original AFPChain is not modified.
+	 * 
+	 * INPUT: the optimal alignment in a triple list (same format as optAln of AFPChain) and the Atom[] arrays.
+	 * OUTPUT: the optimal AFPChain alignment object divided into the subunits.
+	 */
+	public static AFPChain createOptAln(int[][][] newAlgn, AFPChain afpChain, Atom[] ca1, Atom[] ca2) throws StructureException {
+		
+		//The order is the number of groups in the newAlgn
+		int order = newAlgn.length;
+		
+		//Calculate the alignment length from all the subunits lengths
+		int[] optLens = new int[order];
+		for(int s=0;s<order;s++) {
+			optLens[s] = newAlgn[s][0].length;
+		}
+		int optLength = 0;
+		for(int s=0;s<order;s++) {
+			optLength += optLens[s];
+		}
+				
+		//Temporal: print the sizes to check correctness
+		System.out.println("Number of subunits: "+newAlgn.length);
+		System.out.println("Subunit length: "+newAlgn[0][0].length);
+		
+		//Create a copy of the original AFPChain and set everything needed for the structure update
+		AFPChain copyAFP = (AFPChain) afpChain.clone();
+		
+		//Set the new parameters of the optimal alignment
+		copyAFP.setOptLength(optLength);
+		copyAFP.setOptLen(optLens);
+		copyAFP.setOptAln(newAlgn);
+		
+		//Set the block information of the new alignment
+		copyAFP.setBlockNum(order);
+		copyAFP.setBlockSize(optLens);
+		copyAFP.setBlockResList(newAlgn);
+		copyAFP.setBlockResSize(optLens);
+		copyAFP.setBlockGap(createBlockGap(newAlgn));
+		
+		//Recalculate properties: superposition, tm-score, etc
+		Atom[] ca2clone = StructureTools.cloneCAArray(ca2); // don't modify ca1 positions
+		AlignmentTools.updateSuperposition(copyAFP, ca1, ca2clone);
+		
+		//It re-does the sequence alignment strings from the OptAlgn information only
+		copyAFP.setAlnsymb(null);
+		AFPAlignmentDisplay.getAlign(copyAFP, ca1, ca2clone);
+		
+		return copyAFP;
 	}
 	
 	/**
@@ -615,15 +727,16 @@ public class SubunitTools {
 					/*for (int e=0; e<group.size(); e++){
 						System.out.println(group.get(e));
 					}*/
-					//Check that the residues are inside its subunit intervals boundaries (Needed to avoid discontinuos regions)
+					/*
+					//Check that the residues are inside its subunit intervals boundaries (Needed to avoid discontinuous regions)
 					for (int e=1; e<group.size()+1; e++){
-						if (!((group.get(e-1)>=intervals.get(2*e-2)) && (group.get(e-1)<=intervals.get(2*e-1))) && correct){
-							//System.out.println("Inconsistent group: not inside interval boundaries...");
-							//System.out.println("Residue "+group.get(e-1)+" not in the interval ["+intervals.get(2*e-2)+", "+intervals.get(2*e-1)+"]");
+						if (!((group.get(e-1)>=intervals.get(2*e-2)) && (group.get(e-1)<=intervals.get(2*e))) && correct){
+							System.out.println("Inconsistent group: not inside interval boundaries...");
+							System.out.println("Residue "+group.get(e-1)+" not in the interval ["+intervals.get(2*e-2)+", "+intervals.get(2*e-1)+"]");
 							correct = false;
 							break;
 						}
-					}
+					}*/
 					//Find the insertion index of the group in the groups list and check that all other residues are consistent
 					int index = 0;
 					for (int k=1; k<groups.size(); k++){

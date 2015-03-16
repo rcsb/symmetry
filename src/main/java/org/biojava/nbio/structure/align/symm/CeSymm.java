@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JFrame;
-
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.StructureException;
@@ -16,7 +14,6 @@ import org.biojava.nbio.structure.align.ce.CECalculator;
 import org.biojava.nbio.structure.align.ce.CeCPMain;
 import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.ce.MatrixListener;
-import org.biojava.nbio.structure.align.gui.DotPlotPanel;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
@@ -34,7 +31,7 @@ import org.biojava.nbio.structure.utils.SymmetryTools;
  * 
  * @author andreas
  * 
- * Modified Aleix Lafita: 09.03.2015
+ * Modified Aleix Lafita: 16.03.2015
  * 
  */
 public class CeSymm extends AbstractStructureAlignment implements
@@ -255,7 +252,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 		while ((afpChain == null) && i < params.getMaxNrAlternatives()) {
 			
-			System.out.print(">>>> Alignment number: "+i);
+			//System.out.print(">>>> Alignment number: "+i);
 
 			if (origM != null) {
 				myAFP.setDistanceMatrix((Matrix) origM.clone());
@@ -461,7 +458,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 			i++;
 		}
 		
-		System.out.println("CeSymm align completed...");
+		System.out.println("CeSymm multiple alignment completed...");
 		
 		afpChain = SubunitTools.refinedAFP(allAlignments, ca1);
 		return afpChain;
@@ -473,7 +470,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		if (params == null)
 			params = new CESymmParameters();
 			//The maximum order of symmetry known is 8, but can be set to any value.
-			params.setMaxNrAlternatives(8);
+			params.setMaxNrAlternatives(15);
 
 		return alignMultiple(ca1, ca2, params);
 	}

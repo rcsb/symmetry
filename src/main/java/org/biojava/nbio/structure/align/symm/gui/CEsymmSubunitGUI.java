@@ -31,25 +31,24 @@ import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
 
 /**
  * Displays the alignment of the protein with the refined optimal alignment with the subunit blocks.
  * 
  * Tried and worked for:
- * 		- order 2: 2J5A, 3HDP, 4HHB, 1SQU.A, 2F9H.A, 3DDV.A, 4FI3.F, 1H9M.A, 1MP9.A, 1TL2, 1AIN, 1VYM.A, 4HPL.A, 1UBI, 1GUA.B
- * 		- order 3: 4DOU, 1VYM, 2AFG.A, 1HCE, 1TIE
- *   	- order 4: 
- *  	- order 5: 1G61.A, 
+ * 		- order 2: 2J5A, 3HDP, 4HHB, 1SQU.A, 2F9H.A, 3DDV.A, 4FI3.F, 1H9M.A, 1MP9.A, 1AIN, 1VYM.A, 4HPL.A, 1UBI, 1GUA.B, 1BA2.A
+ * 		- order 3: 4DOU, 1VYM, 2AFG.A, 1HCE, 1TIE, 4I4Q
+ *   	- order 4: 1GEN, 1HXN
+ *  	- order 5: 1G61.A, 1TL2.A
  *  	- order 6: 1U6D, 
- *      - order 7: 1JOF.A, 1JTD.B, 2I5I.A
- *      - order 8: 1TIM.A, 1VZW
- *      - helical: 1B3U.A, 1EZG.A, 1DFJ.I, 1AWC.B
+ *      - order 7: 1JOF.A, 1JTD.B, 2I5I.A, 1K3I.A, 1JV2.A, 1GOT.B, 1A12.A, 
+ *      - order 8: 1TIM.A, 1VZW, 1NSJ
+ *      - helical: 1B3U.A, 1EZG.A, 1DFJ.I, 1AWC.B, 1D0B.A
  *      - unknown: 1WD3, 1Z7X, 1DCE,
  *  	
- * Did not work for:  2FEE (takes long)
- *                    1VYM.A (buggy rotation axis)
- *                    1DCE (takes long)
- *                    1QIU (takes long)
+ * Did not work for:  1VYM.A (buggy rotation axis)
+ *                    
  *                  
  * BUGS:   1*- For the 1JTD.B structure, the blackout is not done properly in the last alignment and the alignment is made
  *            over a black area, that is why the order of symmetry is incorrectly determined to 8 instead of 7. To reproduce
@@ -74,29 +73,29 @@ import org.biojava.nbio.structure.align.symm.CeSymm;
  *         9- For small proteins, the TM score is very low even for the first alignment, which results to incorrectly determine the 
  *            order (higher than it is). This could be fixed by determining a threshold that considers the length of the protein.
  *            Examples: 1GUA.B, 1UBI.
- *        10- 
+ *        10- From the alignment panel, an error is thrown because a position cannot be matched. Example: 1A12.A
  *         
  *         * Solved!
  *                    
  *  
  * @author Aleix Lafita
  * 
- * Last modified: 10.03.2015
+ * Last modified: 16.03.2015
  *
  */
 public class CEsymmSubunitGUI {
 	public static void main(String[] args) throws Exception{
 		
 		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "1H9M.A", "2AFG.A", "4DOU", "1VYM", "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TIM.A"};
-		String[] names = {"1JTD.B"};
+		String[] names = {"4DOU"};
+		
 		for (int i=0; i<names.length; i++){
-		//Set the name of the protein structure to analyze
-		System.out.println("Analyzing protein "+names[i]);
-		AtomCache cache = new AtomCache();
-		String name = names[i];
-
-		try {
 			
+			//Set the name of the protein structure to analyze
+			System.out.println("Analyzing protein "+names[i]);
+			AtomCache cache = new AtomCache();
+			String name = names[i];
+
 			//Parse atoms of the protein into two DS
 			Atom[] ca1 = cache.getAtoms(name); 
 			Atom[] ca2 = cache.getAtoms(name);
@@ -107,27 +106,19 @@ public class CEsymmSubunitGUI {
 			CeSymm ceSymm = new CeSymm();
 			AFPChain afpChain = new AFPChain();
 			
+			/*
 			//Set the maximum number of iterations for the cases where the order detection fails
-			//int order = 8;
-			//CESymmParameters params = new CESymmParameters();
-			//params.setMaxNrAlternatives(order);
+			int order = 2;
+			CESymmParameters params = new CESymmParameters();
+			params.setMaxNrAlternatives(order);*/
 			
 			//Perform the alignment and store
 			afpChain = ceSymm.alignMultiple(ca1, ca2);
-			afpChain.setName1(name);
-			afpChain.setName2(name);
 			
-			//Display the AFP alignment of the subunits
-			StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
-			
-			//Set the rotation axis of the symmetry
-			RotationAxis axis = new RotationAxis(afpChain);
-			jmolPanel.evalString(axis.getJmolScript(ca1));
-			
-		} catch (Exception e){
-			e.printStackTrace();
+			SubunitTools.displayColorSubunits(afpChain, name, ca1, ca2);
+			SubunitTools.displaySuperimposedSubunits(afpChain, name, ca1, ca2);
+
 		}
-	}
 	}
 	
 }

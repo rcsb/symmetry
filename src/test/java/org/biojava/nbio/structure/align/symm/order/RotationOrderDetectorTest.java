@@ -386,13 +386,61 @@ public class RotationOrderDetectorTest {
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleCuspBySSE(ca1, axis);
-		expectedHarmonics = new double[] { 
-				0.4411113, 0.1688462, 0.4289372, 0.436751,
-				0.4336008, 0.4358288, 0.4358056, 0.4384935
+		expectedHarmonics = new double[] {
+				0.4023477, 0.1620938, 0.3740037, 0.3923604,
+				0.3973309, 0.4011318, 0.4041583, 0.4054583
 		};
 
 		assertArrayEquals(name,expectedHarmonics,coefs,1e-4);
 
+	}
+	@Test
+	public void testTrySingleCuspFixedByAmp() throws IOException, StructureException {
+		String name;
+
+		// Perform alignment to determine axis
+		Atom[] ca1, ca2;
+		AFPChain alignment;
+		RotationAxis axis;
+		double[] coefs,expectedHarmonics;
+
+		name = "1MER.A";
+		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneCAArray(ca1);
+		alignment = ce.align(ca1, ca2);
+		axis = new RotationAxis(alignment);
+
+		coefs = detector.trySingleCuspFixedByAmp(ca1, axis);
+		expectedHarmonics = new double[] {
+				0.1287134, 1.030371, -0.5324238, -0.4618442,
+				-0.5114463, -0.4755183, -0.4395435, -0.3174656
+		};
+
+		assertArrayEquals(name,expectedHarmonics,coefs,1e-4);
+	}
+	@Test
+	public void testTrySingleCuspFixedBySSE() throws IOException, StructureException {
+		String name;
+
+		// Perform alignment to determine axis
+		Atom[] ca1, ca2;
+		AFPChain alignment;
+		RotationAxis axis;
+		double[] coefs,expectedHarmonics;
+
+		name = "1MER.A";
+		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneCAArray(ca1);
+		alignment = ce.align(ca1, ca2);
+		axis = new RotationAxis(alignment);
+
+		coefs = detector.trySingleCuspFixedBySSE(ca1, axis);
+		expectedHarmonics = new double[] {
+				0.4023477, 0.1485084, 0.3794772, 0.3946517,
+				0.3969921, 0.4006527, 0.4033445, 0.4056923,
+		};
+
+		assertArrayEquals(name,expectedHarmonics,coefs,1e-2);
 	}
 
 }

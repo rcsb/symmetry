@@ -11,6 +11,8 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.jama.Matrix;
 
+import static java.lang.Math.*;
+
 /**
  * Detects order by analyzing the goodness of fit as the protein is rotated
  * around the axis of symmetry.
@@ -23,7 +25,9 @@ public class RotationOrderDetector implements OrderDetector {
 		SINGLE_HARMONIC_AMP,
 		SINGLE_HARMONIC_SSE,
 		SINGLE_CUSP_AMP,
-		SINGLE_CUSP_SSE
+		SINGLE_CUSP_SSE,
+		SINGLE_CUSP_FIXED_AMP,
+		SINGLE_CUSP_FIXED_SSE,
 	}
 
 	private int maxOrder;
@@ -45,6 +49,7 @@ public class RotationOrderDetector implements OrderDetector {
 		this.method= method;
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getSimpleName()+"[method="+method+",maxOrder="+maxOrder+"]";
 	}
@@ -85,8 +90,13 @@ public class RotationOrderDetector implements OrderDetector {
 		case SINGLE_CUSP_AMP:
 			return calculateOrderSingleCuspByAmp(afpChain,ca);
 		case SINGLE_CUSP_SSE:
-		default:
 			return calculateOrderSingleCuspBySSE(afpChain,ca);
+		case SINGLE_CUSP_FIXED_AMP:
+			return calculateOrderSingleCuspFixedByAmp(afpChain,ca);
+		case SINGLE_CUSP_FIXED_SSE:
+			return calculateOrderSingleCuspFixedBySSE(afpChain,ca);
+		default:
+			throw new UnsupportedOperationException("Unimplemented method "+method);
 		}
 	}
 
@@ -292,6 +302,64 @@ public class RotationOrderDetector implements OrderDetector {
 			throw new OrderDetectionFailedException(e);
 		}
 	}
+	int calculateOrderSingleCuspFixedByAmp(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+
+		try {
+
+			RotationAxis axis = new RotationAxis(afpChain);
+
+			// Use C1 order if the axis is undefined
+			if(!axis.isDefined()) {
+				return 1;
+			}
+			// Calculate weights for each order
+			double[] coefficients = trySingleCuspFixedByAmp(ca,axis);
+
+			// Find order with maximum weight
+			// ignore initial intercept term
+			double bestScore = coefficients[0];
+			int maxorder = 1;
+			for(int order=2;order<coefficients.length;order++) {
+				if(coefficients[order-1] > bestScore ) {
+					maxorder = order;
+					bestScore = coefficients[order-1];
+				}
+			}
+			return maxorder;
+
+		} catch (Exception e) {
+			throw new OrderDetectionFailedException(e);
+		}
+	}
+	int calculateOrderSingleCuspFixedBySSE(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+
+		try {
+
+			RotationAxis axis = new RotationAxis(afpChain);
+
+			// Use C1 order if the axis is undefined
+			if(!axis.isDefined()) {
+				return 1;
+			}
+			// Calculate weights for each order
+			double[] coefficients = trySingleCuspFixedBySSE(ca,axis);
+
+			// Find order with maximum weight
+			// ignore initial intercept term
+			double bestScore = coefficients[0];
+			int maxorder = 1;
+			for(int order=2;order<coefficients.length;order++) {
+				if(coefficients[order-1] < bestScore ) {
+					maxorder = order;
+					bestScore = coefficients[order-1];
+				}
+			}
+			return maxorder;
+
+		} catch (Exception e) {
+			throw new OrderDetectionFailedException(e);
+		}
+	}
 	/**
 	 * Provide a rough alignment-free metric for the similarity between two
 	 * superimposed structures.
@@ -411,7 +479,7 @@ public class RotationOrderDetector implements OrderDetector {
 	 */
 	double[] fitHarmonicsFloating(Atom[] ca, RotationAxis axis) throws StructureException {
 		// Range of angles to use for training
-		final double minAngle = Math.floor(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
+		final double minAngle = Math.ceil(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
 		final double maxAngle = Math.PI;
 		// Number of angle steps
 		final int steps = (int)Math.floor((maxAngle-minAngle)/angleIncr);
@@ -478,7 +546,7 @@ public class RotationOrderDetector implements OrderDetector {
 	 */
 	double[] trySingleHarmonicsFloatingByAmp(Atom[] ca, RotationAxis axis) throws StructureException {
 		// Range of angles to use for training
-		final double minAngle = Math.floor(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
+		final double minAngle = Math.ceil(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
 		final double maxAngle = Math.PI;
 		// Number of angle steps
 		final int steps = (int)Math.floor((maxAngle-minAngle)/angleIncr);
@@ -549,7 +617,7 @@ public class RotationOrderDetector implements OrderDetector {
 
 	double[] trySingleHarmonicsFloatingBySSE(Atom[] ca, RotationAxis axis) throws StructureException {
 		// Range of angles to use for training
-		final double minAngle = Math.floor(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
+		final double minAngle = Math.ceil(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
 		final double maxAngle = Math.PI;
 		// Number of angle steps
 		final int steps = (int)Math.floor((maxAngle-minAngle)/angleIncr);
@@ -613,7 +681,7 @@ public class RotationOrderDetector implements OrderDetector {
 	}
 	double[] trySingleCuspByAmp(Atom[] ca, RotationAxis axis) throws StructureException {
 		// Range of angles to use for training
-		final double minAngle = Math.floor(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
+		final double minAngle = Math.ceil(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
 		final double maxAngle = Math.PI;
 		// Number of angle steps
 		final int steps = (int)Math.floor((maxAngle-minAngle)/angleIncr);
@@ -672,7 +740,7 @@ public class RotationOrderDetector implements OrderDetector {
 	}
 	double[] trySingleCuspBySSE(Atom[] ca, RotationAxis axis) throws StructureException {
 		// Range of angles to use for training
-		final double minAngle = Math.floor(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
+		final double minAngle = Math.ceil(Math.PI/maxOrder/angleIncr)*angleIncr; // first valid peak
 		final double maxAngle = Math.PI;
 		// Number of angle steps
 		final int steps = (int)Math.floor((maxAngle-minAngle)/angleIncr);
@@ -708,7 +776,7 @@ public class RotationOrderDetector implements OrderDetector {
 				//order-dependent column
 				double angle = minAngle+angleIncr*step;
 				double x = Math.sqrt( 1 - Math.cos(order*angle) );
-				harmonics[step][1] = x*x;
+				harmonics[step][1] = x;
 			}
 
 			Matrix y = new Matrix(distances);
@@ -734,4 +802,151 @@ public class RotationOrderDetector implements OrderDetector {
 
 		return sses;
 	}
+	
+	double[] trySingleCuspFixedByAmp(Atom[] ca, RotationAxis axis) throws StructureException {
+		// Range of angles to use for training
+		final double minAngle = ceil(PI/maxOrder/angleIncr)*angleIncr; // first valid peak
+		final double maxAngle = PI;
+		// Number of angle steps
+		final int steps = (int)floor((maxAngle-minAngle)/angleIncr);
+
+		// Fit (angle,distance) points to the following equation
+		// f(angle) = a0 + a1*f(x,1) + a2*f(x,2) +...+ aN*f(k,maxorder)
+		// goal is to find a_1...a_maxOrder
+
+		double[][] distances = new double[steps][1];//preserve matrix dimensions
+		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		if(minAngle != 0.) {
+			axis.rotate(ca2, minAngle);
+		}
+		for (int step=0; step<steps;step++) {
+			double dist = superpositionDistance(ca, ca2);
+			distances[step][0] = dist;
+			// Rotate for next step
+			axis.rotate(ca2, angleIncr);
+		}
+
+		double[] amplitudes = new double[maxOrder];
+
+//		System.out.print("Angle\t");
+//		for( int step=0;step<steps;step++) {
+//			double angle = minAngle+angleIncr*step;
+//			System.out.print(angle+"\t");
+//		}
+//		System.out.println();
+//		System.out.print("Distance\t");
+//		for( int step=0;step<steps;step++) {
+//			System.out.print(distances[step][0]+"\t");
+//		}
+//		System.out.println();
+		
+		for( int order=1;order <= maxOrder; order++) {
+
+			// holds the f(x,k) terms
+			double[][] harmonics = new double[steps][2];
+
+			for (int step=0; step<steps;step++) {
+
+				//initialize intercept column
+				harmonics[step][0] = 1.;
+
+				//order-dependent column
+				double angle = minAngle+angleIncr*step;
+				double triangleX = abs( abs(order*angle/2/PI-.5)%1 - .5);
+				double x = sqrt( 2 - 2*cos(2*PI/order*triangleX) );
+				harmonics[step][1] = x;
+			}
+
+			Matrix y = new Matrix(distances);
+			Matrix M = new Matrix(harmonics);
+
+			Matrix A = M.transpose().times(M).times(2);
+			Matrix b = M.transpose().times(y).times(2);
+			//Matrix c = y.transpose().times(y);
+
+			// f(x) = x'Ax/2-bx+c
+			// f'(x) = Ax-b = 0
+			// Ax = b
+
+			Matrix harmonicWeights = A.solve(b);
+
+			Matrix predictions = M.times(harmonicWeights);
+//			System.out.print("C"+order+"\t");
+//			for( int step=0;step<steps;step++) {
+//				System.out.print(predictions.get(step, 0)+"\t");
+//			}
+//			System.out.println();
+
+			amplitudes[order-1] = harmonicWeights.get(1, 0);
+		}
+
+		return amplitudes;
+	}
+	double[] trySingleCuspFixedBySSE(Atom[] ca, RotationAxis axis) throws StructureException {
+		// Range of angles to use for training
+		final double minAngle = ceil(PI/maxOrder/angleIncr)*angleIncr; // first valid peak
+		final double maxAngle = PI;
+		// Number of angle steps
+		final int steps = (int)floor((maxAngle-minAngle)/angleIncr);
+
+		// Fit (angle,distance) points to the following equation
+		// f(angle) = a0 + a1*sin^2(1*angle/2) + a2*sin^2(2*angle/2) +...+ a*sin2(maxOrder*angle/2)
+		// goal is to find a_1...a_maxOrder
+
+		double[][] distances = new double[steps][1];//preserve matrix dimensions
+		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		if(minAngle != 0.) {
+			axis.rotate(ca2, minAngle);
+		}
+		for (int step=0; step<steps;step++) {
+			double dist = superpositionDistance(ca, ca2);
+			distances[step][0] = dist;
+			// Rotate for next step
+			axis.rotate(ca2, angleIncr);
+		}
+
+		double[] sses = new double[maxOrder];
+
+		for( int order=1;order <= maxOrder; order++) {
+
+			// holds the sin2(i*angle/2) terms
+			double[][] harmonics = new double[steps][2];
+
+			for (int step=0; step<steps;step++) {
+
+				//initialize intercept column
+				harmonics[step][0] = 1.;
+
+				//order-dependent column
+				double angle = minAngle+angleIncr*step;
+				double triangleX = abs( abs(order*angle/2/PI-.5)%1 - .5);
+				double x = sqrt( 2 - 2*cos(2*PI/order*triangleX) );
+				harmonics[step][1] = x;
+			}
+
+			Matrix y = new Matrix(distances);
+			Matrix M = new Matrix(harmonics);
+
+			Matrix A = M.transpose().times(M).times(2);
+			Matrix b = M.transpose().times(y).times(2);
+			//Matrix c = y.transpose().times(y);
+
+			// f(x) = x'Ax/2-bx+c
+			// f'(x) = Ax-b = 0
+			// Ax = b
+
+			Matrix harmonicWeights = A.solve(b);
+
+			Matrix predictions = M.times(harmonicWeights);
+			
+			predictions.minusEquals(y);//errors
+			Matrix sse = predictions.transpose().times(predictions);
+
+			// Calculate RSSE (could save some arithmetic, but this is easier to compare)
+			sses[order-1] = sqrt(sse.get(0, 0)/steps);
+		}
+
+		return sses;
+	}
+
 }

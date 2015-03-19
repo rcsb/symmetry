@@ -19,7 +19,7 @@ public class PeakCountingOrderDetector implements OrderDetector {
 	private static final Logger logger = LoggerFactory.getLogger(PeakCountingOrderDetector.class);
 
 	private int maxOrder = 9;
-	private double degreeSampling = 0.01;
+	private double degreeSampling = 1;
 	private double epsilon = 0.000001;
 	private double bandwidth = 0.1;
 	private int robustnessIterations = LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS;

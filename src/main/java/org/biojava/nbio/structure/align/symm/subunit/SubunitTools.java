@@ -1,5 +1,7 @@
 package org.biojava.nbio.structure.align.symm.subunit;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,6 +9,7 @@ import java.util.List;
 import java.util.Stack;
 
 import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
@@ -417,8 +420,8 @@ public class SubunitTools {
 		for(int s=0;s<order;s++) {
 			optLength += optLens[s];
 		}
-				
-		//Temporal: print the sizes to check correctness
+		
+		//Print the sizes to check correctness
 		System.out.println("Number of subunits: "+newAlgn.length);
 		System.out.println("Subunit length: "+newAlgn[0][0].length);
 		
@@ -481,7 +484,7 @@ public class SubunitTools {
 			}
 		}
 		
-		//Temporal: print the sizes to check correctness
+		//Print the sizes to check correctness
 		System.out.println("Number of subunits: "+optAlgn.length);
 		System.out.println("Subunit length: "+optAlgn[0][0].length);
 		
@@ -539,28 +542,71 @@ public class SubunitTools {
 				if (!adjList.get(vertex).contains(edge)){
 					adjList.get(vertex).add(edge);
 				}
-				//Make the graph undirected (optional feature)
+				/*//Make the graph undirected (optional feature)
 				if (!adjList.get(edge).contains(vertex)){
 					adjList.get(edge).add(vertex);
-				}
+				}*/
 			}
 		}
 		//Print graph information
 		System.out.println("GRAPH INFORMATION:");
 		System.out.println(" - Vertices: "+adjList.size());
 		int edges = 0;
-		int count = 0;
 		for (List<Integer> v:adjList){
 			edges+=v.size();
-			//Count residues with order-1 edges (connected consistently in all the alignments)
-			if (v.size()==allAlignments.size()){
-				count++;
-			}
 		}
 		System.out.println(" - Edges: "+edges);
-		System.out.println(" - Consistent connected residues: "+count+" out of "+adjList.size());
+		//System.out.println(" - Consistent connected residues: "+count+" out of "+adjList.size());
+		
+		//Store the graph as a csv file to analyze it graphically
+		//generateCsvFile(adjList, "unknown_dir");
 		
 		return adjList;
+	}
+	
+	/**
+	 * Calculates a weighted graph in the format of a matrix from the set of alignments, where each vertex is a 
+	 * residue and each edge means the connection between the two residues in one of the alignments. The weight 
+	 * of the edge is the distance between both residues in the protein.
+	 * 
+	 * INPUT: a list of AFP alignments and the Atom[] array.
+	 * OUTPUT: the alignment graph (describing relations between residues). List dimensions: AdjList[vertices][edges]
+	 */
+	public static double[][][] buildWeightedAFPgraph(List<AFPChain> allAlignments, Atom[] ca1) {
+		
+		//Initialize the matrix that stores the graph and fill it with 0 values
+		double[][][] graph = new double[ca1.length][][];
+		for (int i=0; i<ca1.length; i++){
+			double[][] row = new double[ca1.length][];
+			for (int j=0; j<ca1.length; j++){
+				double[] entry = {0.0,10.0};
+				row[j] = entry;
+			}
+			graph[i] = row;
+		}
+		
+		//Convert the multiple alignments into a triple list to handle the relations
+		List<List<List<Integer>>> alignments = processMultipleAFP(allAlignments);
+		
+		for (int k=0; k< alignments.size(); k++){
+			for (int i=0; i<alignments.get(k).get(0).size(); i++){
+				
+				//The vertex is the residue in the first chain and the edge the one in the second chain
+				int vertex = alignments.get(k).get(0).get(i);
+				int edge = alignments.get(k).get(1).get(i);
+				if (graph[vertex][edge][0]==0.0 && graph[edge][vertex][0]==0.0){
+					//Distance between two residues in the protein
+					graph[vertex][edge][0] = Calc.getDistance(ca1[vertex],ca1[edge]);
+					//Distance between two residues in the superimposed alignment
+					graph[vertex][edge][1] = allAlignments.get(k).getDistanceMatrix().getArray()[vertex][edge];
+				}
+			}
+		}
+		
+		//Store the graph as a csv file to analyze it graphically
+		csvWeightedGraph(graph, "unknown_align");
+		
+		return graph;
 	}
 	
 	/**
@@ -578,12 +624,15 @@ public class SubunitTools {
 	 * RUNNING TIME: order of complexity depending on the order of symmetry and the number of residues (DFS of <order> depth).
 	 *               The running time is much faster than the multiple alignment so it is not a bottleneck.
 	 */
-	public static AFPChain refinedAFP(List<AFPChain> allAlignments, Atom[] ca1) throws StructureException {
+	public static AFPChain refinedAFPold(List<AFPChain> allAlignments, Atom[] ca1) throws StructureException {
 		
 		//Create the alignment graph and initialize a variable to store the groups
 		List<List<Integer>> graph = buildAFPgraph(allAlignments, ca1);
 		List<List<Integer>> groups = new ArrayList<List<Integer>>();
 		List<Integer> intervals = calculateIntervals(ca1, allAlignments);
+		//Add to the intervals list the first and last element of the protein to consider also cycles in this region (permissive intervals)
+		intervals.add(0, 0);
+		intervals.add(ca1.length-1);
 		
 		//Initialize a variable to store the residues already in a group (do not take them twice)
 		List<Integer> alreadySeen = new ArrayList<Integer>();
@@ -657,6 +706,7 @@ public class SubunitTools {
 								}
 								Collections.sort(group);
 								boolean correct = true;
+								
 								//Check that all the residues are greater than the last group found, otherwise inconsistent
 								for (int e=0; e<group.size()-1; e++){
 									if (!(group.get(e)>lastGroup.get(e)) && lastGroup.get(e+1)!=0){
@@ -675,11 +725,11 @@ public class SubunitTools {
 										break;
 									}
 								}
-								//Also check that the residues are inside its subunit intervals boundaries
-								for (int e=1; e<group.size()+1; e++){
-									if (!((group.get(e-1)>=intervals.get(2*e-2)) && (group.get(e-1)<=intervals.get(2*e-1))) && correct){
+								//Also check that the residues are inside its subunit intervals boundaries (restrictive intervals)
+								for (int e=0; e<group.size(); e++){
+									if (!((group.get(e)>=intervals.get(2*e+1)) && (group.get(e)<=intervals.get(2*e+2))) && correct){
 										//System.out.println("Inconsistent group: not inside interval boundaries...");
-										//System.out.println("Residue "+group.get(e-1)+" not in the interval ["+intervals.get(2*e-2)+", "+intervals.get(2*e-1)+"]");
+										//System.out.println("Residue "+group.get(e)+" not in the interval ["+intervals.get(2*e+1)+", "+intervals.get(2*e+2)+"]");
 										correct = false;
 										break;
 									}
@@ -708,7 +758,7 @@ public class SubunitTools {
 		} //end of all the residue analysis
 		
 		//Last step to select those residues that do not form a cycle but that are connected in a consistent manner.
-		boolean last_step = true; //set to true if this last step is required
+		boolean last_step = false; //set to true if this last step is required
 		if (last_step){
 			for (int i=0; i<graph.size(); i++){
 				if (graph.get(i).size()==order-1 && !alreadySeen.contains(i)){
@@ -727,26 +777,40 @@ public class SubunitTools {
 					/*for (int e=0; e<group.size(); e++){
 						System.out.println(group.get(e));
 					}*/
-					/*
-					//Check that the residues are inside its subunit intervals boundaries (Needed to avoid discontinuous regions)
-					for (int e=1; e<group.size()+1; e++){
-						if (!((group.get(e-1)>=intervals.get(2*e-2)) && (group.get(e-1)<=intervals.get(2*e))) && correct){
-							System.out.println("Inconsistent group: not inside interval boundaries...");
-							System.out.println("Residue "+group.get(e-1)+" not in the interval ["+intervals.get(2*e-2)+", "+intervals.get(2*e-1)+"]");
+					
+					//Check that the residues are inside its subunit intervals boundaries (Needed to avoid discontinuous regions) (restrictive intervals)
+					for (int e=0; e<group.size(); e++){
+						if (!((group.get(e)>=intervals.get(2*e+1)) && (group.get(e)<=intervals.get(2*e+2))) && correct){
+							//System.out.println("Inconsistent group: not inside interval boundaries...");
+							//System.out.println("Residue "+group.get(e)+" not in the interval ["+intervals.get(2*e)+", "+intervals.get(2*e+3)+"]");
 							correct = false;
 							break;
 						}
-					}*/
+					}
 					//Find the insertion index of the group in the groups list and check that all other residues are consistent
 					int index = 0;
-					for (int k=1; k<groups.size(); k++){
-						if (groups.get(k).get(0)>group.get(0)){
+					for (int k=0; k<groups.size(); k++){
+						//special case for the first group, compare only with the first
+						if (k==0 && groups.get(k).get(0)>group.get(0)){
+							index = k;
+							for (int d=0; d<order; d++){
+								if (groups.get(k).get(d)<group.get(d)){
+									correct = false;
+									//System.out.println("Inconsistent group: not accordance with neighbors...");
+									//System.out.println("Residue "+group.get(d)+" not in the neighbors interval [0, "+groups.get(k).get(d)+"]");
+									break;
+								}
+							}
+							break;
+						}
+						//case for all other values of k, compare previous and next
+						else if (groups.get(k).get(0)>group.get(0)){
 							index = k;
 							for (int d=0; d<order; d++){
 								if (groups.get(k-1).get(d)>group.get(d) || groups.get(k).get(d)<group.get(d)){
 									correct = false;
 									//System.out.println("Inconsistent group: not accordance with neighbors...");
-									//System.out.println("Residue "+group.get(d)+" not in the neigbors interval ["+groups.get(k-1).get(d)+", "+groups.get(k).get(d)+"]");
+									//System.out.println("Residue "+group.get(d)+" not in the neighbors interval ["+groups.get(k-1).get(d)+", "+groups.get(k).get(d)+"]");
 									break;
 								}
 							}
@@ -835,5 +899,404 @@ public class SubunitTools {
 			blockGap[i] = gaps;
 		}
 		return blockGap;
+	}
+	
+	
+	/**
+	 * Saves a graph into a csv file in the format of tuples (vertex,edge) for every edge in the graph.
+	 */
+	 public static void csvGraph(List<List<Integer>> graph, String name){
+		 
+		String sFileName = "/home/scratch/graphs/"+name+".csv";
+		
+		try
+		{
+		    FileWriter writer = new FileWriter(sFileName);
+		    writer.append("Vertex,Edge\n");
+		    for (Integer i=0; i<graph.size(); i++){
+		    	for (int j=0; j<graph.get(i).size(); j++){
+		    		
+		    		writer.append(i.toString());
+		    		writer.append(',');
+		    		writer.append(graph.get(i).get(j).toString());
+		    		writer.append('\n');
+		    	}
+		    }
+		    
+		    writer.flush();
+		    writer.close();
+		}
+		catch(IOException e)
+		{
+		     e.printStackTrace();
+		}
+	}
+	 
+	/**
+	 * Saves a graph into a csv file in the format of tuples (vertex,edge) for every node in the graph that is part of a subunit.
+	 */
+	 public static void csvGraphSubunits(List<List<Integer>> graph, String name, List<Integer> alreadySeen){
+		 
+		String sFileName = "/home/scratch/graphs/"+name+"_subunit.csv";
+		
+		try
+		{
+		    FileWriter writer = new FileWriter(sFileName);
+		    writer.append("Vertex,Edge\n");	    
+		    for (int i=0; i<graph.size(); i++){
+		    	if (alreadySeen.contains(i)){
+			    	for (int j=0; j<graph.get(i).size(); j++){
+			    		if (alreadySeen.contains(graph.get(i).get(j))){
+			    		writer.append(i+",");
+			    		writer.append(graph.get(i).get(j)+"\n");
+			    		}
+			    	}
+		    	}
+		    }
+		    
+		    writer.flush();
+		    writer.close();
+		}
+		catch(IOException e)
+		{
+		     e.printStackTrace();
+		}
+	}
+	
+	 /**
+	 * Saves a graph into a csv file in the format of tuples (vertex,edge,weight) for every edge in the graph.
+	 */
+	public static void csvWeightedGraph(double[][][] graph, String name){
+		 
+		String sFileName = "/home/scratch/graphs/"+name+".csv";
+		
+		try
+		{
+		    FileWriter writer = new FileWriter(sFileName);
+		    writer.append("Vertex,Edge,Distance,RMSD\n");	    
+		    for (int i=0; i<graph.length; i++){
+		    	for (int j=0; j<graph[i].length; j++){
+		    		
+		    		if (graph[i][j][0]!=0.0){
+			    		writer.append(i+",");
+			    		writer.append(j+",");
+			    		writer.append(graph[i][j][0]+",");
+			    		writer.append(graph[i][j][1]+"\n");
+		    		}
+		    	}
+		    }
+		    writer.flush();
+		    writer.close();
+		}
+		catch(IOException e)
+		{
+		     e.printStackTrace();
+		}
+	}
+	 
+	 /**
+	 * Calculates from a set of AFP alignments the groups of residues (the group size is the order of symmetry)
+	 * that align together and are consistent, equivalent for each subunit). As a result a modified AFPChain with 
+	 * <order of symmetry> consistent groups is produced.
+	 * 
+	 * INPUT: a list of AFP alignments and the Atom[] array of the protein.
+	 * OUTPUT: an AFP alignment with subunit groups consistent between each other.
+	 * ALGORITHM: TBD
+	 * 
+	 * RUNNING TIME: the order of complexity is polynomial in length with the exponent being the order of symmetry.
+	 */
+	public static AFPChain refinedAFP(List<AFPChain> allAlignments, Atom[] ca1) throws StructureException {
+		
+		//Create the alignment graph and initialize a variable to store the groups
+		double[][][] weights = buildWeightedAFPgraph(allAlignments, ca1);
+		List<List<Integer>> graph = buildAFPgraph(allAlignments, ca1);
+		//Count the number of aligned residues to exclude the loops from the interresidue distances
+		int aligned_res = 0;
+		for (List<Integer> v:graph){
+			//Count residues with order-1 edges (connected consistently in all the alignments)
+			if (v.size()>0){
+				aligned_res++;
+			}
+		}
+		List<List<Integer>> groups = new ArrayList<List<Integer>>();
+		
+		//Variable to store the residues already present in one of the selected groups
+		List<Integer> alreadySeen = new ArrayList<Integer>();
+		int order = allAlignments.size()+1;
+		
+		//Loop through all the residues (vertices) in the graph
+		for (int i=0; i<graph.size(); i++){
+			if (!alreadySeen.contains(i)){
+			//System.out.println("Cycle for residue "+i);
+			
+			//Initialize the variables for the DFS of this residue iteration
+			Stack<Integer> path = new Stack<Integer>(); //stack that stores the current path nodes
+			Stack<List<Integer>> stack = new Stack<List<Integer>>(); //stack that stores the nodes to be visited next: [vertex,level]
+			List<Integer> source = new ArrayList<Integer>(); //source information: level 0
+			source.add(i);
+			source.add(0);
+			stack.push(source);
+			
+			boolean foundGroup = false; //Do not loop more if you already found a group of connected nodes
+			
+			while (!stack.isEmpty() && !foundGroup){
+				
+				/*//Print path and stack at each iteration
+				System.out.println("Stack: ");
+				for (List<Integer> s:stack){
+					System.out.println(s);
+				}
+				
+				System.out.println("Path: ");
+				for (Integer s:path){
+					System.out.println(s);
+				}*/
+				
+				List<Integer> vertex = stack.pop();
+				
+				//If the vertex level is lower than the path size remove the last element of the path
+				while (vertex.get(1)<=path.size()-1){
+					//System.out.println("Popped from the path: "+path.pop());
+					path.pop();
+				}
+				
+				//If the vertex has level lower than the order consider its neighbors
+				if (vertex.get(1)<order && !path.contains(vertex.get(0))){
+					//First add the node to the path
+					path.push(vertex.get(0));
+					//System.out.println("Pushed to the path: "+path.peek());
+					
+					for (int k=0; k<graph.get(vertex.get(0)).size(); k++){
+						//Extract the next node to be considered (neighbor k of the vertex)
+						List<Integer> node = new ArrayList<Integer>();
+						node.add(graph.get(vertex.get(0)).get(k));
+						node.add(path.size());
+						//Only add to the stack the nodes not included in the current path with level less than the order
+						if (!path.contains(node.get(0)) && node.get(1)<order){
+							stack.push(node);
+						}
+						//If the level=order and the node is equal to the source a cycle of size order has been found
+						else if (node.get(0)==i && node.get(1)==order){
+							//Initialize the group of residues
+							List<Integer> group = new ArrayList<Integer>();
+							int n = path.size();
+							//Store the nodes in the path in the group and sort them
+							for (int x=0; x<n; x++){
+								int p = path.get(x);
+								group.add(p);
+							}
+							Collections.sort(group);
+							
+							//Check that the residues have consistent interresidue distance between the group. The total distance should be more or less the same
+							double[] distances = new double[order];
+							double maxDist = 0.0;
+							boolean consistent = true;
+							
+							for (int g=0; g<order; g++){
+								for (int h=0; h<order; h++){
+									distances[g] += Calc.getDistance(ca1[group.get(g)],ca1[group.get(h)]);
+									int residueDist = Math.abs(group.get(g)-group.get(h));
+									//If the distance between the two residues in number is lower they are too close and not consistent.
+									if (residueDist<(aligned_res/(order+2)) && h!=g){
+										consistent = false;
+										//System.out.println("Not consistent: difference of "+residueDist+" with maximum "+aligned_res/(order+1)+"...");
+										break;
+									}
+								}
+								if (maxDist<distances[g])
+									maxDist=distances[g];
+							}
+							
+							for (int g=0; g<order; g++){
+								for (int h=0; h<order; h++){
+									//If their difference in distance is higher than 15% they are not consistent
+									if (Math.abs(distances[g]-distances[h])>maxDist/order){
+										consistent = false;
+										//System.out.println("Not consistent: difference of "+Math.abs(distances[g]-distances[h])+" with maximum "+maxDist+"...");
+										break;
+									}
+								}
+							}
+							if (!consistent) continue;
+							
+							//If any residue of the group is in another group already seen mark it as inconsistent
+							for (int d=0; d<order; d++){
+								if (alreadySeen.contains(group.get(d))){
+									consistent = false;
+								}
+							}
+							
+							boolean added = false;
+							//Check that the group is consistent with the groups already found
+							//Find the insertion index of the group in the groups list and replace another group if necessary
+							int index = -1;
+							for (int j=0; j<groups.size(); j++){
+								//special case for the first group, compare only with the first
+								if (j==0 && groups.get(j).get(0)>=group.get(0)){
+									index = j;
+									for (int d=0; d<order; d++){
+										if (groups.get(j).get(d)<=group.get(d)){
+											//Compare both groups and decide which is more meaningful based on their RMSD (the lower wins)
+											if (groups.get(j).get(d)==group.get(d)){
+												double current_rmsd = 0.0;
+												double new_rmsd = 0.0;
+												for (int g=0; g<order; g++){
+													for (int h=0; h<order; h++){
+														current_rmsd += weights[groups.get(j).get(g)][groups.get(j).get(h)][1];
+														new_rmsd += weights[group.get(g)][group.get(h)][1];
+													}
+												}
+												if (new_rmsd<current_rmsd){
+													groups.remove(j);
+													groups.add(j, group);
+													added = true;
+													foundGroup = true;
+													//System.out.println("Replaced the group of residue "+j);
+												}
+												else{
+													consistent=false;
+												}
+											}
+											break;
+										}
+									}
+									break;
+								}
+								//special case for the last group, compare only with the last
+								else if (j==group.size()-1 && groups.get(j).get(0)<=group.get(0)){
+									index = -1;
+									for (int d=0; d<order; d++){
+										if (groups.get(j).get(d)>=group.get(d)){
+											//Compare both groups and decide which is more meaningful based on their RMSD (the lower wins)
+											if (groups.get(j).get(d)==group.get(d)){
+												double current_rmsd = 0.0;
+												double new_rmsd = 0.0;
+												for (int g=0; g<order; g++){
+													for (int h=0; h<order; h++){
+														current_rmsd += weights[groups.get(j).get(g)][groups.get(j).get(h)][1];
+														new_rmsd += weights[group.get(g)][group.get(h)][1];
+													}
+												}
+												if (new_rmsd<current_rmsd){
+													groups.remove(j);
+													groups.add(j, group);
+													added = true;
+													foundGroup = true;
+													//System.out.println("Replaced the group of residue "+j);
+												}
+												else{
+													consistent=false;
+													//System.out.println("Not replaced the group of residue "+j);
+												}
+											}
+											break;
+										}
+									}
+									break;
+								}
+								//case for all other values of k, compare previous and next
+								else if (groups.get(j).get(0)>group.get(0)){
+									index = j;
+									for (int d=0; d<order; d++){
+										if (groups.get(j).get(d)<=group.get(d) || groups.get(j-1).get(d)>=group.get(d)){
+											//Compare both groups and decide which is more meaningful based on their RMSD (the lower wins)
+											if (groups.get(j).get(d)==group.get(d)){
+												double current_rmsd = 0.0;
+												double new_rmsd = 0.0;
+												for (int g=0; g<order; g++){
+													for (int h=0; h<order; h++){
+														current_rmsd += weights[groups.get(j).get(g)][groups.get(j).get(h)][1];
+														new_rmsd += weights[group.get(g)][group.get(h)][1];
+													}
+												}
+												if (new_rmsd<current_rmsd){
+													groups.remove(j);
+													groups.add(j, group);
+													added = true;
+													foundGroup = true;
+													//System.out.println("Replaced the group of residue "+j);
+												}
+												else{
+													consistent=false;
+													//System.out.println("Not replaced the group of residue "+j);
+												}
+											}
+											else if (groups.get(j-1).get(d)==group.get(d)){
+												double current_rmsd = 0.0;
+												double new_rmsd = 0.0;
+												for (int g=0; g<order; g++){
+													for (int h=0; h<order; h++){
+														current_rmsd += weights[groups.get(j-1).get(g)][groups.get(j-1).get(h)][1];
+														new_rmsd += weights[group.get(g)][group.get(h)][1];
+													}
+												}
+												if (new_rmsd<current_rmsd){
+													groups.remove(j-1);
+													groups.add(j-1, group);
+													added = true;
+													foundGroup = true;
+													//System.out.println("Replaced the group of residue "+(j-1));
+													//System.out.println("Not replaced the group of residue "+j);
+												}
+												else{
+													consistent=false;
+												}
+											}
+											break;
+										}
+									}
+									break;
+								}
+							}
+							if (!added && consistent){
+								//If the conditions are fulfilled insert the group into the right position
+								if (index==-1){
+									groups.add(group);
+								}
+								else{
+									groups.add(index, group);
+								}
+								System.out.println("Group added, size: "+group.size());
+								for (int e:group){
+									alreadySeen.add(e);
+									System.out.println(e);
+								}
+							}
+							foundGroup = true;
+							path.clear();
+							//System.out.println("Clearing path...");
+							break;
+						}
+					}
+				}
+			} //end of DFS
+			}
+		} //end of all the residue analysis
+		
+		//Initialize the optAln variable
+		List<List<List<Integer>>> optAln = new ArrayList<List<List<Integer>>>();
+		for (int k=0; k<order; k++){
+			List<List<Integer>> chains = new ArrayList<List<Integer>>();
+			for (int j=0; j<2; j++){
+				List<Integer> chain = new ArrayList<Integer>();
+				chains.add(chain);
+			}
+			optAln.add(chains);
+		}
+		
+		//Convert the groups of residues into the optimal alignment (suppose the groups are already sorted by their first residue)
+		for (List<Integer> group:groups){
+			//System.out.println("Group: ");
+			for (int k=0; k<group.size(); k++){
+				optAln.get(k).get(0).add(group.get(k));
+				optAln.get(k).get(1).add(group.get((k+1)%order));
+				//System.out.println(group.get(k));
+			}
+		}
+		
+		//Save the graph with only the subunit residues, to see the filtering made by the algorithm
+		csvGraphSubunits(graph, "unknown", alreadySeen);
+		
+		return createOptAln(optAln, allAlignments.get(order-2), ca1);
 	}
 }

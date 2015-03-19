@@ -294,86 +294,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 	}
 	
 	/**
-	 * New method that stores all the successive AFP alignment in the allAlignments list before each blackout.
-	 * Guesses the order of symmetry by detecting a drop in the alignment length of 10%.
+	 * Changed temporally to obtain a graph
 	 * 
-	 * @author Aleix Lafita
-	 * 
-	 * @param ca1
-	 * @param ca2O
-	 * @param param
-	 * @param allAlignments
-	 * @throws StructureException
-	 */
-	public void align(Atom[] ca1, Atom[] ca2O, Object param, ArrayList<AFPChain> allAlignments)
-			throws StructureException {
-		if (!(param instanceof CESymmParameters))
-			throw new IllegalArgumentException(
-					"CE algorithm needs an object of call CESymmParameters as argument.");
-
-		this.params = (CESymmParameters) param;
-
-		this.ca1 = ca1;
-		this.ca2 = ca2O;
-
-		ca2 = StructureTools.duplicateCA2(ca2O);
-		rows = ca1.length;
-		cols = ca2.length;
-		
-		calculator = new CECalculator(params);
-		calculator.addMatrixListener(this);
-
-		Matrix origM = null;
-		
-		AFPChain myAFP = new AFPChain();
-
-		Integer OptAlgnLenth = null;
-		
-		int i = 1;
-
-		while ((afpChain == null) && i < params.getMaxNrAlternatives()) {
-
-			if (origM != null) {
-				myAFP.setDistanceMatrix((Matrix) origM.clone());
-			}
-			origM = align(myAFP, ca1, ca2, params, origM, calculator, i+5);
-			
-			double tmScore2 = AFPChainScorer.getTMScore(myAFP, ca1, ca2);
-			myAFP.setTMScore(tmScore2);
-		
-			//Clone the AFPChain
-			AFPChain newAFP = (AFPChain) myAFP.clone();
-			double tmScore3 = AFPChainScorer.getTMScore(newAFP, ca1, ca2);
-			newAFP.setTMScore(tmScore3);
-			
-			//Post process the alignment
-			try {
-				newAFP = CeCPMain.postProcessAlignment(newAFP, ca1, ca2,
-						calculator);
-			} catch (Exception e) {
-				e.printStackTrace();
-				allAlignments.add(newAFP);
-			}
-			
-			//If it is the first alignment set the optimal length
-			if (OptAlgnLenth==null){
-				OptAlgnLenth = newAFP.getOptLength();
-			}
-			//If not check for a drop in the alignment length and break the loop
-			else if (newAFP.getOptLength() < (OptAlgnLenth-OptAlgnLenth/10)){
-				System.out.println("Order of symmetry detected: "+i);
-				System.out.println("Optimal Alignment Lenth: "+OptAlgnLenth+", Last alignment length: "+newAFP.getOptLength());
-				break;
-			}
-			//Add the alignment to the allAlignments list otherwise
-			allAlignments.add(newAFP);
-			System.out.println("Alignment "+i+" completed...");
-			
-			i++;
-		}
-	}
-
-	/**
 	 * New method that creates a multiple block AFP alignment corresponding to the subunits of symmetry.
 	 * Guesses the order of symmetry by detecting a drop in the alignment length or TM score of 10%.
 	 * 
@@ -445,7 +367,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 				optTMscore = newAFP.getTMScore();
 			}
 			//If not check for a drop in the alignment length and break the loop
-			else if (newAFP.getOptLength() < (optAlgnLen-optAlgnLen/2) || newAFP.getTMScore() < (optTMscore-optTMscore/2)){
+			else if ((newAFP.getOptLength() < (optAlgnLen-optAlgnLen/2) || newAFP.getTMScore() < (optTMscore-optTMscore/2))){
 				System.out.println("Order of symmetry detected: "+i);
 				System.out.println("Optimal alignment length: "+optAlgnLen+", Last alignment length: "+newAFP.getOptLength());
 				System.out.println("Optimal alignment TM score: "+optTMscore+", Last alignment TM score: "+newAFP.getTMScore());
@@ -470,7 +392,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		if (params == null)
 			params = new CESymmParameters();
 			//The maximum order of symmetry known is 8, but can be set to any value.
-			params.setMaxNrAlternatives(15);
+			params.setMaxNrAlternatives(10);
 
 		return alignMultiple(ca1, ca2, params);
 	}

@@ -24,11 +24,8 @@ package org.biojava.nbio.structure.align.symm.gui;
 
 
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
@@ -42,7 +39,7 @@ import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
  *   	- order 4: 1GEN, 1HXN
  *  	- order 5: 1G61.A, 1TL2.A
  *  	- order 6: 1U6D, 
- *      - order 7: 1JOF.A, 1JTD.B, 2I5I.A, 1K3I.A, 1JV2.A, 1GOT.B, 1A12.A, 
+ *      - order 7: 1JOF.A, 1JTD.B, 1K3I.A, 2I5I.A, 1JV2.A, 1GOT.B, 1A12.A
  *      - order 8: 1TIM.A, 1VZW, 1NSJ
  *      - helical: 1B3U.A, 1EZG.A, 1DFJ.I, 1AWC.B, 1D0B.A
  *      - unknown: 1WD3, 1Z7X, 1DCE,
@@ -65,7 +62,7 @@ import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
  *            a mismatch (when the alignment is not FatCat only) but rather as an aligned pair and it colors them (modification in 
  *            the biojava code DisplayAFP line 76), although they are not really aligned. Possible implications for biojava?
  *         6- When the subunits are colored in the 3D structure, in some structures the color does not change between two subunits,
- *            they are either all blue or all green. This happens with the 1JTD.B structure (maybe red is not added properly.
+ *            they are either all blue or all green. This happens with the 1JTD.B structure (maybe red is not added properly).
  *         7- Rotation axis is not displayed with an issue with the jmol window when evaluating the string. Examples: 3DDV.A
  *         8- The subunit selection seems to be very restrictive for proteins of higher order of symmetry. One solution could be
  *            to consider, if there are not <order> cycles, cycles of smaller size and establish (or group) the subunits by pairwise
@@ -86,8 +83,8 @@ import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
 public class CEsymmSubunitGUI {
 	public static void main(String[] args) throws Exception{
 		
-		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "1H9M.A", "2AFG.A", "4DOU", "1VYM", "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TIM.A"};
-		String[] names = {"4DOU"};
+		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1VYM", "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1NSJ", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ"};
+		String[] names = {"1NSJ"};
 		
 		for (int i=0; i<names.length; i++){
 			
@@ -97,7 +94,7 @@ public class CEsymmSubunitGUI {
 			String name = names[i];
 
 			//Parse atoms of the protein into two DS
-			Atom[] ca1 = cache.getAtoms(name); 
+			Atom[] ca1 = cache.getAtoms(name);
 			Atom[] ca2 = cache.getAtoms(name);
 			
 			System.out.println("Protein length: "+ca1.length);
@@ -110,13 +107,14 @@ public class CEsymmSubunitGUI {
 			//Set the maximum number of iterations for the cases where the order detection fails
 			int order = 2;
 			CESymmParameters params = new CESymmParameters();
-			params.setMaxNrAlternatives(order);*/
+			params.setMaxNrAlternatives(order);
+			*/
 			
 			//Perform the alignment and store
 			afpChain = ceSymm.alignMultiple(ca1, ca2);
 			
 			SubunitTools.displayColorSubunits(afpChain, name, ca1, ca2);
-			SubunitTools.displaySuperimposedSubunits(afpChain, name, ca1, ca2);
+			//SubunitTools.displaySuperimposedSubunits(afpChain, name, ca1, ca2);
 
 		}
 	}

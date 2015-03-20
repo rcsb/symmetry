@@ -1,11 +1,10 @@
 package org.biojava.nbio.structure.align.symm.order;
 
+import static java.lang.Math.*;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.RotationAxis;
-
-import static java.lang.Math.PI;
-import static java.lang.Math.abs;
 
 /**
  * Guesses an order of rotational symmetry from the angle.
@@ -25,6 +24,11 @@ public class AngleOrderDetectorPlus implements OrderDetector {
 	 */
 	public AngleOrderDetectorPlus(double angleError) {
 		this(8,angleError,false);
+	}
+
+	public AngleOrderDetectorPlus(int maxOrder) {
+		// PI is the max error for C1
+		this(maxOrder,PI,false);
 	}
 
 	/**
@@ -83,6 +87,8 @@ public class AngleOrderDetectorPlus implements OrderDetector {
 			throw new OrderDetectionFailedException(e);
 		}
 	}
+
+
 
 	@Override
 	public String toString() {

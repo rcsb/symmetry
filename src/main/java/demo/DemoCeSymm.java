@@ -23,7 +23,7 @@ public class DemoCeSymm {
 	
 		AtomCache cache = new AtomCache();
 
-		String name = "d1kcwa1";
+		String name = "4dou";
 		
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75);
 

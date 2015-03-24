@@ -13,9 +13,9 @@ import org.biojava.nbio.structure.align.ce.CeParameters;
  */
 public class CESymmParameters extends CeParameters {
 
-	private boolean refineResult;
+	private int maxNrSubunits; // Renamed, old variable maxNrAlternatives (now means max nr. of iterations/subunits)
 	private OrderDetectorMethod orderDetectorMethod;
-	private int maxNrAlternatives; // Not exposed in UI
+	private RefineMethod refineMethod;
 
 	
 	public static enum OrderDetectorMethod {
@@ -23,11 +23,18 @@ public class CESymmParameters extends CeParameters {
 		public static OrderDetectorMethod DEFAULT = SEQUENCE_FUNCTION;
 	}
 	
+	public static enum RefineMethod {
+		NOT_REFINED,
+		MULTIPLE,
+		SINGLE;
+		public static RefineMethod DEFAULT = MULTIPLE;
+	}
+	
 	public CESymmParameters() {
 		super();
-		refineResult = false;
+		refineMethod = RefineMethod.DEFAULT;
 		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
-		maxNrAlternatives = 1;
+		maxNrSubunits = 8;
 	}
 
 	@Override
@@ -47,15 +54,18 @@ public class CESymmParameters extends CeParameters {
 	@Override
 	public void reset(){
 		super.reset();
-		refineResult = false;
+		refineMethod = RefineMethod.DEFAULT;
 		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
-		maxNrAlternatives = 1;
+		maxNrSubunits = 8;
 	}
 
 
 	@Override
 	public List<String> getUserConfigHelp() {
 		List<String> params = super.getUserConfigHelp();
+		
+		params.add("Sets the maximum number of iterations to perform in the multiple alignment.");
+		
 		StringBuilder orderTypes = new StringBuilder("Order detection method: ");
 		OrderDetectorMethod[] vals = OrderDetectorMethod.values();
 		if(vals.length == 1) {
@@ -66,44 +76,70 @@ public class CESymmParameters extends CeParameters {
 				orderTypes.append(", ");
 			}
 			orderTypes.append("or ");
-			orderTypes.append(vals[vals.length].name());
+			orderTypes.append(vals[vals.length-1].name());
 		}
 		params.add(orderTypes.toString());
-		params.add("Refine the result to a multiple alignment");
+		
+		StringBuilder refineTypes = new StringBuilder("Refinement method: ");
+		RefineMethod[] values = RefineMethod.values();
+		if(values.length == 1) {
+			refineTypes.append(values[0].name());
+		} else if(values.length > 1 ) {
+			for(int i=0;i<values.length-1;i++) {
+				refineTypes.append(values[i].name());
+				refineTypes.append(", ");
+			}
+			refineTypes.append("or ");
+			refineTypes.append(values[values.length-1].name());
+		}
+		params.add(refineTypes.toString());
+		
 		return params;
 	}
 
 	@Override
 	public List<String> getUserConfigParameters() {
 		List<String> params = super.getUserConfigParameters();
-		params.add("OrderDetectorMethod");
-		params.add("RefineResult");
+		params.add("maxNrSubunits");
+		params.add("orderDetectorMethod");
+		params.add("refineMethod");
 		return params;
 	}
 
 	@Override
 	public List<String> getUserConfigParameterNames(){
 		List<String> params = super.getUserConfigParameterNames();
-		
-		params.add("Order detection method");
-		params.add("Refine Result");
+		params.add("Maximum Number of Subunits");
+		params.add("Order Detection Method");
+		params.add("Refinement Method");
 		return params;
 	}
 
 	@SuppressWarnings("rawtypes")
 	public List<Class> getUserConfigTypes() {
 		List<Class> params = super.getUserConfigTypes();
+		params.add(Integer.class);
 		params.add(OrderDetectorMethod.class);
-		params.add(Boolean.class);
+		params.add(RefineMethod.class);
 		return params;
 	}
 
-	public boolean isRefineResult() {
-		return refineResult;
+	public RefineMethod getRefineMethod() {
+		return refineMethod;
 	}
 
-	public void setRefineResult(Boolean refineResult) {
-		this.refineResult = refineResult;
+	public void setRefineMethod(RefineMethod refineMethod) {
+		this.refineMethod = refineMethod;
+	}
+	
+	@Deprecated
+	public void setRefineResult(boolean doRefine) {
+		if (!doRefine){
+			refineMethod = RefineMethod.NOT_REFINED;
+		}
+		else{
+			refineMethod = RefineMethod.DEFAULT;
+		}
 	}
 
 	public OrderDetectorMethod getOrderDetectorMethod() {
@@ -114,11 +150,11 @@ public class CESymmParameters extends CeParameters {
 		this.orderDetectorMethod = orderDetectorMethod;
 	}
 	
-	public void setMaxNrAlternatives(int max) {
-		maxNrAlternatives = max;
+	public void setMaxNrSubunits(int max) {
+		maxNrSubunits = max;
 	}
 
-	public int getMaxNrAlternatives() {
-		return maxNrAlternatives;
+	public int getMaxNrSubunits() {
+		return maxNrSubunits;
 	}
 }

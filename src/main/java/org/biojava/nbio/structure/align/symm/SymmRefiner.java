@@ -27,7 +27,8 @@ import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 
 /**
- * A utility class for refining symmetric alignments
+ * A utility class for refining symmetric alignments.
+ * Code moved to the SingleAlignRefinment in the refine package (aleix).
  * @author Spencer Bliven
  *
  */

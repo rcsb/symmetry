@@ -1,25 +1,3 @@
-/*
- *                    BioJava development code
- *
- * This code may be freely distributed and modified under the
- * terms of the GNU Lesser General Public License.  This should
- * be distributed with the code.  If you do not have a copy,
- * see:
- *
- *      http://www.gnu.org/copyleft/lesser.html
- *
- * Copyright for this code is held jointly by the individual
- * authors.  These should be listed in @author doc comments.
- *
- * For more information on the BioJava project and its aims,
- * or to join the biojava-l mailing list, visit the home page
- * at:
- *
- *      http://www.biojava.org/
- *
- * Created on 2015-02-27
- *
- */
 package org.biojava.nbio.structure.align.symm.gui;
 
 
@@ -30,6 +8,8 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.refine.MultipleAlignRefiner;
+import org.biojava.nbio.structure.align.symm.refine.SingleAlignRefinement;
 import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
 import org.jcolorbrewer.ColorBrewer;
 
@@ -96,7 +76,7 @@ import org.jcolorbrewer.ColorBrewer;
 public class CEsymmSubunitGUI {
 	public static void main(String[] args) throws Exception{
 		
-		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1NSJ", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW"};
+		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1GEN", "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ");
 		String[] names = {"1VZW"};
 		
 		for (int i=0; i<names.length; i++){
@@ -115,16 +95,17 @@ public class CEsymmSubunitGUI {
 			//Initialize a new CeSymm class and its parameters and a new alignment class
 			CeSymm ceSymm = new CeSymm();
 			AFPChain afpChain = new AFPChain();
+			//MultipleAlignRefiner refiner = new MultipleAlignRefiner();
+			//SingleAlignRefinement refiner = new SingleAlignRefinement();
+			//ceSymm.setRefiner(refiner);
 			
-			/*
-			//Set the maximum number of iterations for the cases where the order detection fails
-			int order = 2;
+			/*//Set the maximum number of iterations for the cases where the order detection fails
+			int maxNr = 8;
 			CESymmParameters params = new CESymmParameters();
-			params.setMaxNrAlternatives(order);
-			*/
+			params.setMaxNrAlternatives(maxNr);*/
 			
 			//Perform the alignment and store
-			afpChain = ceSymm.alignMultiple(ca1, ca2);
+			afpChain = ceSymm.align(ca1, ca2);
 			
 			//Set the colors (OPTIONS: Spectral (soft transition), Set1 (radical difference), Set2 (softer than 1), 
 			//Set3 (soft colors), Paired (pairs of two colors)
@@ -132,8 +113,8 @@ public class CEsymmSubunitGUI {
 			//Color[] colors = {Color.blue, Color.yellow, Color.cyan, Color.orange, Color.green, Color.magenta,  Color.pink, Color.red}; 
 			afpChain.setBlockColors(colors);
 			
-			//SubunitTools.displayColorSubunits(afpChain, name, ca1, ca2);
-			SubunitTools.displaySuperimposedSubunits(afpChain, name, ca1, ca2);
+			SubunitTools.displayColorSubunits(afpChain, name, ca1, ca2);
+			//SubunitTools.displaySuperimposedSubunits(afpChain, name, ca1, ca2);
 
 		}
 	}

@@ -23,12 +23,15 @@
 package org.biojava.nbio.structure.align.symm.gui;
 
 
+import java.awt.Color;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
+import org.jcolorbrewer.ColorBrewer;
 
 /**
  * Displays the alignment of the protein with the refined optimal alignment with the subunit blocks.
@@ -42,7 +45,7 @@ import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
  *      - order 7: 1JOF.A, 1JTD.B, 1K3I.A, 2I5I.A, 1JV2.A, 1GOT.B, 1A12.A
  *      - order 8: 1TIM.A, 1VZW, 1NSJ
  *      - helical: 1B3U.A, 1EZG.A, 1DFJ.I, 1AWC.B, 1D0B.A
- *      - unknown: 1WD3, 1Z7X, 1DCE,
+ *      - unknown: 1WD3, 1Z7X, 1DCE
  *  	
  * Did not work for:  1VYM.A (buggy rotation axis)
  *                    
@@ -61,16 +64,26 @@ import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
  *         5*- The alignment panel does not color correctly the alignment, because it considers a " " in the symb alignment not as 
  *            a mismatch (when the alignment is not FatCat only) but rather as an aligned pair and it colors them (modification in 
  *            the biojava code DisplayAFP line 76), although they are not really aligned. Possible implications for biojava?
- *         6- When the subunits are colored in the 3D structure, in some structures the color does not change between two subunits,
+ *         6*- When the subunits are colored in the 3D structure, in some structures the color does not change between two subunits,
  *            they are either all blue or all green. This happens with the 1JTD.B structure (maybe red is not added properly).
  *         7- Rotation axis is not displayed with an issue with the jmol window when evaluating the string. Examples: 3DDV.A
- *         8- The subunit selection seems to be very restrictive for proteins of higher order of symmetry. One solution could be
+ *         8*- The subunit selection seems to be very restrictive for proteins of higher order of symmetry. One solution could be
  *            to consider, if there are not <order> cycles, cycles of smaller size and establish (or group) the subunits by pairwise
  *            (or more) similarity groups. Different approach for order 6-8. Examples: 1VZW, 1TIM.A
  *         9- For small proteins, the TM score is very low even for the first alignment, which results to incorrectly determine the 
  *            order (higher than it is). This could be fixed by determining a threshold that considers the length of the protein.
  *            Examples: 1GUA.B, 1UBI.
- *        10- From the alignment panel, an error is thrown because a position cannot be matched. Example: 1A12.A
+ *        10*- From the alignment panel, an error is thrown because a position cannot be matched. Example: 1A12.A. Unknown but solved.
+ *        11*- Protein 1G61.A gives some problems in the alignment: the colors are misplaced in the boundaries of the subunits and
+ *            the FATCAT result is not properly shown (it shows the text alignment instead). Something to do with a double gap that
+ *            might be ignore in the first subunit. Solved in getBlockNr of biojava display code.
+ *        12*- The getAlign method does not consider double gaps when calculating the alignment strings and that is why some errors
+ *            occur in the sequence alignment Display (color not correct and repeated residues). The problem was actually in the
+ *            OptAln, because the residues were not contiguous in all the subunits. Solved by checking consistency between groups in
+ *            the refinement method, there was a bug in the names of variables.
+ *        13- In 1VYM structure there is a loop identified as not aligned, but it is present in the three subunits and the sequence
+ *            is highly conserved, although in the 3D alignment is only seems to align well two of the three loops. In this case the
+ *            subunit conditions are too restrictive.
  *         
  *         * Solved!
  *                    
@@ -83,8 +96,8 @@ import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
 public class CEsymmSubunitGUI {
 	public static void main(String[] args) throws Exception{
 		
-		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1VYM", "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1NSJ", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ"};
-		String[] names = {"1NSJ"};
+		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1NSJ", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW"};
+		String[] names = {"1VZW"};
 		
 		for (int i=0; i<names.length; i++){
 			
@@ -113,8 +126,14 @@ public class CEsymmSubunitGUI {
 			//Perform the alignment and store
 			afpChain = ceSymm.alignMultiple(ca1, ca2);
 			
-			SubunitTools.displayColorSubunits(afpChain, name, ca1, ca2);
-			//SubunitTools.displaySuperimposedSubunits(afpChain, name, ca1, ca2);
+			//Set the colors (OPTIONS: Spectral (soft transition), Set1 (radical difference), Set2 (softer than 1), 
+			//Set3 (soft colors), Paired (pairs of two colors)
+			Color[] colors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
+			//Color[] colors = {Color.blue, Color.yellow, Color.cyan, Color.orange, Color.green, Color.magenta,  Color.pink, Color.red}; 
+			afpChain.setBlockColors(colors);
+			
+			//SubunitTools.displayColorSubunits(afpChain, name, ca1, ca2);
+			SubunitTools.displaySuperimposedSubunits(afpChain, name, ca1, ca2);
 
 		}
 	}

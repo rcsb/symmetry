@@ -39,15 +39,23 @@ public class CESymmParameters extends CeParameters {
 
 	@Override
 	public String toString() {
-		return "CECPParameters [scoringStrategy=" + scoringStrategy 
-		+ ", maxGapSize=" + maxGapSize 
-		+ ", rmsdThr=" + rmsdThr 
-		+ ", rmsdThrJoin="+ rmsdThrJoin 
-		+ ", winSize=" + winSize 
-		+ ", showAFPRanges=" + showAFPRanges 
-		+ ", maxOptRMSD=" + maxOptRMSD
-		+ ", seqWeight=" + seqWeight
-		+ "]";
+		return "CESymmParameters [maxNrSubunits=" + maxNrSubunits
+				+ ", orderDetectorMethod=" + orderDetectorMethod
+				+ ", refineMethod=" + refineMethod + ", toString()="
+				+ super.toString() + ", getWinSize()=" + getWinSize()
+				+ ", getRmsdThr()=" + getRmsdThr() + ", getRmsdThrJoin()="
+				+ getRmsdThrJoin() + ", getScoringStrategy()="
+				+ getScoringStrategy() + ", getMaxGapSize()=" + getMaxGapSize()
+				+ ", isShowAFPRanges()=" + isShowAFPRanges()
+				+ ", getMaxOptRMSD()=" + getMaxOptRMSD() + ", getGapOpen()="
+				+ getGapOpen() + ", getGapExtension()=" + getGapExtension()
+				+ ", getDistanceIncrement()=" + getDistanceIncrement()
+				+ ", getORmsdThr()=" + getORmsdThr()
+				+ ", getMaxNrIterationsForOptimization()="
+				+ getMaxNrIterationsForOptimization() + ", getSeqWeight()="
+				+ getSeqWeight() + ", getSubstitutionMatrix()="
+				+ getSubstitutionMatrix() + ", getClass()=" + getClass()
+				+ ", hashCode()=" + hashCode() + "]";
 	}
 
 

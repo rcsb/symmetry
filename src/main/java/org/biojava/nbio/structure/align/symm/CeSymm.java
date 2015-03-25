@@ -1,5 +1,6 @@
 package org.biojava.nbio.structure.align.symm;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,12 +24,12 @@ import org.biojava.nbio.structure.align.symm.refine.MultipleAlignRefiner;
 import org.biojava.nbio.structure.align.symm.refine.Refiner;
 import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
 import org.biojava.nbio.structure.align.symm.refine.SingleAlignRefinement;
-import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
 import org.biojava.nbio.structure.align.util.AFPChainScorer;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.utils.SymmetryTools;
+import org.jcolorbrewer.ColorBrewer;
 
 /**
  * Try to identify all possible symmetries by iterating recursively over all
@@ -263,7 +264,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		int i = 0;
 
 		do {
-			//System.out.print(">>>> Alignment number: "+i);
+			//System.out.print("Alignment number: "+i);
 
 			if (origM != null) {
 				myAFP.setDistanceMatrix((Matrix) origM.clone());
@@ -290,8 +291,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 			newAFP.setTMScore(tmScore3);
 			
 			//Print alignment length and TM score of the current alignment
-			System.out.println("Alignment "+(i+1)+" length: "+newAFP.getOptLength());
-			System.out.println("Alignment "+(i+1)+" score: "+newAFP.getTMScore());
+			//System.out.println("Alignment "+(i+1)+" length: "+newAFP.getOptLength());
+			//System.out.println("Alignment "+(i+1)+" score: "+newAFP.getTMScore());
 			
 			//If it is the first alignment set the optimal length
 			if (i==0){
@@ -300,14 +301,13 @@ public class CeSymm extends AbstractStructureAlignment implements
 			}
 			//If not check for a drop (of 50%) in the alignment length or score and break the loop
 			else if ((newAFP.getOptLength() < (optAlgnLen-optAlgnLen/2) || newAFP.getTMScore() < (optTMscore-optTMscore/2))){
-				System.out.println("Order of symmetry detected: "+(i+1));
-				System.out.println("Optimal alignment length: "+optAlgnLen+", Last alignment length: "+newAFP.getOptLength());
-				System.out.println("Optimal alignment TM score: "+optTMscore+", Last alignment TM score: "+newAFP.getTMScore());
+				//System.out.println("Optimal alignment length: "+optAlgnLen+", Last alignment length: "+newAFP.getOptLength());
+				//System.out.println("Optimal alignment TM score: "+optTMscore+", Last alignment TM score: "+newAFP.getTMScore());
 				break;
 			}
-			//Add the alignment to the allAlignments list otherwise
+			//Add the alignment to the allAlignments list
 			allAlignments.add(newAFP);
-			System.out.println("Alignment "+(i+1)+" completed...");
+			//System.out.println("Alignment "+(i+1)+" completed...");
 			
 			i++;
 		} while (i < params.getMaxNrSubunits() && multiple);
@@ -322,19 +322,25 @@ public class CeSymm extends AbstractStructureAlignment implements
 		
 		//Refinement options
 		if (params.getRefineMethod() == RefineMethod.MULTIPLE){
-			order = afpAlignments.length;
+			order = afpAlignments.length+1;
+			System.out.println("Order of symmetry: "+(order));
 			refiner = new MultipleAlignRefiner();
 			try {
 				afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
 			} catch (RefinerFailedException e) {
 				e.printStackTrace();
 			}
+			//Set the colors (OPTIONS: Spectral (soft transition), Set1 (radical difference), Set3 (soft colors), Paired (pairs of two colors)
+			Color[] colors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
+			//Color[] colors = {Color.blue, Color.yellow, Color.cyan, Color.orange, Color.green, Color.magenta,  Color.pink, Color.red}; 
+			afpChain.setBlockColors(colors);
 		}
 		else if (params.getRefineMethod() == RefineMethod.SINGLE){
 			refiner = new SingleAlignRefinement();
 			//Calculate order
 			try {
 				order = orderDetector.calculateOrder(afpChain, ca1);
+				System.out.println("Order of symmetry: "+(order));
 			} catch (OrderDetectionFailedException e) {
 				e.printStackTrace();
 			}
@@ -349,7 +355,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 		afpChain.setTMScore(tmScore2);
 		
-		System.out.println("CeSymm alignment completed...");
+		//System.out.println("CeSymm alignment completed...");
 
 		return afpChain;
 		

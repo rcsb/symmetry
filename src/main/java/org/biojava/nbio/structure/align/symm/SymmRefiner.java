@@ -44,6 +44,7 @@ public class SymmRefiner {
 	 * @return The refined alignment
 	 * @throws StructureException
 	 */
+	@Deprecated
 	public static AFPChain refineSymmetry(AFPChain afpChain, Atom[] ca1, Atom[] ca2, int k) throws StructureException {
 		// The current alignment
 		Map<Integer, Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
@@ -65,6 +66,7 @@ public class SymmRefiner {
 	 * @return A modified map with the refined alignment
 	 * @throws StructureException
 	 */
+	@Deprecated
 	public static Map<Integer, Integer> refineSymmetry(Map<Integer, Integer> alignment,int k) throws StructureException {
 
 		// Store scores
@@ -189,6 +191,7 @@ public class SymmRefiner {
 	 * @param forwardLoops
 	 * @return eligible after modification
 	 */
+	@Deprecated
 	private static List<Integer> initializeEligible(Map<Integer, Integer> alignment,
 			Map<Integer, Double> scores, List<Integer> eligible, int k, NavigableSet<Integer> forwardLoops, NavigableSet<Integer> backwardLoops) {
 		// Eligible if:
@@ -292,6 +295,7 @@ public class SymmRefiner {
 	 *            Eligible residues. Residues from small cycles are removed.
 	 * @return f^k(x)
 	 */
+	@Deprecated
 	private static Map<Integer, Integer> applyAlignmentAndCheckCycles(Map<Integer, Integer> alignmentMap, int k, List<Integer> eligible) {
 
 		// Convert to lists to establish a fixed order (avoid concurrent modification)
@@ -330,6 +334,7 @@ public class SymmRefiner {
 	 * 	created if null
 	 * @return scores
 	 */
+	@Deprecated
 	private static Map<Integer, Double> initializeScores(Map<Integer, Integer> alignment,
 			Map<Integer, Double> scores, int k) {
 		if(scores == null) {
@@ -370,6 +375,7 @@ public class SymmRefiner {
 	 * @param maxPre highest possible residue number
 	 * @return
 	 */
+	@Deprecated
 	private static double scoreAbsError(Integer pre, Integer image,int minPre,int maxPre) {
 		// Use the absolute error score, |x - f^k(x)|
 		double error;
@@ -496,6 +502,7 @@ public class SymmRefiner {
 	 * @param alignmentInteraction Two-letter string used to identify alignment edges
 	 * @throws IOException
 	 */
+	@Deprecated
 	private static void alignmentToSIF(Writer out,
 			AFPChain afpChain, Atom[] ca1,Atom[] ca2, String backboneInteraction, String alignmentInteraction) throws IOException {
 		//out.write("Res1\tInteraction\tRes2\n");

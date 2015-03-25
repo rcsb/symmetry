@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.StructureException;
@@ -13,8 +14,12 @@ import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.symm.CESymmParameters;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.util.AFPAlignmentDisplay;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
+import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
@@ -202,4 +207,87 @@ public class SubunitTools {
 	    writer.close();
 	}
 	
+	 /**
+	 * Saves a graph into a csv file in the format of tuples (vertex,edge,weight) for every edge in the graph.
+	 * @throws StructureException 
+	 */
+	public static void analyzeRunningTime(String[] names) throws IOException, StructureException{
+		
+		//Prepare the file writer
+		String sFileName = "/home/scratch/stats/complexity.csv";
+	    FileWriter writer = new FileWriter(sFileName);
+	    writer.append("Name,Order,Length,TimeMultiple,TimeSingle,TimeNotRefined\n");
+		
+		for (int i=0; i<names.length; i++){
+			
+			String name = names[i];
+			int order = 0;
+			int length = 0;
+			
+			//Initialize the time measure variables
+			long durationMultiple = 0;
+			long durationSingle = 0;
+			long durationNoRefine = 0;
+			
+			for (int j=0; j<3; j++){
+			
+				long startTime = System.nanoTime();
+				
+				//Set the name of the protein structure to analyze
+				System.out.println("Analyzing protein "+name );
+				AtomCache cache = new AtomCache();
+	
+				//Parse atoms of the protein into two DS
+				Atom[] ca1 = cache.getAtoms(name);
+				Atom[] ca2 = cache.getAtoms(name);
+				
+				//Initialize a new CeSymm class and its parameters and a new alignment class
+				CeSymm ceSymm = new CeSymm();
+				AFPChain afpChain = new AFPChain();
+	
+				if (j==0){
+					//Perform the alignment
+					afpChain = ceSymm.align(ca1, ca2);
+					
+					long endTime = System.nanoTime();
+					
+					durationMultiple = (endTime - startTime);
+					length = ca1.length;
+					order = afpChain.getBlockNum();
+				}
+				else if(j==1){
+					//Perform the alignment
+					CESymmParameters params = new CESymmParameters();
+					params.setRefineMethod(RefineMethod.SINGLE);
+					
+					afpChain = ceSymm.align(ca1, ca2, params);
+					
+					long endTime = System.nanoTime();
+					
+					durationSingle = (endTime - startTime);
+				}
+				else{
+					//Perform the alignment
+					CESymmParameters params = new CESymmParameters();
+					params.setRefineMethod(RefineMethod.NOT_REFINED);
+					
+					afpChain = ceSymm.align(ca1, ca2, params);
+					
+					long endTime = System.nanoTime();
+					
+					durationNoRefine = (endTime - startTime);
+				}
+			}
+			writer.append(name+","+order+","+length+","+durationMultiple+","+durationSingle+","+durationNoRefine+"\n");
+		}
+		
+	    writer.flush();
+	    writer.close();
+	}
+	
+	public static void main(String[] args) throws StructureException, IOException{
+		
+		String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1VYM", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN", "1G61.A","1TL2.A","2JAJ.A", "1U6D", "1JOF.A", "1JTD.B",  "1A12.A", "2I5I.A", "1K3I.A", "1GOT.B", "1TIM.A", "1VZW", "1NSJ"};
+		analyzeRunningTime(names);
+	}
 }

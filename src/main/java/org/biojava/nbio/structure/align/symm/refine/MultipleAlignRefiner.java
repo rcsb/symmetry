@@ -94,7 +94,7 @@ public class MultipleAlignRefiner implements Refiner {
 				for (List<Integer> s:stack){
 					System.out.println(s);
 				}
-				
+				/*
 				System.out.println("Path: ");
 				for (Integer s:path){
 					System.out.println(s);
@@ -120,7 +120,7 @@ public class MultipleAlignRefiner implements Refiner {
 						node.add(graph.get(vertex.get(0)).get(k));
 						node.add(path.size());
 						//Only add to the stack the nodes not included in the current path with level less than the order
-						if (!path.contains(node.get(0)) && node.get(1)<order){
+						if (!path.contains(node.get(0)) && node.get(1)<order && !alreadySeen.contains(node.get(0))){
 							stack.push(node);
 						}
 						//If the level=order and the node is equal to the source a cycle of size order has been found
@@ -155,11 +155,11 @@ public class MultipleAlignRefiner implements Refiner {
 							}
 							
 							//If any residue of the group is in another group already seen mark it as inconsistent
-							for (int d=0; d<order; d++){
+							/*for (int d=0; d<order; d++){
 								if (alreadySeen.contains(group.get(d))){
 									consistent = false;
 								}
-							}
+							}*/
 							
 							//Check that the group is consistent with the previous, all the residues should be greater than the last group
 							int len = groups.size();
@@ -340,9 +340,10 @@ public class MultipleAlignRefiner implements Refiner {
 	 */
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1GEN", "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ");
+		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN¨, "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ"}; //Correct ones
+		//String[] names = {"1VYM"}
 		//String[] names = {"d1poqa_", "1itb.A", "3jut.A", "2jaj.A", "d1jlya1" ,"1hiv"}; //New structures to test
-		String[] names = {"d1poqa_"};
+		String[] names = {"1TIM.A"};
 		
 		for (int i=0; i<names.length; i++){
 			

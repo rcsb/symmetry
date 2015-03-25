@@ -1,4 +1,4 @@
-package org.biojava.nbio.structure.align.symm;
+package org.biojava.nbio.structure.align.symm.refine;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -21,19 +21,41 @@ import org.biojava.nbio.structure.align.StructureAlignmentFactory;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
-import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 
 /**
- * A utility class for refining symmetric alignments.
- * Code moved to the SingleAlignRefinment in the refine package (aleix).
- * @author Spencer Bliven
- *
+ * Creates a refined alignment with a single self-alignment. Needs the order of symmetry.
+ * Uses Spencer's refinement code that was initially in SymmRefiner.
+ * @author lafita
  */
-public class SymmRefiner {
 
+public class SingleAlignRefiner implements Refiner {
+
+	public SingleAlignRefiner() {
+		super();
+	}
+	
+	@Override
+	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
+			throws RefinerFailedException {
+		
+		AFPChain originalAFP = afpAlignments[0];
+		AFPChain refinedAFP = new AFPChain();
+		
+		//Provisional, move the code from SymRefiner to this class.
+		try {
+			refinedAFP = refineSymmetry(originalAFP, ca1, ca2, order);
+		} catch (StructureException e) {
+			e.printStackTrace();
+		}
+		
+		return refinedAFP;
+	}
+	
 	/**
 	 * Refines a CE-Symm alignment so that it is perfectly symmetric.
 	 *
@@ -44,7 +66,6 @@ public class SymmRefiner {
 	 * @return The refined alignment
 	 * @throws StructureException
 	 */
-	@Deprecated
 	public static AFPChain refineSymmetry(AFPChain afpChain, Atom[] ca1, Atom[] ca2, int k) throws StructureException {
 		// The current alignment
 		Map<Integer, Integer> alignment = AlignmentTools.alignmentAsMap(afpChain);
@@ -66,7 +87,6 @@ public class SymmRefiner {
 	 * @return A modified map with the refined alignment
 	 * @throws StructureException
 	 */
-	@Deprecated
 	public static Map<Integer, Integer> refineSymmetry(Map<Integer, Integer> alignment,int k) throws StructureException {
 
 		// Store scores
@@ -191,7 +211,6 @@ public class SymmRefiner {
 	 * @param forwardLoops
 	 * @return eligible after modification
 	 */
-	@Deprecated
 	private static List<Integer> initializeEligible(Map<Integer, Integer> alignment,
 			Map<Integer, Double> scores, List<Integer> eligible, int k, NavigableSet<Integer> forwardLoops, NavigableSet<Integer> backwardLoops) {
 		// Eligible if:
@@ -295,7 +314,6 @@ public class SymmRefiner {
 	 *            Eligible residues. Residues from small cycles are removed.
 	 * @return f^k(x)
 	 */
-	@Deprecated
 	private static Map<Integer, Integer> applyAlignmentAndCheckCycles(Map<Integer, Integer> alignmentMap, int k, List<Integer> eligible) {
 
 		// Convert to lists to establish a fixed order (avoid concurrent modification)
@@ -334,7 +352,6 @@ public class SymmRefiner {
 	 * 	created if null
 	 * @return scores
 	 */
-	@Deprecated
 	private static Map<Integer, Double> initializeScores(Map<Integer, Integer> alignment,
 			Map<Integer, Double> scores, int k) {
 		if(scores == null) {
@@ -375,7 +392,6 @@ public class SymmRefiner {
 	 * @param maxPre highest possible residue number
 	 * @return
 	 */
-	@Deprecated
 	private static double scoreAbsError(Integer pre, Integer image,int minPre,int maxPre) {
 		// Use the absolute error score, |x - f^k(x)|
 		double error;
@@ -502,7 +518,6 @@ public class SymmRefiner {
 	 * @param alignmentInteraction Two-letter string used to identify alignment edges
 	 * @throws IOException
 	 */
-	@Deprecated
 	private static void alignmentToSIF(Writer out,
 			AFPChain afpChain, Atom[] ca1,Atom[] ca2, String backboneInteraction, String alignmentInteraction) throws IOException {
 		//out.write("Res1\tInteraction\tRes2\n");

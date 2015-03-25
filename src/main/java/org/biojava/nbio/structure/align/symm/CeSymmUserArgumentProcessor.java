@@ -1,17 +1,14 @@
 package org.biojava.nbio.structure.align.symm;
 
 import org.biojava.nbio.structure.align.StructureAlignment;
-import org.biojava.nbio.structure.align.ce.CECPParameters;
-import org.biojava.nbio.structure.align.ce.CeParameters;
 import org.biojava.nbio.structure.align.ce.CeUserArgumentProcessor;
 import org.biojava.nbio.structure.align.ce.StartupParameters;
-import org.biojava.nbio.structure.align.ce.CeUserArgumentProcessor.CeStartupParams;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.OrderDetectorMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 
 public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 	
-	protected class CeSymmStartupParams extends CeStartupParams {
+	protected static class CeSymmStartupParams extends CeUserArgumentProcessor.CeStartupParams {
 		
 		protected OrderDetectorMethod orderDetectorMethod;
 		protected RefineMethod refineMethod;
@@ -65,7 +62,7 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 					+ ", getSaveOutputDir()=" + getSaveOutputDir()
 					+ ", isShowMenu()=" + isShowMenu() + ", isPrintCE()="
 					+ isPrintCE() + ", getPdb1()=" + getPdb1() + ", getPdb2()="
-					+ getPdb2() + ", isPdbDirSplit()=" + isPdbDirSplit()
+					+ getPdb2()
 					+ ", isPrintXML()=" + isPrintXML() + ", isPrintFatCat()="
 					+ isPrintFatCat() + ", getPdbFilePath()="
 					+ getPdbFilePath() + ", getCacheFilePath()="

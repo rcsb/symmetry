@@ -23,7 +23,7 @@ import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector
 import org.biojava.nbio.structure.align.symm.refine.MultipleAlignRefiner;
 import org.biojava.nbio.structure.align.symm.refine.Refiner;
 import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
-import org.biojava.nbio.structure.align.symm.refine.SingleAlignRefinement;
+import org.biojava.nbio.structure.align.symm.refine.SingleAlignRefiner;
 import org.biojava.nbio.structure.align.util.AFPChainScorer;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -336,7 +336,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 			afpChain.setBlockColors(colors);
 		}
 		else if (params.getRefineMethod() == RefineMethod.SINGLE){
-			refiner = new SingleAlignRefinement();
+			refiner = new SingleAlignRefiner();
 			//Calculate order
 			try {
 				order = orderDetector.calculateOrder(afpChain, ca1);

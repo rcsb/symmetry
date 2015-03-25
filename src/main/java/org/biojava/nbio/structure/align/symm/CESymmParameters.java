@@ -32,9 +32,9 @@ public class CESymmParameters extends CeParameters {
 	
 	public CESymmParameters() {
 		super();
+		maxNrSubunits = 8;
 		refineMethod = RefineMethod.DEFAULT;
 		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
-		maxNrSubunits = 8;
 	}
 
 	@Override
@@ -64,8 +64,6 @@ public class CESymmParameters extends CeParameters {
 	public List<String> getUserConfigHelp() {
 		List<String> params = super.getUserConfigHelp();
 		
-		params.add("Sets the maximum number of iterations to perform in the multiple alignment.");
-		
 		StringBuilder orderTypes = new StringBuilder("Order detection method: ");
 		OrderDetectorMethod[] vals = OrderDetectorMethod.values();
 		if(vals.length == 1) {
@@ -94,15 +92,18 @@ public class CESymmParameters extends CeParameters {
 		}
 		params.add(refineTypes.toString());
 		
+		//maxNrSubunits help explanation
+		params.add("Sets the maximum number of iterations to perform in the multiple alignment.");
+		
 		return params;
 	}
 
 	@Override
 	public List<String> getUserConfigParameters() {
 		List<String> params = super.getUserConfigParameters();
-		params.add("maxNrSubunits");
-		params.add("orderDetectorMethod");
-		params.add("refineMethod");
+		params.add("MaxNrSubunits");
+		params.add("OrderDetectorMethod");
+		params.add("RefineMethod");
 		return params;
 	}
 
@@ -150,7 +151,7 @@ public class CESymmParameters extends CeParameters {
 		this.orderDetectorMethod = orderDetectorMethod;
 	}
 	
-	public void setMaxNrSubunits(int max) {
+	public void setMaxNrSubunits(Integer max) {
 		maxNrSubunits = max;
 	}
 

@@ -15,12 +15,14 @@ import org.biojava.nbio.structure.align.ce.CeCPMain;
 import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.ce.MatrixListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.symm.refine.MultipleAlignRefiner;
 import org.biojava.nbio.structure.align.symm.refine.Refiner;
 import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
+import org.biojava.nbio.structure.align.symm.refine.SingleAlignRefinement;
 import org.biojava.nbio.structure.align.symm.subunit.SubunitTools;
 import org.biojava.nbio.structure.align.util.AFPChainScorer;
 import org.biojava.nbio.structure.align.util.AtomCache;
@@ -43,10 +45,9 @@ public class CeSymm extends AbstractStructureAlignment implements
 	public static final String algorithmName = "jCE-symmetry";
 
 	public static final String version = "1.0";
-
-	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8,
-			0.4f); // TODO finish
 	
+	//The order and refinement options are controlled by CESymmParameters
+	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8, 0.4f);
 	private Refiner refiner = null;
 
 	AFPChain afpChain;
@@ -257,12 +258,11 @@ public class CeSymm extends AbstractStructureAlignment implements
 		calculator.addMatrixListener(this);
 		
 		//Set multiple to true if multiple alignments are needed
-		boolean multiple = refiner instanceof MultipleAlignRefiner;
+		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE);
 
 		int i = 0;
 
-		while ((afpChain == null && i < params.getMaxNrSubunits()) || multiple) { 
-			
+		do {
 			//System.out.print(">>>> Alignment number: "+i);
 
 			if (origM != null) {
@@ -310,30 +310,39 @@ public class CeSymm extends AbstractStructureAlignment implements
 			System.out.println("Alignment "+(i+1)+" completed...");
 			
 			i++;
-		}
+		} while (i < params.getMaxNrSubunits() && multiple);
 		
+		int order = params.getMaxNrSubunits();
 		//Save the results to the AFPChain variables
-		afpChain = allAlignments.get(allAlignments.size()-1);
+		afpChain = allAlignments.get(0);
 		afpAlignments = new AFPChain[allAlignments.size()];
 		for (int k=0; k<allAlignments.size(); k++){
 			afpAlignments[k] = allAlignments.get(k);
 		}
 		
-		int order = 0;
-		try {
-			order = orderDetector.calculateOrder(myAFP, ca1);
-			
-		} catch (OrderDetectionFailedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		if (refiner!=null) {
+		//Refinement options
+		if (params.getRefineMethod() == RefineMethod.MULTIPLE){
+			order = afpAlignments.length;
+			refiner = new MultipleAlignRefiner();
 			try {
 				afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
 			} catch (RefinerFailedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}
+		}
+		else if (params.getRefineMethod() == RefineMethod.SINGLE){
+			refiner = new SingleAlignRefinement();
+			//Calculate order
+			try {
+				order = orderDetector.calculateOrder(afpChain, ca1);
+			} catch (OrderDetectionFailedException e) {
+				e.printStackTrace();
+			}
+			//Refine the AFPChain
+			try {
+				afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
+			} catch (RefinerFailedException e1) {
+				e1.printStackTrace();
 			}
 		}
 
@@ -343,7 +352,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		System.out.println("CeSymm alignment completed...");
 
 		return afpChain;
-
+		
 	}
 
 	@Override
@@ -387,7 +396,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 	public void setRefiner(Refiner refiner) {
 		this.refiner = refiner;
 	}
-
+	
 	public static boolean isSignificant(AFPChain afpChain,OrderDetector orderDetector, Atom[] ca1) throws StructureException {
 
 		// TM-score cutoff

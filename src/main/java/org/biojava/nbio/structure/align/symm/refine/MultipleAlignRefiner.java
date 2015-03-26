@@ -372,9 +372,9 @@ public class MultipleAlignRefiner implements Refiner {
 			StructureAlignmentJmol jmolPanel;
 			jmolPanel = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
 				
-			//Set the rotation axis of the symmetry
+			/*//Set the rotation axis of the symmetry
 			RotationAxis axis = new RotationAxis(afpChain);
-			jmolPanel.evalString(axis.getJmolScript(ca1));
+			jmolPanel.evalString(axis.getJmolScript(ca1));*/
 			
 			//Display two subunits superimposed
 			//SubunitTools.displaySuperimposedSubunits(afpChain, name, ca1, ca2);

@@ -13,10 +13,11 @@ import org.biojava.nbio.structure.align.ce.CeParameters;
  */
 public class CESymmParameters extends CeParameters {
 
-	private int maxNrSubunits; // Renamed, old variable maxNrAlternatives (now means max nr. of iterations/subunits)
+	private int maxNrSubunits; //Renamed, old variable maxNrAlternatives (now means max nr. of iterations/subunits)
 	private OrderDetectorMethod orderDetectorMethod;
 	private RefineMethod refineMethod;
-
+	private int rotationNr; //The number of rotations of the protein for the alignment (if it is C3, 1 would mean 120 degree rotation and 2, 240)
+	private SubunitColors subunitColors; //Sets the color pattern for the subunits
 	
 	public static enum OrderDetectorMethod {
 		SEQUENCE_FUNCTION;
@@ -27,7 +28,15 @@ public class CESymmParameters extends CeParameters {
 		NOT_REFINED,
 		MULTIPLE,
 		SINGLE;
-		public static RefineMethod DEFAULT = NOT_REFINED;
+		public static RefineMethod DEFAULT = MULTIPLE;
+	}
+	
+	public static enum SubunitColors {
+		COLOR_SET,
+		SPECTRAL,
+		//PAIRED,
+		GRADUAL;
+		public static SubunitColors DEFAULT = COLOR_SET;
 	}
 	
 	public CESymmParameters() {
@@ -35,17 +44,21 @@ public class CESymmParameters extends CeParameters {
 		maxNrSubunits = 8;
 		refineMethod = RefineMethod.DEFAULT;
 		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
+		rotationNr = 1;
+		subunitColors = SubunitColors.DEFAULT;
 	}
 
 	@Override
 	public String toString() {
 		return "CESymmParameters [maxNrSubunits=" + maxNrSubunits
 				+ ", orderDetectorMethod=" + orderDetectorMethod
-				+ ", refineMethod=" + refineMethod + ", toString()="
-				+ super.toString() + ", getWinSize()=" + getWinSize()
-				+ ", getRmsdThr()=" + getRmsdThr() + ", getRmsdThrJoin()="
-				+ getRmsdThrJoin() + ", getScoringStrategy()="
-				+ getScoringStrategy() + ", getMaxGapSize()=" + getMaxGapSize()
+				+ ", refineMethod=" + refineMethod + ", rotationNr="
+				+ rotationNr + ", subunitColors=" + subunitColors
+				+ ", toString()=" + super.toString() + ", getWinSize()="
+				+ getWinSize() + ", getRmsdThr()=" + getRmsdThr()
+				+ ", getRmsdThrJoin()=" + getRmsdThrJoin()
+				+ ", getScoringStrategy()=" + getScoringStrategy()
+				+ ", getMaxGapSize()=" + getMaxGapSize()
 				+ ", isShowAFPRanges()=" + isShowAFPRanges()
 				+ ", getMaxOptRMSD()=" + getMaxOptRMSD() + ", getGapOpen()="
 				+ getGapOpen() + ", getGapExtension()=" + getGapExtension()
@@ -62,9 +75,11 @@ public class CESymmParameters extends CeParameters {
 	@Override
 	public void reset(){
 		super.reset();
-		refineMethod = RefineMethod.DEFAULT;
-		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
 		maxNrSubunits = 8;
+		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
+		refineMethod = RefineMethod.DEFAULT;
+		rotationNr = 1;
+		subunitColors = SubunitColors.DEFAULT;
 	}
 
 
@@ -72,7 +87,10 @@ public class CESymmParameters extends CeParameters {
 	public List<String> getUserConfigHelp() {
 		List<String> params = super.getUserConfigHelp();
 		
-		StringBuilder orderTypes = new StringBuilder("Order detection method: ");
+		//maxNrSubunits help explanation
+		params.add("Sets the maximum number of iterations to perform in the multiple alignment.");
+		
+		StringBuilder orderTypes = new StringBuilder("Order Detection Method: ");
 		OrderDetectorMethod[] vals = OrderDetectorMethod.values();
 		if(vals.length == 1) {
 			orderTypes.append(vals[0].name());
@@ -86,7 +104,7 @@ public class CESymmParameters extends CeParameters {
 		}
 		params.add(orderTypes.toString());
 		
-		StringBuilder refineTypes = new StringBuilder("Refinement method: ");
+		StringBuilder refineTypes = new StringBuilder("Refinement Method: ");
 		RefineMethod[] values = RefineMethod.values();
 		if(values.length == 1) {
 			refineTypes.append(values[0].name());
@@ -100,8 +118,22 @@ public class CESymmParameters extends CeParameters {
 		}
 		params.add(refineTypes.toString());
 		
-		//maxNrSubunits help explanation
-		params.add("Sets the maximum number of iterations to perform in the multiple alignment.");
+		//Rotation number help explanation
+		params.add("The subunit rotation of the second structure in the alignment display (if it is C3, 1 would mean 120 degree rotation, and 2, 240 degree)");
+		
+		StringBuilder colorTypes = new StringBuilder("Subunit Colors: ");
+		SubunitColors[] val = SubunitColors.values();
+		if(val.length == 1) {
+			colorTypes.append(val[0].name());
+		} else if(val.length > 1 ) {
+			for(int i=0;i<val.length-1;i++) {
+				colorTypes.append(val[i].name());
+				colorTypes.append(", ");
+			}
+			colorTypes.append("or ");
+			colorTypes.append(val[val.length-1].name());
+		}
+		params.add(colorTypes.toString());
 		
 		return params;
 	}
@@ -112,6 +144,8 @@ public class CESymmParameters extends CeParameters {
 		params.add("MaxNrSubunits");
 		params.add("OrderDetectorMethod");
 		params.add("RefineMethod");
+		params.add("RotationNr");
+		params.add("SubunitColors");
 		return params;
 	}
 
@@ -121,6 +155,8 @@ public class CESymmParameters extends CeParameters {
 		params.add("Maximum Number of Subunits");
 		params.add("Order Detection Method");
 		params.add("Refinement Method");
+		params.add("Rotation Number");
+		params.add("Subunit Colors");
 		return params;
 	}
 
@@ -130,6 +166,8 @@ public class CESymmParameters extends CeParameters {
 		params.add(Integer.class);
 		params.add(OrderDetectorMethod.class);
 		params.add(RefineMethod.class);
+		params.add(Integer.class);
+		params.add(SubunitColors.class);
 		return params;
 	}
 
@@ -159,11 +197,27 @@ public class CESymmParameters extends CeParameters {
 		this.orderDetectorMethod = orderDetectorMethod;
 	}
 	
+	public SubunitColors getSubunitColors() {
+		return subunitColors;
+	}
+
+	public void setSubunitColors(SubunitColors colors) {
+		this.subunitColors = colors;
+	}
+	
 	public void setMaxNrSubunits(Integer max) {
 		maxNrSubunits = max;
 	}
 
 	public int getMaxNrSubunits() {
 		return maxNrSubunits;
+	}
+	
+	public void setRotationNr(Integer number) {
+		rotationNr = number;
+	}
+
+	public int getRotationNr() {
+		return rotationNr;
 	}
 }

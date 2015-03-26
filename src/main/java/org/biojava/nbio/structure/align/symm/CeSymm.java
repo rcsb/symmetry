@@ -17,6 +17,7 @@ import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.ce.MatrixListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.SubunitColors;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
@@ -298,6 +299,11 @@ public class CeSymm extends AbstractStructureAlignment implements
 			if (i==0){
 				optAlgnLen = newAFP.getOptLength();
 				optTMscore = newAFP.getTMScore();
+				//Threshold for symmetry detection TBD
+				if (optTMscore < 0.2){
+					System.out.println("No symmetry detected");
+					return newAFP;
+				}
 			}
 			//If not check for a drop (of 50%) in the alignment length or score and break the loop
 			else if ((newAFP.getOptLength() < (optAlgnLen-optAlgnLen/2) || newAFP.getTMScore() < (optTMscore-optTMscore/2))){
@@ -330,10 +336,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 			} catch (RefinerFailedException e) {
 				e.printStackTrace();
 			}
-			//Set the colors (OPTIONS: Spectral (soft transition), Set1 (radical difference), Set3 (soft colors), Paired (pairs of two colors)
-			Color[] colors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
-			//Color[] colors = {Color.blue, Color.yellow, Color.cyan, Color.orange, Color.green, Color.magenta,  Color.pink, Color.red}; 
-			afpChain.setBlockColors(colors);
 		}
 		else if (params.getRefineMethod() == RefineMethod.SINGLE){
 			refiner = new SingleAlignRefiner();
@@ -350,6 +352,16 @@ public class CeSymm extends AbstractStructureAlignment implements
 			} catch (RefinerFailedException e1) {
 				e1.printStackTrace();
 			}
+		}
+		
+		//Coloring options
+		if (params.getSubunitColors() == SubunitColors.COLOR_SET){
+			Color[] colors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
+			afpChain.setBlockColors(colors);
+		}
+		else if (params.getSubunitColors() == SubunitColors.SPECTRAL){
+			Color[] colors = ColorBrewer.Spectral.getColorPalette(afpChain.getBlockNum());
+			afpChain.setBlockColors(colors);
 		}
 
 		double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);

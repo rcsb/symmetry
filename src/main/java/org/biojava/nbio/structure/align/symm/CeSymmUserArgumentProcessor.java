@@ -5,21 +5,26 @@ import org.biojava.nbio.structure.align.ce.CeUserArgumentProcessor;
 import org.biojava.nbio.structure.align.ce.StartupParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.OrderDetectorMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.SubunitColors;
 
 public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 	
 	protected static class CeSymmStartupParams extends CeUserArgumentProcessor.CeStartupParams {
 		
+		protected int maxNrSubunits;
 		protected OrderDetectorMethod orderDetectorMethod;
 		protected RefineMethod refineMethod;
-		protected int maxNrSubunits;
+		private int rotationNr;
+		private SubunitColors subunitColors;
 		
 
 		public CeSymmStartupParams() {
 			super();
+			maxNrSubunits = 8;
 			orderDetectorMethod = OrderDetectorMethod.DEFAULT;
 			refineMethod = RefineMethod.DEFAULT;
-			maxNrSubunits = 8;
+			rotationNr = 1;
+			subunitColors = SubunitColors.DEFAULT;
 		}
 
 		public OrderDetectorMethod getOrderDetectorMethod() {
@@ -37,27 +42,45 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		public void setRefineMethod(RefineMethod refineMethod) {
 			this.refineMethod = refineMethod;
 		}
+		
+		public SubunitColors getSubunitColors() {
+			return subunitColors;
+		}
+
+		public void setSubunitColors(SubunitColors colors) {
+			this.subunitColors = colors;
+		}
 
 		public int getMaxNrSubunits() {
 			return maxNrSubunits;
 		}
 
-		public void setMaxNrSubunits(int maxNrSubunits) {
-			this.maxNrSubunits = maxNrSubunits;
+		public void setMaxNrSubunits(Integer max) {
+			this.maxNrSubunits = max;
+		}
+		
+		public void setRotationNr(Integer number) {
+			maxNrSubunits = number;
+		}
+
+		public int getRotationNr() {
+			return rotationNr;
 		}
 
 		@Override
 		public String toString() {
 			return "CeSymmStartupParams [orderDetectorMethod="
 					+ orderDetectorMethod + ", refineMethod=" + refineMethod
-					+ ", maxNrSubunits=" + maxNrSubunits + ", getWinSize()="
-					+ getWinSize() + ", getScoringStrategy()="
-					+ getScoringStrategy() + ", getGapOpen()=" + getGapOpen()
-					+ ", getGapExtension()=" + getGapExtension()
-					+ ", getMaxGapSize()=" + getMaxGapSize()
-					+ ", isShowAFPRanges()=" + isShowAFPRanges()
-					+ ", getMaxOptRMSD()=" + getMaxOptRMSD() + ", toString()="
-					+ super.toString() + ", getSearchFile()=" + getSearchFile()
+					+ ", maxNrSubunits=" + maxNrSubunits + ", rotationNr="
+					+ rotationNr + ", subunitColors=" + subunitColors
+					+ ", getWinSize()=" + getWinSize()
+					+ ", getScoringStrategy()=" + getScoringStrategy()
+					+ ", getGapOpen()=" + getGapOpen() + ", getGapExtension()="
+					+ getGapExtension() + ", getMaxGapSize()="
+					+ getMaxGapSize() + ", isShowAFPRanges()="
+					+ isShowAFPRanges() + ", getMaxOptRMSD()="
+					+ getMaxOptRMSD() + ", toString()=" + super.toString()
+					+ ", getSearchFile()=" + getSearchFile()
 					+ ", getAlignPairs()=" + getAlignPairs()
 					+ ", getSaveOutputDir()=" + getSaveOutputDir()
 					+ ", isShowMenu()=" + isShowMenu() + ", isPrintCE()="
@@ -111,6 +134,9 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		aligParams.setMaxNrSubunits(startParams.getMaxNrSubunits());
 		aligParams.setOrderDetectorMethod(startParams.getOrderDetectorMethod());
 		aligParams.setRefineMethod(startParams.getRefineMethod());
+		aligParams.setRotationNr(startParams.getRotationNr());
+		aligParams.setSubunitColors(startParams.getSubunitColors());
+		
 		return aligParams;
 	}
 	

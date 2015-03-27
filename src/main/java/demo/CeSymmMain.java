@@ -332,7 +332,7 @@ public class CeSymmMain {
 				if(cli.hasOption("maxrmsd")) {
 					String strVal = cli.getOptionValue("maxrmsd");
 					try {
-						double val = Integer.parseInt(strVal);
+						double val = Double.parseDouble(strVal);
 						if(val < 0) {
 							System.err.println("Invalid maxrmsd: "+strVal);
 							System.exit(1); return null;
@@ -347,7 +347,7 @@ public class CeSymmMain {
 				if(cli.hasOption("gapopen")) {
 					String strVal = cli.getOptionValue("gapopen");
 					try {
-						double val = Integer.parseInt(strVal);
+						double val = Double.parseDouble(strVal);
 						if(val < 0) {
 							System.err.println("Invalid gapopen: "+strVal);
 							System.exit(1); return null;
@@ -362,7 +362,7 @@ public class CeSymmMain {
 				if(cli.hasOption("gapextension")) {
 					String strVal = cli.getOptionValue("gapextension");
 					try {
-						double val = Integer.parseInt(strVal);
+						double val = Double.parseDouble(strVal);
 						if(val < 0) {
 							System.err.println("Invalid gapextension: "+strVal);
 							System.exit(1); return null;
@@ -406,7 +406,6 @@ public class CeSymmMain {
 			cacheConfig.setCacheFilePath(pdbFilePath);
 		}
 		if(pdbDirSplit != null) {
-			cacheConfig.setSplit(pdbDirSplit);
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
 
@@ -709,7 +708,7 @@ public class CeSymmMain {
 		//		optionOrder.put("threads", optionNum++);
 		
 		options.addOption( OptionBuilder.withLongOpt("maxgapsize")
-				.hasArg(false)
+				.hasArg(true)
 				.withDescription("This parameter configures the maximum gap size "
 						+ "G, that is applied during the AFP extension. The "
 						+ "larger the value, the longer the calculation time "
@@ -726,14 +725,14 @@ public class CeSymmMain {
 		optionOrder.put("scoringstrategy", optionNum++);
 		
 		options.addOption( OptionBuilder.withLongOpt("winsize")
-				.hasArg(false)
+				.hasArg(true)
 				.withDescription("This configures the fragment size m of Aligned Fragment Pairs (AFPs).")
 				.create()
 				);
 		optionOrder.put("winsize", optionNum++);
 		
 		options.addOption( OptionBuilder.withLongOpt("maxrmsd")
-				.hasArg(false)
+				.hasArg(true)
 				.withDescription("The maximum RMSD at which to stop alignment "
 						+ "optimization. (default: unlimited=99)")
 				.create()

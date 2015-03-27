@@ -14,6 +14,8 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
+import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 
@@ -178,17 +180,19 @@ public class SubunitTools {
 	 /**
 	 * Saves a graph into a csv file in the format of tuples (vertex,edge,weight) for every edge in the graph.
 	 * @throws StructureException 
+	 * @throws OrderDetectionFailedException 
 	 */
-	public static void analyzeRunningTime(String[] names, String sFileName) throws IOException, StructureException{
+	public static void analyzeRunningTime(String[] names, int[] orders, String sFileName) throws IOException, StructureException, OrderDetectionFailedException{
 		
 		//Prepare the file writer
 	    FileWriter writer = new FileWriter(sFileName);
-	    writer.append("Name,Order,Length,TimeMultiple,TimeSingle,TimeNotRefined\n");
+	    writer.append("name,orderReal,orderMultipe,orderSingle,length,timeMultiple,timeSingle,timeNotRefined\n");
 		
 		for (int i=0; i<names.length; i++){
 			
 			String name = names[i];
-			int order = 0;
+			int orderM = 0;
+			int orderS = 0;
 			int length = 0;
 			
 			//Initialize the time measure variables
@@ -201,7 +205,7 @@ public class SubunitTools {
 				long startTime = System.nanoTime();
 				
 				//Set the name of the protein structure to analyze
-				System.out.println("Analyzing protein "+name );
+				System.out.println("Analyzing protein "+name);
 				AtomCache cache = new AtomCache();
 	
 				//Parse atoms of the protein into two DS
@@ -214,13 +218,17 @@ public class SubunitTools {
 	
 				if (j==0){
 					//Perform the alignment
+					CESymmParameters params = new CESymmParameters();
+					params.setRefineMethod(RefineMethod.MULTIPLE);
+					
 					afpChain = ceSymm.align(ca1, ca2);
+					
+					orderM = afpChain.getBlockNum();
 					
 					long endTime = System.nanoTime();
 					
 					durationMultiple = (endTime - startTime);
 					length = ca1.length;
-					order = afpChain.getBlockNum();
 				}
 				else if(j==1){
 					//Perform the alignment
@@ -228,6 +236,9 @@ public class SubunitTools {
 					params.setRefineMethod(RefineMethod.SINGLE);
 					
 					afpChain = ceSymm.align(ca1, ca2, params);
+					SequenceFunctionOrderDetector orderDetector= new SequenceFunctionOrderDetector();
+					
+					orderS = orderDetector.calculateOrder(afpChain, ca1);
 					
 					long endTime = System.nanoTime();
 					
@@ -245,16 +256,17 @@ public class SubunitTools {
 					durationNoRefine = (endTime - startTime);
 				}
 			}
-			writer.append(name+","+order+","+length+","+durationMultiple+","+durationSingle+","+durationNoRefine+"\n");
+			writer.append(name+","+orders[i]+","+orderM+","+orderS+","+length+","+durationMultiple+","+durationSingle+","+durationNoRefine+"\n");
 		}
 		
 	    writer.flush();
 	    writer.close();
 	}
 	
-	public static void main(String[] args) throws StructureException, IOException{
+	public static void main(String[] args) throws StructureException, IOException, OrderDetectionFailedException{
 		
-		String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1VYM", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN", "1G61.A","1TL2.A","2JAJ.A", "1U6D", "1JOF.A", "1JTD.B",  "1A12.A", "2I5I.A", "1K3I.A", "1GOT.B", "1TIM.A", "1VZW", "1NSJ"};
-		analyzeRunningTime(names, "/home/scratch/stats/complexity.csv");
+		String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN", "1G61.A","1TL2.A","2JAJ.A", "1U6D", "1JOF.A", "1JTD.B", "1A12.A", "2I5I.A", "1GOT.B", "1TIM.A", "1VZW", "1NSJ"};
+		int[] realOrders = {2,2,2,3,3,3,3,3,4,4,5,5,5,6,7,7,7,7,7,8,8,8};
+		analyzeRunningTime(names, realOrders, "/home/scratch/stats/complexity.csv");
 	}
 }

@@ -31,6 +31,8 @@ import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 import org.jcolorbrewer.ColorBrewer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Try to identify all possible symmetries by iterating recursively over all
@@ -47,6 +49,10 @@ public class CeSymm extends AbstractStructureAlignment implements
 	public static final String algorithmName = "jCE-symmetry";
 
 	public static final String version = "1.0";
+	
+	private static final double symmetryThreshold = 0.4;
+	
+	private static final Logger logger = LoggerFactory.getLogger(CeSymm.class);
 	
 	//The order and refinement options are controlled by CESymmParameters
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8, 0.4f);
@@ -300,8 +306,10 @@ public class CeSymm extends AbstractStructureAlignment implements
 				optAlgnLen = newAFP.getOptLength();
 				optTMscore = newAFP.getTMScore();
 				//Threshold for symmetry detection TBD
-				if (optTMscore < 0.2){
-					System.out.println("No symmetry detected");
+				if (optTMscore < symmetryThreshold){
+					if(debug) {
+						logger.debug("Not symmetric protein...");
+					}
 					return newAFP;
 				}
 			}
@@ -329,7 +337,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		//Refinement options
 		if (params.getRefineMethod() == RefineMethod.MULTIPLE){
 			order = afpAlignments.length+1;
-			System.out.println("Order of symmetry: "+(order));
+			//System.out.println("Order of symmetry: "+(order));
 			refiner = new MultipleAlignRefiner();
 			try {
 				afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
@@ -342,7 +350,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 			//Calculate order
 			try {
 				order = orderDetector.calculateOrder(afpChain, ca1);
-				System.out.println("Order of symmetry: "+(order));
+				//System.out.println("Order of symmetry: "+(order));
 			} catch (OrderDetectionFailedException e) {
 				e.printStackTrace();
 			}

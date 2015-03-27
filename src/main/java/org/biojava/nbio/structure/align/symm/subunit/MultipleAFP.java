@@ -31,10 +31,9 @@ public class MultipleAFP {
 	 * 
 	 * INPUT: the groups of residues sorted increasingly and the Aom[] array of the protein.
 	 */
-	public static void saveMultipleAln(List<List<Integer>> groups, Atom[] ca1) throws StructureException, IOException{
+	public static void fastaMultipleAln(List<List<Integer>> groups, Atom[] ca1, String sFileName) throws StructureException, IOException{
 		
 		int order = groups.get(0).size();
-		String sFileName = "/home/scratch/align/unknown.fasta";
 		
 	    FileWriter writer = new FileWriter(sFileName);
 		

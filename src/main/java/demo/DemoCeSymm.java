@@ -31,7 +31,7 @@ public class DemoCeSymm {
 		name = "3C1B.A:,B:,C:,D:,I:,E:,F:,G:,H:,J:"; // full nucleosome
 		name = "3C1B.I:,J:"; // nucleosome DNA
 		//name = "3C1B.A:,B:,E:,F:,C:,D:,G:,H:"; // nucleosome second axis
-
+		name = "3F2Q";
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75);
 
 
@@ -41,7 +41,8 @@ public class DemoCeSymm {
 			ChemCompGroupFactory.setChemCompProvider(new ReducedChemCompProvider());
 			Structure struct = cache.getStructure(name);
 			Atom[] ca1 = StructureTools.getRepresentativeAtomArray(struct);
-			Atom[] ca2 = StructureTools.cloneAtomArray(ca1);
+			Atom[] ca2 = StructureTools.getRepresentativeAtomArray(struct.clone());
+//			Atom[] ca2 = StructureTools.cloneAtomArray(ca1); // loses ligands
 			AFPChain afpChain = ceSymm.align(ca1, ca2);
 			afpChain.setName1(name);
 			afpChain.setName2(name);

@@ -438,8 +438,9 @@ public class CeSymmMain {
 				results.setMeanSecondsTaken(totalTimeTaken / (float) names.size() / 1000.0f);
 
 				// Perform alignment to determine axis
-				Atom[] ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(result.getId(),null,cache));
-				Atom[] ca2 = StructureTools.cloneAtomArray(ca1);
+				Structure struct = StructureTools.getStructure(result.getId(),null,cache);
+				Atom[] ca1 = StructureTools.getRepresentativeAtomArray(struct);
+				Atom[] ca2 = StructureTools.getRepresentativeAtomArray(struct.clone());
 				AFPChain alignment = calc.getAfpChain();
 				//alignment.setName1(name);
 				//alignment.setName2(name);

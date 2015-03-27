@@ -14,7 +14,7 @@
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<slf4j.version>1.7.7</slf4j.version>
 		<log4j.version>2.1</log4j.version>
-		<biojava.version>4.0.0</biojava.version>
+		<biojava.version>4.1.0-SNAPSHOT</biojava.version>
 	</properties>
 
 	<repositories>

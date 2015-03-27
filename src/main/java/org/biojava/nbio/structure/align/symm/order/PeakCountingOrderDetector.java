@@ -15,7 +15,7 @@ import org.biojava.nbio.structure.align.symm.census3.stats.CensusStatUtils;
  */
 public class PeakCountingOrderDetector implements OrderDetector {
 
-	private int maxOrder = 9;
+	private int maxOrder;
 	private double degreeSampling = 0.01;
 	private double epsilon = 0.000001;
 	private double bandwidth = 0.1;
@@ -128,8 +128,8 @@ public class PeakCountingOrderDetector implements OrderDetector {
 //		String name = "d1h70a_"; // 5
 
 		// Perform alignment to determine axis
-		Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		Atom[] ca2 = StructureTools.cloneCAArray(ca1);
+		Atom[] ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca1);
 		CeSymm ce = new CeSymm();
 		AFPChain alignment = ce.align(ca1, ca2);
 

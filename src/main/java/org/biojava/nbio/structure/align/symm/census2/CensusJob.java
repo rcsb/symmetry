@@ -39,7 +39,6 @@ import org.biojava.nbio.structure.secstruc.SecStruc;
 import org.biojava.nbio.structure.secstruc.SecStrucGroup;
 import org.biojava.nbio.structure.secstruc.SecStrucState;
 import org.biojava.nbio.structure.align.symm.census2.Census.AlgorithmGiver;
-import org.biojava.nbio.structure.align.symm.census2.utils.CensusChecker;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.symm.protodomain.Protodomain;
@@ -121,8 +120,8 @@ public class CensusJob implements Callable<Result> {
 				structure = cache.getStructure(name);
 			}
 			// ca1 = cache.getAtoms(name);
-			ca1 = StructureTools.getAtomCAArray(structure);
-			ca2 = StructureTools.cloneCAArray(ca1);
+			ca1 = StructureTools.getRepresentativeAtomArray(structure);
+			ca2 = StructureTools.cloneAtomArray(ca1);
 		} catch (Exception e) {
 			logger.error("Could not create the atom arrays for " + name + ": " + e.getMessage(), e);
 			return null;

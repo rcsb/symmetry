@@ -45,6 +45,7 @@ public class RotationOrderDetector implements OrderDetector {
 		this.method= method;
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getSimpleName()+"[method="+method+",maxOrder="+maxOrder+"]";
 	}
@@ -102,7 +103,7 @@ public class RotationOrderDetector implements OrderDetector {
 		double[] angles = new double[steps];
 		double[] distances = new double[steps];
 
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 		double angle = 0;
 
 		for (int step=0; step<steps;step++) {
@@ -359,7 +360,7 @@ public class RotationOrderDetector implements OrderDetector {
 		// holds the sin2(i*angle/2) terms
 		double[][] harmonics = new double[steps][maxOrder];
 
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 
 		for (int step=0; step<steps;step++) {
 			double dist = superpositionDistance(ca, ca2);
@@ -424,7 +425,7 @@ public class RotationOrderDetector implements OrderDetector {
 		// holds the sin2(i*angle/2) terms
 		double[][] harmonics = new double[steps][maxOrder+1];
 
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 
 		if(minAngle != 0.) {
 			axis.rotate(ca2, minAngle);
@@ -488,7 +489,7 @@ public class RotationOrderDetector implements OrderDetector {
 		// goal is to find a_1...a_maxOrder
 
 		double[][] distances = new double[steps][1];//preserve matrix dimensions
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 		if(minAngle != 0.) {
 			axis.rotate(ca2, minAngle);
 		}
@@ -559,7 +560,7 @@ public class RotationOrderDetector implements OrderDetector {
 		// goal is to find a_1...a_maxOrder
 
 		double[][] distances = new double[steps][1];//preserve matrix dimensions
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 		if(minAngle != 0.) {
 			axis.rotate(ca2, minAngle);
 		}
@@ -623,7 +624,7 @@ public class RotationOrderDetector implements OrderDetector {
 		// goal is to find a_1...a_maxOrder
 
 		double[][] distances = new double[steps][1];//preserve matrix dimensions
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 		if(minAngle != 0.) {
 			axis.rotate(ca2, minAngle);
 		}
@@ -682,7 +683,7 @@ public class RotationOrderDetector implements OrderDetector {
 		// goal is to find a_1...a_maxOrder
 
 		double[][] distances = new double[steps][1];//preserve matrix dimensions
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 		if(minAngle != 0.) {
 			axis.rotate(ca2, minAngle);
 		}

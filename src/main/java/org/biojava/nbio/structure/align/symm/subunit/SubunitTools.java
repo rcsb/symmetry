@@ -2,25 +2,20 @@ package org.biojava.nbio.structure.align.symm.subunit;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.util.AFPAlignmentDisplay;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
  * Methods to process AFPChain multiple alignments and analyze the symmetrical subunits generated.
@@ -157,41 +152,14 @@ public class SubunitTools {
 	    writer.flush();
 	    writer.close();
 	}
-	 
-	/**
-	 * Saves a graph into a csv file in the format of tuples (vertex,edge) for every node in the graph that is part of a subunit.
-	 */
-	 public static void csvGraphSubunits(List<List<Integer>> graph, String name, List<Integer> alreadySeen) throws IOException{
-		 
-	String sFileName = "/home/scratch/graphs/"+name+"_subunit.csv";
-
-	    FileWriter writer = new FileWriter(sFileName);
-	    writer.append("Vertex,Edge\n");	    
-	    for (int i=0; i<graph.size(); i++){
-	    	if (alreadySeen.contains(i)){
-		    	for (int j=0; j<graph.get(i).size(); j++){
-		    		if (alreadySeen.contains(graph.get(i).get(j))){
-		    		writer.append(i+",");
-		    		writer.append(graph.get(i).get(j)+"\n");
-		    		}
-		    	}
-	    	}
-	    }
-	    
-	    writer.flush();
-	    writer.close();
-	
-	}
 	
 	 /**
 	 * Saves a graph into a csv file in the format of tuples (vertex,edge,weight) for every edge in the graph.
 	 */
-	public static void csvWeightedGraph(double[][][] graph, String name) throws IOException{
-		 
-		String sFileName = "/home/scratch/graphs/"+name+".csv";
+	 public static void csvWeightedGraph(double[][][] graph, String sFileName) throws IOException{
 		
 	    FileWriter writer = new FileWriter(sFileName);
-	    writer.append("Vertex,Edge,Distance,RMSD\n");	    
+	    writer.append("Vertex,Edge,Distance,RMSD\n");
 	    for (int i=0; i<graph.length; i++){
 	    	for (int j=0; j<graph[i].length; j++){
 	    		
@@ -211,10 +179,9 @@ public class SubunitTools {
 	 * Saves a graph into a csv file in the format of tuples (vertex,edge,weight) for every edge in the graph.
 	 * @throws StructureException 
 	 */
-	public static void analyzeRunningTime(String[] names) throws IOException, StructureException{
+	public static void analyzeRunningTime(String[] names, String sFileName) throws IOException, StructureException{
 		
 		//Prepare the file writer
-		String sFileName = "/home/scratch/stats/complexity.csv";
 	    FileWriter writer = new FileWriter(sFileName);
 	    writer.append("Name,Order,Length,TimeMultiple,TimeSingle,TimeNotRefined\n");
 		
@@ -288,6 +255,6 @@ public class SubunitTools {
 	public static void main(String[] args) throws StructureException, IOException{
 		
 		String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1VYM", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN", "1G61.A","1TL2.A","2JAJ.A", "1U6D", "1JOF.A", "1JTD.B",  "1A12.A", "2I5I.A", "1K3I.A", "1GOT.B", "1TIM.A", "1VZW", "1NSJ"};
-		analyzeRunningTime(names);
+		analyzeRunningTime(names, "/home/scratch/stats/complexity.csv");
 	}
 }

@@ -267,6 +267,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 		
 		//Set multiple to true if multiple alignments are needed
 		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE);
+		
+		//params.setMaxNrIterationsForOptimization(1);
 
 		int i = 0;
 
@@ -378,7 +380,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 		//System.out.println("CeSymm alignment completed...");
 
 		return afpChain;
-		
 	}
 
 	@Override

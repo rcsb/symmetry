@@ -113,6 +113,7 @@ public class SymmetryTools {
 
 				for ( int i1 = start1; i1< end1 ; i1++){
 
+					// blank diagonal of dist1
 					for ( int k=0; k < blankWindowSize/2 ; k ++){
 						if ( i1-k >= 0) {
 							double resetVal = getResetVal(max.get(i1-k, i1-k), 0, gradientPolyCoeff, gradientExpCoeff);
@@ -134,13 +135,23 @@ public class SymmetryTools {
 							double resetVal2 = getResetVal(max.get(i1, j2-breakPoint), Math.abs(i1-(j2-breakPoint)), gradientPolyCoeff, gradientExpCoeff);
 							max.set(i1,j2-breakPoint,resetVal2);
 						}
-						for ( int k=0; k <blankWindowSize/2 ; k ++){							
+						for ( int k=0; k <blankWindowSize/2 ; k ++){
 							if ( j2-k >=0) {
-								double resetVal2 = getResetVal(max.get(j2-k, j2-k), 0, gradientPolyCoeff, gradientExpCoeff);
-								dist2[j2-k][j2-k] = resetVal2;
+								if( j2-k < breakPoint ) {
+									double resetVal2 = getResetVal(max.get(j2-k, j2-k), 0, gradientPolyCoeff, gradientExpCoeff);
+									dist2[j2-k][j2-k] = resetVal2;
+								} else {
+									double resetVal2 = getResetVal(max.get(j2-k-breakPoint, j2-k), 0, gradientPolyCoeff, gradientExpCoeff);
+									dist2[j2-k-breakPoint][j2-k-breakPoint] = resetVal2;
+								}
 							} else if ( j2+k < cols) {
-								double resetVal2 = getResetVal(max.get(j2+k, j2+k), 0, gradientPolyCoeff, gradientExpCoeff);
-								dist2[j2+k][j2+k] = resetVal2;
+								if( j2+k < breakPoint) {
+									double resetVal2 = getResetVal(max.get(j2+k, j2+k), 0, gradientPolyCoeff, gradientExpCoeff);
+									dist2[j2+k][j2+k] = resetVal2;
+								} else {
+									double resetVal2 = getResetVal(max.get(j2+k-breakPoint, j2+k), 0, gradientPolyCoeff, gradientExpCoeff);
+									dist2[j2+k-breakPoint][j2+k-breakPoint] = resetVal2;
+								}
 							}
 						}
 					}

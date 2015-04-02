@@ -29,7 +29,8 @@ import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
  * Creates a refined alignment with a single self-alignment. Needs the order of symmetry.
- * Uses Spencer's refinement code that was initially in SymmRefiner.
+ * Uses Spencer's refinement code that was initially in the SymmRefiner class.
+ * 
  * @author lafita
  */
 

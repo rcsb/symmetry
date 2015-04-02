@@ -68,9 +68,7 @@ public class SubunitTools {
 	/**
 	 * Saves a graph into a csv file in the format of tuples (vertex,edge) for every edge in the graph.
 	 */
-	 public static void csvGraph(List<List<Integer>> graph, String name) throws IOException {
-		 
-		String sFileName = "/home/scratch/graphs/"+name+".csv";
+	 public static void csvGraph(List<List<Integer>> graph, String sFileName) throws IOException {
 		
 	    FileWriter writer = new FileWriter(sFileName);
 	    writer.append("Vertex,Edge\n");

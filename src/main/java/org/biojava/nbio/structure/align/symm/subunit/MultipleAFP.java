@@ -3,6 +3,7 @@ package org.biojava.nbio.structure.align.symm.subunit;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -11,8 +12,10 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.SVDSuperimposer;
 import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.jama.Matrix;
 
@@ -38,7 +41,7 @@ public class MultipleAFP {
 	List<Double> rmsdHistory;
 	List<Double> scoreHistory;
 	
-	//List to store the residues aligned, in the block. Dimensions are: [order][residues in block]
+	//List to store the residues aligned, in the block. Dimensions are: [order][subunitLen]
 	List<ArrayList<Integer>> block;
 	//List to store the residues not aligned, that are part of the free pool. Dimensions are: [order][residues in the pool]
 	List<ArrayList<Integer>> freePool;
@@ -47,7 +50,11 @@ public class MultipleAFP {
 	double rmsd;
 	double score;
 	
-	MultipleAFP(AFPChain afp, Atom[] ca1){
+	//Multiple alignment String sequences
+	String[] alnSequences;
+	String alnSymbols;
+	
+	public MultipleAFP(AFPChain afp, Atom[] ca1){
 		
 		//Initialize member variables
 		afpChain = afp;
@@ -91,10 +98,9 @@ public class MultipleAFP {
 		try {
 			updateAvgRMSDandScore();
 			optimizeMC(10000);
-			saveHistory("/scratch/mcopt/1tim.a_MCopt_0.csv");
+			//saveHistory("/scratch/mcopt/"+afpChain.getName1()+"_optMC.csv");
+			//saveSeqAln("/scratch/align/"+afpChain.getName1()+"_MC.fasta");
 		} catch (StructureException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -119,7 +125,7 @@ public class MultipleAFP {
 		//Initialize a random generator number
 		Random rnd = new Random();
 		int conv = 0;  //Number of steps without an alignment improvement
-		double C = 1.0;  //Constant for the probability of acceptance for bad moves, will be decreased
+		double C = 0.05;  //Constant for the probability of acceptance for bad moves, will be decreased
 		
 		int i = 1;
 		
@@ -162,7 +168,7 @@ public class MultipleAFP {
 			if (AS<0){
 				
 				//Probability of accepting the new alignment
-				double prob = Math.min(Math.max((C+10*AS)/(i),0.0),1.0);
+				double prob = Math.min(Math.max((C+AS)/Math.sqrt(i),0.0),1.0);
 				double p = rnd.nextDouble();
 				//Reject the move
 				if (p>prob){
@@ -177,7 +183,7 @@ public class MultipleAFP {
 				
 			} else if (AS!=0.0) conv=0;
 			
-			if (debug) 	System.out.println(i+": --prob: "+Math.min(Math.max((C+10*AS)/(i),0.0),1.0)+", --score: "+AS+", --conv: "+conv);
+			if (debug) 	System.out.println(i+": --prob: "+Math.min(Math.max((C+AS)/Math.sqrt(i),0.0),1.0)+", --score: "+AS+", --conv: "+conv);
 			
 			subunitLenHistory.add(subunitLen);
 			rmsdHistory.add(rmsd);
@@ -185,6 +191,21 @@ public class MultipleAFP {
 			
 			i++;
 		}
+		
+		int[][][] newAlgn = new int[order][2][subunitLen];
+		for (int su=0; su<order; su++){
+			int[] chain1 = new int[subunitLen];
+			int[] chain2 = new int[subunitLen];
+			for (int k=0; k<subunitLen; k++){
+				chain1[k] = block.get(su).get(k);
+				chain2[k] = block.get((su+1)%order).get(k);
+			}
+			newAlgn[su][0] = chain1;
+			newAlgn[su][1] = chain2;
+		}
+		
+		afpChain = AlignmentTools.replaceOptAln(newAlgn, afpChain, ca, ca);
+		updateSeqAln();
 	}
 	
 	/**
@@ -617,6 +638,89 @@ public class MultipleAFP {
 		score = SVDSuperimposer.getTMScore(arr1, arr2, ca.length, ca.length);
 	}
 	
+	/**
+	 *  Calculate the multiple sequence alignment as strings from the block and freePool residues.
+	 */
+	private void updateSeqAln() {
+	    
+		//Store the current positions of the alignment, block and free
+		int[] blockPos = new int[order];
+		int[] freePos = new int[order];
+		
+		//Initialize sequence variables
+		alnSequences = new String[order];
+		Arrays.fill(alnSequences,new String());
+		alnSymbols = new String();
+		
+		while(true){
+			boolean stop = true;
+			int gaps = 0;
+			char[] provisional = new char[order];
+		    
+			for (int su=0; su<order; su++){
+				//If the subunit residues ran out (no more free or block) insert a gap
+				if (blockPos[su] == subunitLen && freePos[su] == freePool.get(su).size()){
+					provisional[su] = '-';
+					gaps++;
+				}
+				//If there are no more aligned residues increment the gap and add the freePool residues
+				else if (blockPos[su] == subunitLen){
+					provisional[su] = StructureTools.get1LetterCode(ca[freePool.get(su).get(freePos[su])].getGroup().getPDBName());
+					freePos[su]++;
+					gaps++;
+				}
+				//If there are no more free residues insert a provisional dash
+				else if (freePos[su] == freePool.get(su).size()){
+					provisional[su] = '-';
+				}
+				//If the next residue is from the freePool, because the residue is lower than the one in the block
+				else if (freePool.get(su).get(freePos[su]) < block.get(su).get(blockPos[su])){
+					provisional[su] = StructureTools.get1LetterCode(ca[freePool.get(su).get(freePos[su])].getGroup().getPDBName());
+					freePos[su]++;
+					gaps++;
+				}
+				//If the next residue is from the block insert a provisional dash
+				else {
+					provisional[su] = '-';
+				}
+			}
+			//If there are no gaps add the aligned residues
+			if (gaps==0){
+				alnSymbols += "|";
+				for (int su=0; su<order; su++){
+					alnSequences[su] += StructureTools.get1LetterCode(ca[block.get(su).get(blockPos[su])].getGroup().getPDBName());
+					blockPos[su]++;
+				}
+			}
+			//If any sequence has a gap add the provisional characters
+			else {
+				alnSymbols += " ";
+				for (int su=0; su<order; su++){
+					alnSequences[su] += provisional[su];
+				}
+			}
+			
+			//Stop if all of the residues in the block and freePool have been analyzed
+			for (int q=0; q<order; q++){
+				if (freePos[q] != freePool.get(q).size() || blockPos[q] != subunitLen)
+					stop = false;
+			}
+			if (stop) break;
+		}
+		
+		if (debug){
+			System.out.println("SEQUENCE ALIGNMENT:");
+			for (int su=0; su<order; su++){
+				System.out.println(alnSequences[su]);
+				if (su!=order-1) System.out.println(alnSymbols);
+			}
+			System.out.println("Subunit Length: "+subunitLen);
+		}
+	}
+	
+	/**
+	 * Save the evolution of the optimization process as a csv file.
+	 */
 	private void saveHistory(String filePath) throws IOException{
 		
 	    FileWriter writer = new FileWriter(filePath);
@@ -630,19 +734,70 @@ public class MultipleAFP {
 	    writer.close();
 	}
 	
+	/**
+	 *  Save the multiple sequence alignment result of the optimization as a fasta alignment
+	 */
+	private void saveSeqAln(String filePath) throws IOException {
+		
+		FileWriter writer = new FileWriter(filePath);
+		
+		for (int su=0; su<order; su++){
+			writer.append(">Subunit_"+(su+1)+"\n");
+			writer.append(alnSequences[su]+"\n");
+			//if (su!=order-1) writer.append(alnSymbols+"\n");
+		}
+		
+		writer.flush();
+	    writer.close();
+	}
+
 	public static void main(String[] args) throws IOException, StructureException{
 		
-		String name = "1tim.a";
+		long startTime = System.currentTimeMillis();
+		
+		String name = "1vzw";
 		AtomCache cache = new AtomCache();
 		Atom[] ca1 = cache.getAtoms(name);
 		Atom[] ca2 = cache.getAtoms(name);
 		
 		CeSymm ceSymm = new CeSymm();
 		AFPChain afpChain = ceSymm.align(ca1, ca2);
+		afpChain.setName1(name);
+		
+		long alignTime = System.currentTimeMillis() - startTime;
 		
 		MultipleAFP multipleAFP = new MultipleAFP(afpChain,ca1);
 		
-		System.out.println("Finished!");
+		long optimizationTime   = System.currentTimeMillis() - alignTime - startTime;
 		
+		if (debug){
+			System.out.println(">> Alignment time: "+alignTime+" ms");
+			System.out.println(">> Optimization time: "+optimizationTime+" ms");
+		}
+		
+	}
+
+	public AFPChain getAfpChain() {
+		return afpChain;
+	}
+
+	public void setAfpChain(AFPChain afpChain) {
+		this.afpChain = afpChain;
+	}
+
+	public String[] getAlnSequences() {
+		return alnSequences;
+	}
+
+	public void setAlnSequences(String[] alnSequences) {
+		this.alnSequences = alnSequences;
+	}
+
+	public String getAlnSymbols() {
+		return alnSymbols;
+	}
+
+	public void setAlnSymbols(String alnSymbols) {
+		this.alnSymbols = alnSymbols;
 	}
 }

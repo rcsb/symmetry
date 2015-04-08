@@ -12,6 +12,9 @@ import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
+import org.biojava.nbio.structure.align.symm.subunit.MultipleAFP;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -224,7 +227,12 @@ public class MultipleAlignRefiner implements Refiner {
 			}
 		}
 		
-		return AlignmentTools.replaceOptAln(optAlgn, allAlignments[order-2], ca1, ca1);
+		AFPChain afp = AlignmentTools.replaceOptAln(optAlgn, allAlignments[order-2], ca1, ca1);
+		
+		MultipleAFP mulAln = new MultipleAFP(afp, ca1);
+		
+		return mulAln.getAfpChain();
+		
 	}
 	
 	/**
@@ -342,7 +350,7 @@ public class MultipleAlignRefiner implements Refiner {
 		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN¨, "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ"}; //Correct ones
 		//String[] names = {"1VYM"}
 		//String[] names = {"d1poqa_", "1itb.A", "3jut.A", "2jaj.A", "d1jlya1" ,"1hiv"}; //New structures to test
-		String[] names = {"1TIM.A"};
+		String[] names = {"1tim.a"};
 		
 		for (int i=0; i<names.length; i++){
 			
@@ -368,16 +376,7 @@ public class MultipleAlignRefiner implements Refiner {
 			afpChain.setName2(name);
 				
 			//Display the AFP alignment of the subunits
-			StructureAlignmentJmol jmolPanel;
-			jmolPanel = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
-				
-			//Set the rotation axis of the symmetry
-			RotationAxis axis = new RotationAxis(afpChain);
-			jmolPanel.evalString(axis.getJmolScript(ca1));
-			
-			//Display two subunits superimposed
-			//SubunitTools.displaySuperimposedSubunits(afpChain, name, ca1, ca2);
+			SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2);
 		}
 	}
-
 }

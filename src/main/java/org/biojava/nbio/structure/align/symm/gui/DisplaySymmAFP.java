@@ -1,9 +1,12 @@
 package org.biojava.nbio.structure.align.symm.gui;
 
+import java.awt.Color;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.Box;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JScrollPane;
@@ -16,8 +19,11 @@ import org.biojava.nbio.structure.align.gui.AlignmentTextPanel;
 import org.biojava.nbio.structure.align.gui.DisplayAFP;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.aligpanel.AligPanel;
+import org.biojava.nbio.structure.align.gui.aligpanel.StatusDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.symm.gui.aligpanel.SymmAligPanel;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 
 /** A utility class for visualistion of symmetry alignments (rotation of the second structure).
@@ -31,7 +37,7 @@ public class DisplaySymmAFP extends DisplayAFP {
 	/** 
 	 * Rotation of ca2, hetatoms2 and nucleotides2 will be done here.
 	 */
-	public static SymmetryJmol display(AFPChain afpChain,Group[] twistedGroups, Atom[] ca1, Atom[] ca2, List<Group> hetatms, List<Group> nucleotides, List<Group> hetatms2, List<Group> nucleotides2 ) throws StructureException{
+	public static SymmetryJmol display(AFPChain afpChain,Group[] twistedGroups, Atom[] ca1, Atom[] ca2, List<Group> hetatms, List<Group> nucleotides, List<Group> hetatms2, List<Group> nucleotides2, Color[] subunitColors) throws StructureException{
 
 		List<Atom> twistedAs = new ArrayList<Atom>();
 
@@ -60,7 +66,7 @@ public class DisplaySymmAFP extends DisplayAFP {
 
 		//System.out.println(artificial.toPDB());
 
-		SymmetryJmol jmol = new SymmetryJmol(afpChain,arr1,arr2);
+		SymmetryJmol jmol = new SymmetryJmol(afpChain,arr1,arr2, subunitColors);
 		jmol.setTitle(title);
 		
 		return jmol;
@@ -150,6 +156,53 @@ public class DisplaySymmAFP extends DisplayAFP {
 		frame.getContentPane().add(js);
 		frame.pack();      
 		frame.setVisible(true);
+	}
+	
+	public static void showAlignmentImage(AFPChain afpChain, Atom[] ca1, Atom[] ca2, SymmetryJmol jmol, Color[] subunitColors) {
+		String result = afpChain.toFatcat(ca1, ca2);
+
+		//String rot = afpChain.toRotMat();
+		//DisplayAFP.showAlignmentImage(afpChain, result + AFPChain.newline + rot);
+
+		SymmAligPanel me = new SymmAligPanel();
+		me.setSubunitColors(subunitColors);
+		me.setStructureAlignmentJmol(jmol);
+		me.setAFPChain(afpChain);
+
+		JFrame frame = new JFrame();
+
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);		
+		frame.setTitle(afpChain.getName1() + " vs. " + afpChain.getName2() + " | " + afpChain.getAlgorithmName() + " V. " + afpChain.getVersion());
+		me.setPreferredSize(new Dimension(me.getCoordManager().getPreferredWidth() , me.getCoordManager().getPreferredHeight()));
+
+		JMenuBar menu = MenuCreator.getAlignmentTextMenu(frame,me,afpChain);
+		frame.setJMenuBar(menu);
+
+		JScrollPane scroll = new JScrollPane(me);
+		scroll.setAutoscrolls(true);
+
+		StatusDisplay status = new StatusDisplay();
+		status.setAfpChain(afpChain);
+
+		status.setCa1(ca1);
+		status.setCa2(ca2);
+		me.setCa1(ca1);
+		me.setCa2(ca2);
+		me.addAlignmentPositionListener(status);
+
+
+		Box vBox = Box.createVerticalBox();
+		vBox.add(scroll);
+		vBox.add(status);
+
+
+		frame.getContentPane().add(vBox);
+
+		frame.pack();
+		frame.setVisible(true);
+		// make sure they get cleaned up correctly:
+			frame.addWindowListener(me);
+			frame.addWindowListener(status);
 	}
 	
 	/**

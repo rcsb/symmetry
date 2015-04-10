@@ -51,7 +51,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 	public static final String version = "1.0";
 	
-	private static final double symmetryThreshold = 0.35;
+	private static final double symmetryThreshold = 0.4;
 	
 	private static final Logger logger = LoggerFactory.getLogger(CeSymm.class);
 	
@@ -375,16 +375,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 					e1.printStackTrace();
 				}
 			}
-		}
-		
-		//Coloring options
-		if (params.getSubunitColors() == SubunitColors.COLOR_SET){
-			Color[] colors = ColorBrewer.Set1.getColorPalette(params.getMaxSymmOrder());
-			afpChain.setBlockColors(colors);
-		}
-		else if (params.getSubunitColors() == SubunitColors.SPECTRAL){
-			Color[] colors = ColorBrewer.Spectral.getColorPalette(params.getMaxSymmOrder());
-			afpChain.setBlockColors(colors);
 		}
 
 		double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);

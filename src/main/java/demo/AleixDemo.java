@@ -17,19 +17,19 @@ import org.biojava.nbio.structure.align.symm.subunit.MultipleAFP;
 import org.jcolorbrewer.ColorBrewer;
 
 /**
- * Quick demo of how to call CE-Symm programmatically.
+ * Demo for various scripting analysis.
  *
- * @author spencer
+ * @author lafita
  *
  */
-public class AleixDemoMC {
+public class AleixDemo {
 
 	public static void main(String[] args){
 
 	
 		AtomCache cache = new AtomCache();
 
-		String name = "2afg.a";
+		String name = "1vzw";
 		
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75);
 		
@@ -42,11 +42,6 @@ public class AleixDemoMC {
 			AFPChain afpChain = ceSymm.align(ca1, ca2);
 			afpChain.setName1(name);
 			afpChain.setName2(name);
-			int symOrder = afpChain.getBlockNum();
-			
-			//Where a new AFPChain is initialized that the block colors are reset?
-			Color[] colors = ColorBrewer.Set1.getColorPalette(symOrder);
-			afpChain.setBlockColors(colors);
 			
 			SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2);
 			

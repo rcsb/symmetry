@@ -1,13 +1,16 @@
 package org.biojava.nbio.structure.align.symm.gui;
 
+import java.awt.Color;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.StructureAlignment;
-import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.gui.AlignmentCalculationRunnable;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.symm.CESymmParameters;
+import org.jcolorbrewer.ColorBrewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,11 +58,27 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 
 			afpChain.setName1(name);
 			afpChain.setName2(name);
+			
+			CESymmParameters params = (CESymmParameters) algorithm.getParameters();
+			//Set the color of the subunits
+			Color[] subunitColors = null;
+			CESymmParameters.SubunitColors COLOR = params.getSubunitColors();
+			switch(COLOR){
+			case COLOR_SET: 
+				subunitColors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
+				break;
+			case SPECTRAL:
+				subunitColors = ColorBrewer.Spectral.getColorPalette(afpChain.getBlockNum());
+				break;
+			case PAIRED:
+				subunitColors = ColorBrewer.Paired.getColorPalette(afpChain.getBlockNum());
+			case GRADUAL:
+				break;
+			}
 
-			SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2);
+			SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2, subunitColors);
 
 			String title = jmol.getTitle();
-			ConfigStrucAligParams params = algorithm.getParameters();
 			
 			/*if ( params != null) //The title is very large for CeSymm, so disabled.
 				title += " " + algorithm.getParameters().toString();*/

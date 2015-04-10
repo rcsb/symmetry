@@ -28,7 +28,7 @@ public class CESymmParameters extends CeParameters {
 		MULTIPLE,
 		SINGLE,
 		MC_OPT;
-		public static RefineMethod DEFAULT = SINGLE;
+		public static RefineMethod DEFAULT = MULTIPLE;
 	}
 	
 	public static enum SubunitColors {

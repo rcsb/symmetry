@@ -29,17 +29,9 @@ public class MultipleRefiner implements Refiner {
 	
 	@Override
 	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
-			throws RefinerFailedException {
+			throws RefinerFailedException,StructureException {
 		
-		AFPChain refinedAFP = new AFPChain();
-		
-		try {
-			 refinedAFP = cycleRefineAFP(afpAlignments, ca1);
-		} catch (StructureException e) {
-			e.printStackTrace();
-		}
-		
-		return refinedAFP;
+		return cycleRefineAFP(afpAlignments, ca1);
 	}
 	
 	 /**
@@ -343,7 +335,7 @@ public class MultipleRefiner implements Refiner {
 		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN¨, "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ"}; //Correct ones
 		//String[] names = {"1VYM"}
 		//String[] names = {"d1poqa_", "1itb.A", "3jut.A", "2jaj.A", "d1jlya1" ,"1hiv"}; //New structures to test
-		String[] names = {"1W0P"};
+		String[] names = {"1afg.a"};
 		
 		for (int i=0; i<names.length; i++){
 			

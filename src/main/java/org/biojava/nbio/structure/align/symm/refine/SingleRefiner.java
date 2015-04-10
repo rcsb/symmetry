@@ -42,19 +42,11 @@ public class SingleRefiner implements Refiner {
 	
 	@Override
 	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
-			throws RefinerFailedException {
+			throws RefinerFailedException,StructureException {
 		
 		AFPChain originalAFP = afpAlignments[0];
-		AFPChain refinedAFP = new AFPChain();
 		
-		//Provisional, move the code from SymRefiner to this class.
-		try {
-			refinedAFP = refineSymmetry(originalAFP, ca1, ca2, order);
-		} catch (StructureException e) {
-			e.printStackTrace();
-		}
-		
-		return refinedAFP;
+		return refineSymmetry(originalAFP, ca1, ca2, order);
 	}
 	
 	/**

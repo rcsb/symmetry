@@ -54,13 +54,13 @@ public class MultipleAFP {
 	String[] alnSequences;
 	String alnSymbols;
 	
-	public MultipleAFP(AFPChain afp, Atom[] ca1, int symOrder){
+	public MultipleAFP(AFPChain afp, Atom[] ca1){
 		
 		//Initialize member variables
 		afpChain = afp;
 		ca = ca1;
-		order = symOrder;
-		subunitLen = afpChain.getOptLength()/order;
+		order = afpChain.getBlockNum();
+		subunitLen = afpChain.getOptLen()[0];
 		
 		//Initialize alignment variables
 		block = new ArrayList<ArrayList<Integer>>();
@@ -69,19 +69,15 @@ public class MultipleAFP {
 		//Store the residues that have been added either to the block or to the freePool
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		
-		//Generate the initial state of the system from the aligned residues of the first chain of the AFPChain
-		ArrayList<Integer> alignedRes = new ArrayList<Integer>();
-		for (int i=0; i<afpChain.getOptAln().length; i++){
-			for (int j=0; j<afpChain.getOptAln()[i][0].length; j++){
-				 alignedRes.add(afpChain.getOptAln()[i][0][j]);
-			}
-		}
-		
+		//Generate the initial state of the system from the aligned blocks of the AFPChain
 		for (int i=0; i<order; i++){
-			ArrayList<Integer> subunitRes = new ArrayList<Integer>();
-			subunitRes.addAll(alignedRes.subList(i*subunitLen, (i+1)*subunitLen));
-			alreadySeen.addAll(alignedRes.subList(i*subunitLen, (i+1)*subunitLen));
-			block.add(subunitRes);
+			ArrayList<Integer> residues = new ArrayList<Integer>();
+			for (int j=0; j<subunitLen; j++){
+				Integer residue = afpChain.getOptAln()[i][0][j];
+				residues.add(residue);
+				alreadySeen.add(residue);
+			}
+			block.add(residues);
 			freePool.add(new ArrayList<Integer>());
 		}
 		
@@ -103,7 +99,8 @@ public class MultipleAFP {
 			updateAvgRMSDandScore();
 			//The maxIter is set in function of the protein length
 			optimizeMC(100*ca.length);
-			saveHistory("/scratch/mcopt/"+afpChain.getName1()+"_optMC.csv");
+			saveHistory("/scratch/mcopt/"+afpChain.getName1()+"_MCref.csv");
+			if (debug) System.out.println("Saved history.");
 			//saveSeqAln("/scratch/align/"+afpChain.getName1()+"_MC.fasta");
 		} catch (StructureException e) {
 			e.printStackTrace();
@@ -133,11 +130,11 @@ public class MultipleAFP {
 		//Initialize a random generator number
 		Random rnd = new Random();
 		int conv = 0;  //Number of steps without an alignment improvement
-		double C = 0.9;  //Constant for the probability of acceptance for bad moves, will be decreased
+		double C = 0.1;  //Constant for the probability of acceptance for bad moves, will be decreased
 		
 		int i = 1;
 		
-		while (i<maxIter && conv<(maxIter/10)){
+		while (i<maxIter && conv<(1000)){
 			
 			//Save the state of the system in case the modifications are not favorable
 			List<ArrayList<Integer>> lastBlock = new ArrayList<ArrayList<Integer>>();
@@ -177,7 +174,7 @@ public class MultipleAFP {
 			if (AS<0){
 				
 				//Probability of accepting the new alignment
-				prob = Math.min(Math.max(Math.pow((C+5*AS),Math.sqrt(i)),0.0),1.0);
+				prob = Math.min(Math.max((C+AS)/Math.pow(i,0.75),0.0),1.0);
 				double p = rnd.nextDouble();
 				//Reject the move
 				if (p>prob){
@@ -665,26 +662,13 @@ public class MultipleAFP {
 		int su2end = 0;
 		
 		//su1
-		if (freePool.get(su1).size()==0){
-			su1start = block.get(su1).get(0);
-			su1end = block.get(su1).get(block.get(su1).size()-1)+1;
-		} else {
-			//su1 start
-			if (block.get(su1).get(0) < freePool.get(su1).get(0)){
-				su1start = block.get(su1).get(0);
-			} else {
-				su1start = freePool.get(su1).get(0);
-			}
-			//su1 end
-			if (block.get(su1).get(block.get(su1).size()-1) > freePool.get(su1).get(freePool.get(su1).size()-1)){
-				su1end = block.get(su1).get(block.get(su1).size()-1)+1;
-			} else {
-				su1end = freePool.get(su1).get(freePool.get(su1).size()-1)+1;
-			}
-		}
+		su1start = block.get(su1).get(0);
+		su1end = block.get(su1).get(block.get(su1).size()-1)+1;
 		
 		//su2
-		if (freePool.get(su2).size()==0){
+		su2start = block.get(su2).get(0);
+		su2end = block.get(su2).get(block.get(su2).size()-1)+1;
+		/*if (freePool.get(su2).size()==0){
 			su2start = block.get(su2).get(0);
 			su2end = block.get(su2).get(block.get(su2).size()-1)+1;
 		} else {
@@ -700,7 +684,7 @@ public class MultipleAFP {
 			} else {
 				su2end = freePool.get(su2).get(freePool.get(su2).size()-1)+1;
 			}
-		}
+		}*/
 		Atom[] ca1block = Arrays.copyOfRange(ca, su1start, su1end);
 		Atom[] ca2block = Arrays.copyOfRange(ca, su2start, su2end);
 		
@@ -856,7 +840,7 @@ public class MultipleAFP {
 		
 		long alignTime = System.currentTimeMillis() - startTime;
 		
-		MultipleAFP multipleAFP = new MultipleAFP(afpChain,ca1,7);
+		MultipleAFP multipleAFP = new MultipleAFP(afpChain,ca1);
 		
 		long optimizationTime   = System.currentTimeMillis() - alignTime - startTime;
 		

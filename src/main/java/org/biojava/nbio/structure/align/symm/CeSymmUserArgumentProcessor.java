@@ -11,19 +11,17 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 	
 	protected static class CeSymmStartupParams extends CeUserArgumentProcessor.CeStartupParams {
 		
-		protected int maxNrSubunits;
+		protected int maxSymmOrder;
 		protected OrderDetectorMethod orderDetectorMethod;
 		protected RefineMethod refineMethod;
-		private int rotationNr;
 		private SubunitColors subunitColors;
 		
 
 		public CeSymmStartupParams() {
 			super();
-			maxNrSubunits = 8;
+			maxSymmOrder = 8;
 			orderDetectorMethod = OrderDetectorMethod.DEFAULT;
 			refineMethod = RefineMethod.DEFAULT;
-			rotationNr = 1;
 			subunitColors = SubunitColors.DEFAULT;
 		}
 
@@ -51,28 +49,19 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 			this.subunitColors = colors;
 		}
 
-		public int getMaxNrSubunits() {
-			return maxNrSubunits;
+		public int getMaxSymmOrder() {
+			return maxSymmOrder;
 		}
 
-		public void setMaxNrSubunits(Integer max) {
-			this.maxNrSubunits = max;
-		}
-		
-		public void setRotationNr(Integer number) {
-			maxNrSubunits = number;
-		}
-
-		public int getRotationNr() {
-			return rotationNr;
+		public void setMaxSymmOrder(Integer max) {
+			this.maxSymmOrder = max;
 		}
 
 		@Override
 		public String toString() {
 			return "CeSymmStartupParams [orderDetectorMethod="
 					+ orderDetectorMethod + ", refineMethod=" + refineMethod
-					+ ", maxNrSubunits=" + maxNrSubunits + ", rotationNr="
-					+ rotationNr + ", subunitColors=" + subunitColors
+					+ ", maxSymmOrder=" + maxSymmOrder + ", subunitColors=" + subunitColors
 					+ ", getWinSize()=" + getWinSize()
 					+ ", getScoringStrategy()=" + getScoringStrategy()
 					+ ", getGapOpen()=" + getGapOpen() + ", getGapExtension()="
@@ -131,10 +120,9 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		aligParams.setGapOpen(startParams.getGapOpen());
 		aligParams.setGapExtension(startParams.getGapExtension());
 		aligParams.setShowAFPRanges(startParams.isShowAFPRanges());
-		aligParams.setMaxNrSubunits(startParams.getMaxNrSubunits());
+		aligParams.setMaxSymmOrder(startParams.getMaxSymmOrder());
 		aligParams.setOrderDetectorMethod(startParams.getOrderDetectorMethod());
 		aligParams.setRefineMethod(startParams.getRefineMethod());
-		aligParams.setRotationNr(startParams.getRotationNr());
 		aligParams.setSubunitColors(startParams.getSubunitColors());
 		
 		return aligParams;

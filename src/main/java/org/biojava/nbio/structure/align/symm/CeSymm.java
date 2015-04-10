@@ -21,10 +21,11 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters.SubunitColors;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
-import org.biojava.nbio.structure.align.symm.refine.MultipleAlignRefiner;
+import org.biojava.nbio.structure.align.symm.refine.MCRefiner;
+import org.biojava.nbio.structure.align.symm.refine.MultipleRefiner;
 import org.biojava.nbio.structure.align.symm.refine.Refiner;
 import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
-import org.biojava.nbio.structure.align.symm.refine.SingleAlignRefiner;
+import org.biojava.nbio.structure.align.symm.refine.SingleRefiner;
 import org.biojava.nbio.structure.align.util.AFPChainScorer;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -44,19 +45,19 @@ import org.slf4j.LoggerFactory;
  */
 public class CeSymm extends AbstractStructureAlignment implements
 		MatrixListener, StructureAlignment {
-	static final boolean debug = false;
+	static final boolean debug = true;
 
 	public static final String algorithmName = "jCE-symmetry";
 
 	public static final String version = "1.0";
 	
-	private static final double symmetryThreshold = 0.4;
+	private static final double symmetryThreshold = 0.35;
 	
 	private static final Logger logger = LoggerFactory.getLogger(CeSymm.class);
 	
 	//The order and refinement options are controlled by CESymmParameters
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8, 0.4f);
-	private Refiner refiner = null;
+	private Refiner refiner;
 
 	AFPChain afpChain;
 	AFPChain[] afpAlignments;
@@ -271,7 +272,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 		//params.setMaxNrIterationsForOptimization(1);
 
 		int i = 0;
-
 		do {
 			//System.out.print("Alignment number: "+i);
 
@@ -299,9 +299,11 @@ public class CeSymm extends AbstractStructureAlignment implements
 			double tmScore3 = AFPChainScorer.getTMScore(newAFP, ca1, ca2);
 			newAFP.setTMScore(tmScore3);
 			
-			//Print alignment length and TM score of the current alignment
-			//System.out.println("Alignment "+(i+1)+" length: "+newAFP.getOptLength());
-			//System.out.println("Alignment "+(i+1)+" score: "+newAFP.getTMScore());
+			if (debug){
+				//Print alignment length and TM score of the current alignment
+				System.out.println("Alignment "+(i+1)+" length: "+newAFP.getOptLength());
+				System.out.println("Alignment "+(i+1)+" score: "+newAFP.getTMScore());
+			}
 			
 			//If it is the first alignment set the optimal length
 			if (i==0){
@@ -311,6 +313,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 				if (optTMscore < symmetryThreshold){
 					if(debug) {
 						logger.debug("Not symmetric protein...");
+						//TODO What have to be done when a protein is not symmetric?
 					}
 					return newAFP;
 				}
@@ -326,29 +329,30 @@ public class CeSymm extends AbstractStructureAlignment implements
 			//System.out.println("Alignment "+(i+1)+" completed...");
 			
 			i++;
-		} while (i < params.getMaxNrSubunits() && multiple);
+		} while (i < params.getMaxSymmOrder() && multiple);
 		
-		int order = params.getMaxNrSubunits();
-		//Save the results to the AFPChain variables
+		//Initialize the order of symmetry
+		int order = allAlignments.size()+1;
+		
+		//Save the results to the CeSymm member variables
 		afpChain = allAlignments.get(0);
 		afpAlignments = new AFPChain[allAlignments.size()];
 		for (int k=0; k<allAlignments.size(); k++){
 			afpAlignments[k] = allAlignments.get(k);
 		}
 		
-		//Refinement options
+		//REFINEMENT options
 		if (params.getRefineMethod() == RefineMethod.MULTIPLE){
 			order = afpAlignments.length+1;
 			//System.out.println("Order of symmetry: "+(order));
-			refiner = new MultipleAlignRefiner();
+			refiner = new MultipleRefiner();
 			try {
 				afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
 			} catch (RefinerFailedException e) {
 				e.printStackTrace();
 			}
 		}
-		else if (params.getRefineMethod() == RefineMethod.SINGLE){
-			refiner = new SingleAlignRefiner();
+		else {
 			//Calculate order
 			try {
 				order = orderDetector.calculateOrder(afpChain, ca1);
@@ -356,21 +360,30 @@ public class CeSymm extends AbstractStructureAlignment implements
 			} catch (OrderDetectionFailedException e) {
 				e.printStackTrace();
 			}
+			
+			if (params.getRefineMethod() == RefineMethod.SINGLE){
+				refiner = new SingleRefiner();
+			} else if (params.getRefineMethod() == RefineMethod.MC_OPT){
+				refiner = new MCRefiner();
+			}
+			
 			//Refine the AFPChain
-			try {
-				afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
-			} catch (RefinerFailedException e1) {
-				e1.printStackTrace();
+			if (refiner != null){
+				try {
+					afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
+				} catch (RefinerFailedException e1) {
+					e1.printStackTrace();
+				}
 			}
 		}
 		
 		//Coloring options
 		if (params.getSubunitColors() == SubunitColors.COLOR_SET){
-			Color[] colors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
+			Color[] colors = ColorBrewer.Set1.getColorPalette(params.getMaxSymmOrder());
 			afpChain.setBlockColors(colors);
 		}
 		else if (params.getSubunitColors() == SubunitColors.SPECTRAL){
-			Color[] colors = ColorBrewer.Spectral.getColorPalette(afpChain.getBlockNum());
+			Color[] colors = ColorBrewer.Spectral.getColorPalette(params.getMaxSymmOrder());
 			afpChain.setBlockColors(colors);
 		}
 

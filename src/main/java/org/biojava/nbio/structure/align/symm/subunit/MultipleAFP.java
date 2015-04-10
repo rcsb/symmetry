@@ -54,13 +54,13 @@ public class MultipleAFP {
 	String[] alnSequences;
 	String alnSymbols;
 	
-	public MultipleAFP(AFPChain afp, Atom[] ca1){
+	public MultipleAFP(AFPChain afp, Atom[] ca1, int symOrder){
 		
 		//Initialize member variables
 		afpChain = afp;
 		ca = ca1;
-		order = afpChain.getBlockNum();
-		subunitLen = afpChain.getOptLen()[0];
+		order = symOrder;
+		subunitLen = afpChain.getOptLength()/order;
 		
 		//Initialize alignment variables
 		block = new ArrayList<ArrayList<Integer>>();
@@ -69,23 +69,27 @@ public class MultipleAFP {
 		//Store the residues that have been added either to the block or to the freePool
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		
-		//Add the subunit residues aligned, previously found, to the block
-		for (int i=0; i<order; i++){
-			ArrayList<Integer> residues = new ArrayList<Integer>();
-			for (int j=0; j<afpChain.getOptLen()[i]; j++){
-				residues.add(afpChain.getOptAln()[i][0][j]);
-				alreadySeen.add(afpChain.getOptAln()[i][0][j]);
+		//Generate the initial state of the system from the aligned residues of the first chain of the AFPChain
+		ArrayList<Integer> alignedRes = new ArrayList<Integer>();
+		for (int i=0; i<afpChain.getOptAln().length; i++){
+			for (int j=0; j<afpChain.getOptAln()[i][0].length; j++){
+				 alignedRes.add(afpChain.getOptAln()[i][0][j]);
 			}
-			block.add(residues);
+		}
+		
+		for (int i=0; i<order; i++){
+			ArrayList<Integer> subunitRes = new ArrayList<Integer>();
+			subunitRes.addAll(alignedRes.subList(i*subunitLen, (i+1)*subunitLen));
+			alreadySeen.addAll(alignedRes.subList(i*subunitLen, (i+1)*subunitLen));
+			block.add(subunitRes);
 			freePool.add(new ArrayList<Integer>());
 		}
-		int subunitSize = block.get(0).size();
 		
-		//Add any residue not aligned to the free pool, in the corresponding subunit region (flexible, initial assignment)
+		//Add any residue not aligned to the free pool, in the corresponding subunit region (provisional initial state)
 		for (int i=0; i<ca.length; i++){
 			if (alreadySeen.contains(i)) continue;
 			for (int j=0; j<order; j++){
-				if (i<block.get(j).get(subunitSize-1) && !alreadySeen.contains(i)){
+				if (i<block.get(j).get(subunitLen-1) && !alreadySeen.contains(i)){
 					freePool.get(j).add(i);
 					alreadySeen.add(i);
 				}
@@ -97,10 +101,14 @@ public class MultipleAFP {
 		
 		try {
 			updateAvgRMSDandScore();
-			optimizeMC(10000);
-			//saveHistory("/scratch/mcopt/"+afpChain.getName1()+"_optMC.csv");
+			//The maxIter is set in function of the protein length
+			optimizeMC(100*ca.length);
+			saveHistory("/scratch/mcopt/"+afpChain.getName1()+"_optMC.csv");
 			//saveSeqAln("/scratch/align/"+afpChain.getName1()+"_MC.fasta");
 		} catch (StructureException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -125,11 +133,11 @@ public class MultipleAFP {
 		//Initialize a random generator number
 		Random rnd = new Random();
 		int conv = 0;  //Number of steps without an alignment improvement
-		double C = 0.05;  //Constant for the probability of acceptance for bad moves, will be decreased
+		double C = 0.9;  //Constant for the probability of acceptance for bad moves, will be decreased
 		
 		int i = 1;
 		
-		while (i<maxIter && conv<1000){
+		while (i<maxIter && conv<(maxIter/10)){
 			
 			//Save the state of the system in case the modifications are not favorable
 			List<ArrayList<Integer>> lastBlock = new ArrayList<ArrayList<Integer>>();
@@ -164,11 +172,12 @@ public class MultipleAFP {
 			updateAvgRMSDandScore();
 			
 			double AS = score-lastScore;  //Change in the alignment score
+			double prob=0.0;
 			
 			if (AS<0){
 				
 				//Probability of accepting the new alignment
-				double prob = Math.min(Math.max((C+AS)/Math.sqrt(i),0.0),1.0);
+				prob = Math.min(Math.max(Math.pow((C+5*AS),Math.sqrt(i)),0.0),1.0);
 				double p = rnd.nextDouble();
 				//Reject the move
 				if (p>prob){
@@ -183,7 +192,7 @@ public class MultipleAFP {
 				
 			} else if (AS!=0.0) conv=0;
 			
-			if (debug) 	System.out.println(i+": --prob: "+Math.min(Math.max((C+AS)/Math.sqrt(i),0.0),1.0)+", --score: "+AS+", --conv: "+conv);
+			if (debug) 	System.out.println(i+": --prob: "+prob+", --score: "+AS+", --conv: "+conv);
 			
 			subunitLenHistory.add(subunitLen);
 			rmsdHistory.add(rmsd);
@@ -370,29 +379,26 @@ public class MultipleAFP {
 		
 		//Initialize a random generator number
 		Random rnd = new Random();
-		boolean expanded = false;
-		int iter = 0;
+		boolean expandable = true;
 		
 		//If any freePool is empty, the block cannot be extended (one or more subunits cannot)
 		for (int su=0; su<order; su++){
-			if (freePool.get(su).size()==0) expanded = true;
+			if (freePool.get(su).size()==0) expandable = false;
 		}
 		
-		while(!expanded && iter<order){
+		if(expandable){
 			
-			iter++;
 			int rl = rnd.nextInt(2);  //Select between expanding right (0) or left (1)
 			int res = rnd.nextInt(subunitLen); //Residue as a pivot to expand the subunits
 			
 			switch (rl) {
 			case 0:
 				
-				expanded = true;
 				//Check that there is at least one residue in the freePool to the right (bigger) than the pivot in each subunit
 				for (int su=0; su<order; su++){
-					if (freePool.get(su).get(freePool.get(su).size()-1)<block.get(su).get(res)) expanded = false;
+					if (freePool.get(su).get(freePool.get(su).size()-1)<block.get(su).get(res)) expandable = false;
 				}
-				if (!expanded) continue;
+				if (!expandable) return;
 				
 				//Find the next expandable group of residues from the pivot to the right (bigger)
 				int rightRes = res+1;
@@ -418,10 +424,10 @@ public class MultipleAFP {
 				//Special case: when the rightRes==subunitLen and there is no freePool residue higher, avoid adding a residue outside the subunit
 				for (int su=0; su<order; su++){
 					if (rightRes==subunitLen && freePool.get(su).get(freePool.get(su).size()-1)<block.get(su).get(subunitLen-1)){
-						expanded = false;
+						expandable = false;
 					}
 				}
-				if (!expanded) continue;
+				if (!expandable) return;
 				
 				
 				//Expand the block with the residues and delete them from the freePool
@@ -440,12 +446,11 @@ public class MultipleAFP {
 				
 			case 1:
 				
-				expanded = true;
 				//Check that there is at least one residue in the freePool to the left (smaller) than the first block in each subunit
 				for (int su=0; su<order; su++){
-					if (freePool.get(su).get(0)>block.get(su).get(res)) expanded = false;
+					if (freePool.get(su).get(0)>block.get(su).get(res)) expandable = false;
 				}
-				if (!expanded) continue;
+				if (!expandable) return;
 				
 				//Find the next expandable group of residues from the pivot to the left (smaller)
 				int leftRes = res-1;
@@ -471,10 +476,10 @@ public class MultipleAFP {
 				//Special case: when the leftRes==-1 and there is no freePool residue lower, avoid adding a residue outside the subunit
 				for (int su=0; su<order; su++){
 					if (leftRes<0 && freePool.get(su).get(0)>block.get(su).get(0)){
-						expanded = false;
+						expandable = false;
 					}
 				}
-				if (!expanded) continue;
+				if (!expandable) return;
 				
 				//Expand the block with the residues and delete them from the freePool
 				for (int su=0; su<order; su++){
@@ -587,7 +592,6 @@ public class MultipleAFP {
 	/**
 	 *  Calculates the average RMSD of all possible rotation superimpositions of the molecule, corresponding to the
 	 *  aligned residues in block. 
-	 *  If it is too slow the replaceOptAln method can be changed for a raw implementation of the RMSD calculation.
 	 */
 	private void updateAvgRMSDandScore() throws StructureException{
 		
@@ -596,10 +600,20 @@ public class MultipleAFP {
 		
 		//Construct all possible rotations of the molecule (order-1 possible, index i)
 		for (int i=1; i<order; i++){
-			getRMSDandScore(i);
+			RMSDandScore(i);
 			avgRMSD += rmsd;
 			avgScore += score;
 		}
+		
+		//Construct all possible subunit superimpositions of the molecule: order*(order-1)/2 possible
+		/*for (int i=0; i<order; i++){
+			for (int j=i+1; j<order; j++){
+				subunitRMSDandScore(i, j);
+				avgRMSD += rmsd;
+				avgScore += score;
+			}
+		}*/
+		
 		rmsd = avgRMSD / (order-1);
 		score = avgScore / (order-1);
 	}
@@ -607,23 +621,22 @@ public class MultipleAFP {
 	/**
 	 *  Raw implementation of the RMSD and Score calculation for a better algorithm efficiency.
 	 */
-	private void getRMSDandScore(int rotation) throws StructureException{
+	private void RMSDandScore(int rotation) throws StructureException{
 		
-		int n = block.get(0).size();  //length of the subunit
-		Atom[] arr1 = new Atom[n*order];
-		Atom[] arr2 = new Atom[n*order];
+		Atom[] arr1 = new Atom[subunitLen*order];
+		Atom[] arr2 = new Atom[subunitLen*order];
 		int pos = 0;
 		
 		//Calculate the aligned atom arrays
 		for (int j=0; j<order; j++){
-			for (int k=0; k<n; k++){
+			for (int k=0; k<subunitLen; k++){
 				arr1[pos] = ca[block.get(j).get(k)];
 				arr2[pos] = (Atom) ca[block.get((rotation+j)%order).get(k)].clone();
 				pos++;
 			}
 		}
 		
-		//Superimpose the two structures in correspondance to the new alignment
+		//Superimpose the two structures in correspondence to the new alignment
 		SVDSuperimposer svd = new SVDSuperimposer(arr1, arr2);
 		Matrix matrix = svd.getRotation();
 		Atom shift = svd.getTranslation();
@@ -636,6 +649,83 @@ public class MultipleAFP {
 		//Get the rmsd and score of the rotation
 		rmsd = SVDSuperimposer.getRMS(arr1, arr2);
 		score = SVDSuperimposer.getTMScore(arr1, arr2, ca.length, ca.length);
+	}
+	
+	/**
+	 *  Calculate RMSD and score only considering the subunits to superimpose, not the whole protein.
+	 *  NOTE: Did not result to be useful alone, because the optimization converges to parts that are not subunits,
+	 *        like big insertions, if they have helices or sheets. Consider it as additional information.
+	 */
+	private void subunitRMSDandScore(int su1, int su2) throws StructureException{
+		
+		//Create the atom arrays corresponding to the first and second subunits only
+		int su1start = 0;
+		int su1end = 0;
+		int su2start = 0;
+		int su2end = 0;
+		
+		//su1
+		if (freePool.get(su1).size()==0){
+			su1start = block.get(su1).get(0);
+			su1end = block.get(su1).get(block.get(su1).size()-1)+1;
+		} else {
+			//su1 start
+			if (block.get(su1).get(0) < freePool.get(su1).get(0)){
+				su1start = block.get(su1).get(0);
+			} else {
+				su1start = freePool.get(su1).get(0);
+			}
+			//su1 end
+			if (block.get(su1).get(block.get(su1).size()-1) > freePool.get(su1).get(freePool.get(su1).size()-1)){
+				su1end = block.get(su1).get(block.get(su1).size()-1)+1;
+			} else {
+				su1end = freePool.get(su1).get(freePool.get(su1).size()-1)+1;
+			}
+		}
+		
+		//su2
+		if (freePool.get(su2).size()==0){
+			su2start = block.get(su2).get(0);
+			su2end = block.get(su2).get(block.get(su2).size()-1)+1;
+		} else {
+			//su2 start
+			if (block.get(su2).get(0) < freePool.get(su2).get(0)){
+				su2start = block.get(su2).get(0);
+			} else {
+				su2start = freePool.get(su2).get(0);
+			}
+			//su1 end
+			if (block.get(su2).get(block.get(su2).size()-1) > freePool.get(su2).get(freePool.get(su2).size()-1)){
+				su2end = block.get(su2).get(block.get(su2).size()-1)+1;
+			} else {
+				su2end = freePool.get(su2).get(freePool.get(su2).size()-1)+1;
+			}
+		}
+		Atom[] ca1block = Arrays.copyOfRange(ca, su1start, su1end);
+		Atom[] ca2block = Arrays.copyOfRange(ca, su2start, su2end);
+		
+		//Extract the aligned atom arrays
+		Atom[] aligned1 = new Atom[subunitLen];
+		Atom[] aligned2 = new Atom[subunitLen];
+		
+		for (int k=0; k<subunitLen; k++){
+			aligned1[k] = ca[block.get(su1).get(k)];
+			aligned2[k] = (Atom) ca[block.get(su2).get(k)].clone();
+		}
+		
+		//Superimpose the two structures in correspondence to the new alignment
+		SVDSuperimposer svd = new SVDSuperimposer(aligned1, aligned2);
+		Matrix matrix = svd.getRotation();
+		Atom shift = svd.getTranslation();
+		
+		for (Atom a : aligned2) {
+			Calc.rotate(a, matrix);
+			Calc.shift(a, shift);
+		}
+		
+		//Get the rmsd and score of the rotation
+		rmsd = SVDSuperimposer.getRMS(aligned1, aligned2);
+		score = SVDSuperimposer.getTMScore(aligned1, aligned2, ca1block.length, ca2block.length);
 	}
 	
 	/**
@@ -755,7 +845,7 @@ public class MultipleAFP {
 		
 		long startTime = System.currentTimeMillis();
 		
-		String name = "1vzw";
+		String name = "4i4q";
 		AtomCache cache = new AtomCache();
 		Atom[] ca1 = cache.getAtoms(name);
 		Atom[] ca2 = cache.getAtoms(name);
@@ -766,7 +856,7 @@ public class MultipleAFP {
 		
 		long alignTime = System.currentTimeMillis() - startTime;
 		
-		MultipleAFP multipleAFP = new MultipleAFP(afpChain,ca1);
+		MultipleAFP multipleAFP = new MultipleAFP(afpChain,ca1,7);
 		
 		long optimizationTime   = System.currentTimeMillis() - alignTime - startTime;
 		

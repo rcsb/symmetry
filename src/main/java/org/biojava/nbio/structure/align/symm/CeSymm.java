@@ -252,6 +252,11 @@ public class CeSymm extends AbstractStructureAlignment implements
 		ca2 = StructureTools.duplicateCA2(ca2O);
 		rows = ca1.length;
 		cols = ca2.length;
+		
+		if( rows == 0 || cols == 0) {
+			logger.warn("Aligning empty structure");
+			throw new StructureException("Aligning empty structure");
+		}
 
 		Matrix origM = null;
 

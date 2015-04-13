@@ -1,4 +1,4 @@
-package org.biojava.nbio.structure.align.symm;
+package org.biojava.nbio.structure.align.symm.refine;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -21,18 +21,41 @@ import org.biojava.nbio.structure.align.StructureAlignmentFactory;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
-import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 
 /**
- * A utility class for refining symmetric alignments
- * @author Spencer Bliven
- *
+ * Creates a refined alignment with a single self-alignment. Needs the order of symmetry.
+ * Uses Spencer's refinement code that was initially in SymmRefiner.
+ * @author lafita
  */
-public class SymmRefiner {
 
+public class SingleAlignRefiner implements Refiner {
+
+	public SingleAlignRefiner() {
+		super();
+	}
+	
+	@Override
+	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
+			throws RefinerFailedException {
+		
+		AFPChain originalAFP = afpAlignments[0];
+		AFPChain refinedAFP = new AFPChain();
+		
+		//Provisional, move the code from SymRefiner to this class.
+		try {
+			refinedAFP = refineSymmetry(originalAFP, ca1, ca2, order);
+		} catch (StructureException e) {
+			e.printStackTrace();
+		}
+		
+		return refinedAFP;
+	}
+	
 	/**
 	 * Refines a CE-Symm alignment so that it is perfectly symmetric.
 	 *

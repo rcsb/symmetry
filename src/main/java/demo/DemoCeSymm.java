@@ -27,11 +27,13 @@ public class DemoCeSymm {
 	
 		AtomCache cache = new AtomCache();
 
-		String name = "d1kcwa1";
+		String name = "4dou";
+		name = "d1kcwa1";
 		name = "3C1B.A:,B:,C:,D:,I:,E:,F:,G:,H:,J:"; // full nucleosome
 		name = "3C1B.I:,J:"; // nucleosome DNA
 		//name = "3C1B.A:,B:,E:,F:,C:,D:,G:,H:"; // nucleosome second axis
 		name = "3F2Q";
+
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75);
 
 

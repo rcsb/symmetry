@@ -34,6 +34,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 public class FileUtils {
 	public static String readFileAsString(String filePath)
@@ -93,5 +94,42 @@ public class FileUtils {
 		out.close();
 	}
 
+	/**
+	 * Saves a graph into a csv file in the format of tuples (vertex,edge) for every edge in the graph.
+	 * The graph has to be in the form of an adjacency list.
+	 */
+	 public static void saveGraph(List<List<Integer>> graph, String sFileName) throws IOException {
+		
+	    FileWriter writer = new FileWriter(sFileName);
+	    writer.append("Vertex,Edge\n");
+	    for (Integer i=0; i<graph.size(); i++){
+	    	for (int j=0; j<graph.get(i).size(); j++){
+	    		
+	    		writer.append(i.toString());
+	    		writer.append(',');
+	    		writer.append(graph.get(i).get(j).toString());
+	    		writer.append('\n');
+	    	}
+	    }
+	    
+	    writer.flush();
+	    writer.close();
+	 }
+	 
+	/**
+	 *  Save a multiple sequence alignment result as a fasta file.
+	 */
+	public static void saveSeqAln(String[] alnSequences, String filePath) throws IOException {
+		
+		FileWriter writer = new FileWriter(filePath);
+		
+		for (int su=0; su<alnSequences.length; su++){
+			writer.append(">Subunit_"+(su+1)+"\n");
+			writer.append(alnSequences[su]+"\n");
+		}
+		
+		writer.flush();
+	    writer.close();
+	}
 
 }

@@ -8,38 +8,29 @@ import java.util.Stack;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
  * Creates a refined alignment with the multiple self-alignments obtained from blacking out previous alignments.
  * @author lafita
  */
 
-public class MultipleAlignRefiner implements Refiner {
+public class MultipleRefiner implements Refiner {
 
-	public MultipleAlignRefiner() {
+	public MultipleRefiner() {
 		super();
 	}
 	
 	@Override
 	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
-			throws RefinerFailedException {
+			throws RefinerFailedException,StructureException {
 		
-		AFPChain refinedAFP = new AFPChain();
-		
-		try {
-			 refinedAFP = cycleRefineAFP(afpAlignments, ca1);
-		} catch (StructureException e) {
-			e.printStackTrace();
-		}
-		
-		return refinedAFP;
+		return cycleRefineAFP(afpAlignments, ca1);
 	}
 	
 	 /**
@@ -285,10 +276,11 @@ public class MultipleAlignRefiner implements Refiner {
 	 *   	- order 4: 1GEN, 1HXN
 	 *  	- order 5: 1G61.A, 1TL2.A, 2jaj.A
 	 *  	- order 6: 1U6D,
-	 *      - order 7: 1JOF.A, 1JTD.B, 1K3I.A, 2I5I.A, 1JV2.A, 1GOT.B, 1A12.A
+	 *      - order 7: 1JOF.A, 1JTD.B, 1K3I.A, 1JV2.A, 1GOT.B, 1A12.A, 2I5I.A, 1GR1.A?
 	 *      - order 8: 1TIM.A, 1VZW, 1NSJ
 	 *      - helical: 1B3U.A, 1EZG.A, 1DFJ.I, 1AWC.B, 1D0B.A
 	 *      - unknown: 1WD3, 1Z7X, 1DCE
+	 *      - DIFFICULT: 1BPL (7), 1W0P (?)
 	 *  	
 	 * Did not work for:  1VYM.A (buggy rotation axis)
 	 *                    3HKE.A (partial alignment)
@@ -302,7 +294,7 @@ public class MultipleAlignRefiner implements Refiner {
 	 *            matrix listener in the OrigM align method in the CeSymm class, that maintains the black regions during optimization.
 	 *         2*- The 3D alignment deletes some regions in the rotated (second) protein, which may be the unaligned regions between
 	 *            the subunits. It might be a problem with AlignmentTools.updateSuperposition. Some examples are: 1G61.A, 3HDP. Solved
-	 *            by clonning the AFPChain instead of initializing it from 0, the method needs the original one.
+	 *            by cloning the AFPChain instead of initializing it from 0, the method needs the original one.
 	 *         3*- The information of gaps and RMSD in the Sequence Alignment Display is incorrect (it is set to 0). updateSuperposition 
 	 *            has to be changed (the dummy code), in order to update the values.
 	 *         4*- In the molecule 1G61.A the helices are not aligned although they seem to be symmetric, consider a less restrictive
@@ -342,7 +334,7 @@ public class MultipleAlignRefiner implements Refiner {
 		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN¨, "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ"}; //Correct ones
 		//String[] names = {"1VYM"}
 		//String[] names = {"d1poqa_", "1itb.A", "3jut.A", "2jaj.A", "d1jlya1" ,"1hiv"}; //New structures to test
-		String[] names = {"1TIM.A"};
+		String[] names = {"1afg.a"};
 		
 		for (int i=0; i<names.length; i++){
 			
@@ -368,16 +360,7 @@ public class MultipleAlignRefiner implements Refiner {
 			afpChain.setName2(name);
 				
 			//Display the AFP alignment of the subunits
-			StructureAlignmentJmol jmolPanel;
-			jmolPanel = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
-				
-			//Set the rotation axis of the symmetry
-			RotationAxis axis = new RotationAxis(afpChain);
-			jmolPanel.evalString(axis.getJmolScript(ca1));
-			
-			//Display two subunits superimposed
-			//SubunitTools.displaySuperimposedSubunits(afpChain, name, ca1, ca2);
+			SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2);
 		}
 	}
-
 }

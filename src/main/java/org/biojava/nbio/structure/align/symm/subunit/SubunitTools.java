@@ -2,92 +2,30 @@ package org.biojava.nbio.structure.align.symm.subunit;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
-import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
+import org.biojava.nbio.structure.utils.FileUtils;
+import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
- * Methods to process AFPChain multiple alignments and analyze the symmetrical subunits generated.
+ * NOT PART OF THE CE-Symm CORE. Only contais methods to analyze running time and save alignment information.
  * 
  * @author lafita
  */
 public class SubunitTools {
-	
-	/**
-	 * Method that displays two superimposed subunits in jmol.
-	 * 
-	 * INPUT: an AFP alignment and the protein data.
-	 * OUTPUT: a jmol panel with only one subunit superimposed.
-	 */
-	public static void displaySuperimposedSubunits(AFPChain afpChain, String name, Atom[] ca1, Atom[] ca2){
-		
-		//Create the atom arrays corresponding to the first and second subunits only
-		Atom[] ca1block = new Atom[afpChain.getOptLen()[0]];
-		Atom[] ca2block = new Atom[afpChain.getOptLen()[0]];
-		ca1block = Arrays.copyOfRange(ca1, 0, afpChain.getOptAln()[0][0][afpChain.getOptAln()[0][0].length-1]+1);
-		ca2block = Arrays.copyOfRange(ca2, afpChain.getOptAln()[0][1][0], afpChain.getOptAln()[0][1][afpChain.getOptAln()[0][1].length-1]+1);
-		
-		/*//Try the method in AlignmentTools
-		int[] aligned1 = afpChain.getOptAln()[0][0];
-		int[] aligned2 = afpChain.getOptAln()[0][1];
-		AFPChain displayAFP = AlignmentTools.createAFPChain(ca1block, ca2block, aligned1, aligned2);*/
-		
-		//Modify the optimal alignment to include only one subunit (block)
-		int[][][] optAln = new int[1][2][afpChain.getOptLen()[0]];
-		int[][] block = afpChain.getOptAln()[0];
-		//Normalize the residues of the second subunit, to be in the range of ca2block
-		int start = block[1][0];
-		for (int i=0; i<block[1].length; i++){
-			block[1][i] -= start;
-		}
-		optAln[0] = block;
-		int[] optLens = new int[1];
-		optLens[0]=optAln[0][0].length;
-		
-		//Modify the AFP chain to adapt the new optimal alignment of two subunits.
-		AFPChain displayAFP = new AFPChain();
-		try {
-			displayAFP = AlignmentTools.replaceOptAln(optAln, afpChain, ca1block, ca2block);
-		} catch (StructureException e1) {
-			e1.printStackTrace();
-		}
-		
-		//Another array to display is created only with the residues of the second subunit, because all (first and second, are needed to superimpose, but only the second is relevant in the alignment)
-		//DOES NOT WORK, because the second subunit is not colored
-		//Atom[] ca2blockDisplay = Arrays.copyOfRange(ca2, afpChain.getOptAln()[0][1][0], afpChain.getOptAln()[0][1][afpChain.getOptAln()[0][1].length-1]+1);
-
-		//Set the name of the protein
-		displayAFP.setName1(name+" su1");
-		displayAFP.setName2(name+" su2");
-		
-		try {
-			
-			//Display the AFP alignment of the subunits
-			StructureAlignmentJmol jmolPanel;
-			jmolPanel = StructureAlignmentDisplay.display(displayAFP, ca1block, ca2block);
-			
-			/*	
-			//Set the rotation axis of the symmetry
-			RotationAxis axis = new RotationAxis(displayAFP);
-			jmolPanel.evalString(axis.getJmolScript(ca1));*/
-			
-		} catch (StructureException e) {
-			e.printStackTrace();
-		}
-	}
 	
 	/**
 	 * Calculates a weighted graph in the format of a matrix from the set of alignments, where each vertex is a 
@@ -132,29 +70,6 @@ public class SubunitTools {
 		return graph;
 	}
 	
-	/**
-	 * Saves a graph into a csv file in the format of tuples (vertex,edge) for every edge in the graph.
-	 */
-	 public static void csvGraph(List<List<Integer>> graph, String name) throws IOException {
-		 
-		String sFileName = "/home/scratch/graphs/"+name+".csv";
-		
-	    FileWriter writer = new FileWriter(sFileName);
-	    writer.append("Vertex,Edge\n");
-	    for (Integer i=0; i<graph.size(); i++){
-	    	for (int j=0; j<graph.get(i).size(); j++){
-	    		
-	    		writer.append(i.toString());
-	    		writer.append(',');
-	    		writer.append(graph.get(i).get(j).toString());
-	    		writer.append('\n');
-	    	}
-	    }
-	    
-	    writer.flush();
-	    writer.close();
-	}
-	
 	 /**
 	 * Saves a graph into a csv file in the format of tuples (vertex,edge,weight) for every edge in the graph.
 	 */
@@ -186,7 +101,7 @@ public class SubunitTools {
 		
 		//Prepare the file writer
 	    FileWriter writer = new FileWriter(sFileName);
-	    writer.append("name,orderReal,orderMultipe,orderSingle,length,timeMultiple,timeSingle,timeNotRefined\n");
+	    writer.append("Name,Order,orderMultipe,orderSingle,length,timeMultiple,timeSingle,timeNotRefined,timeMultipleOpt\n");
 		
 		for (int i=0; i<names.length; i++){
 			
@@ -199,6 +114,7 @@ public class SubunitTools {
 			long durationMultiple = 0;
 			long durationSingle = 0;
 			long durationNoRefine = 0;
+			long durationMultipleOpt = 0;
 			
 			for (int j=0; j<3; j++){
 			
@@ -244,7 +160,7 @@ public class SubunitTools {
 					
 					durationSingle = (endTime - startTime);
 				}
-				else{
+				else {
 					//Perform the alignment
 					CESymmParameters params = new CESymmParameters();
 					params.setRefineMethod(RefineMethod.NOT_REFINED);
@@ -256,7 +172,7 @@ public class SubunitTools {
 					durationNoRefine = (endTime - startTime);
 				}
 			}
-			writer.append(name+","+orders[i]+","+orderM+","+orderS+","+length+","+durationMultiple+","+durationSingle+","+durationNoRefine+"\n");
+			writer.append(name+","+orders[i]+","+orderM+","+orderS+","+length+","+durationMultiple+","+durationSingle+","+durationNoRefine+","+durationMultipleOpt+"\n");
 		}
 		
 	    writer.flush();
@@ -265,8 +181,24 @@ public class SubunitTools {
 	
 	public static void main(String[] args) throws StructureException, IOException, OrderDetectionFailedException{
 		
-		String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN", "1G61.A","1TL2.A","2JAJ.A", "1U6D", "1JOF.A", "1JTD.B", "1A12.A", "2I5I.A", "1GOT.B", "1TIM.A", "1VZW", "1NSJ"};
-		int[] realOrders = {2,2,2,3,3,3,3,3,4,4,5,5,5,6,7,7,7,7,7,8,8,8};
-		analyzeRunningTime(names, realOrders, "/home/scratch/stats/complexity.csv");
+		AtomCache cache = new AtomCache();
+		cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
+		
+		//d2vdka_,d1n6dd3
+		String name = "d1n6dd3";
+		
+		Atom[] ca1 = cache.getAtoms(name);
+		Atom[] ca2 = cache.getAtoms(name);
+		System.out.println(ca1.length);
+
+		CeSymm ceSymm = new CeSymm();
+		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
+		params.setRefineMethod(RefineMethod.MONTE_CARLO);
+		AFPChain afpChain = ceSymm.align(ca1, ca2);
+		
+		List<List<Integer>> graph = SymmetryTools.buildAFPgraph(afpChain, ca1);
+		
+		FileUtils.saveGraph(graph, "/scratch/graphs/"+name+"_MC.csv");
+		
 	}
 }

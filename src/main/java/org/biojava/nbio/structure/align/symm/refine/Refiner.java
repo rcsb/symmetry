@@ -1,6 +1,7 @@
 package org.biojava.nbio.structure.align.symm.refine;
 
 import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
 
 /**
@@ -10,6 +11,6 @@ import org.biojava.nbio.structure.align.model.AFPChain;
  */
 public interface Refiner {
 
-	AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order) throws RefinerFailedException;
+	AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order) throws RefinerFailedException,StructureException;
 	
 }

@@ -11,12 +11,17 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
+import org.biojava.nbio.structure.utils.FileUtils;
+import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
- * NOT PART OF THE CE-Symm CORE. Only contais methods to analyze running time and save alignment graphs.
+ * NOT PART OF THE CE-Symm CORE. Only contais methods to analyze running time and save alignment information.
  * 
  * @author lafita
  */
@@ -65,27 +70,6 @@ public class SubunitTools {
 		return graph;
 	}
 	
-	/**
-	 * Saves a graph into a csv file in the format of tuples (vertex,edge) for every edge in the graph.
-	 */
-	 public static void csvGraph(List<List<Integer>> graph, String sFileName) throws IOException {
-		
-	    FileWriter writer = new FileWriter(sFileName);
-	    writer.append("Vertex,Edge\n");
-	    for (Integer i=0; i<graph.size(); i++){
-	    	for (int j=0; j<graph.get(i).size(); j++){
-	    		
-	    		writer.append(i.toString());
-	    		writer.append(',');
-	    		writer.append(graph.get(i).get(j).toString());
-	    		writer.append('\n');
-	    	}
-	    }
-	    
-	    writer.flush();
-	    writer.close();
-	}
-	
 	 /**
 	 * Saves a graph into a csv file in the format of tuples (vertex,edge,weight) for every edge in the graph.
 	 */
@@ -132,7 +116,7 @@ public class SubunitTools {
 			long durationNoRefine = 0;
 			long durationMultipleOpt = 0;
 			
-			for (int j=0; j<4; j++){
+			for (int j=0; j<3; j++){
 			
 				long startTime = System.nanoTime();
 				
@@ -176,7 +160,7 @@ public class SubunitTools {
 					
 					durationSingle = (endTime - startTime);
 				}
-				else if (j==2){
+				else {
 					//Perform the alignment
 					CESymmParameters params = new CESymmParameters();
 					params.setRefineMethod(RefineMethod.NOT_REFINED);
@@ -186,21 +170,6 @@ public class SubunitTools {
 					long endTime = System.nanoTime();
 					
 					durationNoRefine = (endTime - startTime);
-				}
-				else {
-					//Perform the alignment
-					CESymmParameters params = new CESymmParameters();
-					params.setRefineMethod(RefineMethod.MULTIPLE);
-					params.setMaxNrIterationsForOptimization(3);
-					
-					afpChain = ceSymm.align(ca1, ca2);
-					
-					orderM = afpChain.getBlockNum();
-					
-					long endTime = System.nanoTime();
-					
-					durationMultipleOpt = (endTime - startTime);
-					length = ca1.length;
 				}
 			}
 			writer.append(name+","+orders[i]+","+orderM+","+orderS+","+length+","+durationMultiple+","+durationSingle+","+durationNoRefine+","+durationMultipleOpt+"\n");
@@ -212,8 +181,24 @@ public class SubunitTools {
 	
 	public static void main(String[] args) throws StructureException, IOException, OrderDetectionFailedException{
 		
-		String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN", "1G61.A","1TL2.A","2JAJ.A", "1U6D", "1JOF.A", "1JTD.B", "1A12.A", "2I5I.A", "1GOT.B", "1TIM.A", "1VZW", "1NSJ"};
-		int[] realOrders = {2,2,2,3,3,3,3,3,4,4,5,5,5,6,7,7,7,7,7,8,8,8};
-		analyzeRunningTime(names, realOrders, "/home/scratch/stats/complexity.csv");
+		AtomCache cache = new AtomCache();
+		cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
+		
+		//d2vdka_,d1n6dd3
+		String name = "d1n6dd3";
+		
+		Atom[] ca1 = cache.getAtoms(name);
+		Atom[] ca2 = cache.getAtoms(name);
+		System.out.println(ca1.length);
+
+		CeSymm ceSymm = new CeSymm();
+		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
+		params.setRefineMethod(RefineMethod.MONTE_CARLO);
+		AFPChain afpChain = ceSymm.align(ca1, ca2);
+		
+		List<List<Integer>> graph = SymmetryTools.buildAFPgraph(afpChain, ca1);
+		
+		FileUtils.saveGraph(graph, "/scratch/graphs/"+name+"_MC.csv");
+		
 	}
 }

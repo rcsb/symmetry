@@ -1,52 +1,51 @@
 package demo;
-import java.awt.Color;
+import java.io.IOException;
 
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
+import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.model.AfpChainWriter;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
-import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
-import org.biojava.nbio.structure.align.symm.subunit.MultipleAFP;
-import org.jcolorbrewer.ColorBrewer;
+import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 
 /**
- * Demo for various scripting analysis.
+ * Demo for the CeSymm alignment and display.
  *
  * @author lafita
- *
+ * 
  */
 public class AleixDemo {
 
-	public static void main(String[] args){
+	public static void main(String[] args) throws StructureException, IOException{
 
 	
 		AtomCache cache = new AtomCache();
-
-		String name = "1vzw";
+		cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
+		//ScopFactory.setScopDatabase(ScopFactory.VERSION_2_0_1, true);
 		
-		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75);
+		//Easy cases: 4i4q, 4dou
+		//Hard cases: d2vdka_,d1n6dd3
+		//Better MULTIPLE: 2i5i.a
+		String name = "d1n6dd3";
+	
+		Atom[] ca1 = cache.getAtoms(name);
+		Atom[] ca2 = cache.getAtoms(name);
+		System.out.println(ca1.length);
+
+		CeSymm ceSymm = new CeSymm();
+		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
+		params.setRefineMethod(RefineMethod.MONTE_CARLO);
+		AFPChain afpChain = ceSymm.align(ca1, ca2);
 		
-		try {
-			Atom[] ca1 = cache.getAtoms(name);
-			Atom[] ca2 = cache.getAtoms(name);
-
-			CeSymm ceSymm = new CeSymm();
-
-			AFPChain afpChain = ceSymm.align(ca1, ca2);
-			afpChain.setName1(name);
-			afpChain.setName2(name);
+		afpChain.setName1(name);
+		afpChain.setName2(name);
+		
+		SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2);
 			
-			SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2);
-			
-		} catch (Exception e){
-			e.printStackTrace();
-		}
 	}
 }

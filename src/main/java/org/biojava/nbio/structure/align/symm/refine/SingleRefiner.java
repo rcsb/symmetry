@@ -28,7 +28,7 @@ import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 
 /**
- * Creates a refined alignment with a single self-alignment. Needs the order of symmetry.
+ * Creates a refined alignment with the CE alternative self-alignment. Needs the order of symmetry.
  * Uses Spencer's refinement code that was initially in the SymmRefiner class.
  * 
  * @author lafita
@@ -43,10 +43,8 @@ public class SingleRefiner implements Refiner {
 	@Override
 	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
 			throws RefinerFailedException,StructureException {
-		
-		AFPChain originalAFP = afpAlignments[0];
-		
-		return refineSymmetry(originalAFP, ca1, ca2, order);
+				
+		return refineSymmetry(afpAlignments[0], ca1, ca2, order);
 	}
 	
 	/**
@@ -65,9 +63,10 @@ public class SingleRefiner implements Refiner {
 
 		// Do the alignment
 		Map<Integer, Integer> refined = refineSymmetry(alignment, k);
-
+		
+		//Substitute and partition the alignment
 		AFPChain refinedAFP = AlignmentTools.replaceOptAln(afpChain, ca1, ca2, refined);
-		return refinedAFP;
+		return partitionAFPchain(refinedAFP, ca1, ca2, k);
 	}
 
 	/**
@@ -212,7 +211,6 @@ public class SingleRefiner implements Refiner {
 		// 3. score(f^K-1(x))>0
 		// 4. For all y, score(y)==0 implies sign(f^K-1(x)-y) == sign(x-f(y) )
 		// 5. Not in a loop of length less than k
-
 
 		// Assume all residues are eligible to start
 		if(eligible == null) {
@@ -566,5 +564,34 @@ public class SingleRefiner implements Refiner {
 		}
 
 	}
-
+	
+	/**
+	 *  Partitions an afpChain alignment into <order> blocks of aligned residues.
+	 */
+	private static AFPChain partitionAFPchain(AFPChain afpChain, Atom[] ca1, Atom[] ca2, int order) throws StructureException{
+		
+		int[][][] newAlgn = new int[order][][];
+		int subunitLen = afpChain.getOptLength()/order;
+		
+		//Extract all the residues considered in the first chain of the alignment
+		List<Integer> alignedRes = new ArrayList<Integer>();
+		for (int su=0; su<afpChain.getBlockNum(); su++){
+			for (int i=0; i<afpChain.getOptLen()[su]; i++){
+				alignedRes.add(afpChain.getOptAln()[su][0][i]);
+			}
+		}
+		
+		//Build the new alignment
+		for (int su=0; su<order; su++){
+			newAlgn[su] = new int[2][];
+			newAlgn[su][0] = new  int[subunitLen];
+			newAlgn[su][1] = new  int[subunitLen];
+			for (int i=0; i<subunitLen; i++){
+				newAlgn[su][0][i] = alignedRes.get(subunitLen*su+i);
+				newAlgn[su][1][i] = alignedRes.get((subunitLen*(su+1)+i)%alignedRes.size());
+			}
+		}
+		
+		return AlignmentTools.replaceOptAln(newAlgn, afpChain, ca1, ca2);
+	}
 }

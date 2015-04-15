@@ -81,12 +81,12 @@ public class MCRefiner implements Refiner {
 		initialize(refinedAFP, ca1);
 		optimizeMC(iterFactor*ca.length);
 		
-		/*try {
+		try {
 			saveHistory("/scratch/mcopt/"+afpChain.getName1()+"_MC.csv");
 			if (debug) System.out.println("Saved history.");
 		} catch (IOException e) {
 			e.printStackTrace();
-		}*/
+		}
 		
 		return afpChain;
 	}
@@ -644,8 +644,8 @@ public class MCRefiner implements Refiner {
 		//Construct all possible rotations of the molecule (order-1 possible, index i)
 		for (int i=1; i<order; i++){
 			calculateScore(i, ScoreRMSD, distances);
-			rmsd += ScoreRMSD[0];
-			tmScore += ScoreRMSD[1];
+			rmsd += ScoreRMSD[1];
+			tmScore += ScoreRMSD[0];
 		}
 		//Divide the colDistances entries for the total number to get the average
 		int total = (order-1)*(order-2); 

@@ -21,10 +21,11 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters.SubunitColors;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
-import org.biojava.nbio.structure.align.symm.refine.MultipleAlignRefiner;
+import org.biojava.nbio.structure.align.symm.refine.MCRefiner;
+import org.biojava.nbio.structure.align.symm.refine.MultipleRefiner;
 import org.biojava.nbio.structure.align.symm.refine.Refiner;
 import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
-import org.biojava.nbio.structure.align.symm.refine.SingleAlignRefiner;
+import org.biojava.nbio.structure.align.symm.refine.SingleRefiner;
 import org.biojava.nbio.structure.align.util.AFPChainScorer;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CeSymm extends AbstractStructureAlignment implements
 		MatrixListener, StructureAlignment {
+
 	static final boolean debug = false;
 
 	public static final String algorithmName = "jCE-symmetry";
@@ -56,7 +58,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 	
 	//The order and refinement options are controlled by CESymmParameters
 	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8, 0.4f);
-	private Refiner refiner = null;
+	private Refiner refiner;
 
 	AFPChain afpChain;
 	AFPChain[] afpAlignments;
@@ -258,21 +260,17 @@ public class CeSymm extends AbstractStructureAlignment implements
 		AFPChain myAFP = new AFPChain();
 		List<AFPChain> allAlignments = new ArrayList<AFPChain>();
 		
-		//The two variables that keep track of the goodness of the alignment compared to the optimal
-		int optAlgnLen = 0;
-		double optTMscore = 0;
-
 		calculator = new CECalculator(params);
 		calculator.addMatrixListener(this);
 		
 		//Set multiple to true if multiple alignments are needed
 		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE);
+		//Save the optimal score, to quantify the goodness of the current alignment compared to the optimal (multiple strategy)
+		double optTMscore = 0;
 
 		int i = 0;
-
 		do {
-			//System.out.print("Alignment number: "+i);
-
+			
 			if (origM != null) {
 				myAFP.setDistanceMatrix((Matrix) origM.clone());
 			}
@@ -297,56 +295,58 @@ public class CeSymm extends AbstractStructureAlignment implements
 			double tmScore3 = AFPChainScorer.getTMScore(newAFP, ca1, ca2);
 			newAFP.setTMScore(tmScore3);
 			
-			//Print alignment length and TM score of the current alignment
-			//System.out.println("Alignment "+(i+1)+" length: "+newAFP.getOptLength());
-			//System.out.println("Alignment "+(i+1)+" score: "+newAFP.getTMScore());
+			if (debug){
+				//Print alignment length and TM score of the current alignment
+				logger.info("Alignment "+(i+1)+" length: "+newAFP.getOptLength());
+				logger.info("Alignment "+(i+1)+" score: "+newAFP.getTMScore());
+			}
 			
-			//If it is the first alignment set the optimal length
+			//If it is the first alignment determine if it is significant and set the optimal score
 			if (i==0){
-				optAlgnLen = newAFP.getOptLength();
 				optTMscore = newAFP.getTMScore();
-				//Threshold for symmetry detection TBD
-				if (optTMscore < symmetryThreshold){
-					if(debug) {
-						logger.debug("Not symmetric protein...");
-					}
+				if (!isSignificant(newAFP,orderDetector,ca1)){
+					if(debug) logger.info("Not symmetric protein...");
+						//TODO What have to be done when a protein is not symmetric?
+						//		At the moment the alignment without refinement is returned.
 					return newAFP;
 				}
 			}
-			//If not check for a drop (of 50%) in the alignment length or score and break the loop
-			else if ((newAFP.getOptLength() < (optAlgnLen-optAlgnLen/2) || newAFP.getTMScore() < (optTMscore-optTMscore/2))){
-				//System.out.println("Optimal alignment length: "+optAlgnLen+", Last alignment length: "+newAFP.getOptLength());
-				//System.out.println("Optimal alignment TM score: "+optTMscore+", Last alignment TM score: "+newAFP.getTMScore());
+			//Otherwise check for a drop (of 50%) in the alignment score and break the loop
+			else if (newAFP.getTMScore()*2 < optTMscore){
+				if (debug) logger.info("Optimal alignment TM score: "+optTMscore+", Last alignment TM score: "+newAFP.getTMScore());
 				break;
 			}
+			
 			//Add the alignment to the allAlignments list
 			allAlignments.add(newAFP);
-			//System.out.println("Alignment "+(i+1)+" completed...");
+			if (debug) logger.info("Alignment "+(i+1)+" completed...");
 			
 			i++;
-		} while (i < params.getMaxNrSubunits() && multiple);
+			
+		} while (i <= params.getMaxSymmOrder() && multiple);
 		
-		int order = params.getMaxNrSubunits();
-		//Save the results to the AFPChain variables
+		//Initialize the order of symmetry
+		int order = allAlignments.size()+1;
+		
+		//Save the results to the CeSymm member variables
 		afpChain = allAlignments.get(0);
 		afpAlignments = new AFPChain[allAlignments.size()];
 		for (int k=0; k<allAlignments.size(); k++){
 			afpAlignments[k] = allAlignments.get(k);
 		}
 		
-		//Refinement options
+		//REFINEMENT options
 		if (params.getRefineMethod() == RefineMethod.MULTIPLE){
 			order = afpAlignments.length+1;
 			//System.out.println("Order of symmetry: "+(order));
-			refiner = new MultipleAlignRefiner();
+			refiner = new MultipleRefiner();
 			try {
 				afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
 			} catch (RefinerFailedException e) {
 				e.printStackTrace();
 			}
 		}
-		else if (params.getRefineMethod() == RefineMethod.SINGLE){
-			refiner = new SingleAlignRefiner();
+		else {
 			//Calculate order
 			try {
 				order = orderDetector.calculateOrder(afpChain, ca1);
@@ -354,31 +354,24 @@ public class CeSymm extends AbstractStructureAlignment implements
 			} catch (OrderDetectionFailedException e) {
 				e.printStackTrace();
 			}
+			
+			if (params.getRefineMethod() == RefineMethod.SINGLE) refiner = new SingleRefiner();
+			else if (params.getRefineMethod() == RefineMethod.MONTE_CARLO) refiner = new MCRefiner();
+			
 			//Refine the AFPChain
-			try {
-				afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
-			} catch (RefinerFailedException e1) {
-				e1.printStackTrace();
+			if (refiner != null){
+				try {
+					afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
+				} catch (RefinerFailedException e1) {
+					e1.printStackTrace();
+				}
 			}
-		}
-		
-		//Coloring options
-		if (params.getSubunitColors() == SubunitColors.COLOR_SET){
-			Color[] colors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
-			afpChain.setBlockColors(colors);
-		}
-		else if (params.getSubunitColors() == SubunitColors.SPECTRAL){
-			Color[] colors = ColorBrewer.Spectral.getColorPalette(afpChain.getBlockNum());
-			afpChain.setBlockColors(colors);
 		}
 
 		double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
 		afpChain.setTMScore(tmScore2);
-		
-		//System.out.println("CeSymm alignment completed...");
 
 		return afpChain;
-		
 	}
 
 	@Override
@@ -406,27 +399,11 @@ public class CeSymm extends AbstractStructureAlignment implements
 	public String getVersion() {
 		return version;
 	}
-
-	public OrderDetector getOrderDetector() {
-		return orderDetector;
-	}
-
-	public void setOrderDetector(OrderDetector orderDetector) {
-		this.orderDetector = orderDetector;
-	}
-	
-	public Refiner getRefiner() {
-		return refiner;
-	}
-	
-	public void setRefiner(Refiner refiner) {
-		this.refiner = refiner;
-	}
 	
 	public static boolean isSignificant(AFPChain afpChain,OrderDetector orderDetector, Atom[] ca1) throws StructureException {
 
 		// TM-score cutoff
-		if (afpChain.getTMScore() < 0.4) return false;
+		if (afpChain.getTMScore() < symmetryThreshold) return false;
 
 		// sequence-function order cutoff
 		int order = 1;
@@ -443,6 +420,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		RotationAxis rot = new RotationAxis(afpChain);
 		order = rot.guessOrderFromAngle(1.0 * Calc.radiansPerDegree, 8);
 		if (order > 1) return true;
+		
 		// asymmetric
 		return false;
 	}

@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 public class CeSymm extends AbstractStructureAlignment implements
 		MatrixListener, StructureAlignment {
 
-	static final boolean debug = true;
+	static final boolean debug = false;
 
 	public static final String algorithmName = "jCE-symmetry";
 

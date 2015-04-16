@@ -648,7 +648,7 @@ public class MCRefiner implements Refiner {
 			tmScore += ScoreRMSD[0];
 		}
 		//Divide the colDistances entries for the total number to get the average
-		int total = (order-1)*(order-2); 
+		int total = (order)*(order-1);
 		for (int i=0; i<subunitLen; i++) distances[i] /= total;
 		colDistances = distances;
 		
@@ -734,6 +734,8 @@ public class MCRefiner implements Refiner {
 	 *    1- Pick the 90% of the distances range (softer condition, results in longer subunits).
 	 *    2- Pick the average value of the top 10% distances (can be softer than 1 depending on the range scale).
 	 *    3- Pick the value at the boundary of the top 10% distances (hardest condition, restricts the subunits to the core only).
+	 *    
+	 *  Set a minimum distance to avoid short refined alignments.
 	 */
 	private void calculatePenaltyDistance(){
 	
@@ -753,7 +755,7 @@ public class MCRefiner implements Refiner {
 		//Option 3: boundary of top 10%
 		double d3 = distances[index10];
 		
-		d0=d1;
+		d0=Math.max(d1,4);
 	}
 	
 	/**

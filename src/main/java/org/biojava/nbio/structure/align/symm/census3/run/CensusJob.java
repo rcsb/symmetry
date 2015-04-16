@@ -104,8 +104,8 @@ public class CensusJob implements Callable<CensusResult> {
 		try {
 			if (cache == null) cache = new AtomCache();
 			structure = StructureTools.getStructure(name, null, cache);
-			ca1 = StructureTools.getAtomCAArray(structure);
-			ca2 = StructureTools.cloneCAArray(ca1);
+			ca1 = StructureTools.getRepresentativeAtomArray(structure);
+			ca2 = StructureTools.cloneAtomArray(ca1);
 		} catch (Exception e) {
 			logger.error("Could not create the atom arrays for " + name + ": " + e.getMessage(), e);
 			return null;

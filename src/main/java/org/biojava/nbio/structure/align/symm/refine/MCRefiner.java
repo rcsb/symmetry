@@ -41,7 +41,7 @@ public class MCRefiner implements Refiner {
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
 	private static final double A = 10.0; //Penalty for alignment distances
-	private  double d0; //Maximum distance that is not penalized - chosen from initial alignment
+	private  double d0; //Maximum distance that is not penalized - chosen from initial alignment RMSD
 	
 	AFPChain afpChain;
 	Atom[] ca;
@@ -76,6 +76,8 @@ public class MCRefiner implements Refiner {
 			throws RefinerFailedException,StructureException {
 		
 		AFPChain originalAFP = afpAlignments[0];
+		d0 = originalAFP.getTotalRmsdOpt()*2;
+		
 		AFPChain refinedAFP = SingleRefiner.refineSymmetry(originalAFP, ca1, ca2, order);
 		
 		initialize(refinedAFP, ca1);
@@ -134,11 +136,10 @@ public class MCRefiner implements Refiner {
 		//Set the scores and RMSD of the initial state
 		updateScore();
 		
-		//Set the constant d0 to control the bad alignment penalty term (A) from the initial state.
-		calculatePenaltyDistance();
-		
+		//Set the constant d0 to control the bad alignment penalty term (A) from the initial state. Now calculate from originalAFP RMSD.
+		//calculatePenaltyDistance();
 		//Calculate MCscore again with the new d0 parameter
-		mcScore = scoreFunctionMC(colDistances);
+		//mcScore = scoreFunctionMC(colDistances);
 		
 	}
 	
@@ -737,6 +738,7 @@ public class MCRefiner implements Refiner {
 	 *    
 	 *  Set a minimum distance to avoid short refined alignments.
 	 */
+	@SuppressWarnings("unused")
 	private void calculatePenaltyDistance(){
 	
 		double[] distances = colDistances.clone();

@@ -45,7 +45,8 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 
 		// the structure has been downloaded, now calculate the alignment ...
 
-		StructureAlignment algorithm = parent.getStructureAlignment();  
+		StructureAlignment algorithm = parent.getStructureAlignment();
+		CESymmParameters params = (CESymmParameters) algorithm.getParameters();
 		//StructurePairAligner aligner = new StructurePairAligner();
 		//aligner.setDebug(true);
 		try {
@@ -59,10 +60,10 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 			afpChain.setName1(name);
 			afpChain.setName2(name);
 			
-			CESymmParameters params = (CESymmParameters) algorithm.getParameters();
 			//Set the color of the subunits
 			Color[] subunitColors = null;
 			CESymmParameters.SubunitColors COLOR = params.getSubunitColors();
+			
 			switch(COLOR){
 			case COLOR_SET: 
 				subunitColors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
@@ -80,8 +81,7 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 
 			String title = jmol.getTitle();
 			
-			/*if ( params != null) //The title is very large for CeSymm, so disabled.
-				title += " " + algorithm.getParameters().toString();*/
+			if (params != null) title += " | OrderDetector=" + params.getOrderDetectorMethod()+" Refiner: "+params.getRefineMethod();
 			jmol.setTitle(title);
 
 			//DisplaySymmAFP.showAlignmentImage(afpChain,ca1,ca2,jmol);

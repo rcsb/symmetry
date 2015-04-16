@@ -156,9 +156,9 @@ public class SymmetryGui extends JFrame {
 	private Box setupAlgorithm()
 	{
 		String[] algorithms = {"JCE-symmetry"};
-		algorithm = new CeSymm();
+		updateAlgorithm();
 
-		JLabel algoLabel = new JLabel("Select symmetry algorithm: ");
+		JLabel algoLabel = new JLabel("Symmetry algorithm: ");
 
 		JComboBox algorithmList = new JComboBox(algorithms);
 		algorithmList.setSelectedIndex(0);
@@ -172,7 +172,7 @@ public class SymmetryGui extends JFrame {
 				String algorithmName = (String)cb.getSelectedItem();
 				// Perform action...
 				//System.out.println("calc structure alignment");
-				updateAlgorithm(algorithmName);
+				updateAlgorithm();
 			}
 		};
 
@@ -185,6 +185,7 @@ public class SymmetryGui extends JFrame {
 			public void actionPerformed(ActionEvent evt) {
 				// Perform action...
 				//System.out.println("calc structure alignment");
+				updateAlgorithm();
 				configureParameters();
 			}
 		};
@@ -354,13 +355,9 @@ public class SymmetryGui extends JFrame {
 		return algorithm;
 	}
 
-	private void updateAlgorithm(String algorithmName) {
-		//String algorithmName = (String)algorithmList.getSelectedItem();
-		try {
-			algorithm = StructureAlignmentFactory.getAlgorithm(algorithmName);
-		} catch (StructureException ex){
-			ex.printStackTrace();
-		}
+	private void updateAlgorithm() {
+		//There is only one algorithm for symmetry
+		algorithm = new CeSymm();
 	}
 
 }

@@ -185,7 +185,6 @@ public class SymmetryGui extends JFrame {
 			public void actionPerformed(ActionEvent evt) {
 				// Perform action...
 				//System.out.println("calc structure alignment");
-				updateAlgorithm();
 				configureParameters();
 			}
 		};
@@ -333,7 +332,7 @@ public class SymmetryGui extends JFrame {
 		} catch (StructureException e){
 			JOptionPane.showMessageDialog(null,"Could not align structures. Exception: " + e.getMessage());
 		}
-
+		updateAlgorithm();
 	}
 
 	public void notifyCalcFinished(){

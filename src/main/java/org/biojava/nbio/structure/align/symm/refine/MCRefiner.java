@@ -83,12 +83,12 @@ public class MCRefiner implements Refiner {
 		initialize(refinedAFP, ca1);
 		optimizeMC(iterFactor*ca.length);
 		
-		try {
+		/*try {
 			saveHistory("/scratch/mcopt/"+afpChain.getName1()+"_MC.csv");
 			if (debug) System.out.println("Saved history.");
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 		return afpChain;
 	}

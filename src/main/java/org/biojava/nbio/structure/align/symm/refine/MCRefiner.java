@@ -41,7 +41,7 @@ public class MCRefiner implements Refiner {
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
 	private static final double A = 10.0; //Penalty for alignment distances
-	private  double d0; //Maximum distance that is not penalized - chosen from initial alignment
+	private  double d0; //Maximum distance that is not penalized - chosen from initial alignment RMSD
 	
 	AFPChain afpChain;
 	Atom[] ca;
@@ -76,6 +76,8 @@ public class MCRefiner implements Refiner {
 			throws RefinerFailedException,StructureException {
 		
 		AFPChain originalAFP = afpAlignments[0];
+		d0 = originalAFP.getTotalRmsdOpt()*2;
+		
 		AFPChain refinedAFP = SingleRefiner.refineSymmetry(originalAFP, ca1, ca2, order);
 		
 		initialize(refinedAFP, ca1);
@@ -134,11 +136,10 @@ public class MCRefiner implements Refiner {
 		//Set the scores and RMSD of the initial state
 		updateScore();
 		
-		//Set the constant d0 to control the bad alignment penalty term (A) from the initial state.
-		calculatePenaltyDistance();
-		
+		//Set the constant d0 to control the bad alignment penalty term (A) from the initial state. Now calculate from originalAFP RMSD.
+		//calculatePenaltyDistance();
 		//Calculate MCscore again with the new d0 parameter
-		mcScore = scoreFunctionMC(colDistances);
+		//mcScore = scoreFunctionMC(colDistances);
 		
 	}
 	
@@ -644,11 +645,11 @@ public class MCRefiner implements Refiner {
 		//Construct all possible rotations of the molecule (order-1 possible, index i)
 		for (int i=1; i<order; i++){
 			calculateScore(i, ScoreRMSD, distances);
-			rmsd += ScoreRMSD[0];
-			tmScore += ScoreRMSD[1];
+			rmsd += ScoreRMSD[1];
+			tmScore += ScoreRMSD[0];
 		}
 		//Divide the colDistances entries for the total number to get the average
-		int total = (order-1)*(order-2); 
+		int total = (order)*(order-1);
 		for (int i=0; i<subunitLen; i++) distances[i] /= total;
 		colDistances = distances;
 		
@@ -734,7 +735,10 @@ public class MCRefiner implements Refiner {
 	 *    1- Pick the 90% of the distances range (softer condition, results in longer subunits).
 	 *    2- Pick the average value of the top 10% distances (can be softer than 1 depending on the range scale).
 	 *    3- Pick the value at the boundary of the top 10% distances (hardest condition, restricts the subunits to the core only).
+	 *    
+	 *  Set a minimum distance to avoid short refined alignments.
 	 */
+	@SuppressWarnings("unused")
 	private void calculatePenaltyDistance(){
 	
 		double[] distances = colDistances.clone();
@@ -753,7 +757,7 @@ public class MCRefiner implements Refiner {
 		//Option 3: boundary of top 10%
 		double d3 = distances[index10];
 		
-		d0=d1;
+		d0=Math.max(d1,4);
 	}
 	
 	/**

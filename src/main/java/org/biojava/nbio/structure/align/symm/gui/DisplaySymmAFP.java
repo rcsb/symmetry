@@ -19,7 +19,6 @@ import org.biojava.nbio.structure.align.gui.AlignmentTextPanel;
 import org.biojava.nbio.structure.align.gui.DisplayAFP;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.aligpanel.AligPanel;
 import org.biojava.nbio.structure.align.gui.aligpanel.StatusDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
@@ -37,7 +36,7 @@ public class DisplaySymmAFP extends DisplayAFP {
 	/** 
 	 * Rotation of ca2, hetatoms2 and nucleotides2 will be done here.
 	 */
-	public static SymmetryJmol display(AFPChain afpChain,Group[] twistedGroups, Atom[] ca1, Atom[] ca2, List<Group> hetatms, List<Group> nucleotides, List<Group> hetatms2, List<Group> nucleotides2, Color[] subunitColors) throws StructureException{
+	public static SymmetryJmol display(AFPChain afpChain,Group[] twistedGroups, Atom[] ca1, Atom[] ca2, List<Group> hetatms, List<Group> hetatms2, Color[] subunitColors) throws StructureException{
 
 		List<Atom> twistedAs = new ArrayList<Atom>();
 
@@ -51,8 +50,8 @@ public class DisplaySymmAFP extends DisplayAFP {
 		}
 		Atom[] twistedAtoms = (Atom[])twistedAs.toArray(new Atom[twistedAs.size()]);
 
-		Atom[] arr1 = getAtomArray(ca1, hetatms, nucleotides);
-		Atom[] arr2 = getAtomArray(twistedAtoms, hetatms2, nucleotides2);
+		Atom[] arr1 = getAtomArray(ca1, hetatms);
+		Atom[] arr2 = getAtomArray(twistedAtoms, hetatms2);
 
 		// 
 

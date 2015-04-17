@@ -478,11 +478,11 @@ public class SingleRefiner implements Refiner {
 			System.out.println("New rmsd:"+refinedAFP.getTotalRmsdOpt());
 
 			if(displayStruct) {
-				StructureAlignmentJmol unrefined = StructureAlignmentDisplay.display(afpChain, ca1, StructureTools.cloneCAArray(ca2));
+				StructureAlignmentJmol unrefined = StructureAlignmentDisplay.display(afpChain, ca1, StructureTools.cloneAtomArray(ca2));
 				RotationAxis unrefinedAxis = new RotationAxis(afpChain);
 				unrefined.evalString(unrefinedAxis.getJmolScript(ca1));
 
-				StructureAlignmentJmol refined = StructureAlignmentDisplay.display(refinedAFP, ca1, StructureTools.cloneCAArray(ca2));
+				StructureAlignmentJmol refined = StructureAlignmentDisplay.display(refinedAFP, ca1, StructureTools.cloneAtomArray(ca2));
 				RotationAxis refinedAxis = new RotationAxis(refinedAFP);
 				refined.evalString(refinedAxis.getJmolScript(ca1));
 			}

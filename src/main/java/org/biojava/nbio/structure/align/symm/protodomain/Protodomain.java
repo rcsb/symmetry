@@ -599,7 +599,7 @@ public class Protodomain {
 	/**
 	 * @see #spliceApproxConsecutive(int)
 	 */
-	private static List<ResidueRangeAndLength> spliceApproxConsecutive(AtomPositionMap map, List<ResidueRangeAndLength> old,
+	public static List<ResidueRangeAndLength> spliceApproxConsecutive(AtomPositionMap map, List<ResidueRangeAndLength> old,
 			int approxConsecutive) {
 		List<ResidueRangeAndLength> spliced = new ArrayList<ResidueRangeAndLength>(old.size());
 

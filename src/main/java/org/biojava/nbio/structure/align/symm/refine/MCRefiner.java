@@ -33,10 +33,10 @@ import org.biojava.nbio.structure.jama.Matrix;
  */
 public class MCRefiner implements Refiner {
 
-	private static final boolean debug = true;
+	private static final boolean debug = false;
 	
 	//Optimization parameters
-	private static int Lmin = 2; //Minimum length of the subunit - chosen from initial alignment length
+	private static final int Lmin = 4; //Minimum block length of aligned residues
 	private static final int iterFactor = 100; //Factor to control the max number of iterations of optimization
 	private static final double C = 5; //Probability function constant (probability of acceptance for bad moves)
 	
@@ -80,19 +80,18 @@ public class MCRefiner implements Refiner {
 		//Set parameters from initial alignment
 		AFPChain originalAFP = afpAlignments[0];
 		d0 = originalAFP.getTotalRmsdOpt()*2;
-		Lmin = originalAFP.getOptLength()/(order+1); //order+1 to be more flexible
 		
-		AFPChain refinedAFP = SingleRefiner.refineSymmetry(originalAFP, ca1, ca2, 7);
+		AFPChain refinedAFP = SingleRefiner.refineSymmetry(originalAFP, ca1, ca2, order);
 		
 		initialize(refinedAFP, ca1);
 		optimizeMC(iterFactor*ca.length);
 		
-		try {
+		/*try {
 			saveHistory("/scratch/mcopt/"+afpChain.getName1()+"_MC.csv");
 			if (debug) System.out.println("Saved history.");
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 		return afpChain;
 	}
@@ -171,7 +170,7 @@ public class MCRefiner implements Refiner {
 		
 		int i = 1;
 		
-		while (i<maxIter && conv<(maxIter/20)){
+		while (i<maxIter && conv<(maxIter/10)){
 			
 			moveResidue();  //At the beginning of each iteration move randomly a residue from the freePool
 			
@@ -218,7 +217,7 @@ public class MCRefiner implements Refiner {
 			if (AS<0){
 				
 				//Probability of accepting the new alignment given that produces a negative score change
-				prob = probabilityFunction(AS,i);
+				prob = probabilityFunction(AS,i,maxIter);
 				double p = rnd.nextDouble();
 				//Reject the move
 				if (p>prob){
@@ -536,7 +535,6 @@ public class MCRefiner implements Refiner {
 	private boolean shrinkBlock(){
 		
 		boolean moved = false;
-		if (subunitLen < Lmin) return moved;
 		
 		//Initialize a random generator number
 		Random rnd = new Random();
@@ -565,6 +563,7 @@ public class MCRefiner implements Refiner {
 				}
 				rightRes++;
 			}
+			if ((rightRes-res) <= Lmin) return moved;  //If the block (consecutive residues) is short don't shrink
 			//Shrink the block and add the residues to the freePool
 			for (int su=0; su<order; su++){
 				Integer residue = block.get(su).get(rightRes-1);
@@ -597,7 +596,7 @@ public class MCRefiner implements Refiner {
 				}
 				leftRes--;
 			}
-			
+			if ((res-leftRes) <= Lmin) return moved;  //If the block (consecutive residues) is short don't shrink
 			//Shrink the block and add the residues to the freePool
 			for (int su=0; su<order; su++){
 				Integer residue = block.get(su).get(leftRes+1);
@@ -615,7 +614,7 @@ public class MCRefiner implements Refiner {
 	private boolean splitBlock(){
 		
 		boolean moved = false;
-		if (subunitLen < 2) return moved; //Let split moves unless the subunit is 1 residue long
+		if (subunitLen <= Lmin) return moved; //Let split moves everywhere if the subunit is larger than the minimum block size
 		
 		//Initialize a random generator number
 		Random rnd = new Random();
@@ -728,10 +727,13 @@ public class MCRefiner implements Refiner {
 	 *  Calculates the probability of accepting a bad move given the iteration step and the score change.
 	 *  
 	 *  Function: p=(C-AS)/m^0.5   *from the CEMC algorithm.
+	 *  Added a normalization factor so that the probability approaches 0 when the maxIter is reached.
 	 */
-	private double probabilityFunction(double AS, int m) {
+	private double probabilityFunction(double AS, int m, int maxIter) {
 		
-		return Math.min(Math.max((C+AS)/Math.sqrt(m),0.0),1.0);
+		double prob = (C+AS)/Math.sqrt(m);
+		double norm = (1-(m*1.0)/maxIter);  //Normalization factor
+		return Math.min(Math.max(prob*norm,0.0),1.0);
 	}
 	
 	/**
@@ -866,7 +868,7 @@ public class MCRefiner implements Refiner {
 		//Easy cases: 4i4q, 4dou
 		//Hard cases: d2vdka_,d1n6dd3, d1n7na1
 		//Better MULTIPLE: 2i5i.a
-		String name = "d1n7na1";
+		String name = "d2vdka_";
 		
 		AtomCache cache = new AtomCache();
 		Atom[] ca1 = cache.getAtoms(name);

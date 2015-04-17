@@ -16,6 +16,8 @@ import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
@@ -31,10 +33,10 @@ import org.biojava.nbio.structure.jama.Matrix;
  */
 public class MCRefiner implements Refiner {
 
-	private static final boolean debug = true;
+	private static final boolean debug = false;
 	
 	//Optimization parameters
-	private static final int Lmin = 2; //Minimum length of an aligned block (consecutive residues)
+	private static final int Lmin = 4; //Minimum block length of aligned residues
 	private static final int iterFactor = 100; //Factor to control the max number of iterations of optimization
 	private static final double C = 5; //Probability function constant (probability of acceptance for bad moves)
 	
@@ -75,6 +77,7 @@ public class MCRefiner implements Refiner {
 	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
 			throws RefinerFailedException,StructureException {
 		
+		//Set parameters from initial alignment
 		AFPChain originalAFP = afpAlignments[0];
 		d0 = originalAFP.getTotalRmsdOpt()*2;
 		
@@ -136,10 +139,10 @@ public class MCRefiner implements Refiner {
 		//Set the scores and RMSD of the initial state
 		updateScore();
 		
-		//Set the constant d0 to control the bad alignment penalty term (A) from the initial state. Now calculate from originalAFP RMSD.
-		//calculatePenaltyDistance();
+		/*//Set the constant d0 to control the bad alignment penalty term (A) from the initial state. Now calculate from originalAFP RMSD.
+		calculatePenaltyDistance();
 		//Calculate MCscore again with the new d0 parameter
-		//mcScore = scoreFunctionMC(colDistances);
+		mcScore = scoreFunctionMC(colDistances);*/
 		
 	}
 	
@@ -167,7 +170,9 @@ public class MCRefiner implements Refiner {
 		
 		int i = 1;
 		
-		while (i<maxIter && conv<(maxIter/20)){
+		while (i<maxIter && conv<(maxIter/10)){
+			
+			moveResidue();  //At the beginning of each iteration move randomly a residue from the freePool
 			
 			//Save the state of the system in case the modifications are not favorable
 			List<ArrayList<Integer>> lastBlock = new ArrayList<ArrayList<Integer>>();
@@ -183,7 +188,6 @@ public class MCRefiner implements Refiner {
 			
 			
 			boolean moved = false;
-			moveResidue();  //At the beginning of each iteration move randomly a residue from the freePool
 			
 			while (!moved){
 				//Randomly select one of the steps to modify the alignment
@@ -213,7 +217,7 @@ public class MCRefiner implements Refiner {
 			if (AS<0){
 				
 				//Probability of accepting the new alignment given that produces a negative score change
-				prob = probabilityFunction(AS,i);
+				prob = probabilityFunction(AS,i,maxIter);
 				double p = rnd.nextDouble();
 				//Reject the move
 				if (p>prob){
@@ -531,7 +535,6 @@ public class MCRefiner implements Refiner {
 	private boolean shrinkBlock(){
 		
 		boolean moved = false;
-		if (subunitLen < Lmin) return moved;  //TODO change to consdider consecutive residues as block
 		
 		//Initialize a random generator number
 		Random rnd = new Random();
@@ -560,6 +563,7 @@ public class MCRefiner implements Refiner {
 				}
 				rightRes++;
 			}
+			if ((rightRes-res) <= Lmin) return moved;  //If the block (consecutive residues) is short don't shrink
 			//Shrink the block and add the residues to the freePool
 			for (int su=0; su<order; su++){
 				Integer residue = block.get(su).get(rightRes-1);
@@ -592,7 +596,7 @@ public class MCRefiner implements Refiner {
 				}
 				leftRes--;
 			}
-			
+			if ((res-leftRes) <= Lmin) return moved;  //If the block (consecutive residues) is short don't shrink
 			//Shrink the block and add the residues to the freePool
 			for (int su=0; su<order; su++){
 				Integer residue = block.get(su).get(leftRes+1);
@@ -610,7 +614,7 @@ public class MCRefiner implements Refiner {
 	private boolean splitBlock(){
 		
 		boolean moved = false;
-		if (subunitLen < Lmin) return moved; //TODO change to consdider consecutive residues as block
+		if (subunitLen <= Lmin) return moved; //Let split moves everywhere if the subunit is larger than the minimum block size
 		
 		//Initialize a random generator number
 		Random rnd = new Random();
@@ -723,10 +727,13 @@ public class MCRefiner implements Refiner {
 	 *  Calculates the probability of accepting a bad move given the iteration step and the score change.
 	 *  
 	 *  Function: p=(C-AS)/m^0.5   *from the CEMC algorithm.
+	 *  Added a normalization factor so that the probability approaches 0 when the maxIter is reached.
 	 */
-	private double probabilityFunction(double AS, int m) {
+	private double probabilityFunction(double AS, int m, int maxIter) {
 		
-		return Math.min(Math.max((C+AS)/Math.sqrt(m),0.0),1.0);
+		double prob = (C+AS)/Math.sqrt(m);
+		double norm = (1-(m*1.0)/maxIter);  //Normalization factor
+		return Math.min(Math.max(prob*norm,0.0),1.0);
 	}
 	
 	/**
@@ -859,9 +866,9 @@ public class MCRefiner implements Refiner {
 	public static void main(String[] args) throws IOException, StructureException{
 		
 		//Easy cases: 4i4q, 4dou
-		//Hard cases: d2vdka_,d1n6dd3
+		//Hard cases: d2vdka_,d1n6dd3, d1n7na1
 		//Better MULTIPLE: 2i5i.a
-		String name = "d1n6dd3";
+		String name = "d2vdka_";
 		
 		AtomCache cache = new AtomCache();
 		Atom[] ca1 = cache.getAtoms(name);
@@ -872,6 +879,11 @@ public class MCRefiner implements Refiner {
 		params.setRefineMethod(RefineMethod.MONTE_CARLO);
 		
 		AFPChain afpChain = ceSymm.align(ca1, ca2);
+		
+		afpChain.setName1(name);
+		afpChain.setName2(name);
+		
+		SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2);
 		
 	}
 }

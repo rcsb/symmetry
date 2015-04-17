@@ -30,7 +30,21 @@ public class MultipleRefiner implements Refiner {
 	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
 			throws RefinerFailedException,StructureException {
 		
-		return cycleRefineAFP(afpAlignments, ca1);
+		AFPChain[] allAlignments = new AFPChain[afpAlignments.length*2];
+		int n = afpAlignments.length;
+		
+		//Use the help of the SINGLE refiner by incrementing the number of alignments
+		for (int i=0; i<n; i++){
+			allAlignments[i] = afpAlignments[i];
+			try {
+				allAlignments[n+i] = SingleRefiner.refineSymmetry(afpAlignments[i], ca1, ca2, order);
+			} //It means that one of the refined alignments has length 0, so continue without refining
+			catch (Exception ignore){
+				allAlignments[n+i] = null;
+				continue;
+			}
+		}
+		return cycleRefineAFP(allAlignments, ca1, ca2, order);
 	}
 	
 	 /**
@@ -43,7 +57,7 @@ public class MultipleRefiner implements Refiner {
 	 * ALGORITHM: cycle detection for each residue checking each time that the distance between residues is sufficient
 	 * RUNNING TIME: DFS of depth order, polynomial in length of the protein. No bottleneck.
 	 */
-	public static AFPChain cycleRefineAFP(AFPChain[] allAlignments, Atom[] ca1) throws StructureException {
+	private static AFPChain cycleRefineAFP(AFPChain[] allAlignments, Atom[] ca1, Atom[] ca2, int order) throws StructureException {
 		
 		//Create the alignment graph and initialize a variable to store the groups
 		//double[][][] weights = buildWeightedAFPgraph(allAlignments, ca1);
@@ -60,7 +74,6 @@ public class MultipleRefiner implements Refiner {
 		
 		//Variable to store the residues already present in one of the selected groups
 		List<Integer> alreadySeen = new ArrayList<Integer>();
-		int order = allAlignments.length+1;
 		
 		//Loop through all the residues in the graph (only consider the first residues, because cycles must include them to be consistent).
 		for (int i=0; i<graph.size()/(order-order/2); i++){
@@ -215,7 +228,7 @@ public class MultipleRefiner implements Refiner {
 			}
 		}
 		
-		return AlignmentTools.replaceOptAln(optAlgn, allAlignments[order-2], ca1, ca1);
+		return AlignmentTools.replaceOptAln(optAlgn, allAlignments[order-1], ca1, ca2);
 	}
 	
 	/**
@@ -234,10 +247,8 @@ public class MultipleRefiner implements Refiner {
 			adjList.add(edges);
 		}
 		
-		//Convert the multiple alignments into a triple list to handle the relations
-		//List<List<List<Integer>>> alignments = processMultipleAFP(allAlignments);
-		
-		for (int k=0; k< allAlignments.length; k++){
+		for (int k=0; k < allAlignments.length; k++){
+			if (allAlignments[k] != null){
 			for (int i=0; i<allAlignments[k].getOptAln().length; i++){
 				for (int j=0; j<allAlignments[k].getOptAln()[i][0].length; j++){
 				
@@ -252,6 +263,7 @@ public class MultipleRefiner implements Refiner {
 						adjList.get(edge).add(vertex);
 					}
 				}
+			}
 			}
 		}
 		/*//Print graph information

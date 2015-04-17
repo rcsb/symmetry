@@ -62,7 +62,7 @@ public class MomentsOfInertia {
 
 			for ( int r = 0 ; r < rotations ; r++){
 				
-				Atom[] ca2 = StructureTools.cloneCAArray(ca);
+				Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 				
 				ca2 = Calc.centerAtoms(ca2);
 				

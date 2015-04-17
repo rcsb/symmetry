@@ -1,6 +1,9 @@
 package org.biojava.nbio.structure.align.symm;
 
+import java.awt.Color;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
@@ -13,34 +16,52 @@ import org.biojava.nbio.structure.align.ce.CeCPMain;
 import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.ce.MatrixListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.SubunitColors;
+import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
+import org.biojava.nbio.structure.align.symm.order.OrderDetector;
+import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
+import org.biojava.nbio.structure.align.symm.refine.MCRefiner;
+import org.biojava.nbio.structure.align.symm.refine.MultipleRefiner;
+import org.biojava.nbio.structure.align.symm.refine.Refiner;
+import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
+import org.biojava.nbio.structure.align.symm.refine.SingleRefiner;
 import org.biojava.nbio.structure.align.util.AFPChainScorer;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.jama.Matrix;
-import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
-import org.biojava.nbio.structure.align.symm.order.OrderDetector;
-import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.utils.SymmetryTools;
+import org.jcolorbrewer.ColorBrewer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Try to identify all possible symmetries by iterating resursively over all
+ * Try to identify all possible symmetries by iterating recursively over all
  * results and disabling the diagonal of each previous result.
  * 
  * @author andreas
  * 
+ * 
  */
 public class CeSymm extends AbstractStructureAlignment implements
 		MatrixListener, StructureAlignment {
+
 	static final boolean debug = false;
 
 	public static final String algorithmName = "jCE-symmetry";
 
 	public static final String version = "1.0";
-
-	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8,
-			0.4f); // TODO finish
+	
+	private static final double symmetryThreshold = 0.4;
+	
+	private static final Logger logger = LoggerFactory.getLogger(CeSymm.class);
+	
+	//The order and refinement options are controlled by CESymmParameters
+	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8, 0.4f);
+	private Refiner refiner;
 
 	AFPChain afpChain;
+	AFPChain[] afpAlignments;
 
 	Atom[] ca1;
 	Atom[] ca2;
@@ -134,6 +155,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 			origM = SymmetryTools.blankOutPreviousAlignment(afpChain, ca2,
 					rows, cols, calculator, origM, blankWindowSize);
 		}
+		//System.out.println("origM: blankout correct...");
 
 		Matrix clone = (Matrix) origM.clone();
 
@@ -141,13 +163,41 @@ public class CeSymm extends AbstractStructureAlignment implements
 		calculator.setMatMatrix(clone.getArray());
 
 		calculator.traceFragmentMatrix(afpChain, ca1, ca2clone);
+		
+		final Matrix origMfinal = (Matrix) origM.clone();
+		//Add a matrix listener to keep the blacked zones in max.
+		calculator.addMatrixListener(new MatrixListener() {
 
+			@Override
+			public double[][] matrixInOptimizer(double[][] max) {
+				
+				//Check every entry of origM for blacked out regions
+				for (int i=0; i<max.length; i++){
+					for (int j=0; j<max[i].length; j++){
+						if (origMfinal.getArray()[i][j]>1e9){
+							max[i][j] = -origMfinal.getArray()[i][j];
+						}
+					}
+				}
+				return max;
+			}
+
+			@Override
+			public boolean[][] initializeBreakFlag(boolean[][] brkFlag) {
+				
+				return brkFlag;
+			}
+		});
+		
 		calculator.nextStep(afpChain, ca1, ca2clone);
+		//System.out.println("origM: next step correct...");
 
 		afpChain.setAlgorithmName(algorithmName);
 		afpChain.setVersion(version);
 
 		afpChain.setDistanceMatrix(origM);
+		//System.out.println("origM: distance matrix correct...");
+		
 		return origM;
 
 	}
@@ -192,7 +242,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 	}
 
 	@Override
-	public AFPChain align(Atom[] ca1, Atom[] ca2O, Object param)
+	public AFPChain align(Atom[] ca10, Atom[] ca2O, Object param)
 			throws StructureException {
 		if (!(param instanceof CESymmParameters))
 			throw new IllegalArgumentException(
@@ -200,24 +250,32 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 		this.params = (CESymmParameters) param;
 
-		this.ca1 = ca1;
-		this.ca2 = ca2O;
-
+		ca1 = ca10;
 		ca2 = StructureTools.duplicateCA2(ca2O);
 		rows = ca1.length;
 		cols = ca2.length;
+		
+		if( rows == 0 || cols == 0) {
+			logger.warn("Aligning empty structure");
+			throw new StructureException("Aligning empty structure");
+		}
 
 		Matrix origM = null;
 
 		AFPChain myAFP = new AFPChain();
-
+		List<AFPChain> allAlignments = new ArrayList<AFPChain>();
+		
 		calculator = new CECalculator(params);
 		calculator.addMatrixListener(this);
+		
+		//Set multiple to true if multiple alignments are needed
+		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE);
+		//Save the optimal score, to quantify the goodness of the current alignment compared to the optimal (multiple strategy)
+		double optTMscore = 0;
 
 		int i = 0;
-
-		while ((afpChain == null) && i < params.getMaxNrAlternatives()) {
-
+		do {
+			
 			if (origM != null) {
 				myAFP.setDistanceMatrix((Matrix) origM.clone());
 			}
@@ -225,28 +283,93 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 			double tmScore2 = AFPChainScorer.getTMScore(myAFP, ca1, ca2);
 			myAFP.setTMScore(tmScore2);
-
-			i++;
-		}
-		afpChain = myAFP;
-
-		try {
-			afpChain = CeCPMain.postProcessAlignment(afpChain, ca1, ca2,
-					calculator);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return afpChain;
-		}
-
-		if (params.isRefineResult()) {
-			int order;
+			
+			//Clone the AFPChain
+			AFPChain newAFP = (AFPChain) myAFP.clone();
+			
+			//Post process the alignment
 			try {
-				order = orderDetector.calculateOrder(myAFP, ca1);
-				afpChain = SymmRefiner.refineSymmetry(afpChain, ca1, ca2O,
-						order);
-			} catch (OrderDetectionFailedException e) {
-				// TODO Auto-generated catch block
+				newAFP = CeCPMain.postProcessAlignment(newAFP, ca1, ca2,
+						calculator);
+			} catch (Exception e) {
 				e.printStackTrace();
+				allAlignments.add(newAFP);
+			}
+			
+			//Calculate and set the TM score for the newAFP alignment before adding it to the list
+			double tmScore3 = AFPChainScorer.getTMScore(newAFP, ca1, ca2);
+			newAFP.setTMScore(tmScore3);
+			
+			if (debug){
+				//Print alignment length and TM score of the current alignment
+				logger.info("Alignment "+(i+1)+" length: "+newAFP.getOptLength());
+				logger.info("Alignment "+(i+1)+" score: "+newAFP.getTMScore());
+			}
+			
+			//If it is the first alignment determine if it is significant and set the optimal score
+			if (i==0){
+				optTMscore = newAFP.getTMScore();
+				if (!isSignificant(newAFP,orderDetector,ca1)){
+					if(debug) logger.info("Not symmetric protein...");
+						//TODO What have to be done when a protein is not symmetric?
+						//		At the moment the alignment without refinement is returned.
+					return newAFP;
+				}
+			}
+			//Otherwise check for a drop (of 50%) in the alignment score and break the loop
+			else if (newAFP.getTMScore()*2 < optTMscore){
+				if (debug) logger.info("Optimal alignment TM score: "+optTMscore+", Last alignment TM score: "+newAFP.getTMScore());
+				break;
+			}
+			
+			//Add the alignment to the allAlignments list
+			allAlignments.add(newAFP);
+			if (debug) logger.info("Alignment "+(i+1)+" completed...");
+			
+			i++;
+			
+		} while (i <= params.getMaxSymmOrder() && multiple);
+		
+		//Initialize the order of symmetry
+		int order = allAlignments.size()+1;
+		
+		//Save the results to the CeSymm member variables
+		afpChain = allAlignments.get(0);
+		afpAlignments = new AFPChain[allAlignments.size()];
+		for (int k=0; k<allAlignments.size(); k++){
+			afpAlignments[k] = allAlignments.get(k);
+		}
+		
+		//REFINEMENT options
+		if (params.getRefineMethod() == RefineMethod.MULTIPLE){
+			order = afpAlignments.length+1;
+			//System.out.println("Order of symmetry: "+(order));
+			refiner = new MultipleRefiner();
+			try {
+				afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
+			} catch (RefinerFailedException e) {
+				e.printStackTrace();
+			}
+		}
+		else {
+			//Calculate order
+			try {
+				order = orderDetector.calculateOrder(afpChain, ca1);
+				//System.out.println("Order of symmetry: "+(order));
+			} catch (OrderDetectionFailedException e) {
+				e.printStackTrace();
+			}
+			
+			if (params.getRefineMethod() == RefineMethod.SINGLE) refiner = new SingleRefiner();
+			else if (params.getRefineMethod() == RefineMethod.MONTE_CARLO) refiner = new MCRefiner();
+			
+			//Refine the AFPChain
+			if (refiner != null){
+				try {
+					afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
+				} catch (RefinerFailedException e1) {
+					e1.printStackTrace();
+				}
 			}
 		}
 
@@ -254,7 +377,6 @@ public class CeSymm extends AbstractStructureAlignment implements
 		afpChain.setTMScore(tmScore2);
 
 		return afpChain;
-
 	}
 
 	@Override
@@ -282,19 +404,11 @@ public class CeSymm extends AbstractStructureAlignment implements
 	public String getVersion() {
 		return version;
 	}
-
-	public OrderDetector getOrderDetector() {
-		return orderDetector;
-	}
-
-	public void setOrderDetector(OrderDetector orderDetector) {
-		this.orderDetector = orderDetector;
-	}
-
+	
 	public static boolean isSignificant(AFPChain afpChain,OrderDetector orderDetector, Atom[] ca1) throws StructureException {
 
 		// TM-score cutoff
-		if (afpChain.getTMScore() < 0.4) return false;
+		if (afpChain.getTMScore() < symmetryThreshold) return false;
 
 		// sequence-function order cutoff
 		int order = 1;
@@ -311,6 +425,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		RotationAxis rot = new RotationAxis(afpChain);
 		order = rot.guessOrderFromAngle(1.0 * Calc.radiansPerDegree, 8);
 		if (order > 1) return true;
+		
 		// asymmetric
 		return false;
 	}

@@ -196,7 +196,7 @@ public class RotationOrderDetector implements OrderDetector {
 		double[] angles = new double[steps];
 		double[] distances = new double[steps];
 
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 		double angle = 0;
 
 		for (int step=0; step<steps;step++) {
@@ -273,7 +273,7 @@ public class RotationOrderDetector implements OrderDetector {
 		double[] distances = new double[steps];
 		if(steps < 1) return distances;
 
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 
 		// step 0
 		if(angles[0] > 0) {
@@ -518,6 +518,7 @@ public class RotationOrderDetector implements OrderDetector {
 		for(int i=start+1;i<arr.length;i++) {
 			if(arr[i] > arr[maxIndex])
 				maxIndex = i;
+
 		}
 		return maxIndex;
 	}

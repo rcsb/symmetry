@@ -46,7 +46,7 @@ public class DetectOrder {
 	public static void printSuperpositionDistance(Atom[] ca, RotationAxis axis,double angleIncr, PrintStream out) throws StructureException {
 		final int steps = (int)Math.floor(Math.PI/angleIncr);
 
-		Atom[] ca2 = StructureTools.cloneCAArray(ca);
+		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 
 		for (int step=0; step<steps;step++) {
 			double dist = RotationOrderDetector.superpositionDistance(ca, ca2);
@@ -195,8 +195,8 @@ public class DetectOrder {
 		try {
 
 			// Perform alignment to determine axis
-			Atom[] ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-			Atom[] ca2 = StructureTools.cloneCAArray(ca1);
+			Atom[] ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+			Atom[] ca2 = StructureTools.cloneAtomArray(ca1);
 			CeSymm ce = new CeSymm();
 			AFPChain alignment = ce.align(ca1, ca2);
 			alignment.setName1(name);alignment.setName2(name);

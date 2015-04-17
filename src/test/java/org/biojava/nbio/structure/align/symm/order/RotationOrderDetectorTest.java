@@ -51,8 +51,8 @@ public class RotationOrderDetectorTest {
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -68,8 +68,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "d1ijqa1";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -94,8 +94,8 @@ public class RotationOrderDetectorTest {
 		int order;
 
 		name = "1MER.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 
 		order = detector.calculateOrder(alignment, ca1);
@@ -106,8 +106,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "d1ijqa1";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 
 		order = detector.calculateOrder(alignment, ca1);
@@ -117,8 +117,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "1TIM.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 
 		order = detector.calculateOrder(alignment, ca1);
@@ -138,8 +138,8 @@ public class RotationOrderDetectorTest {
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -155,8 +155,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "d1ijqa1";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -171,8 +171,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "1TIM.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -197,8 +197,8 @@ public class RotationOrderDetectorTest {
 		int order;
 
 		name = "1MER.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 
 		order = detector.calculateOrder(alignment, ca1);
@@ -209,8 +209,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "d1ijqa1";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 
 		order = detector.calculateOrder(alignment, ca1);
@@ -220,8 +220,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "1TIM.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 
 		order = detector.calculateOrder(alignment, ca1);
@@ -244,8 +244,8 @@ public class RotationOrderDetectorTest {
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -261,8 +261,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "d1ijqa1";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -277,8 +277,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "1TIM.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -304,8 +304,8 @@ public class RotationOrderDetectorTest {
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -333,8 +333,8 @@ public class RotationOrderDetectorTest {
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -350,8 +350,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "d1ijqa1";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -366,8 +366,8 @@ public class RotationOrderDetectorTest {
 		ce = new CeSymm();// work around bug
 
 		name = "1TIM.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 
@@ -392,8 +392,8 @@ public class RotationOrderDetectorTest {
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
-		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
+		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
+		ca2 = StructureTools.cloneAtomArray(ca1);
 		alignment = ce.align(ca1, ca2);
 		axis = new RotationAxis(alignment);
 

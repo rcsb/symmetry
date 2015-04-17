@@ -1,6 +1,9 @@
 package org.biojava.nbio.structure.utils;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.JFrame;
 
 import org.biojava.nbio.structure.Atom;
@@ -118,7 +121,7 @@ public class SymmetryTools {
 						if ( i1-k >= 0) {
 							double resetVal = getResetVal(max.get(i1-k, i1-k), 0, gradientPolyCoeff, gradientExpCoeff);
 							dist1[i1-k][i1-k] = resetVal;
-						} else if ( i1+k < rows) { // Why else? -SB
+						} else if ( i1+k < rows) {
 							double resetVal = getResetVal(max.get(i1+k, i1+k), 0, gradientPolyCoeff, gradientExpCoeff);
 							dist1[i1+k][i1+k] = resetVal;
 						}
@@ -225,7 +228,7 @@ public class SymmetryTools {
 		for (Atom a : ca2){
 			Group g = (Group) a.getGroup().clone(); // works because each group has only a CA atom
 
-			ca2clone[pos] = g.getAtom(StructureTools.CA_ATOM_NAME);
+			ca2clone[pos] = g.getAtom(a.getName());
 
 			pos++;
 		}
@@ -325,5 +328,34 @@ public class SymmetryTools {
 		return Math.acos(rotation.trace() - 1) * 180/Math.PI;
 	}
 	
-
+	/**
+	 * Builds an undirected graph in the form of an adjacency list where the vertices are the residues 
+	 * of the protein and the edges mean that the two residues are aligned.
+	 */
+	public static List<List<Integer>> buildAFPgraph(AFPChain afpChain, Atom[] ca1) {
+		
+		//Initialize the adjacency list that stores the graph
+		List<List<Integer>> adjList = new ArrayList<List<Integer>>();
+		for (int n=0; n<ca1.length; n++){
+			List<Integer> edges = new ArrayList<Integer>();
+			adjList.add(edges);
+		}
+		
+		for (int i=0; i<afpChain.getOptAln().length; i++){
+			for (int j=0; j<afpChain.getOptAln()[i][0].length; j++){
+			
+				//The vertex is the residue in the first chain and the edge the one in the second chain
+				int vertex = afpChain.getOptAln()[i][0][j];
+				int edge = afpChain.getOptAln()[i][1][j];
+				if (!adjList.get(vertex).contains(edge)){
+					adjList.get(vertex).add(edge);
+				}
+				//Make the graph undirected by inserting the back edge
+				if (!adjList.get(edge).contains(vertex)){
+					adjList.get(edge).add(vertex);
+				}
+			}
+		}		
+		return adjList;
+	}
 }

@@ -72,7 +72,7 @@ public class CEMirrorSymm extends CeSymm {
 		if(mirrorSequence) {
 			ca2m = reverseCA2(ca2);
 		} else {
-			ca2m = StructureTools.cloneCAArray(ca2);
+			ca2m = StructureTools.cloneAtomArray(ca2);
 		}
 
 		AFPChain afpChain = super.align(ca1, ca2m, param);
@@ -174,7 +174,7 @@ public class CEMirrorSymm extends CeSymm {
 		for (Atom a : ca2){
 			Group g = (Group) a.getGroup().clone(); // works because each group has only a CA atom
 			c.addGroup(g);
-			ca2clone[pos] = g.getAtom(StructureTools.CA_ATOM_NAME);
+			ca2clone[pos] = g.getAtom(a.getName());
 
 			pos--;
 		}

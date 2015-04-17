@@ -128,7 +128,7 @@ public class LigandFinder {
 					logger.error("Alignment mapping does not exist");
 				}
 				try {
-					AFPChain afpChain = mapping.buildAfpChain(ca, StructureTools.getAtomCAArray(structure));
+					AFPChain afpChain = mapping.buildAfpChain(ca, StructureTools.getRepresentativeAtomArray(structure));
 					axis = new RotationAxis(afpChain);
 					centroid = calcCentroidFromAfpChain(afpChain, ca);
 				} catch (Exception e) {

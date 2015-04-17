@@ -84,37 +84,37 @@ public class DisplaySymmAFP extends DisplayAFP {
 		//Create the atom arrays corresponding to the first and second subunits only
 		Atom[] ca1block = new Atom[afpChain.getOptLen()[0]];
 		Atom[] ca2block = new Atom[afpChain.getOptLen()[0]];
-		ca1block = Arrays.copyOfRange(ca1, 0, afpChain.getOptAln()[0][0][afpChain.getOptAln()[0][0].length-1]+1);
+		ca1block = Arrays.copyOfRange(ca1, afpChain.getOptAln()[0][0][0], afpChain.getOptAln()[0][0][afpChain.getOptAln()[0][0].length-1]+1);
 		ca2block = Arrays.copyOfRange(ca2, afpChain.getOptAln()[0][1][0], afpChain.getOptAln()[0][1][afpChain.getOptAln()[0][1].length-1]+1);
 		
 		//Modify the optimal alignment to include only one subunit (block)
-		int[][][] optAln = new int[1][2][afpChain.getOptLen()[0]];
-		int[][] block = afpChain.getOptAln()[0];
-		//Normalize the residues of the second subunit, to be in the range of ca2block
-		int start = block[1][0];
-		for (int i=0; i<block[1].length; i++){
-			block[1][i] -= start;
+		int[][][] optAln = new int[1][][];
+		int[][] block = new int[2][];
+		//Normalize the residues of the subunits, to be in the range of ca1block and ca2block
+		int start1 = afpChain.getOptAln()[0][0][0];
+		int start2 = afpChain.getOptAln()[0][1][0];
+		int[] chain1 = new int[afpChain.getOptLen()[0]];
+		int[] chain2 = new int[afpChain.getOptLen()[0]];
+		for (int i=0; i<chain1.length; i++){
+			chain1[i] = afpChain.getOptAln()[0][0][i] - start1;
+			chain2[i] = afpChain.getOptAln()[0][1][i] - start2;
 		}
+		block[0] = chain1;
+		block[1] = chain2;
 		optAln[0] = block;
-		int[] optLens = new int[1];
-		optLens[0]=optAln[0][0].length;
 		
 		//Modify the AFP chain to adapt the new optimal alignment of two subunits.
 		AFPChain displayAFP = new AFPChain();
+		
 		try {
-			displayAFP = AlignmentTools.replaceOptAln(optAln, afpChain, ca1block, ca2block);
+			displayAFP = AlignmentTools.replaceOptAln(optAln, displayAFP, ca1block, ca2block);
 		} catch (StructureException e1) {
 			e1.printStackTrace();
 		}
-		
-		//Another array to display is created only with the residues of the second subunit, because all (first and second, are needed to superimpose, but only the second is relevant in the alignment)
-		//DOES NOT WORK, because the second subunit is not colored
-		//Atom[] ca2blockDisplay = Arrays.copyOfRange(ca2, afpChain.getOptAln()[0][1][0], afpChain.getOptAln()[0][1][afpChain.getOptAln()[0][1].length-1]+1);
 
 		//Set the name of the protein
 		displayAFP.setName1(afpChain.getName1()+" su1");
 		displayAFP.setName2(afpChain.getName2()+" su2");
-		displayAFP.setAlgorithmName("jFatCat_rigid");  //Set the name to FatCat, because it is not a CE-Symm alignment.
 		
 		try {
 			//Display the AFP alignment of the subunits

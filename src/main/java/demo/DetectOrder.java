@@ -22,12 +22,12 @@ import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector;
 import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector.RotationOrderMethod;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 
 public class DetectOrder {
 
@@ -99,6 +99,10 @@ public class DetectOrder {
 				"and Distance columns will be added. The string '%s' will be " +
 				"expanded with the structure id.");
 		options.addOption("d","display",false,"display jMol window with CeSymm alignment.");
+		options.addOption(OptionBuilder.withLongOpt("nodisplay")
+				.hasArg(false)
+				.withDescription("don't display jMol window with CeSymm alignment.")
+				.create() );
 		CommandLineParser parser = new GnuParser();
 		HelpFormatter help = new HelpFormatter();
 
@@ -166,14 +170,16 @@ public class DetectOrder {
 			outfile = String.format(cli.getOptionValue('o'),name);
 		}
 
-		List<RotationOrderDetector> methods = new ArrayList<RotationOrderDetector>();
+		List<OrderDetector> methods = new ArrayList<OrderDetector>();
 		if(cli.hasOption('M')) {
 			for(String method: cli.getOptionValues('M')) {
 				RotationOrderMethod m = RotationOrderMethod.valueOf(method);
 				methods.add(new RotationOrderDetector(maxorder,m) );
 			}
 		}
-		boolean displayAlignment = cli.hasOption('d');
+		//methods.add(new AngleOrderDetectorPlus(maxorder,100));
+		//methods.add(new HybridOrderDetector(maxorder, Math.PI/16, false, .85));
+		boolean displayAlignment = cli.hasOption('d') && ! cli.hasOption("nodisplay");
 
 //		System.out.println("Name:" + name);
 //		System.out.println("order:" + maxorder);
@@ -193,6 +199,7 @@ public class DetectOrder {
 			Atom[] ca2 = StructureTools.cloneCAArray(ca1);
 			CeSymm ce = new CeSymm();
 			AFPChain alignment = ce.align(ca1, ca2);
+			alignment.setName1(name);alignment.setName2(name);
 			RotationAxis axis = new RotationAxis(alignment);
 
 			// Output raw data

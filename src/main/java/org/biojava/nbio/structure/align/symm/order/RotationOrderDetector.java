@@ -255,7 +255,7 @@ public class RotationOrderDetector implements OrderDetector {
 		return dist;
 	}
 
-	private double[] getAngles() {
+	protected double[] getAngles() {
 		final double firstAngle = ceil(this.minAngle/angleIncr)*angleIncr; // first valid peak
 		final double maxAngle = PI;
 		// Number of angle steps
@@ -267,7 +267,7 @@ public class RotationOrderDetector implements OrderDetector {
 		}
 		return angles;
 	}
-	private static double[] getSuperpositionDistances(Atom[] ca, RotationAxis axis, double[] angles) throws StructureException {
+	protected static double[] getSuperpositionDistances(Atom[] ca, RotationAxis axis, double[] angles) throws StructureException {
 		int steps = angles.length;
 
 		double[] distances = new double[steps];
@@ -355,6 +355,9 @@ public class RotationOrderDetector implements OrderDetector {
 	private double getSSEForFit(Atom[] ca, RotationAxis axis, int[] orders) throws StructureException {
 		double[] angles = getAngles();
 		double[] distances = getSuperpositionDistances(ca,axis, angles);
+		return getSSEForFit(angles,distances,orders);
+	}
+	protected double getSSEForFit(double[] angles,double[] distances, int[] orders) throws StructureException {
 
 		int steps = angles.length;
 
@@ -395,6 +398,9 @@ public class RotationOrderDetector implements OrderDetector {
 	private double[] getWeightsForFit(Atom[] ca, RotationAxis axis, int[] orders) throws StructureException {
 		double[] angles = getAngles();
 		double[] distances = getSuperpositionDistances(ca,axis, angles);
+		return getWeightsForFit(angles, distances, orders);
+	}
+	protected double[] getWeightsForFit(double[] angles, double[] distances, int[] orders) throws StructureException {
 
 		int steps = angles.length;
 
@@ -448,6 +454,26 @@ public class RotationOrderDetector implements OrderDetector {
 			// Calculate RSSE (could save some arithmetic, but this is easier to compare)
 			double[] weights = getWeightsForFit(ca, axis, new int[] {0,order});
 			amps[order-1] = weights[1];
+		}
+
+		return amps;
+	}
+	/**
+	 * For each order from 1 to maxOrder, calculate the amplitude from fitting
+	 * a single-order function (with intercept).
+	 * @param ca
+	 * @param axis
+	 * @param orders array of orders to compute
+	 * @return An array of length maxOrder containing the amplitude of the function
+	 * @throws StructureException For errors applying the rotation
+	 */
+	public double[] trySingleOrdersByAmp(Atom[] ca, RotationAxis axis,int[] orders) throws StructureException {
+		double[] amps = new double[orders.length];
+
+		for( int i = 0;i<orders.length;i++) {
+			// Calculate RSSE (could save some arithmetic, but this is easier to compare)
+			double[] weights = getWeightsForFit(ca, axis, new int[] {0,orders[i]});
+			amps[i] = weights[1];
 		}
 
 		return amps;

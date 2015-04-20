@@ -22,8 +22,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
-/** A JFrame that allows to trigger a symmetry analysis, either from files in a directory,
- * 	or after manual upload. 
+/** 
+ *  A JFrame that allows to trigger a symmetry analysis, either from files in a directory or after manual upload. 
  * 	Adapted from the biojava AlignmentGui class.
  *
  * @author lafita

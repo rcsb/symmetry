@@ -1,8 +1,11 @@
 package org.biojava.nbio.structure.align.symm.gui;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
 import javax.swing.Box;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -82,50 +85,46 @@ public class SymmetryMenu extends MenuCreator {
 		menu.add(file);
 
 		//ALIGN tab
-		JMenu align = new JMenu("Align");
+		JMenu align = new JMenu("Alignment");
 		align.setMnemonic(KeyEvent.VK_A);
-		JMenuItem pairI = getPairwiseAlignmentMenuItem();
-		align.add(pairI);
 
-		menu.add(align);
-
-		//VIEW tab
-		JMenu view = new JMenu("View");
-		view.getAccessibleContext().setAccessibleDescription("View Menu");
-		view.setMnemonic(KeyEvent.VK_V);
+		align.setMnemonic(KeyEvent.VK_V);
 
 		if ( parent != null){
 			JMenuItem aligpI = MenuCreator.getIcon(parent,ALIGNMENT_PANEL);
 			aligpI.setMnemonic(KeyEvent.VK_L);
 			aligpI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, keyMask));
-			view.add(aligpI);
+			align.add(aligpI);
 
 			JMenuItem textI = MenuCreator.getIcon(parent,TEXT_ONLY);
 			textI.setMnemonic(KeyEvent.VK_T);
-			view.add(textI);
+			align.add(textI);
 
 			JMenuItem pairsI = MenuCreator.getIcon(parent,PAIRS_ONLY);
 			pairsI.setMnemonic(KeyEvent.VK_P);
-			view.add(pairsI);
+			align.add(pairsI);
 
 			JMenuItem textF = MenuCreator.getIcon(parent,FATCAT_TEXT);
 			textF.setMnemonic(KeyEvent.VK_F);
-			view.add(textF);
+			align.add(textF);
 		}
 
 		if ( afpChain != null){
 			JMenuItem distMax = new  JMenuItem("Show Distance Matrices");
 			distMax.setMnemonic(KeyEvent.VK_D);
 			distMax.addActionListener(new MyDistMaxListener(afpChain));
-			view.add(distMax);
+			align.add(distMax);
 
 			JMenuItem dotplot = new JMenuItem("Show Dot Plot");
 			dotplot.setMnemonic(KeyEvent.VK_O);
 			dotplot.addActionListener(new DotPlotListener(afpChain));
-			view.add(dotplot);
+			align.add(dotplot);
 		}
-
-		menu.add(view);
+		
+		JMenuItem pairI = getPairwiseAlignmentMenuItem();
+		align.add(pairI);
+		
+		menu.add(align);
 		
 		//SYMMETRY tab
 		JMenu sym = new JMenu("Symmetry");
@@ -139,10 +138,8 @@ public class SymmetryMenu extends MenuCreator {
 		mulAln.addActionListener(parent);
 		mulAln.setMnemonic(KeyEvent.VK_M);
 		
-		JMenuItem newSym = new JMenuItem(SYMMETRY);
+		JMenuItem newSym = getNewSymmetryMenuItem();
 		newSym.addActionListener(parent);
-		newSym.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, keyMask));
-		newSym.setMnemonic(KeyEvent.VK_Y);
 		
 		sym.add(subunits);
 		sym.add(mulAln);
@@ -173,5 +170,21 @@ public class SymmetryMenu extends MenuCreator {
 	protected static void showSymmDialog(){
 		SymmetryGui gui =  SymmetryGui.getInstance();
 		gui.setVisible(true);
+	}
+	
+	/**
+	 * 
+	 */
+	private static JMenuItem getNewSymmetryMenuItem() {
+		ImageIcon alignIcon = createImageIcon("/icons/window_new.png");
+
+		JMenuItem symI;
+		if ( alignIcon == null)
+			symI = new JMenuItem(SYMMETRY);
+		else 
+			symI = new JMenuItem(SYMMETRY, alignIcon);
+		symI.setMnemonic(KeyEvent.VK_Y);
+		symI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, keyMask));
+		return symI;
 	}
 }

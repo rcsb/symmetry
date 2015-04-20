@@ -9,7 +9,9 @@ import java.util.Stack;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
@@ -21,6 +23,8 @@ import org.biojava.nbio.structure.align.util.AtomCache;
  */
 
 public class MultipleRefiner implements Refiner {
+	
+	private static final boolean debug = false;
 
 	public MultipleRefiner() {
 		super();
@@ -30,24 +34,36 @@ public class MultipleRefiner implements Refiner {
 	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
 			throws RefinerFailedException,StructureException {
 		
-		AFPChain[] allAlignments = new AFPChain[afpAlignments.length*2];
-		int n = afpAlignments.length;
-		
-		//Use the help of the SINGLE refiner by incrementing the number of alignments
-		for (int i=0; i<n; i++){
-			allAlignments[i] = afpAlignments[i];
+		//Use the help of the SINGLE refiner to increase the consistency of the alignments
+		for (int i=0; i<afpAlignments.length; i++){
 			try {
-				allAlignments[n+i] = SingleRefiner.refineSymmetry(afpAlignments[i], ca1, ca2, order);
+				afpAlignments[i] = SingleRefiner.refineSymmetry(afpAlignments[i], ca1, ca2, order);
 			} //It means that one of the refined alignments has length 0, so continue without refining
 			catch (Exception ignore){
-				allAlignments[n+i] = null;
+				//afpAlignments[i] = null;
 				continue;
 			}
 		}
-		return cycleRefineAFP(allAlignments, ca1, ca2, order);
+		return cycleRefineAFP(afpAlignments, ca1, ca2, order);
+		//return maxSizeRefineAFP(afpAlignments);
 	}
 	
-	 /**
+	/**
+	 *  Returns the alignment with the maximum length of the set of afpAlignments.
+	 */
+	private AFPChain maxSizeRefineAFP(AFPChain[] afpAlignments) {
+		
+		AFPChain maxAFP = null;
+		for (int i=0; i<afpAlignments.length; i++){
+			if (afpAlignments[i]!=null){
+			if (maxAFP==null) maxAFP = afpAlignments[i];
+			else if (maxAFP.getOptLength()<afpAlignments[i].getOptLength()) maxAFP = afpAlignments[i];
+			}
+		}
+		return maxAFP;
+	}
+
+	/**
 	 * Calculates from a set of AFP alignments the groups of residues (the group size is the order of symmetry)
 	 * that align together and are consistent, equivalent for each subunit). As a result a modified AFPChain with 
 	 * <order of symmetry> consistent groups is produced.
@@ -59,10 +75,10 @@ public class MultipleRefiner implements Refiner {
 	 */
 	private static AFPChain cycleRefineAFP(AFPChain[] allAlignments, Atom[] ca1, Atom[] ca2, int order) throws StructureException {
 		
-		//Create the alignment graph and initialize a variable to store the groups
-		//double[][][] weights = buildWeightedAFPgraph(allAlignments, ca1);
+		//Create the alignment graph and initialize a variable to store the symmetry groups
 		List<List<Integer>> graph = buildAFPgraph(allAlignments, ca1);
-		//Count the number of aligned residues to exclude the loops from the interresidue distances
+		List<List<Integer>> groups = new ArrayList<List<Integer>>();
+		//Count the number of aligned residues to exclude the intersubunit loops from the interresidue distances
 		int aligned_res = 0;
 		for (List<Integer> v:graph){
 			//Count residues with order-1 edges (connected consistently in all the alignments)
@@ -70,7 +86,6 @@ public class MultipleRefiner implements Refiner {
 				aligned_res++;
 			}
 		}
-		List<List<Integer>> groups = new ArrayList<List<Integer>>();
 		
 		//Variable to store the residues already present in one of the selected groups
 		List<Integer> alreadySeen = new ArrayList<Integer>();
@@ -78,7 +93,7 @@ public class MultipleRefiner implements Refiner {
 		//Loop through all the residues in the graph (only consider the first residues, because cycles must include them to be consistent).
 		for (int i=0; i<graph.size()/(order-order/2); i++){
 			if (!alreadySeen.contains(i)){
-			//System.out.println("Cycle for residue "+i);
+			if (debug) System.out.println("Cycle for residue "+i);
 			
 			//Initialize the variables for the DFS of this residue iteration
 			Stack<Integer> path = new Stack<Integer>(); //stack that stores the current path nodes
@@ -92,22 +107,19 @@ public class MultipleRefiner implements Refiner {
 			
 			while (!stack.isEmpty() && !foundGroup){
 				
-				/*//Print path and stack at each iteration
+				if (debug){
+				//Print path and stack at each iteration
 				System.out.println("Stack: ");
-				for (List<Integer> s:stack){
-					System.out.println(s);
-				}
-				/*
+				for (List<Integer> s:stack) System.out.println(s);
 				System.out.println("Path: ");
-				for (Integer s:path){
-					System.out.println(s);
-				}*/
+				for (Integer p:path) System.out.println(p);
+				}
 				
 				List<Integer> vertex = stack.pop();
 				
 				//If the vertex level is lower than the path size remove the last element of the path
 				while (vertex.get(1)<=path.size()-1){
-					//System.out.println("Popped from the path: "+path.pop());
+					if (debug) System.out.println("Popped from the path: "+path.peek());
 					path.pop();
 				}
 				
@@ -115,9 +127,9 @@ public class MultipleRefiner implements Refiner {
 				if (vertex.get(1)<order && !path.contains(vertex.get(0))){
 					//First add the node to the path
 					path.push(vertex.get(0));
-					//System.out.println("Pushed to the path: "+path.peek());
+					if (debug) System.out.println("Pushed to the path: "+path.peek());
 					
-					for (int k=0; k<graph.get(vertex.get(0)).size(); k++){
+					for (int k=graph.get(vertex.get(0)).size()-1; k>=0; k--){
 						//Extract the next node to be considered (neighbor k of the vertex)
 						List<Integer> node = new ArrayList<Integer>();
 						node.add(graph.get(vertex.get(0)).get(k));
@@ -151,25 +163,18 @@ public class MultipleRefiner implements Refiner {
 									//If the distance between the two residues in number is lower they are too close in sequence and not consistent.
 									if (residueDist<(aligned_res/(order+2)) && h!=g){
 										consistent = false;
-										//System.out.println("Not consistent: difference of "+residueDist+" with maximum "+aligned_res/(order+2)+"...");
+										if (debug) System.out.println("Not consistent group: difference of "+residueDist+" with maximum "+aligned_res/(order+2)+"...");
 										break;
 									}
 								}
 							}
 							
-							//If any residue of the group is in another group already seen mark it as inconsistent
-							/*for (int d=0; d<order; d++){
-								if (alreadySeen.contains(group.get(d))){
-									consistent = false;
-								}
-							}*/
-							
-							//Check that the group is consistent with the previous, all the residues should be greater than the last group
+							//Check that the group is consistent with the previous one, all the residues should be greater than the last group
 							int len = groups.size();
 							if (len!=0){
 								for (int d=0; d<order; d++){
 									if (groups.get(len-1).get(d)>group.get(d)){
-										//System.out.println("Inconsistent group: not increasing residues");
+										if (debug) System.out.println("Inconsistent group: not increasing residues");
 										consistent=false;
 										break;
 									}
@@ -179,14 +184,14 @@ public class MultipleRefiner implements Refiner {
 							
 							//If the conditions are fulfilled add the group
 							groups.add(group);
-							//System.out.println("Group added, size: "+group.size());
+							if (debug) System.out.println("Group added, size: "+group.size());
 							for (int e:group){
 								alreadySeen.add(e);
-								//System.out.println(e);
+								if (debug) System.out.println(e);
 							}
 							foundGroup = true;
 							path.clear();
-							//System.out.println("Clearing path...");
+							if (debug) System.out.println("Path cleared...");
 							break;
 						}
 					}
@@ -228,7 +233,7 @@ public class MultipleRefiner implements Refiner {
 			}
 		}
 		
-		return AlignmentTools.replaceOptAln(optAlgn, allAlignments[order-1], ca1, ca2);
+		return AlignmentTools.replaceOptAln(optAlgn, allAlignments[order-2], ca1, ca2);
 	}
 	
 	/**
@@ -266,15 +271,18 @@ public class MultipleRefiner implements Refiner {
 			}
 			}
 		}
-		/*//Print graph information
-		System.out.println("GRAPH INFORMATION:");
-		System.out.println(" - Vertices: "+adjList.size());
+		//Sort the edges in the adjacency list to visit them in increasing order in the DFS
 		int edges = 0;
 		for (List<Integer> v:adjList){
 			edges+=v.size();
+			Collections.sort(v);
 		}
-		System.out.println(" - Edges: "+edges);
-		System.out.println(" - Consistent connected residues: "+count+" out of "+adjList.size());*/
+		if (debug){
+			//Print graph information
+			System.out.println("GRAPH INFORMATION:");
+			System.out.println(" - Vertices: "+adjList.size());
+			System.out.println(" - Edges: "+edges);
+		}
 		
 		return adjList;
 	}
@@ -346,7 +354,7 @@ public class MultipleRefiner implements Refiner {
 		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN¨, "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ"}; //Correct ones
 		//String[] names = {"1VYM"}
 		//String[] names = {"d1poqa_", "1itb.A", "3jut.A", "2jaj.A", "d1jlya1" ,"1hiv"}; //New structures to test
-		String[] names = {"1afg.a"};
+		String[] names = {"2i5i.a"};
 		
 		for (int i=0; i<names.length; i++){
 			
@@ -363,6 +371,8 @@ public class MultipleRefiner implements Refiner {
 			
 			//Initialize a new CeSymm class and its parameters and a new alignment class
 			CeSymm ceSymm = new CeSymm();
+			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
+			params.setRefineMethod(RefineMethod.MULTIPLE);
 			AFPChain afpChain = new AFPChain();
 			
 			//Perform the alignment and store

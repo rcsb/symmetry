@@ -81,10 +81,8 @@ public class DisplaySymmAFP extends DisplayAFP {
 	public static void displaySuperimposedSubunits(AFPChain afpChain, Atom[] ca1, Atom[] ca2){
 		
 		//Create the atom arrays corresponding to the first and second subunits only
-		Atom[] ca1block = new Atom[afpChain.getOptLen()[0]];
-		Atom[] ca2block = new Atom[afpChain.getOptLen()[0]];
-		ca1block = Arrays.copyOfRange(ca1, afpChain.getOptAln()[0][0][0], afpChain.getOptAln()[0][0][afpChain.getOptAln()[0][0].length-1]+1);
-		ca2block = Arrays.copyOfRange(ca2, afpChain.getOptAln()[0][1][0], afpChain.getOptAln()[0][1][afpChain.getOptAln()[0][1].length-1]+1);
+		Atom[] ca1block = Arrays.copyOfRange(ca1, afpChain.getOptAln()[0][0][0], afpChain.getOptAln()[0][0][afpChain.getOptAln()[0][0].length-1]+1);
+		Atom[] ca2block = Arrays.copyOfRange(ca2, afpChain.getOptAln()[0][1][0], afpChain.getOptAln()[0][1][afpChain.getOptAln()[0][1].length-1]+1);
 		
 		//Modify the optimal alignment to include only one subunit (block)
 		int[][][] optAln = new int[1][][];
@@ -116,7 +114,7 @@ public class DisplaySymmAFP extends DisplayAFP {
 		displayAFP.setName2(afpChain.getName2()+" su2");
 		
 		try {
-			//Display the AFP alignment of the subunits
+			//Display the AFP alignment of the subunits - currently not working
 			StructureAlignmentJmol jmolPanel;
 			jmolPanel = StructureAlignmentDisplay.display(displayAFP, ca1block, ca2block);
 			jmolPanel.evalString("hide ligand;");

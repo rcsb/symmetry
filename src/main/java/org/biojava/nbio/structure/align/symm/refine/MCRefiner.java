@@ -868,7 +868,16 @@ public class MCRefiner implements Refiner {
 		//Easy cases: 4i4q, 4dou
 		//Hard cases: d2vdka_,d1n6dd3, d1n7na1
 		//Better MULTIPLE: 2i5i.a
-		String name = "d2vdka_";
+		String[] names = {//"d2vdka_", "d1n6dd3", "d2g02a1", "d1jofd_", "d1kkta_", "d1pbyb_",	"d1ri6a_", "d1tyqc_", "d1xksa_",  //C7
+						  //"d1k32f2", "d1okca_", "d1q7fa_", "d1qlga_", "d1uyox_", "d1wp5a_", "d1zxua1", "d2agsa2", "d2ivza1", //C6
+						  //"d1ffta_", "d1i5pa2", "d1jlya1", "d1lnsa1", "d1r5za_", "d1ttua3", "d1vmob_", "d1wd3a2", "d2hyrb1", //C3
+						  //"d1m1ha1", "d1pexa_", //C4
+						  //"d1vkde_", "d2h2na1", "d2jaja_" //C5
+						  "4i4q"  //C2
+						  };
+		for (String name:names){
+			
+		System.out.println(name);
 		
 		AtomCache cache = new AtomCache();
 		Atom[] ca1 = cache.getAtoms(name);
@@ -884,6 +893,7 @@ public class MCRefiner implements Refiner {
 		afpChain.setName2(name);
 		
 		SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2);
-		
+		}
+		System.out.println("Finished Alaysis!");
 	}
 }

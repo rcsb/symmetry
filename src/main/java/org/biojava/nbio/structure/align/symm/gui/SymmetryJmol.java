@@ -288,8 +288,7 @@ public class SymmetryJmol extends StructureAlignmentJmol{
 	              System.err.println("Currently not viewing an alignment!");
 	              return;
 	    	 }
-	         //DisplaySymmAFP.displaySuperimposedSubunits(afpChain, ca1, ca2);
-	    	 System.out.println("Currently not working...");
+	         DisplaySymmAFP.displaySuperimposedSubunits(afpChain, ca1, ca2);
 	      
 	    } else if (cmd.equals(SymmetryMenu.SUBUNIT_ALIGN)){
 	    	 if ( afpChain == null) {

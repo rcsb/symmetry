@@ -73,7 +73,7 @@ public class DisplaySymmAFP extends DisplayAFP {
 	
 	
 	/**
-	 * Method that displays two superimposed subunits in jmol.
+	 * Method that displays two superimposed subunits as a structural alignment in jmol.
 	 * 
 	 * INPUT: an AFP alignment and the protein.
 	 * OUTPUT: a JmolPanel with only one subunit superimposed.
@@ -113,19 +113,13 @@ public class DisplaySymmAFP extends DisplayAFP {
 		displayAFP.setName1(afpChain.getName1()+" su1");
 		displayAFP.setName2(afpChain.getName2()+" su2");
 		
-		try {
-			//Display the AFP alignment of the subunits - currently not working
-			StructureAlignmentJmol jmolPanel;
-			jmolPanel = StructureAlignmentDisplay.display(displayAFP, ca1block, ca2block);
-			jmolPanel.evalString("hide ligand;");
-			
-		} catch (StructureException e) {
-			e.printStackTrace();
-		}
+		//Display the AFP alignment of the subunits - currently not working
+		StructureAlignmentJmol jmolPanel = new StructureAlignmentJmol(displayAFP, ca1block, ca2block);
+		jmolPanel.evalString("hide ligand;");
 	}
 	
 	/**
-	 * Method that displays a multiple alignment of the subunits.
+	 * Method that displays a multiple sequence alignment of the subunits.
 	 */
 	public static void showMulAlnImage(AFPChain afpChain, Atom[] ca1, Atom[] ca2){
 

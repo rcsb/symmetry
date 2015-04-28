@@ -27,7 +27,8 @@ public class SymmetryMenu extends MenuCreator {
 	
 	//Menu Options for the Symmetry Display
 	public static final String SUBUNIT_DISPLAY = "Subunit Superimposition";
-	public static final String SUBUNIT_ALIGN = "Multiple Subunit Alignment";
+	public static final String MULTIPLE_SEQ = "Multiple Sequence Alignment";
+	public static final String MULTIPLE_STRUCT = "Multiple Structure Alignment";
 	public static final String SYMMETRY = "New Symmetry Analysis";
 	
 	/** 
@@ -84,7 +85,7 @@ public class SymmetryMenu extends MenuCreator {
 		file.add(exitI);
 		menu.add(file);
 
-		//ALIGN tab
+		//ALIGNMENT tab
 		JMenu align = new JMenu("Alignment");
 		align.setMnemonic(KeyEvent.VK_A);
 
@@ -134,15 +135,20 @@ public class SymmetryMenu extends MenuCreator {
 		subunits.addActionListener(parent);
 		subunits.setMnemonic(KeyEvent.VK_D);
 		
-		JMenuItem mulAln = new JMenuItem(SUBUNIT_ALIGN);
-		mulAln.addActionListener(parent);
-		mulAln.setMnemonic(KeyEvent.VK_M);
+		JMenuItem mulSeqAln = new JMenuItem(MULTIPLE_SEQ);
+		mulSeqAln.addActionListener(parent);
+		mulSeqAln.setMnemonic(KeyEvent.VK_M);
+		
+		JMenuItem mulStAln = new JMenuItem(MULTIPLE_STRUCT);
+		mulStAln.addActionListener(parent);
+		mulStAln.setMnemonic(KeyEvent.VK_T);
 		
 		JMenuItem newSym = getNewSymmetryMenuItem();
 		newSym.addActionListener(parent);
 		
 		sym.add(subunits);
-		sym.add(mulAln);
+		sym.add(mulSeqAln);
+		sym.add(mulStAln);
 		sym.add(newSym);
 
 		menu.add(sym);
@@ -172,9 +178,6 @@ public class SymmetryMenu extends MenuCreator {
 		gui.setVisible(true);
 	}
 	
-	/**
-	 * 
-	 */
 	private static JMenuItem getNewSymmetryMenuItem() {
 		ImageIcon alignIcon = createImageIcon("/icons/window_new.png");
 

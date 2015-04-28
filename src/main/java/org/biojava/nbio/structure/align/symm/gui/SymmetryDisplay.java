@@ -7,7 +7,6 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.jcolorbrewer.ColorBrewer;
 
 import java.awt.Color;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

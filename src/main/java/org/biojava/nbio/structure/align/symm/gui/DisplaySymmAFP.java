@@ -20,8 +20,17 @@ import org.biojava.nbio.structure.align.gui.DisplayAFP;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.aligpanel.StatusDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.MultipleAlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.model.Block;
+import org.biojava.nbio.structure.align.model.BlockImpl;
+import org.biojava.nbio.structure.align.model.BlockSet;
+import org.biojava.nbio.structure.align.model.BlockSetImpl;
+import org.biojava.nbio.structure.align.model.MultipleAlignment;
+import org.biojava.nbio.structure.align.model.MultipleAlignmentImpl;
+import org.biojava.nbio.structure.align.model.Pose.PoseMethod;
+import org.biojava.nbio.structure.align.model.StructureAlignmentException;
 import org.biojava.nbio.structure.align.symm.gui.aligpanel.SymmAligPanel;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 
@@ -74,11 +83,11 @@ public class DisplaySymmAFP extends DisplayAFP {
 	
 	/**
 	 * Method that displays two superimposed subunits as a structural alignment in jmol.
-	 * 
-	 * INPUT: an AFP alignment and the protein.
-	 * OUTPUT: a JmolPanel with only one subunit superimposed.
+	 * @param afpChain
+	 * @param ca1
+	 * @param ca2
 	 */
-	public static void displaySuperimposedSubunits(AFPChain afpChain, Atom[] ca1, Atom[] ca2){
+	public static void display2SuperimposedSubunits(AFPChain afpChain, Atom[] ca1, Atom[] ca2){
 		
 		//Create the atom arrays corresponding to the first and second subunits only
 		Atom[] ca1block = Arrays.copyOfRange(ca1, afpChain.getOptAln()[0][0][0], afpChain.getOptAln()[0][0][afpChain.getOptAln()[0][0].length-1]+1);
@@ -113,9 +122,93 @@ public class DisplaySymmAFP extends DisplayAFP {
 		displayAFP.setName1(afpChain.getName1()+" su1");
 		displayAFP.setName2(afpChain.getName2()+" su2");
 		
-		//Display the AFP alignment of the subunits - currently not working
+		//Display the alignment of the subunits
 		StructureAlignmentJmol jmolPanel = new StructureAlignmentJmol(displayAFP, ca1block, ca2block);
 		jmolPanel.evalString("hide ligand;");
+	}
+	
+	/**
+	 * Method that displays all superimposed subunits as a multiple alignment in jmol.
+	 * @param afpChain AFP alignment with subunits segmented as blocks
+	 * @param ca1
+	 * @throws StructureAlignmentException 
+	 * @throws StructureException 
+	 */
+	public static void displaySuperimposedSubunits(AFPChain afpChain, Atom[] ca1) throws StructureException, StructureAlignmentException{
+		
+		//Create the atom arrays corresponding to separate subunits
+		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
+		for (int i=0; i<afpChain.getBlockNum(); i++){
+			Atom[] subunit = Arrays.copyOfRange(ca1, afpChain.getOptAln()[i][0][0], afpChain.getOptAln()[i][0][afpChain.getOptAln()[i][0].length-1]+1);
+			atomArrays.add(subunit);
+		}
+		
+		//Initialize a new MultipleAlignment to store the aligned subunits, each one inside a BlockSet
+		MultipleAlignment multAln = new MultipleAlignmentImpl(atomArrays);
+		multAln.getParent().setAlgorithmName(afpChain.getAlgorithmName());
+		multAln.getStructureNames().clear();
+		multAln.getStructureNames().add(afpChain.getName1());
+		
+		//All the residues are aligned in one block only
+		BlockSet blockSet = new BlockSetImpl(multAln);
+		Block block = new BlockImpl(blockSet);
+		
+		for (int bk=0; bk<afpChain.getBlockNum(); bk++){
+			
+			//Normalize the residues of the subunits, to be in the range of subunit
+			int start = afpChain.getOptAln()[bk][0][0];
+			List<Integer> chain = new ArrayList<Integer>();
+			
+			for (int i=0; i<afpChain.getOptAln()[bk][0].length; i++)
+				chain.add(afpChain.getOptAln()[bk][0][i] - start);
+			
+			block.getAlignRes().add(chain);
+		}
+		multAln.updateCache(PoseMethod.REFERENCE);
+		
+		//Display the alignment of the subunits
+		MultipleAlignmentJmol jmol = StructureAlignmentDisplay.display(multAln);
+	}
+	
+	/**
+	 * Method that displays the multiple structure alignment of all symmetry rotations in jmol.
+	 * @param afpChain AFP alignment with subunits segmented as blocks
+	 * @param ca1
+	 * @throws StructureAlignmentException 
+	 * @throws StructureException 
+	 */
+	public static void displayMultipleAlignment(AFPChain afpChain, Atom[] ca1) throws StructureException, StructureAlignmentException{
+			
+		//Create a list with multiple references to the atom array of the structure
+		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
+		for (int i=0; i<afpChain.getBlockNum(); i++) atomArrays.add(ca1);
+				
+		//Initialize a new MultipleAlignment to store the aligned subunits, each one inside a BlockSet
+		MultipleAlignment multAln = new MultipleAlignmentImpl(atomArrays);
+		multAln.getParent().setAlgorithmName(afpChain.getAlgorithmName());
+		multAln.getStructureNames().clear();
+		multAln.getStructureNames().add(afpChain.getName1());
+		int order = afpChain.getBlockNum();
+		
+		for (int bk=0; bk<order; bk++){
+			
+			//Every subunit has a new BlockSet
+			BlockSet blockSet = new BlockSetImpl(multAln);
+			Block block = new BlockImpl(blockSet);
+			
+			for (int k=0; k<order; k++){
+				List<Integer> chain = new ArrayList<Integer>();
+				
+				for (int i=0; i<afpChain.getOptAln()[0][0].length; i++)
+					chain.add(afpChain.getOptAln()[(bk+k)%order][0][i]);
+				
+				block.getAlignRes().add(chain);
+			}
+		}
+		multAln.updateCache(PoseMethod.REFERENCE);
+		
+		//Display the alignment of the subunits
+		MultipleAlignmentJmol jmol = StructureAlignmentDisplay.display(multAln);
 	}
 	
 	/**

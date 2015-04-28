@@ -1,6 +1,5 @@
 package org.biojava.nbio.structure.align.symm;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +16,6 @@ import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.ce.MatrixListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.SubunitColors;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
@@ -31,7 +29,6 @@ import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.utils.SymmetryTools;
-import org.jcolorbrewer.ColorBrewer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +54,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 	private static final Logger logger = LoggerFactory.getLogger(CeSymm.class);
 	
 	//The order and refinement options are controlled by CESymmParameters
-	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8, 0.4f);
+	private OrderDetector orderDetector = new SequenceFunctionOrderDetector(8, 0.4f);  //used as default
 	private Refiner refiner;
 
 	AFPChain afpChain;

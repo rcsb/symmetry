@@ -26,6 +26,7 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.gui.DisplayAFP;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
+import org.biojava.nbio.structure.align.gui.jmol.AlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.JmolPanel;
 import org.biojava.nbio.structure.align.gui.jmol.JmolTools;
 import org.biojava.nbio.structure.align.gui.jmol.MyJmolStatusListener;
@@ -33,6 +34,7 @@ import org.biojava.nbio.structure.align.gui.jmol.RasmolCommandListener;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.model.AfpChainWriter;
+import org.biojava.nbio.structure.align.model.StructureAlignmentException;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.webstart.AligUIManager;
 import org.biojava.nbio.structure.gui.util.color.ColorUtils;
@@ -43,7 +45,7 @@ import org.biojava.nbio.structure.gui.util.color.ColorUtils;
  * @author lafita
  * 
  */
-public class SymmetryJmol extends StructureAlignmentJmol{
+public class SymmetryJmol extends StructureAlignmentJmol {
 	   
 	Color[] subunitColors;
 	
@@ -288,9 +290,32 @@ public class SymmetryJmol extends StructureAlignmentJmol{
 	              System.err.println("Currently not viewing an alignment!");
 	              return;
 	    	 }
-	         DisplaySymmAFP.displaySuperimposedSubunits(afpChain, ca1, ca2);
+	         try {
+				DisplaySymmAFP.displaySuperimposedSubunits(afpChain, ca1);
+			} catch (StructureException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (StructureAlignmentException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+	         
+		} else if (cmd.equals(SymmetryMenu.MULTIPLE_STRUCT)){
+	    	 if ( afpChain == null) {
+	              System.err.println("Currently not viewing an alignment!");
+	              return;
+	          }
+	    	  try {
+				DisplaySymmAFP.displayMultipleAlignment(afpChain, ca1);
+			} catch (StructureException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (StructureAlignmentException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 	      
-	    } else if (cmd.equals(SymmetryMenu.SUBUNIT_ALIGN)){
+	    } else if (cmd.equals(SymmetryMenu.MULTIPLE_SEQ)){
 	    	 if ( afpChain == null) {
 	              System.err.println("Currently not viewing an alignment!");
 	              return;

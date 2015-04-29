@@ -26,7 +26,6 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.gui.DisplayAFP;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
-import org.biojava.nbio.structure.align.gui.jmol.AlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.JmolPanel;
 import org.biojava.nbio.structure.align.gui.jmol.JmolTools;
 import org.biojava.nbio.structure.align.gui.jmol.MyJmolStatusListener;

@@ -37,32 +37,32 @@ public class MCRefiner implements Refiner {
 	
 	//Optimization parameters
 	private static final int Lmin = 4; //Minimum block length of aligned residues
-	private static final int iterFactor = 100; //Factor to control the max number of iterations of optimization
-	private static final double C = 5; //Probability function constant (probability of acceptance for bad moves)
+	public int iterFactor = 100; //Factor to control the max number of iterations of optimization
+	public double C = 5; //Probability function constant (probability of acceptance for bad moves)
 	
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
 	private static final double A = 10.0; //Penalty for alignment distances
-	private  double d0; //Maximum distance that is not penalized - chosen from initial alignment RMSD
+	public double d0 = 2.25; //Maximum distance that is not penalized - chosen from initial alignment RMSD
 	
-	AFPChain afpChain;
-	Atom[] ca;
-	int order;
-	int subunitLen;
+	private AFPChain afpChain;
+	private Atom[] ca;
+	private int order;
+	public int subunitLen;
 	
 	//Variables that store the history of the optimization, in order to be able to plot the evolution of the system.
-	List<Integer> subunitLenHistory;
-	List<Double> rmsdHistory;
-	List<Double> scoreHistory;
+	private List<Integer> subunitLenHistory;
+	private List<Double> rmsdHistory;
+	private List<Double> scoreHistory;
 	
 	//List to store the residues aligned, in the block. Dimensions are: [order][subunitLen]
-	List<ArrayList<Integer>> block;
+	private List<ArrayList<Integer>> block;
 	//List to store the residues not aligned, that are part of the free pool. Dimensions are: [order][residues in the pool]
-	List<ArrayList<Integer>> freePool;
+	private List<ArrayList<Integer>> freePool;
 	
-	double rmsd;     // Average RMSD of all rotation superpositions
-	double tmScore;  // Average TM-score of all rotation superpositions
-	double mcScore;  // Optimization score, calculated as the original CEMC algorithm
+	public double rmsd;     // Average RMSD of all rotation superpositions
+	public double tmScore;  // Average TM-score of all rotation superpositions
+	public double mcScore;  // Optimization score, calculated as the original CEMC algorithm
 	double[] colDistances;   //Stores the average distance of the residues in a column. Length: subunitLen
 	
 	//Multiple alignment String sequences
@@ -79,7 +79,7 @@ public class MCRefiner implements Refiner {
 		
 		//Set parameters from initial alignment
 		AFPChain originalAFP = afpAlignments[0];
-		d0 = originalAFP.getTotalRmsdOpt()*2;
+		//d0 = originalAFP.getTotalRmsdOpt()*2; TODO uncomment
 		
 		AFPChain refinedAFP = SingleRefiner.refineSymmetry(originalAFP, ca1, ca2, order);
 		

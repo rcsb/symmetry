@@ -43,7 +43,7 @@ public class MCRefiner implements Refiner {
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
 	private static final double A = 10.0; //Penalty for alignment distances
-	public double d0 = 2.25; //Maximum distance that is not penalized - chosen from initial alignment RMSD
+	public double d0 = 5; //Maximum distance that is not penalized - chosen from initial alignment RMSD
 	
 	private AFPChain afpChain;
 	private Atom[] ca;
@@ -863,7 +863,7 @@ public class MCRefiner implements Refiner {
 	    writer.close();
 	}
 	
-	public static void main(String[] args) throws IOException, StructureException{
+	public static void main(String[] args) throws IOException, StructureException, RefinerFailedException{
 		
 		//Easy cases: 4i4q, 4dou
 		//Hard cases: d2vdka_,d1n6dd3, d1n7na1
@@ -873,9 +873,11 @@ public class MCRefiner implements Refiner {
 						  //"d1ffta_", "d1i5pa2", "d1jlya1", "d1lnsa1", "d1r5za_", "d1ttua3", "d1vmob_", "d1wd3a2", "d2hyrb1", //C3
 						  //"d1m1ha1", "d1pexa_", //C4
 						  //"d1vkde_", "d2h2na1", "d2jaja_" //C5
-						  "4i4q"  //C2
+						  "d3fjna_"  //C2
 						  };
 		for (String name:names){
+			
+		int order = 8;
 			
 		System.out.println(name);
 		
@@ -885,14 +887,18 @@ public class MCRefiner implements Refiner {
 		
 		CeSymm ceSymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-		params.setRefineMethod(RefineMethod.MONTE_CARLO);
-		
+		params.setRefineMethod(RefineMethod.NOT_REFINED);
 		AFPChain afpChain = ceSymm.align(ca1, ca2);
+		AFPChain[] afpAlignments = {afpChain};
+		
+		//Force the order of symmetry that we want
+		MCRefiner refiner = new MCRefiner();
+		AFPChain refinedAFP = refiner.refine(afpAlignments, ca1, ca2, order);
 		
 		afpChain.setName1(name);
 		afpChain.setName2(name);
 		
-		SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2);
+		SymmetryJmol jmol = SymmetryDisplay.display(refinedAFP, ca1, ca2);
 		}
 		System.out.println("Finished Alaysis!");
 	}

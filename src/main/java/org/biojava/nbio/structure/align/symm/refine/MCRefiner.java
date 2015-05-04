@@ -43,7 +43,7 @@ public class MCRefiner implements Refiner {
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
 	private static final double A = 10.0; //Penalty for alignment distances
-	public double d0 = 5; //Maximum distance that is not penalized - chosen from initial alignment RMSD
+	public double d0; //Maximum distance that is not penalized - chosen from initial alignment RMSD
 	
 	private AFPChain afpChain;
 	private Atom[] ca;
@@ -79,7 +79,7 @@ public class MCRefiner implements Refiner {
 		
 		//Set parameters from initial alignment
 		AFPChain originalAFP = afpAlignments[0];
-		//d0 = originalAFP.getTotalRmsdOpt()*2; TODO uncomment
+		d0 = Math.max(originalAFP.getTotalRmsdOpt()*2,5);
 		
 		AFPChain refinedAFP = SingleRefiner.refineSymmetry(originalAFP, ca1, ca2, order);
 		
@@ -873,11 +873,11 @@ public class MCRefiner implements Refiner {
 						  //"d1ffta_", "d1i5pa2", "d1jlya1", "d1lnsa1", "d1r5za_", "d1ttua3", "d1vmob_", "d1wd3a2", "d2hyrb1", //C3
 						  //"d1m1ha1", "d1pexa_", //C4
 						  //"d1vkde_", "d2h2na1", "d2jaja_" //C5
-						  "d3fjna_"  //C2
+						  "d1b0ja2"  //C2
 						  };
 		for (String name:names){
 			
-		int order = 8;
+		int order = 2;
 			
 		System.out.println(name);
 		

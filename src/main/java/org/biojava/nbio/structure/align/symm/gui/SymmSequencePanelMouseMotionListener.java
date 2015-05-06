@@ -1,4 +1,4 @@
-package org.biojava.nbio.structure.align.symm.gui.aligpanel;
+package org.biojava.nbio.structure.align.symm.gui;
 
 import org.biojava.nbio.structure.align.gui.aligpanel.AFPChainCoordManager;
 import org.biojava.nbio.structure.align.model.AFPChain;
@@ -11,9 +11,9 @@ import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SymmAligPanelMouseMotionListener implements MouseMotionListener, MouseListener {
+public class SymmSequencePanelMouseMotionListener implements MouseMotionListener, MouseListener {
 
-	SymmAligPanel parent;
+	SymmSequencePanel parent;
 
 	List<AlignmentPositionListener> aligPosListeners;
 	int prevPos;
@@ -23,7 +23,7 @@ public class SymmAligPanelMouseMotionListener implements MouseMotionListener, Mo
 	AlignedPosition selectionEnd;
 	boolean selectionLocked;
 
-	public SymmAligPanelMouseMotionListener(SymmAligPanel parent){
+	public SymmSequencePanelMouseMotionListener(SymmSequencePanel parent){
 		this.parent = parent;
 		aligPosListeners = new ArrayList<AlignmentPositionListener>();
 		prevPos = -1;

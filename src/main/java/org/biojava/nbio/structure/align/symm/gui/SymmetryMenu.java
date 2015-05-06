@@ -1,7 +1,5 @@
 package org.biojava.nbio.structure.align.symm.gui;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
 import javax.swing.Box;
@@ -26,8 +24,8 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 public class SymmetryMenu extends MenuCreator {
 	
 	//Menu Options for the Symmetry Display
+	public static final String SEQUENCE_PANEL = "Sequence Panel";
 	public static final String SUBUNIT_DISPLAY = "Subunit Superimposition";
-	public static final String MULTIPLE_SEQ = "Multiple Sequence Alignment";
 	public static final String MULTIPLE_STRUCT = "Multiple Structure Alignment";
 	public static final String SYMMETRY = "New Symmetry Analysis";
 	
@@ -86,28 +84,14 @@ public class SymmetryMenu extends MenuCreator {
 		menu.add(file);
 
 		//ALIGNMENT tab
-		JMenu align = new JMenu("Alignment");
-		align.setMnemonic(KeyEvent.VK_A);
-
+		JMenu align = new JMenu("View");
 		align.setMnemonic(KeyEvent.VK_V);
 
 		if ( parent != null){
-			JMenuItem aligpI = MenuCreator.getIcon(parent,ALIGNMENT_PANEL);
+			JMenuItem aligpI = MenuCreator.getIcon(parent,SEQUENCE_PANEL);
 			aligpI.setMnemonic(KeyEvent.VK_L);
-			aligpI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, keyMask));
+			aligpI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, keyMask));
 			align.add(aligpI);
-
-			JMenuItem textI = MenuCreator.getIcon(parent,TEXT_ONLY);
-			textI.setMnemonic(KeyEvent.VK_T);
-			align.add(textI);
-
-			JMenuItem pairsI = MenuCreator.getIcon(parent,PAIRS_ONLY);
-			pairsI.setMnemonic(KeyEvent.VK_P);
-			align.add(pairsI);
-
-			JMenuItem textF = MenuCreator.getIcon(parent,FATCAT_TEXT);
-			textF.setMnemonic(KeyEvent.VK_F);
-			align.add(textF);
 		}
 
 		if ( afpChain != null){
@@ -115,16 +99,10 @@ public class SymmetryMenu extends MenuCreator {
 			distMax.setMnemonic(KeyEvent.VK_D);
 			distMax.addActionListener(new MyDistMaxListener(afpChain));
 			align.add(distMax);
-
-			JMenuItem dotplot = new JMenuItem("Show Dot Plot");
-			dotplot.setMnemonic(KeyEvent.VK_O);
-			dotplot.addActionListener(new DotPlotListener(afpChain));
-			align.add(dotplot);
 		}
 		
 		JMenuItem pairI = getPairwiseAlignmentMenuItem();
 		align.add(pairI);
-		
 		menu.add(align);
 		
 		//SYMMETRY tab
@@ -135,10 +113,6 @@ public class SymmetryMenu extends MenuCreator {
 		subunits.addActionListener(parent);
 		subunits.setMnemonic(KeyEvent.VK_D);
 		
-		JMenuItem mulSeqAln = new JMenuItem(MULTIPLE_SEQ);
-		mulSeqAln.addActionListener(parent);
-		mulSeqAln.setMnemonic(KeyEvent.VK_M);
-		
 		JMenuItem mulStAln = new JMenuItem(MULTIPLE_STRUCT);
 		mulStAln.addActionListener(parent);
 		mulStAln.setMnemonic(KeyEvent.VK_T);
@@ -147,10 +121,8 @@ public class SymmetryMenu extends MenuCreator {
 		newSym.addActionListener(parent);
 		
 		sym.add(subunits);
-		sym.add(mulSeqAln);
 		sym.add(mulStAln);
 		sym.add(newSym);
-
 		menu.add(sym);
 
 		//HELP tab

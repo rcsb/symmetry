@@ -898,7 +898,7 @@ public class MCRefiner implements Refiner {
 		afpChain.setName1(name);
 		afpChain.setName2(name);
 		
-		SymmetryJmol jmol = SymmetryDisplay.display(refinedAFP, ca1, ca2);
+		SymmetryJmol jmol = new SymmetryJmol(refinedAFP, ca1);
 		}
 		System.out.println("Finished Alaysis!");
 	}

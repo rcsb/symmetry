@@ -77,7 +77,7 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 				break;
 			}
 
-			SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2, subunitColors);
+			SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1, subunitColors);
 
 			String title = jmol.getTitle();
 			

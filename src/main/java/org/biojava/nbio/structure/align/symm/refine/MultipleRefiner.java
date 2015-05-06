@@ -382,7 +382,7 @@ public class MultipleRefiner implements Refiner {
 			afpChain.setName2(name);
 				
 			//Display the AFP alignment of the subunits
-			SymmetryJmol jmol = SymmetryDisplay.display(afpChain, ca1, ca2);
+			SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
 		}
 	}
 }

@@ -29,13 +29,12 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.ResidueNumber;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.StructureAlignment;
-import org.biojava.nbio.structure.align.StructureAlignmentFactory;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.jcolorbrewer.ColorBrewer;
 
 /**
  * Prompts the user for a structure, then displays the CE-Symm symmetry.
@@ -117,7 +116,7 @@ public class CEsymmGUI {
 			}
 			
 			RotationAxis axis = new RotationAxis(afp);
-			SymmetryJmol jmol = SymmetryDisplay.display(afp, ca1, ca2);
+			SymmetryJmol jmol = new SymmetryJmol(afp, ca1, ColorBrewer.Set1.getColorPalette(afp.getBlockNum()));
 			//showCurrentAlig(afp, ca1, ca2);
 			
 			System.out.println("Theta="+axis.getAngle());
@@ -131,7 +130,7 @@ public class CEsymmGUI {
 			throws StructureException {
 		
 		AFPChain c = (AFPChain) myAFP.clone();
-		SymmetryJmol jmol = SymmetryDisplay.display(c, ca1, ca2);
+		SymmetryJmol jmol = new SymmetryJmol(c, ca1, ColorBrewer.Set1.getColorPalette(c.getBlockNum()));
 
 		// draw a line from center of gravity to N terminus
 

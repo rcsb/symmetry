@@ -9,6 +9,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -290,12 +291,8 @@ public class SymmetryJmol extends StructureAlignmentJmol {
 	              return;
 	    	 }
 	         try {
-				DisplaySymmAFP.displaySuperimposedSubunits(afpChain, ca1);
-			} catch (StructureException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (StructureAlignmentException e1) {
-				// TODO Auto-generated catch block
+					DisplaySymmAFP.displaySuperimposedSubunits(afpChain, ca1);
+			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
 	         
@@ -306,11 +303,7 @@ public class SymmetryJmol extends StructureAlignmentJmol {
 	          }
 	    	  try {
 				DisplaySymmAFP.displayMultipleAlignment(afpChain, ca1);
-			} catch (StructureException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (StructureAlignmentException e1) {
-				// TODO Auto-generated catch block
+			} catch (Exception e1){
 				e1.printStackTrace();
 			}
 	      

@@ -2,6 +2,7 @@ package org.biojava.nbio.structure.align.symm.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -133,8 +134,9 @@ public class DisplaySymmAFP extends DisplayAFP {
 	 * @param ca1
 	 * @throws StructureAlignmentException 
 	 * @throws StructureException 
+	 * @throws IOException 
 	 */
-	public static void displaySuperimposedSubunits(AFPChain afpChain, Atom[] ca1) throws StructureException, StructureAlignmentException{
+	public static void displaySuperimposedSubunits(AFPChain afpChain, Atom[] ca1) throws StructureException, StructureAlignmentException, IOException{
 		
 		//Create the atom arrays corresponding to separate subunits
 		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
@@ -144,7 +146,8 @@ public class DisplaySymmAFP extends DisplayAFP {
 		}
 		
 		//Initialize a new MultipleAlignment to store the aligned subunits, each one inside a BlockSet
-		MultipleAlignment multAln = new MultipleAlignmentImpl(atomArrays);
+		MultipleAlignment multAln = new MultipleAlignmentImpl();
+		multAln.getParent().setAtomArrays(atomArrays);
 		multAln.getParent().setAlgorithmName(afpChain.getAlgorithmName());
 		multAln.getStructureNames().clear();
 		multAln.getStructureNames().add(afpChain.getName1());
@@ -176,15 +179,17 @@ public class DisplaySymmAFP extends DisplayAFP {
 	 * @param ca1
 	 * @throws StructureAlignmentException 
 	 * @throws StructureException 
+	 * @throws IOException 
 	 */
-	public static void displayMultipleAlignment(AFPChain afpChain, Atom[] ca1) throws StructureException, StructureAlignmentException{
+	public static void displayMultipleAlignment(AFPChain afpChain, Atom[] ca1) throws StructureException, StructureAlignmentException, IOException{
 			
 		//Create a list with multiple references to the atom array of the structure
 		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
 		for (int i=0; i<afpChain.getBlockNum(); i++) atomArrays.add(ca1);
 				
 		//Initialize a new MultipleAlignment to store the aligned subunits, each one inside a BlockSet
-		MultipleAlignment multAln = new MultipleAlignmentImpl(atomArrays);
+		MultipleAlignment multAln = new MultipleAlignmentImpl();
+		multAln.getParent().setAtomArrays(atomArrays);
 		multAln.getParent().setAlgorithmName(afpChain.getAlgorithmName());
 		multAln.getStructureNames().clear();
 		multAln.getStructureNames().add(afpChain.getName1());

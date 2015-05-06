@@ -13,8 +13,12 @@ import javax.swing.JMenuBar;
 import javax.swing.JScrollPane;
 
 import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Chain;
+import org.biojava.nbio.structure.ChainImpl;
 import org.biojava.nbio.structure.Group;
+import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureImpl;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.gui.AlignmentTextPanel;
 import org.biojava.nbio.structure.align.gui.DisplayAFP;
@@ -138,11 +142,15 @@ public class DisplaySymmAFP extends DisplayAFP {
 	 */
 	public static void displaySuperimposedSubunits(AFPChain afpChain, Atom[] ca1) throws StructureException, StructureAlignmentException, IOException{
 		
-		//Create the atom arrays corresponding to separate subunits
+		//Create new structure containing the atom arrays corresponding to separate subunits
 		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
 		for (int i=0; i<afpChain.getBlockNum(); i++){
+			Structure newStr = new StructureImpl();
+			Chain newCh = new ChainImpl();
+			newStr.addChain(newCh);
 			Atom[] subunit = Arrays.copyOfRange(ca1, afpChain.getOptAln()[i][0][0], afpChain.getOptAln()[i][0][afpChain.getOptAln()[i][0].length-1]+1);
-			atomArrays.add(subunit);
+			for (int k=0; k<subunit.length; k++)newCh.addGroup((Group) subunit[k].getGroup().clone());
+			atomArrays.add(StructureTools.getAtomCAArray(newCh));
 		}
 		
 		//Initialize a new MultipleAlignment to store the aligned subunits, each one inside a BlockSet
@@ -150,7 +158,7 @@ public class DisplaySymmAFP extends DisplayAFP {
 		multAln.getParent().setAtomArrays(atomArrays);
 		multAln.getParent().setAlgorithmName(afpChain.getAlgorithmName());
 		multAln.getStructureNames().clear();
-		multAln.getStructureNames().add(afpChain.getName1());
+		for(int i=0; i<afpChain.getBlockNum(); i++) multAln.getStructureNames().add(afpChain.getName1());
 		
 		//All the residues are aligned in one block only
 		BlockSet blockSet = new BlockSetImpl(multAln);
@@ -192,7 +200,7 @@ public class DisplaySymmAFP extends DisplayAFP {
 		multAln.getParent().setAtomArrays(atomArrays);
 		multAln.getParent().setAlgorithmName(afpChain.getAlgorithmName());
 		multAln.getStructureNames().clear();
-		multAln.getStructureNames().add(afpChain.getName1());
+		for(int i=0; i<afpChain.getBlockNum(); i++) multAln.getStructureNames().add(afpChain.getName1());
 		int order = afpChain.getBlockNum();
 		
 		for (int bk=0; bk<order; bk++){

@@ -33,6 +33,7 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.webstart.AligUIManager;
 import org.biojava.nbio.structure.gui.util.color.ColorUtils;
+import org.jcolorbrewer.ColorBrewer;
 
 /** 
  * A class that provides a simple GUI for symmetry alignments in Jmol.
@@ -44,48 +45,38 @@ import org.biojava.nbio.structure.gui.util.color.ColorUtils;
  */
 public class SymmetryJmol extends AbstractAlignmentJmol {
 	   
-	Color[] subunitColors;
+	private Color[] subunitColors;
 	AFPChain afpChain;
-	Atom[] ca;
+	private Atom[] ca;
 	
 	/**
 	 * Empty Constructor.
 	 * @throws StructureException
 	 */
 	public SymmetryJmol() throws StructureException{
-		this(null,null,null);
+		this(null,null);
 	}
 	
 	/**
-	 * Constructor without color specifications.
-	 * @param afpChain
-	 * @param ca1
-	 * @throws StructureException
-	 */
-	public SymmetryJmol(AFPChain afpChain, Atom[] ca1) throws StructureException {
-		this(afpChain,ca1,null);
-	}
-	
-	/**
-	 * Main Constructor with all the arguments.
+	 * Main Constructor.
 	 * @param afpChain
 	 * @param ca1
 	 * @param subunitColors
 	 * @throws StructureException
 	 */
-	public SymmetryJmol(AFPChain afpChain, Atom[] ca1, Color[] subunitColors) throws StructureException {
+	public SymmetryJmol(AFPChain afp, Atom[] ca1) throws StructureException {
 		  
 	      AligUIManager.setLookAndFeel();
 
 	      nrOpenWindows++;
 	      jmolPanel = new JmolPanel();
 	      frame = new JFrame();
-	      JMenuBar menu = SymmetryMenu.initMenu(frame,this, afpChain);
+	      JMenuBar menu = SymmetryMenu.initMenu(frame,this, afp);
 	      frame.setJMenuBar(menu);
 	      
-	      this.afpChain = afpChain;
+	      this.afpChain = afp;
 	      this.ca = ca1;
-	      this.subunitColors = subunitColors;
+	      this.subunitColors = ColorBrewer.Spectral.getColorPalette(afpChain.getBlockNum());
 
 	      frame.addWindowListener(new WindowAdapter()
 	      {
@@ -138,9 +129,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 
 			String[] styles = new String[] { "Cartoon", "Backbone", "CPK", "Ball and Stick", "Ligands","Ligands and Pocket"};
 			JComboBox style = new JComboBox(styles);
-			
 			hBox1.setMaximumSize(new Dimension(Short.MAX_VALUE,30));
-	
 			hBox1.add(new JLabel("Style"));
 			hBox1.add(style);
 			vBox.add(hBox1);
@@ -154,6 +143,44 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 			hBox1.add(Box.createGlue());
 			hBox1.add(new JLabel("Color"));
 			hBox1.add(colors);
+			
+			String[] colorPattelete = new String[] {"Color Set", "Spectral", "Pastel", "Paired", "Reds", "Blues" ,"Greens" , "Oranges"};
+			JComboBox pattelete = new JComboBox(colorPattelete);
+			
+			pattelete.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					JComboBox source = (JComboBox) e.getSource();
+					String value = source.getSelectedItem().toString();
+					
+					if (value=="Color Set"){
+						subunitColors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
+						
+					} else if (value=="Spectral"){
+						subunitColors = ColorBrewer.Spectral.getColorPalette(afpChain.getBlockNum());
+					} else if (value=="Pastel"){
+						subunitColors = ColorBrewer.Pastel1.getColorPalette(afpChain.getBlockNum());
+					} else if (value=="Paired"){
+						subunitColors = ColorBrewer.Paired.getColorPalette(afpChain.getBlockNum());
+					} else if (value=="Reds"){
+						subunitColors = ColorBrewer.Reds.getColorPalette(afpChain.getBlockNum());
+					} else if (value=="Blues"){
+						subunitColors = ColorBrewer.Blues.getColorPalette(afpChain.getBlockNum());
+					} else if (value=="Greens"){
+						subunitColors = ColorBrewer.Greens.getColorPalette(afpChain.getBlockNum());
+					} else if (value=="Oranges"){
+						subunitColors = ColorBrewer.Oranges.getColorPalette(afpChain.getBlockNum());
+					} else {
+						subunitColors = ColorBrewer.Greys.getColorPalette(afpChain.getBlockNum());
+					}
+					resetDisplay();
+				}
+			});
+
+			hBox1.add(Box.createGlue());
+			hBox1.add(new JLabel("Pattelete"));
+			hBox1.add(pattelete);
 			
 
 		// CHeck boxes
@@ -221,17 +248,16 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	      MyJmolStatusListener li = (MyJmolStatusListener) jmolPanel.getStatusListener();
 	      li.setTextField(status);
 	      frame.pack();
-	      frame.setVisible(true); 
+	      frame.setVisible(true);
 
 
 	      // init coordinates
 	      initCoords();
 	      resetDisplay();
 	      
-		  //String with the options to format the Symmetry Starting view
+		  //Rotation axis
 		  RotationAxis axis = new RotationAxis(afpChain);
 		  String cmd = axis.getJmolScript(ca1);
-		  cmd += "select ligand; color grey;";
 		  jmolPanel.evalString(cmd);
 		
 	}
@@ -397,7 +423,8 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		
 		if (afpChain != null && ca != null) {
 	         String script = getJmolString(afpChain,ca,subunitColors);
-	         System.out.println(script);
+			 script += " select ligand; color grey;";
+	         //System.out.println(script);
 	         evalString(script);
 	         jmolPanel.evalString("save STATE state_1");
 	      }

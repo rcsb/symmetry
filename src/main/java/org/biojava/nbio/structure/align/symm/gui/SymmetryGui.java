@@ -301,26 +301,25 @@ public class SymmetryGui extends JFrame {
 
 
 		try {
-			Structure s1 = tab.getStructure1();
+			Structure s = tab.getStructure1();
 
-			if ( s1 == null) {
+			if ( s == null) {
 				System.err.println("Please select structure");
 				return ;
 			}
-			Structure s2 = s1.clone();
 
 			String name = "custom";
 
 			if  ( pos == 0){
 				name = tab1.getName1();
 			} else {
-				name = s1.getName();
+				name = s.getName();
 			}
 			
 			System.out.println("Analyzing: " + name);
 
 
-			alicalc = new SymmetryCalc(this,s1,s2,name);
+			alicalc = new SymmetryCalc(this,s,name);
 
 
 			thread = new Thread(alicalc);

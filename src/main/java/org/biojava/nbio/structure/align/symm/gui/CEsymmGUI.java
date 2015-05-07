@@ -116,7 +116,7 @@ public class CEsymmGUI {
 			}
 			
 			RotationAxis axis = new RotationAxis(afp);
-			SymmetryJmol jmol = new SymmetryJmol(afp, ca1, ColorBrewer.Set1.getColorPalette(afp.getBlockNum()));
+			SymmetryJmol jmol = new SymmetryJmol(afp, ca1);
 			//showCurrentAlig(afp, ca1, ca2);
 			
 			System.out.println("Theta="+axis.getAngle());
@@ -130,7 +130,7 @@ public class CEsymmGUI {
 			throws StructureException {
 		
 		AFPChain c = (AFPChain) myAFP.clone();
-		SymmetryJmol jmol = new SymmetryJmol(c, ca1, ColorBrewer.Set1.getColorPalette(c.getBlockNum()));
+		SymmetryJmol jmol = new SymmetryJmol(c, ca1);
 
 		// draw a line from center of gravity to N terminus
 

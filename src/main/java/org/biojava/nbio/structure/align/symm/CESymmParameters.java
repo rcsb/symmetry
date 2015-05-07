@@ -33,6 +33,7 @@ public class CESymmParameters extends CeParameters {
 	
 	public static enum SubunitColors {
 		COLOR_SET,
+		PASTEL,
 		SPECTRAL,
 		PAIRED,
 		GRADUAL;

@@ -68,6 +68,9 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 			case COLOR_SET: 
 				subunitColors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
 				break;
+			case PASTEL: 
+				subunitColors = ColorBrewer.Pastel1.getColorPalette(afpChain.getBlockNum());
+				break;
 			case SPECTRAL:
 				subunitColors = ColorBrewer.Spectral.getColorPalette(afpChain.getBlockNum());
 				break;

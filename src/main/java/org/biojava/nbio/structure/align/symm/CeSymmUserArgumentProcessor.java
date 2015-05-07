@@ -5,7 +5,6 @@ import org.biojava.nbio.structure.align.ce.CeUserArgumentProcessor;
 import org.biojava.nbio.structure.align.ce.StartupParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.OrderDetectorMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.SubunitColors;
 
 public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 	
@@ -14,7 +13,6 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		protected int maxSymmOrder;
 		protected OrderDetectorMethod orderDetectorMethod;
 		protected RefineMethod refineMethod;
-		private SubunitColors subunitColors;
 		
 
 		public CeSymmStartupParams() {
@@ -22,7 +20,6 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 			maxSymmOrder = 8;
 			orderDetectorMethod = OrderDetectorMethod.DEFAULT;
 			refineMethod = RefineMethod.DEFAULT;
-			subunitColors = SubunitColors.DEFAULT;
 		}
 
 		public OrderDetectorMethod getOrderDetectorMethod() {
@@ -40,14 +37,6 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		public void setRefineMethod(RefineMethod refineMethod) {
 			this.refineMethod = refineMethod;
 		}
-		
-		public SubunitColors getSubunitColors() {
-			return subunitColors;
-		}
-
-		public void setSubunitColors(SubunitColors colors) {
-			this.subunitColors = colors;
-		}
 
 		public int getMaxSymmOrder() {
 			return maxSymmOrder;
@@ -59,22 +48,21 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 
 		@Override
 		public String toString() {
-			return "CeSymmStartupParams [orderDetectorMethod="
-					+ orderDetectorMethod + ", refineMethod=" + refineMethod
-					+ ", maxSymmOrder=" + maxSymmOrder + ", subunitColors=" + subunitColors
-					+ ", getWinSize()=" + getWinSize()
-					+ ", getScoringStrategy()=" + getScoringStrategy()
-					+ ", getGapOpen()=" + getGapOpen() + ", getGapExtension()="
-					+ getGapExtension() + ", getMaxGapSize()="
-					+ getMaxGapSize() + ", isShowAFPRanges()="
-					+ isShowAFPRanges() + ", getMaxOptRMSD()="
-					+ getMaxOptRMSD() + ", toString()=" + super.toString()
-					+ ", getSearchFile()=" + getSearchFile()
+			return "CeSymmStartupParams [maxSymmOrder=" + maxSymmOrder
+					+ ", orderDetectorMethod=" + orderDetectorMethod
+					+ ", refineMethod=" + refineMethod + ", getWinSize()="
+					+ getWinSize() + ", getScoringStrategy()="
+					+ getScoringStrategy() + ", getGapOpen()=" + getGapOpen()
+					+ ", getGapExtension()=" + getGapExtension()
+					+ ", getMaxGapSize()=" + getMaxGapSize()
+					+ ", isShowAFPRanges()=" + isShowAFPRanges()
+					+ ", getMaxOptRMSD()=" + getMaxOptRMSD() + ", toString()="
+					+ super.toString() + ", getSearchFile()=" + getSearchFile()
 					+ ", getAlignPairs()=" + getAlignPairs()
 					+ ", getSaveOutputDir()=" + getSaveOutputDir()
 					+ ", isShowMenu()=" + isShowMenu() + ", isPrintCE()="
 					+ isPrintCE() + ", getPdb1()=" + getPdb1() + ", getPdb2()="
-					+ getPdb2()
+					+ getPdb2() + ", isPdbDirSplit()=" + isPdbDirSplit()
 					+ ", isPrintXML()=" + isPrintXML() + ", isPrintFatCat()="
 					+ isPrintFatCat() + ", getPdbFilePath()="
 					+ getPdbFilePath() + ", getCacheFilePath()="
@@ -123,7 +111,6 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		aligParams.setMaxSymmOrder(startParams.getMaxSymmOrder());
 		aligParams.setOrderDetectorMethod(startParams.getOrderDetectorMethod());
 		aligParams.setRefineMethod(startParams.getRefineMethod());
-		aligParams.setSubunitColors(startParams.getSubunitColors());
 		
 		return aligParams;
 	}

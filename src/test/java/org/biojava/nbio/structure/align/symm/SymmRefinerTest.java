@@ -12,7 +12,7 @@ import junit.framework.TestCase;
 
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
-import org.biojava.nbio.structure.align.symm.refine.SingleRefiner;
+import org.biojava.nbio.structure.align.symm.refine.SymmRefiner;
 
 /**
  * @author blivens
@@ -232,7 +232,7 @@ public class SymmRefinerTest extends TestCase {
 			Map<Integer,Integer> align = alignments.get(i);
 			Map<Integer,Integer> expect = expecteds.get(i);
 
-			Map<Integer, Integer> refined = SingleRefiner.refineSymmetry(align, 3);
+			Map<Integer, Integer> refined = SymmRefiner.refineSymmetry(align, 3);
 			if (!expect.equals(refined)) {
 				System.out.println("Actual: " + AlignmentTools.toConciseAlignmentString(align));
 				System.out.println("Expect: " + AlignmentTools.toConciseAlignmentString(expect));
@@ -257,7 +257,7 @@ public class SymmRefinerTest extends TestCase {
 		for(int i=0;i<alignments.size(); i++) {
 			Map<Integer,Integer> align = alignments.get(i);
 
-			Map<Integer,Integer> refined = SingleRefiner.refineSymmetry(align,orders.get(i));
+			Map<Integer,Integer> refined = SymmRefiner.refineSymmetry(align,orders.get(i));
 			testAutomorphism(refined);
 		}
 	}
@@ -280,7 +280,7 @@ public class SymmRefinerTest extends TestCase {
 
 			int order = orders.get(i);
 
-			Map<Integer, Integer> refined = SingleRefiner.refineSymmetry(align, order);
+			Map<Integer, Integer> refined = SymmRefiner.refineSymmetry(align, order);
 			testSymmetric(refined, order);
 		}
 	}

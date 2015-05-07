@@ -19,11 +19,11 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
-import org.biojava.nbio.structure.align.symm.refine.MCRefiner;
+import org.biojava.nbio.structure.align.symm.refine.SymmOptimizer;
 import org.biojava.nbio.structure.align.symm.refine.MultipleRefiner;
 import org.biojava.nbio.structure.align.symm.refine.Refiner;
 import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
-import org.biojava.nbio.structure.align.symm.refine.SingleRefiner;
+import org.biojava.nbio.structure.align.symm.refine.SymmRefiner;
 import org.biojava.nbio.structure.align.util.AFPChainScorer;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -266,7 +266,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		calculator.addMatrixListener(this);
 		
 		//Set multiple to true if multiple alignments are needed
-		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE);
+		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE_REFINE);
 		//Save the optimal score, to quantify the goodness of the current alignment compared to the optimal (multiple strategy)
 		double optTMscore = 0;
 
@@ -338,7 +338,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		}
 		
 		//REFINEMENT options
-		if (params.getRefineMethod() == RefineMethod.MULTIPLE){
+		if (params.getRefineMethod() == RefineMethod.MULTIPLE_REFINE){
 			order = afpAlignments.length+1;
 			//System.out.println("Order of symmetry: "+(order));
 			refiner = new MultipleRefiner();
@@ -357,8 +357,8 @@ public class CeSymm extends AbstractStructureAlignment implements
 				e.printStackTrace();
 			}
 			
-			if (params.getRefineMethod() == RefineMethod.SINGLE) refiner = new SingleRefiner();
-			else if (params.getRefineMethod() == RefineMethod.MONTE_CARLO) refiner = new MCRefiner();
+			if (params.getRefineMethod() == RefineMethod.REFINE) refiner = new SymmRefiner();
+			else if (params.getRefineMethod() == RefineMethod.REFINE_OPTIMIZE) refiner = new SymmOptimizer();
 			
 			//Refine the AFPChain
 			if (refiner != null){

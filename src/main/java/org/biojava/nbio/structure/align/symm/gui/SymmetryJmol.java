@@ -335,7 +335,6 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		   //System.out.println(jmol);
 		   return jmol.toString();
 	
-		   
 	   }
 	   
 	

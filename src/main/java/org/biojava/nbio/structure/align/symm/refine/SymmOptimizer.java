@@ -31,7 +31,7 @@ import org.biojava.nbio.structure.jama.Matrix;
  * 
  * @author lafita
  */
-public class MCRefiner implements Refiner {
+public class SymmOptimizer implements Refiner {
 
 	private static final boolean debug = false;
 	
@@ -69,7 +69,7 @@ public class MCRefiner implements Refiner {
 	String[] alnSequences;
 	String alnSymbols;
 	
-	public MCRefiner() {
+	public SymmOptimizer() {
 		super();
 	}
 	
@@ -81,7 +81,7 @@ public class MCRefiner implements Refiner {
 		AFPChain originalAFP = afpAlignments[0];
 		d0 = Math.max(originalAFP.getTotalRmsdOpt()*2,5);
 		
-		AFPChain refinedAFP = SingleRefiner.refineSymmetry(originalAFP, ca1, ca2, order);
+		AFPChain refinedAFP = SymmRefiner.refineSymmetry(originalAFP, ca1, ca2, order);
 		
 		initialize(refinedAFP, ca1);
 		optimizeMC(iterFactor*ca.length);
@@ -892,7 +892,7 @@ public class MCRefiner implements Refiner {
 		AFPChain[] afpAlignments = {afpChain};
 		
 		//Force the order of symmetry that we want
-		MCRefiner refiner = new MCRefiner();
+		SymmOptimizer refiner = new SymmOptimizer();
 		AFPChain refinedAFP = refiner.refine(afpAlignments, ca1, ca2, order);
 		
 		afpChain.setName1(name);

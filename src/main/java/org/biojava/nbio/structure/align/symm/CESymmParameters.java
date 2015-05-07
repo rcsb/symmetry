@@ -16,7 +16,6 @@ public class CESymmParameters extends CeParameters {
 	private int maxSymmOrder; //Renamed, old variable maxNrAlternatives (now means max nr. of iterations/order of symmetry)
 	private OrderDetectorMethod orderDetectorMethod;
 	private RefineMethod refineMethod;
-	private SubunitColors subunitColors; //Sets the color pattern for the subunits
 	
 	public static enum OrderDetectorMethod {
 		SEQUENCE_FUNCTION;
@@ -25,19 +24,11 @@ public class CESymmParameters extends CeParameters {
 	
 	public static enum RefineMethod {
 		NOT_REFINED,
-		MULTIPLE,
-		SINGLE,
-		MONTE_CARLO;
-		public static RefineMethod DEFAULT = SINGLE;
-	}
-	
-	public static enum SubunitColors {
-		COLOR_SET,
-		PASTEL,
-		SPECTRAL,
-		PAIRED,
-		GRADUAL;
-		public static SubunitColors DEFAULT = COLOR_SET;
+		REFINE,
+		REFINE_OPTIMIZE,
+		MULTIPLE_REFINE,
+		MULTIPLE_REFINE_OPTIMIZE;
+		public static RefineMethod DEFAULT = REFINE_OPTIMIZE;
 	}
 	
 	public CESymmParameters() {
@@ -45,29 +36,23 @@ public class CESymmParameters extends CeParameters {
 		maxSymmOrder = 8;
 		refineMethod = RefineMethod.DEFAULT;
 		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
-		subunitColors = SubunitColors.DEFAULT;
 	}
 
 	@Override
 	public String toString() {
 		return "CESymmParameters [maxSymmOrder=" + maxSymmOrder
 				+ ", orderDetectorMethod=" + orderDetectorMethod
-				+ ", refineMethod=" + refineMethod + ", subunitColors=" + subunitColors
-				+ ", toString()=" + super.toString() + ", getWinSize()="
-				+ getWinSize() + ", getRmsdThr()=" + getRmsdThr()
-				+ ", getRmsdThrJoin()=" + getRmsdThrJoin()
-				+ ", getScoringStrategy()=" + getScoringStrategy()
-				+ ", getMaxGapSize()=" + getMaxGapSize()
-				+ ", isShowAFPRanges()=" + isShowAFPRanges()
-				+ ", getMaxOptRMSD()=" + getMaxOptRMSD() + ", getGapOpen()="
-				+ getGapOpen() + ", getGapExtension()=" + getGapExtension()
-				+ ", getDistanceIncrement()=" + getDistanceIncrement()
-				+ ", getORmsdThr()=" + getORmsdThr()
-				+ ", getMaxNrIterationsForOptimization()="
-				+ getMaxNrIterationsForOptimization() + ", getSeqWeight()="
-				+ getSeqWeight() + ", getSubstitutionMatrix()="
-				+ getSubstitutionMatrix() + ", getClass()=" + getClass()
-				+ ", hashCode()=" + hashCode() + "]";
+				+ ", refineMethod=" + refineMethod + ", winSize=" + winSize
+				+ ", rmsdThr=" + rmsdThr + ", rmsdThrJoin=" + rmsdThrJoin
+				+ ", maxOptRMSD=" + maxOptRMSD + ", scoringStrategy="
+				+ scoringStrategy + ", maxGapSize=" + maxGapSize
+				+ ", showAFPRanges=" + showAFPRanges
+				+ ", sideChainScoringType=" + sideChainScoringType
+				+ ", gapOpen=" + gapOpen + ", gapExtension=" + gapExtension
+				+ ", distanceIncrement=" + distanceIncrement + ", oRmsdThr="
+				+ oRmsdThr + ", maxNrIterationsForOptimization="
+				+ maxNrIterationsForOptimization + ", substitutionMatrix="
+				+ substitutionMatrix + ", seqWeight=" + seqWeight + "]";
 	}
 
 
@@ -77,7 +62,6 @@ public class CESymmParameters extends CeParameters {
 		maxSymmOrder = 8;
 		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
 		refineMethod = RefineMethod.DEFAULT;
-		subunitColors = SubunitColors.DEFAULT;
 	}
 
 
@@ -116,20 +100,6 @@ public class CESymmParameters extends CeParameters {
 		}
 		params.add(refineTypes.toString());
 		
-		StringBuilder colorTypes = new StringBuilder("Subunit Colors: ");
-		SubunitColors[] val = SubunitColors.values();
-		if(val.length == 1) {
-			colorTypes.append(val[0].name());
-		} else if(val.length > 1 ) {
-			for(int i=0;i<val.length-1;i++) {
-				colorTypes.append(val[i].name());
-				colorTypes.append(", ");
-			}
-			colorTypes.append("or ");
-			colorTypes.append(val[val.length-1].name());
-		}
-		params.add(colorTypes.toString());
-		
 		return params;
 	}
 
@@ -139,7 +109,6 @@ public class CESymmParameters extends CeParameters {
 		params.add("MaxSymmOrder");
 		params.add("OrderDetectorMethod");
 		params.add("RefineMethod");
-		params.add("SubunitColors");
 		return params;
 	}
 
@@ -149,7 +118,6 @@ public class CESymmParameters extends CeParameters {
 		params.add("Maximum Order of Symmetry");
 		params.add("Order Detection Method");
 		params.add("Refinement Method");
-		params.add("Subunit Colors");
 		return params;
 	}
 
@@ -159,7 +127,6 @@ public class CESymmParameters extends CeParameters {
 		params.add(Integer.class);
 		params.add(OrderDetectorMethod.class);
 		params.add(RefineMethod.class);
-		params.add(SubunitColors.class);
 		return params;
 	}
 
@@ -187,14 +154,6 @@ public class CESymmParameters extends CeParameters {
 
 	public void setOrderDetectorMethod(OrderDetectorMethod orderDetectorMethod) {
 		this.orderDetectorMethod = orderDetectorMethod;
-	}
-	
-	public SubunitColors getSubunitColors() {
-		return subunitColors;
-	}
-
-	public void setSubunitColors(SubunitColors colors) {
-		this.subunitColors = colors;
 	}
 	
 	public void setMaxSymmOrder(Integer max) {

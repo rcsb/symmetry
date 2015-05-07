@@ -10,6 +10,7 @@ import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
@@ -41,7 +42,6 @@ public class SymmSequencePanel  extends JPrintPanel implements AlignmentPosition
    private AFPChain afpChain;
    private AFPChainCoordManager coordManager;
    private Font seqFont;
-   private Font eqFont;
    private SymmetryJmol jmol;
    private SymmSequencePanelMouseMotionListener mouseMoLi;
 
@@ -56,7 +56,6 @@ public class SymmSequencePanel  extends JPrintPanel implements AlignmentPosition
       this.setBackground(Color.white);
       coordManager = new AFPChainCoordManager();
       seqFont = new Font("SansSerif",Font.PLAIN,12);
-      eqFont = new Font("SansSerif",Font.BOLD,12);
 
       mouseMoLi = new SymmSequencePanelMouseMotionListener(this);
       this.addMouseMotionListener(mouseMoLi);
@@ -125,9 +124,6 @@ public void paintComponent(Graphics g){
          char c = seq[i];
          g2D.setFont(seqFont);
 
-         List<Integer> alignedPos = null;
-         alignedPos = DisplayAFP.getEQRAlignmentPos(afpChain);
-
          Point p1 = coordManager.getPanelPos(0,i);
          int xpos1 = p1.x;
          int ypos1 = p1.y;
@@ -135,18 +131,23 @@ public void paintComponent(Graphics g){
          Color bg = Color.white;
          Color end = ColorUtils.rotateHue(ColorUtils.orange,  (1.0f  / 24.0f) * blockNum  );
 
+         List<Integer> alignedPos = new ArrayList<Integer>();
+         for (int bk=0; bk<blockNum; bk++){
+        	 for (int res=0; res<afpChain.getOptLen()[bk]; res++){
+        		 alignedPos.add(afpChain.getOptAln()[bk][0][res]);
+        	 }
+         }
+
          if (!alignedPos.contains(i)) bg = Color.white;
-         else {
-              
-          int colorPos = 0;
-    	  colorPos = AFPAlignmentDisplay.getBlockNrForAlignPos(afpChain, i);
-    	  if (subunitColors==null) bg  = ColorUtils.getIntermediate(ColorUtils.orange, end, blockNum, colorPos);
-    	  else bg = subunitColors[colorPos%subunitColors.length];
+         else {   
+		      int colorPos = AFPAlignmentDisplay.getBlockNrForAlignPos(afpChain, i);
+			  if (subunitColors==null) bg  = ColorUtils.getIntermediate(ColorUtils.orange, end, blockNum, colorPos);
+			  else if (colorPos<blockNum) bg = subunitColors[colorPos];
          }
             
         // draw a darker background
         g2D.setPaint(bg);
-        Rectangle rec = new Rectangle(p1.x-1,p1.y-11, 12, 1);
+        Rectangle rec = new Rectangle(p1.x-1,p1.y-11, 12, 12);
         g2D.fill(rec);
 
          if ( isSelected(i)){

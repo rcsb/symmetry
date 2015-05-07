@@ -1,7 +1,7 @@
 package org.biojava.nbio.structure.align.symm.gui;
 
+import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.align.gui.aligpanel.AFPChainCoordManager;
-import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.gui.events.AlignmentPositionListener;
 import org.biojava.nbio.structure.gui.util.AlignedPosition;
 
@@ -40,13 +40,11 @@ public class SymmSequencePanelMouseMotionListener implements MouseMotionListener
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		
-
 		AlignedPosition pos = getCurrentAlignedPosition(e);
 		
 		if ( pos == null)
 			return;
 
-		
 		int p = pos.getPos1();
 			
 		if ( prevPos == p && isDragging) {
@@ -54,21 +52,17 @@ public class SymmSequencePanelMouseMotionListener implements MouseMotionListener
 			return;
 		}
 
-
 		if ( ! isDragging) {
 			isDragging = true;
-			
 			setSelectionLock(true);
-
 		}
-		
 		
 		if ( selectionStart == null)
 			selectionStart = pos;
 		if ( selectionEnd == null)
 			selectionEnd = pos;
 
-		if ( p <= selectionStart.getPos1()) {
+		if (p <= selectionStart.getPos1()) {
 			//selectionEnd = selectionStart;			
 			selectionStart = pos;
 			
@@ -134,34 +128,22 @@ public class SymmSequencePanelMouseMotionListener implements MouseMotionListener
 	}
 
 	private AlignedPosition getCurrentAlignedPosition(MouseEvent e){
+		
 		AFPChainCoordManager coordManager = parent.getCoordManager();
-
+		
 		int aligSeq = coordManager.getAligSeq(e.getPoint());
 
 		// we are over a position in the sequences
-		if ( aligSeq == -1) {
-			return null;
-		}
+		if (aligSeq == -1) return null;
 
 		//get sequence positions
 		int seqPos = coordManager.getSeqPos(aligSeq, e.getPoint());
 
-		//if ( prevPos == seqPos)
-		//	return null;
+		if ( seqPos < 0) return null;
 
+		Atom[] ca1 = parent.getCa1();
 
-		//prevPos = seqPos;
-
-		if ( seqPos < 0)
-			return null;
-
-
-
-		AFPChain afpChain = parent.getAFPChain();
-		char[] aligs1  = afpChain.getAlnseq1();
-		char[] aligs2  = afpChain.getAlnseq2();
-
-		if ( seqPos >= afpChain.getAlnLength()) {
+		if (seqPos >= ca1.length) {
 			//System.err.println("seqpos " + seqPos +" >= " + afpChain.getAlnLength());
 			return null;
 		}
@@ -171,17 +153,14 @@ public class SymmSequencePanelMouseMotionListener implements MouseMotionListener
 		pos.setPos1(seqPos);
 		pos.setPos2(seqPos);
 
-		if ( aligs1[seqPos] != '-' && aligs2[seqPos] != '-'){
-			pos.setEquivalent(AlignedPosition.EQUIVALENT);
-		}
-
+		//pos.setEquivalent(AlignedPosition.EQUIVALENT);
+		
 		return pos;
 	}
 
 	public void destroy() {
 		aligPosListeners.clear();
 		parent = null;
-
 	}
 
 	@Override
@@ -193,33 +172,16 @@ public class SymmSequencePanelMouseMotionListener implements MouseMotionListener
 		for (AlignmentPositionListener li : aligPosListeners){
 			li.toggleSelection(pos);
 		}
-
 	}
-	
-
-//	private void triggerToggleRange(AlignedPosition start,
-//			AlignedPosition end) {
-//		for (AlignmentPositionListener li : aligPosListeners){
-//			for ( int i = start.getPos1() ; i < end.getPos1() ; i++){
-//				AlignedPosition pos = new AlignedPosition();
-//				pos.setPos1(i);
-//				pos.setPos2(i);
-//				li.toggleSelection(pos);
-//			}
-//		}
-//		
-//	}
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
-
-
+		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -239,11 +201,7 @@ public class SymmSequencePanelMouseMotionListener implements MouseMotionListener
 			if ( pos != null) {
 				prevPos = pos.getPos1();
 			}
-			
-			
 		}
-		
-
 	}
 
 
@@ -263,7 +221,6 @@ public class SymmSequencePanelMouseMotionListener implements MouseMotionListener
 				keepOn = true;
 			setSelectionLock(true);
 			
-			
 			// add to selection
 			AlignedPosition pos = getCurrentAlignedPosition(e);
 			if ( pos == null)
@@ -273,13 +230,8 @@ public class SymmSequencePanelMouseMotionListener implements MouseMotionListener
 				triggerMouseOverPosition(pos);
 			else
 				triggerToggleSelection(pos);
-			prevPos = pos.getPos1() ;
-			 
-		} 
-		
-		
-
-
+			prevPos = pos.getPos1() ; 
+		}
 	}
 
 }

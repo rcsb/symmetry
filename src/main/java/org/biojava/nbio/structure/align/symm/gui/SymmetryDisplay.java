@@ -180,7 +180,7 @@ public class SymmetryDisplay {
 	/**
 	 * Method that displays a multiple sequence alignment of the subunits.
 	 */
-	public static void showAlignmentImage(AFPChain afpChain, Atom[] ca1, Atom[] ca2){
+	public static void showAlignmentImage(AFPChain afpChain, Atom[] ca1){
 
 		JFrame frame = new JFrame();
 		
@@ -228,15 +228,8 @@ public class SymmetryDisplay {
 		JScrollPane scroll = new JScrollPane(me);
 		scroll.setAutoscrolls(true);
 
-		StatusDisplay status = new StatusDisplay();
-		status.setAfpChain(afpChain);
-
-		status.setCa1(ca1);
-		me.addAlignmentPositionListener(status);
-
 		Box vBox = Box.createVerticalBox();
 		vBox.add(scroll);
-		vBox.add(status);
 
 
 		frame.getContentPane().add(vBox);
@@ -245,13 +238,12 @@ public class SymmetryDisplay {
 		frame.setVisible(true);
 		// make sure they get cleaned up correctly:
 		frame.addWindowListener(me);
-		frame.addWindowListener(status);
 	}
 	
 	/**
 	 * 	Method that calculates a multiple alignment of the subunits as a String to be displayed.
 	 */
-	public static String calculateMultipleAln(AFPChain afpChain, Atom[] ca1) {
+	private static String calculateMultipleAln(AFPChain afpChain, Atom[] ca1) {
 		
 		//Create the gropus of aligned residues from the afpChain. Dimensions group[order][res nr.]
 		int order = afpChain.getBlockNum();

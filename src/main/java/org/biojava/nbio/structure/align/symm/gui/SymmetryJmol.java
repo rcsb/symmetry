@@ -247,7 +247,6 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		       System.err.println("Currently not viewing an alignment!");
 		       return;
 		    }
-		    //TODO Implement that method...
 		    SymmetryDisplay.showSequenceImage(afpChain, ca, this, subunitColors);
 		    
 		} else if (cmd.equals(SymmetryMenu.SUBUNIT_DISPLAY)){
@@ -257,6 +256,17 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	    	 }
 	         try {
 					SymmetryDisplay.displaySuperimposedSubunits(afpChain, ca);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+	         
+		} else if (cmd.equals(SymmetryMenu.SEQUENCE_ALIGN)){
+	    	 if (afpChain == null) {
+	              System.err.println("Currently not viewing a symmetry!");
+	              return;
+	    	 }
+	         try {
+					SymmetryDisplay.showAlignmentImage(afpChain, ca);
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}

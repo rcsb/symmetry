@@ -25,6 +25,7 @@ public class SymmetryMenu extends MenuCreator {
 	
 	//Menu Options for the Symmetry Display
 	public static final String SEQUENCE_PANEL = "Sequence Panel";
+	public static final String SEQUENCE_ALIGN = "Sequence Alignment";
 	public static final String SUBUNIT_DISPLAY = "Subunit Superimposition";
 	public static final String MULTIPLE_STRUCT = "Multiple Structure Alignment";
 	public static final String SYMMETRY = "New Symmetry Analysis";
@@ -89,25 +90,27 @@ public class SymmetryMenu extends MenuCreator {
 
 		if ( parent != null){
 			JMenuItem aligpI = MenuCreator.getIcon(parent,SEQUENCE_PANEL);
-			aligpI.setMnemonic(KeyEvent.VK_L);
+			aligpI.setMnemonic(KeyEvent.VK_P);
 			aligpI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, keyMask));
 			align.add(aligpI);
 		}
 
 		if ( afpChain != null){
-			JMenuItem distMax = new  JMenuItem("Show Distance Matrices");
+			JMenuItem distMax = new  JMenuItem("Show Distance Matrix");
 			distMax.setMnemonic(KeyEvent.VK_D);
 			distMax.addActionListener(new MyDistMaxListener(afpChain));
 			align.add(distMax);
 		}
 		
-		JMenuItem pairI = getPairwiseAlignmentMenuItem();
-		align.add(pairI);
 		menu.add(align);
 		
 		//SYMMETRY tab
 		JMenu sym = new JMenu("Symmetry");
 		sym.setMnemonic(KeyEvent.VK_S);
+		
+		JMenuItem seq = new JMenuItem(SEQUENCE_ALIGN);
+		seq.addActionListener(parent);
+		seq.setMnemonic(KeyEvent.VK_L);
 		
 		JMenuItem subunits = new JMenuItem(SUBUNIT_DISPLAY);
 		subunits.addActionListener(parent);
@@ -120,6 +123,7 @@ public class SymmetryMenu extends MenuCreator {
 		JMenuItem newSym = getNewSymmetryMenuItem();
 		newSym.addActionListener(parent);
 		
+		sym.add(seq);
 		sym.add(subunits);
 		sym.add(mulStAln);
 		sym.add(newSym);

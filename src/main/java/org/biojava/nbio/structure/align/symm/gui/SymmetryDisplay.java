@@ -218,7 +218,7 @@ public class SymmetryDisplay {
 
 		JFrame frame = new JFrame();
 
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);		
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		frame.setTitle(afpChain.getName1() + " vs. " + afpChain.getName2() + " | " + afpChain.getAlgorithmName() + " V. " + afpChain.getVersion());
 		me.setPreferredSize(new Dimension(me.getCoordManager().getPreferredWidth() , me.getCoordManager().getPreferredHeight()));
 
@@ -230,7 +230,6 @@ public class SymmetryDisplay {
 
 		Box vBox = Box.createVerticalBox();
 		vBox.add(scroll);
-
 
 		frame.getContentPane().add(vBox);
 

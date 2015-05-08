@@ -26,7 +26,6 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AFPAlignmentDisplay;
 import org.biojava.nbio.structure.gui.events.AlignmentPositionListener;
 import org.biojava.nbio.structure.gui.util.AlignedPosition;
-import org.biojava.nbio.structure.gui.util.color.ColorUtils;
 
 
 /** 
@@ -88,10 +87,20 @@ public class SymmSequencePanel  extends JPrintPanel implements AlignmentPosition
 
    public void setAFPChain(AFPChain afpChain) {
 
-      this.afpChain = afpChain;
-      coordManager.setAFPChain(afpChain);
-      if ( afpChain != null) {
-         selection = new BitSet(ca1.length);
+      this.afpChain = (AFPChain) afpChain.clone();
+      //Change the alignment sequence to display (delete gaps basically, we only want the sequence)
+      int length = afpChain.getOptAln()[afpChain.getBlockNum()-1][0][afpChain.getOptLen()[0]-1] - afpChain.getOptAln()[0][0][0];
+      char[] seq = new char[length];
+      for (int i=0; i<length; i++)
+    	  seq[i] = StructureTools.get1LetterCode(ca1[afpChain.getOptAln()[0][0][0]+i].getGroup().getPDBName());
+      this.afpChain.setAlnLength(length);
+      this.afpChain.setAlnseq1(seq);
+      this.afpChain.setAlnseq2(seq);
+      this.afpChain.setAlnsymb(seq);
+      
+      coordManager.setAFPChain(this.afpChain);
+      if (afpChain != null) {
+         selection = new BitSet(afpChain.getAlnLength());
       }
    }
 
@@ -105,13 +114,8 @@ public void paintComponent(Graphics g){
       g2D.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
             RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-      //g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-       //     RenderingHints.VALUE_ANTIALIAS_ON);
+      char[] seq = afpChain.getAlnseq1();
       
-      char[] seq = new char[ca1.length];
-      for (int i=0; i<ca1.length; i++)
-    	  seq[i] = StructureTools.get1LetterCode(ca1[i].getGroup().getPDBName());
-
       String summary = afpChain.getName1();
       g2D.drawString(summary, 20, coordManager.getSummaryPos());
       
@@ -119,7 +123,16 @@ public void paintComponent(Graphics g){
       Rectangle sig = new Rectangle(10,10,10,10);				
       g2D.fill(sig);
       
-      for ( int i = 0 ; i < ca1.length ;i++){
+      int blockNum = afpChain.getBlockNum();
+
+      List<Integer> alignedPos = new ArrayList<Integer>();
+      for (int bk=0; bk<blockNum; bk++){
+     	 for (int res=0; res<afpChain.getOptLen()[bk]; res++){
+     		 alignedPos.add(afpChain.getOptAln()[bk][0][res]);
+     	 }
+      }
+      
+      for ( int i = 0 ; i < afpChain.getAlnLength() ;i++){
 
          char c = seq[i];
          g2D.setFont(seqFont);
@@ -127,22 +140,14 @@ public void paintComponent(Graphics g){
          Point p1 = coordManager.getPanelPos(0,i);
          int xpos1 = p1.x;
          int ypos1 = p1.y;
-         int blockNum = afpChain.getBlockNum();
+         
          Color bg = Color.white;
-         Color end = ColorUtils.rotateHue(ColorUtils.orange,  (1.0f  / 24.0f) * blockNum  );
-
-         List<Integer> alignedPos = new ArrayList<Integer>();
-         for (int bk=0; bk<blockNum; bk++){
-        	 for (int res=0; res<afpChain.getOptLen()[bk]; res++){
-        		 alignedPos.add(afpChain.getOptAln()[bk][0][res]);
-        	 }
-         }
 
          if (!alignedPos.contains(i)) bg = Color.white;
          else {   
 		      int colorPos = AFPAlignmentDisplay.getBlockNrForAlignPos(afpChain, i);
-			  if (subunitColors==null) bg  = ColorUtils.getIntermediate(ColorUtils.orange, end, blockNum, colorPos);
-			  else if (colorPos<blockNum) bg = subunitColors[colorPos];
+			  if (colorPos<blockNum) bg = subunitColors[colorPos];
+			  else bg = Color.white;
          }
             
         // draw a darker background
@@ -164,7 +169,7 @@ public void paintComponent(Graphics g){
          g2D.drawString(c+"",xpos1,ypos1);
       }
 
-      int nrLines = (ca1.length -1) / AFPChainCoordManager.DEFAULT_LINE_LENGTH;
+      int nrLines = (afpChain.getAlnLength() -1) / AFPChainCoordManager.DEFAULT_LINE_LENGTH;
 
 
       for (int i = 0; i <= nrLines; i++){
@@ -182,7 +187,7 @@ public void paintComponent(Graphics g){
             Point p3 = coordManager.getEndLegendPosition(i,0);
 
             aligPos = i * AFPChainCoordManager.DEFAULT_LINE_LENGTH + AFPChainCoordManager.DEFAULT_LINE_LENGTH -1 ;
-            if ( aligPos > afpChain.getAlnLength())
+            if (aligPos > afpChain.getAlnLength())
                aligPos = afpChain.getAlnLength() - 1;
             Atom a3 = DisplayAFP.getAtomForAligPos(afpChain, 0,aligPos, ca1,true);
 
@@ -228,7 +233,7 @@ public void mouseOverPosition(AlignedPosition p) {
       if ( jmol == null)
          return;
 
-      int size = afpChain.getAlnLength();
+      int size = ca1.length;
 
       StringBuffer cmd = new StringBuffer("select ");
 

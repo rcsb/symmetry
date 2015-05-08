@@ -32,7 +32,6 @@ import org.biojava.nbio.structure.align.gui.jmol.RasmolCommandListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.webstart.AligUIManager;
-import org.biojava.nbio.structure.gui.util.color.ColorUtils;
 import org.jcolorbrewer.ColorBrewer;
 
 /** 
@@ -153,7 +152,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 				public void actionPerformed(ActionEvent e) {
 					JComboBox source = (JComboBox) e.getSource();
 					String value = source.getSelectedItem().toString();
-					
+					evalString("save selection; select *; color grey; select ligand; color CPK;");
 					if (value=="Color Set"){
 						subunitColors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
 						
@@ -174,12 +173,15 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 					} else {
 						subunitColors = ColorBrewer.Greys.getColorPalette(afpChain.getBlockNum());
 					}
-					resetDisplay();
+					StringWriter script = new StringWriter();
+					for(int bk = 0; bk < afpChain.getBlockNum(); bk ++)
+				         printJmolScript4Block(ca, afpChain.getBlockNum(), afpChain.getOptLen(), afpChain.getOptAln(), script, bk, subunitColors);
+					evalString(script.toString()+"restore selection; ");
 				}
 			});
 
 			hBox1.add(Box.createGlue());
-			hBox1.add(new JLabel("Pattelete"));
+			hBox1.add(new JLabel("Symmetry"));
 			hBox1.add(pattelete);
 			
 
@@ -249,16 +251,15 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	      li.setTextField(status);
 	      frame.pack();
 	      frame.setVisible(true);
-
-
+		  
 	      // init coordinates
 	      initCoords();
-	      resetDisplay();
-	      
-		  //Rotation axis
+	      //Rotation axis
 		  RotationAxis axis = new RotationAxis(afpChain);
 		  String cmd = axis.getJmolScript(ca1);
 		  jmolPanel.evalString(cmd);
+		  
+	      resetDisplay();
 		
 	}
 	
@@ -351,9 +352,10 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	      StringWriter jmol = new StringWriter();
 	      jmol.append(DEFAULT_SCRIPT);
 	      
-	      for(int bk = 0; bk < blockNum; bk ++)       {
+	      for(int bk = 0; bk < blockNum; bk++ ) {
 	
 	         printJmolScript4Block(ca1, blockNum, optLen, optAln, jmol, bk, subunitColors);
+	         jmol.append("backbone 0.6 ;");
 	      }
 	      
 	      jmol.append(LIGAND_DISPLAY_SCRIPT);
@@ -367,22 +369,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 			//the block nr determines the color...
 			 int colorPos = bk;
 			 
-			 Color c1;
-			 //If the colors for the block are specified in AFPChain use them, otherwise the default ones are calculated
-			 if (colors==null){
-				 
-				 if ( colorPos > ColorUtils.colorWheel.length){
-				    colorPos = ColorUtils.colorWheel.length % colorPos ;
-				 }
-				 
-				 Color end1 = ColorUtils.rotateHue(ColorUtils.cyan,    (1.0f  / 24.0f) * (blockNum +1)  ) ;
-				 	 
-				 c1   = ColorUtils.getIntermediate(ColorUtils.cyan, end1, blockNum, bk);
-			 }
-			 else {
-				 int n = colors.length;
-				 c1   = colors[colorPos%n];
-			 }
+			 Color c1 = colors[colorPos];
 			 
 			 List<String> pdb1 = new ArrayList<String>();
 			 for ( int i=0;i< optLen[bk];i++) {
@@ -399,7 +386,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 			    buf.append(res);
 			    count++;
 			 }
-			 buf.append("; backbone 0.6 ; color [" + c1.getRed() +"," + c1.getGreen() +"," +c1.getBlue()+"];");
+			 buf.append("; color [" + c1.getRed() +"," + c1.getGreen() +"," +c1.getBlue()+"];");
 			 
 			 //buf.append("; set display selected;");
 			 // now color this block:
@@ -422,8 +409,8 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		
 		if (afpChain != null && ca != null) {
 	         String script = getJmolString(afpChain,ca,subunitColors);
-			 script += " select ligand; color grey;";
 	         //System.out.println(script);
+	         script += "select ligand; color CPK;";
 	         evalString(script);
 	         jmolPanel.evalString("save STATE state_1");
 	      }

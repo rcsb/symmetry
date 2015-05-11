@@ -24,11 +24,11 @@ public class CESymmParameters extends CeParameters {
 	
 	public static enum RefineMethod {
 		NOT_REFINED,
-		REFINE,
-		REFINE_OPTIMIZE,
-		MULTIPLE_REFINE,
-		MULTIPLE_REFINE_OPTIMIZE;
-		public static RefineMethod DEFAULT = REFINE_OPTIMIZE;
+		SINGLE,
+		MULTIPLE,
+		SINGLE_OPTIMIZE,
+		MULTIPLE_OPTIMIZE;
+		public static RefineMethod DEFAULT = SINGLE;
 	}
 	
 	public CESymmParameters() {

@@ -34,9 +34,9 @@ import org.biojava.nbio.structure.align.util.RotationAxis;
  * @author lafita
  */
 
-public class SymmRefiner implements Refiner {
+public class SingleRefiner implements Refiner {
 
-	public SymmRefiner() {
+	public SingleRefiner() {
 		super();
 	}
 	

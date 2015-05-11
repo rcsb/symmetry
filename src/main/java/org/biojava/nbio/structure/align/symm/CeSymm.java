@@ -23,7 +23,7 @@ import org.biojava.nbio.structure.align.symm.refine.SymmOptimizer;
 import org.biojava.nbio.structure.align.symm.refine.MultipleRefiner;
 import org.biojava.nbio.structure.align.symm.refine.Refiner;
 import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
-import org.biojava.nbio.structure.align.symm.refine.SymmRefiner;
+import org.biojava.nbio.structure.align.symm.refine.SingleRefiner;
 import org.biojava.nbio.structure.align.util.AFPChainScorer;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -239,8 +239,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 	}
 
 	@Override
-	public AFPChain align(Atom[] ca10, Atom[] ca2O, Object param)
-			throws StructureException {
+	public AFPChain align(Atom[] ca10, Atom[] ca2O, Object param) throws StructureException {
 		if (!(param instanceof CESymmParameters))
 			throw new IllegalArgumentException(
 					"CE algorithm needs an object of call CESymmParameters as argument.");
@@ -266,7 +265,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		calculator.addMatrixListener(this);
 		
 		//Set multiple to true if multiple alignments are needed
-		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE_REFINE);
+		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE || params.getRefineMethod() == RefineMethod.MULTIPLE_OPTIMIZE);
 		//Save the optimal score, to quantify the goodness of the current alignment compared to the optimal (multiple strategy)
 		double optTMscore = 0;
 
@@ -338,7 +337,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 		}
 		
 		//REFINEMENT options
-		if (params.getRefineMethod() == RefineMethod.MULTIPLE_REFINE){
+		if (params.getRefineMethod() == RefineMethod.MULTIPLE_OPTIMIZE){
 			order = afpAlignments.length+1;
 			//System.out.println("Order of symmetry: "+(order));
 			refiner = new MultipleRefiner();
@@ -357,8 +356,9 @@ public class CeSymm extends AbstractStructureAlignment implements
 				e.printStackTrace();
 			}
 			
-			if (params.getRefineMethod() == RefineMethod.REFINE) refiner = new SymmRefiner();
-			else if (params.getRefineMethod() == RefineMethod.REFINE_OPTIMIZE) refiner = new SymmOptimizer();
+			if (params.getRefineMethod() == RefineMethod.SINGLE) refiner = new SingleRefiner();
+			else if (params.getRefineMethod() == RefineMethod.MULTIPLE) refiner = new MultipleRefiner();
+			else if (params.getRefineMethod() == RefineMethod.SINGLE_OPTIMIZE) refiner = new SymmOptimizer();
 			
 			//Refine the AFPChain
 			if (refiner != null){

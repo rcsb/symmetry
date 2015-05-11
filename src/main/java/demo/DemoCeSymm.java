@@ -33,8 +33,10 @@ public class DemoCeSymm {
 		name = "3C1B.I:,J:"; // nucleosome DNA
 		//name = "3C1B.A:,B:,E:,F:,C:,D:,G:,H:"; // nucleosome second axis
 		name = "3F2Q";
+		name = "d1wp5a_"; //special case C6
+		name = "d2b1ea_";
 
-		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75);
+		ScopFactory.setScopDatabase(ScopFactory.VERSION_2_0_4);
 
 
 		CeSymm ceSymm = new CeSymm();

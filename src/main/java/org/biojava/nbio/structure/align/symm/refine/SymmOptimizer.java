@@ -81,7 +81,7 @@ public class SymmOptimizer implements Refiner {
 		AFPChain originalAFP = afpAlignments[0];
 		d0 = Math.max(originalAFP.getTotalRmsdOpt()*2,5);
 		
-		AFPChain refinedAFP = SymmRefiner.refineSymmetry(originalAFP, ca1, ca2, order);
+		AFPChain refinedAFP = SingleRefiner.refineSymmetry(originalAFP, ca1, ca2, order);
 		
 		initialize(refinedAFP, ca1);
 		optimizeMC(iterFactor*ca.length);

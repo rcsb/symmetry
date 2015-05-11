@@ -37,7 +37,7 @@ public class MultipleRefiner implements Refiner {
 		//Use the help of the SINGLE refiner to increase the consistency of the alignments
 		for (int i=0; i<afpAlignments.length; i++){
 			try {
-				afpAlignments[i] = SymmRefiner.refineSymmetry(afpAlignments[i], ca1, ca2, order);
+				afpAlignments[i] = SingleRefiner.refineSymmetry(afpAlignments[i], ca1, ca2, order);
 			} //It means that one of the refined alignments has length 0, so continue without refining
 			catch (Exception ignore){
 				//afpAlignments[i] = null;
@@ -372,7 +372,7 @@ public class MultipleRefiner implements Refiner {
 			//Initialize a new CeSymm class and its parameters and a new alignment class
 			CeSymm ceSymm = new CeSymm();
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-			params.setRefineMethod(RefineMethod.MULTIPLE_REFINE);
+			params.setRefineMethod(RefineMethod.MULTIPLE);
 			AFPChain afpChain = new AFPChain();
 			
 			//Perform the alignment and store

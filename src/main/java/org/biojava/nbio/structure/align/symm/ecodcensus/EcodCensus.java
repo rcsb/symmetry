@@ -55,7 +55,7 @@ public class EcodCensus {
 		
 		CeSymm cesymm = new CeSymm();
 		CESymmParameters param = (CESymmParameters) cesymm.getParameters();
-		param.setRefineMethod(RefineMethod.REFINE);
+		param.setRefineMethod(RefineMethod.SINGLE);
 		
 		OrderDetector detector;
 		//detector = new RotationOrderDetector(8, RotationOrderMethod.SINGLE_CUSP_FIXED_SSE);

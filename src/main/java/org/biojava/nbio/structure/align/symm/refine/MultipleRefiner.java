@@ -12,14 +12,15 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 
 /**
  * Creates a refined alignment with the multiple self-alignments obtained from blacking out previous alignments.
- * @author lafita
+ * 
+ * @author Aleix Lafita
+ * 
  */
 
 public class MultipleRefiner implements Refiner {
@@ -31,33 +32,49 @@ public class MultipleRefiner implements Refiner {
 	}
 	
 	@Override
-	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
+	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] ca1, Atom[] ca2, int order)
 			throws RefinerFailedException,StructureException {
 		
 		//Use the help of the SINGLE refiner to increase the consistency of the alignments
-		for (int i=0; i<afpAlignments.length; i++){
+		for (int i=0; i<afpAlignments.size(); i++){
 			try {
-				afpAlignments[i] = SingleRefiner.refineSymmetry(afpAlignments[i], ca1, ca2, order);
+				afpAlignments.set(i,SingleRefiner.refineSymmetry(afpAlignments.get(i), ca1, ca2, order));
 			} //It means that one of the refined alignments has length 0, so continue without refining
 			catch (Exception ignore){
 				//afpAlignments[i] = null;
 				continue;
 			}
 		}
-		return cycleRefineAFP(afpAlignments, ca1, ca2, order);
-		//return maxSizeRefineAFP(afpAlignments);
+		//return cycleRefineAFP(afpAlignments, ca1, ca2, order);
+		//return maxLengthAFP(afpAlignments);
+		return maxScoreAFP(afpAlignments);
 	}
 	
 	/**
 	 *  Returns the alignment with the maximum length of the set of afpAlignments.
 	 */
-	private AFPChain maxSizeRefineAFP(AFPChain[] afpAlignments) {
+	private AFPChain maxLengthAFP(List<AFPChain> afpAlignments) {
 		
 		AFPChain maxAFP = null;
-		for (int i=0; i<afpAlignments.length; i++){
-			if (afpAlignments[i]!=null){
-			if (maxAFP==null) maxAFP = afpAlignments[i];
-			else if (maxAFP.getOptLength()<afpAlignments[i].getOptLength()) maxAFP = afpAlignments[i];
+		for (int i=0; i<afpAlignments.size(); i++){
+			if (afpAlignments.get(i)!=null){
+				if (maxAFP==null) maxAFP = afpAlignments.get(i);
+				else if (maxAFP.getOptLength()<afpAlignments.get(i).getOptLength()) maxAFP = afpAlignments.get(i);
+			}
+		}
+		return maxAFP;
+	}
+	
+	/**
+	 *  Returns the alignment with the maximum length of the set of afpAlignments.
+	 */
+	private AFPChain maxScoreAFP(List<AFPChain> afpAlignments) {
+		
+		AFPChain maxAFP = null;
+		for (int i=0; i<afpAlignments.size(); i++){
+			if (afpAlignments.get(i)!=null){
+				if (maxAFP==null) maxAFP = afpAlignments.get(i);
+				else if (maxAFP.getTMScore()<afpAlignments.get(i).getTMScore()) maxAFP = afpAlignments.get(i);
 			}
 		}
 		return maxAFP;
@@ -73,7 +90,7 @@ public class MultipleRefiner implements Refiner {
 	 * ALGORITHM: cycle detection for each residue checking each time that the distance between residues is sufficient
 	 * RUNNING TIME: DFS of depth order, polynomial in length of the protein. No bottleneck.
 	 */
-	private static AFPChain cycleRefineAFP(AFPChain[] allAlignments, Atom[] ca1, Atom[] ca2, int order) throws StructureException {
+	private static AFPChain cycleRefineAFP(List<AFPChain> allAlignments, Atom[] ca1, Atom[] ca2, int order) throws StructureException {
 		
 		//Create the alignment graph and initialize a variable to store the symmetry groups
 		List<List<Integer>> graph = buildAFPgraph(allAlignments, ca1);
@@ -233,7 +250,7 @@ public class MultipleRefiner implements Refiner {
 			}
 		}
 		
-		return AlignmentTools.replaceOptAln(optAlgn, allAlignments[order-2], ca1, ca2);
+		return AlignmentTools.replaceOptAln(optAlgn, allAlignments.get(order-2), ca1, ca2);
 	}
 	
 	/**
@@ -243,7 +260,7 @@ public class MultipleRefiner implements Refiner {
 	 * INPUT: a list of AFP alignments and the Atom[] array.
 	 * OUTPUT: the alignment graph (describing relations between residues). List dimensions: AdjList[vertices][edges]
 	 */
-	public static List<List<Integer>> buildAFPgraph(AFPChain[] allAlignments, Atom[] ca1) {
+	public static List<List<Integer>> buildAFPgraph(List<AFPChain> allAlignments, Atom[] ca1) {
 		
 		//Initialize the adjacency list that stores the graph
 		List<List<Integer>> adjList = new ArrayList<List<Integer>>();
@@ -252,14 +269,14 @@ public class MultipleRefiner implements Refiner {
 			adjList.add(edges);
 		}
 		
-		for (int k=0; k < allAlignments.length; k++){
-			if (allAlignments[k] != null){
-			for (int i=0; i<allAlignments[k].getOptAln().length; i++){
-				for (int j=0; j<allAlignments[k].getOptAln()[i][0].length; j++){
+		for (int k=0; k < allAlignments.size(); k++){
+			if (allAlignments.get(k) != null){
+			for (int i=0; i<allAlignments.get(k).getOptAln().length; i++){
+				for (int j=0; j<allAlignments.get(k).getOptAln()[i][0].length; j++){
 				
 					//The vertex is the residue in the first chain and the edge the one in the second chain
-					int vertex = allAlignments[k].getOptAln()[i][0][j];
-					int edge = allAlignments[k].getOptAln()[i][1][j];
+					int vertex = allAlignments.get(k).getOptAln()[i][0][j];
+					int edge = allAlignments.get(k).getOptAln()[i][1][j];
 					if (!adjList.get(vertex).contains(edge)){
 						adjList.get(vertex).add(edge);
 					}

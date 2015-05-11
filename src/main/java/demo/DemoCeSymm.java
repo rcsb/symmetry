@@ -34,7 +34,7 @@ public class DemoCeSymm {
 		//name = "3C1B.A:,B:,E:,F:,C:,D:,G:,H:"; // nucleosome second axis
 		name = "3F2Q";
 		name = "d1wp5a_"; //special case C6
-		name = "d2b1ea_";
+		name = "3EU9.A";  //Ankyrin: 1N0R.A, 3EHQ.A, 3EU9.A
 
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_2_0_4);
 

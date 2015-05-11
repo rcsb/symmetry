@@ -16,7 +16,6 @@ import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
@@ -27,11 +26,11 @@ import org.biojava.nbio.structure.jama.Matrix;
  * Creates a refined alignment by a Monte Carlo optimization of a subunit multiple alignment.
  * 
  * This class pretends to use the CEMC approach for multiple structural alignment of the subunits
- * using the refined pairwise alignment obtained from the align method. Optimization step.
+ * using the refined pairwise alignment obtained from the align method.
  * 
  * @author lafita
  */
-public class SymmOptimizer implements Refiner {
+public class SymmOptimizer {
 
 	private static final boolean debug = false;
 	
@@ -73,17 +72,17 @@ public class SymmOptimizer implements Refiner {
 		super();
 	}
 	
-	@Override
-	public AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order)
+	public AFPChain optimize(AFPChain seedAFP, Atom[] ca1, Atom[] ca2, int order)
 			throws RefinerFailedException,StructureException {
 		
+		//No multiple alignment can be generated if there is only one subunit.
+		if (order == 1) return seedAFP;
+		if (afpChain.getBlockNum() == 0) throw new RefinerFailedException("Empty seed alignment");
+		
 		//Set parameters from initial alignment
-		AFPChain originalAFP = afpAlignments[0];
-		d0 = Math.max(originalAFP.getTotalRmsdOpt()*2,5);
+		d0 = Math.max(seedAFP.getTotalRmsdOpt()*2,5);
 		
-		AFPChain refinedAFP = SingleRefiner.refineSymmetry(originalAFP, ca1, ca2, order);
-		
-		initialize(refinedAFP, ca1);
+		initialize(seedAFP, ca1);
 		optimizeMC(iterFactor*ca.length);
 		
 		/*try {
@@ -887,19 +886,19 @@ public class SymmOptimizer implements Refiner {
 		
 		CeSymm ceSymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-		params.setRefineMethod(RefineMethod.NOT_REFINED);
+		params.setRefineMethod(RefineMethod.SINGLE);
 		AFPChain afpChain = ceSymm.align(ca1, ca2);
-		AFPChain[] afpAlignments = {afpChain};
 		
 		//Force the order of symmetry that we want
 		SymmOptimizer refiner = new SymmOptimizer();
-		AFPChain refinedAFP = refiner.refine(afpAlignments, ca1, ca2, order);
+		AFPChain refinedAFP = refiner.optimize(afpChain, ca1, ca2, order);
 		
 		afpChain.setName1(name);
 		afpChain.setName2(name);
 		
 		SymmetryJmol jmol = new SymmetryJmol(refinedAFP, ca1);
 		}
+		
 		System.out.println("Finished Alaysis!");
 	}
 }

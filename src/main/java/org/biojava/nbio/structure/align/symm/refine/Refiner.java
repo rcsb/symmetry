@@ -1,5 +1,7 @@
 package org.biojava.nbio.structure.align.symm.refine;
 
+import java.util.List;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
@@ -12,7 +14,7 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 public interface Refiner {
 
 	/**
-	 * Returns a refined AFP alignment, where the subunit residues are aligned consistently in cycles.
+	 * Returns a refined symmetry alignment, where the subunit residues are aligned consistently.
 	 * @param afpAlignments
 	 * @param ca1
 	 * @param ca2
@@ -21,6 +23,6 @@ public interface Refiner {
 	 * @throws RefinerFailedException
 	 * @throws StructureException
 	 */
-	AFPChain refine(AFPChain[] afpAlignments, Atom[] ca1, Atom[] ca2, int order) throws RefinerFailedException,StructureException;
+	AFPChain refine(List<AFPChain> afpAlignments, Atom[] ca1, Atom[] ca2, int order) throws RefinerFailedException,StructureException;
 	
 }

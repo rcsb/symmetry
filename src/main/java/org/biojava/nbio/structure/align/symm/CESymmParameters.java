@@ -18,6 +18,10 @@ public class CESymmParameters extends CeParameters {
 	private RefineMethod refineMethod;
 	
 	public static enum OrderDetectorMethod {
+		ANGLE,
+		MULTI_METHOD,
+		PEAK_COUNTING,
+		ROTATION,
 		SEQUENCE_FUNCTION;
 		public static OrderDetectorMethod DEFAULT = SEQUENCE_FUNCTION;
 	}
@@ -28,7 +32,7 @@ public class CESymmParameters extends CeParameters {
 		MULTIPLE,
 		SINGLE_OPTIMIZE,
 		MULTIPLE_OPTIMIZE;
-		public static RefineMethod DEFAULT = SINGLE;
+		public static RefineMethod DEFAULT = SINGLE_OPTIMIZE;
 	}
 	
 	public CESymmParameters() {

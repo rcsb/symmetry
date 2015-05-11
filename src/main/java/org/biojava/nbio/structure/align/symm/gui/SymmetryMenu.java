@@ -13,6 +13,7 @@ import javax.swing.KeyStroke;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.MyAlignmentLoadListener;
 import org.biojava.nbio.structure.align.gui.MyDistMaxListener;
+import org.biojava.nbio.structure.align.gui.MenuCreator.DotPlotListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 
 /**
@@ -85,24 +86,30 @@ public class SymmetryMenu extends MenuCreator {
 		menu.add(file);
 
 		//ALIGNMENT tab
-		JMenu align = new JMenu("View");
-		align.setMnemonic(KeyEvent.VK_V);
+		JMenu view = new JMenu("View");
+		view.setMnemonic(KeyEvent.VK_V);
 
 		if ( parent != null){
 			JMenuItem aligpI = MenuCreator.getIcon(parent,SEQUENCE_PANEL);
 			aligpI.setMnemonic(KeyEvent.VK_P);
 			aligpI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, keyMask));
-			align.add(aligpI);
+			view.add(aligpI);
 		}
 
 		if ( afpChain != null){
-			JMenuItem distMax = new  JMenuItem("Show Distance Matrix");
+			JMenuItem distMax = new  JMenuItem("Show Distance Matrices");
 			distMax.setMnemonic(KeyEvent.VK_D);
+			afpChain.setDisTable2(null); //we only have one structure, so we don't want to display the second duplicated matrix
 			distMax.addActionListener(new MyDistMaxListener(afpChain));
-			align.add(distMax);
+			view.add(distMax);
+
+			JMenuItem dotplot = new JMenuItem("Show Dot Plot");
+			dotplot.setMnemonic(KeyEvent.VK_O);
+			dotplot.addActionListener(new DotPlotListener(afpChain));
+			view.add(dotplot);
 		}
 		
-		menu.add(align);
+		menu.add(view);
 		
 		//SYMMETRY tab
 		JMenu sym = new JMenu("Symmetry");

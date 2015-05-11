@@ -125,15 +125,20 @@ public void paintComponent(Graphics g){
       
       int blockNum = afpChain.getBlockNum();
 
+      List<Integer> boundaries = new ArrayList<Integer>();
       List<Integer> alignedPos = new ArrayList<Integer>();
       for (int bk=0; bk<blockNum; bk++){
      	 for (int res=0; res<afpChain.getOptLen()[bk]; res++){
      		 alignedPos.add(afpChain.getOptAln()[bk][0][res]);
+     		 if (res==afpChain.getOptLen()[bk]-1) boundaries.add(afpChain.getOptAln()[bk][0][res]);
      	 }
       }
       
+      int colorPos = 0;
       for ( int i = 0 ; i < afpChain.getAlnLength() ;i++){
 
+    	 if (i > boundaries.get(colorPos)) colorPos++;
+    	 
          char c = seq[i];
          g2D.setFont(seqFont);
 
@@ -144,11 +149,7 @@ public void paintComponent(Graphics g){
          Color bg = Color.white;
 
          if (!alignedPos.contains(i)) bg = Color.white;
-         else {   
-		      int colorPos = AFPAlignmentDisplay.getBlockNrForAlignPos(afpChain, i);
-			  if (colorPos<blockNum) bg = subunitColors[colorPos];
-			  else bg = Color.white;
-         }
+         else bg = subunitColors[colorPos];
             
         // draw a darker background
         g2D.setPaint(bg);

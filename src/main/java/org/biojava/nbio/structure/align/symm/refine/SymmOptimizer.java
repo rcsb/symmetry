@@ -77,7 +77,7 @@ public class SymmOptimizer {
 		
 		//No multiple alignment can be generated if there is only one subunit.
 		if (order == 1) return seedAFP;
-		if (afpChain.getBlockNum() == 0) throw new RefinerFailedException("Empty seed alignment");
+		if (seedAFP.getBlockNum() == 0) throw new RefinerFailedException("Empty seed alignment");
 		
 		//Set parameters from initial alignment
 		d0 = Math.max(seedAFP.getTotalRmsdOpt()*2,5);

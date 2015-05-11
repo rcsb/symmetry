@@ -4,7 +4,6 @@ import org.biojava.nbio.structure.*;
 import org.biojava.nbio.structure.align.gui.AlignmentTextPanel;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.aligpanel.StatusDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.MultipleAlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
@@ -208,6 +207,9 @@ public class SymmetryDisplay {
 		frame.setVisible(true);
 	}
 	
+	/**
+	 * This method is still in development because the sequence panel has still some bugs.
+	 */
 	public static void showSequenceImage(AFPChain afpChain, Atom[] ca1, SymmetryJmol jmol, Color[] subunitColors) {
 
 		SymmSequencePanel me = new SymmSequencePanel();

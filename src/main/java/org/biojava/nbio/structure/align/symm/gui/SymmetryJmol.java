@@ -24,6 +24,7 @@ import javax.swing.JTextField;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.align.gui.DisplayAFP;
 import org.biojava.nbio.structure.align.gui.jmol.AbstractAlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.JmolPanel;
 import org.biojava.nbio.structure.align.gui.jmol.JmolTools;
@@ -274,7 +275,9 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		       System.err.println("Currently not viewing an alignment!");
 		       return;
 		    }
-		    SymmetryDisplay.showSequenceImage(afpChain, ca, this, subunitColors);
+		    //TODO The method should only display one sequence and color the subunits, but many problems to adapt
+		    //SymmetryDisplay.showSequenceImage(afpChain, ca, this, subunitColors);
+		    DisplayAFP.showAlignmentImage(afpChain, ca, ca, this);
 		    
 		} else if (cmd.equals(SymmetryMenu.SUBUNIT_DISPLAY)){
 	    	 if ( afpChain == null) {

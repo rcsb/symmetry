@@ -13,11 +13,14 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
+import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
  * Creates a refined alignment with the multiple self-alignments obtained from blacking out previous alignments.
+ * Still in development. Right now uses the single refiner in all of them and takes the best result as final.
  * 
  * @author Aleix Lafita
  * 
@@ -26,9 +29,15 @@ import org.biojava.nbio.structure.align.util.AtomCache;
 public class MultipleRefiner implements Refiner {
 	
 	private static final boolean debug = false;
+	OrderDetector orderDetector;
 
-	public MultipleRefiner() {
-		super();
+	/**
+	 * The class needs an orderDetector because the order might differ among the alignments.
+	 * It will calculate the order for all of them and run the single refiner
+	 * @param orderDetector
+	 */
+	public MultipleRefiner(OrderDetector orderDetector) {
+		this.orderDetector = orderDetector;
 	}
 	
 	@Override
@@ -38,6 +47,7 @@ public class MultipleRefiner implements Refiner {
 		//Use the help of the SINGLE refiner to increase the consistency of the alignments
 		for (int i=0; i<afpAlignments.size(); i++){
 			try {
+				order = orderDetector.calculateOrder(afpAlignments.get(i), ca1);
 				afpAlignments.set(i,SingleRefiner.refineSymmetry(afpAlignments.get(i), ca1, ca2, order));
 			} //It means that one of the refined alignments has length 0, so continue without refining
 			catch (Exception ignore){
@@ -92,8 +102,8 @@ public class MultipleRefiner implements Refiner {
 	 */
 	private static AFPChain cycleRefineAFP(List<AFPChain> allAlignments, Atom[] ca1, Atom[] ca2, int order) throws StructureException {
 		
-		//Create the alignment graph and initialize a variable to store the symmetry groups
-		List<List<Integer>> graph = buildAFPgraph(allAlignments, ca1);
+		//Create the undirected alignment graph and initialize a variable to store the symmetry groups
+		List<List<Integer>> graph = SymmetryTools.buildAFPgraph(allAlignments, ca1, true);
 		List<List<Integer>> groups = new ArrayList<List<Integer>>();
 		//Count the number of aligned residues to exclude the intersubunit loops from the interresidue distances
 		int aligned_res = 0;
@@ -251,57 +261,6 @@ public class MultipleRefiner implements Refiner {
 		}
 		
 		return AlignmentTools.replaceOptAln(optAlgn, allAlignments.get(order-2), ca1, ca2);
-	}
-	
-	/**
-	 * Calculates a graph in the format of adjacency list from the set of alignments, where each vertex is a 
-	 * residue and each edge means the connection between the two residues in one of the alignments.
-	 * 
-	 * INPUT: a list of AFP alignments and the Atom[] array.
-	 * OUTPUT: the alignment graph (describing relations between residues). List dimensions: AdjList[vertices][edges]
-	 */
-	public static List<List<Integer>> buildAFPgraph(List<AFPChain> allAlignments, Atom[] ca1) {
-		
-		//Initialize the adjacency list that stores the graph
-		List<List<Integer>> adjList = new ArrayList<List<Integer>>();
-		for (int n=0; n<ca1.length; n++){
-			List<Integer> edges = new ArrayList<Integer>();
-			adjList.add(edges);
-		}
-		
-		for (int k=0; k < allAlignments.size(); k++){
-			if (allAlignments.get(k) != null){
-			for (int i=0; i<allAlignments.get(k).getOptAln().length; i++){
-				for (int j=0; j<allAlignments.get(k).getOptAln()[i][0].length; j++){
-				
-					//The vertex is the residue in the first chain and the edge the one in the second chain
-					int vertex = allAlignments.get(k).getOptAln()[i][0][j];
-					int edge = allAlignments.get(k).getOptAln()[i][1][j];
-					if (!adjList.get(vertex).contains(edge)){
-						adjList.get(vertex).add(edge);
-					}
-					//Make the graph undirected (optional feature)
-					if (!adjList.get(edge).contains(vertex)){
-						adjList.get(edge).add(vertex);
-					}
-				}
-			}
-			}
-		}
-		//Sort the edges in the adjacency list to visit them in increasing order in the DFS
-		int edges = 0;
-		for (List<Integer> v:adjList){
-			edges+=v.size();
-			Collections.sort(v);
-		}
-		if (debug){
-			//Print graph information
-			System.out.println("GRAPH INFORMATION:");
-			System.out.println(" - Vertices: "+adjList.size());
-			System.out.println(" - Edges: "+edges);
-		}
-		
-		return adjList;
 	}
 	
 	/**

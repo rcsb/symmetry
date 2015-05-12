@@ -68,9 +68,7 @@ public class SymmOptimizer {
 	String[] alnSequences;
 	String alnSymbols;
 	
-	public SymmOptimizer() {
-		super();
-	}
+	public SymmOptimizer() {}
 	
 	public AFPChain optimize(AFPChain seedAFP, Atom[] ca1, Atom[] ca2, int order)
 			throws RefinerFailedException,StructureException {

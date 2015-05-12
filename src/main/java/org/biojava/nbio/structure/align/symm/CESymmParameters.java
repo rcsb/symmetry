@@ -2,13 +2,13 @@ package org.biojava.nbio.structure.align.symm;
 
 import java.util.List;
 
-import org.biojava.nbio.structure.align.ce.CeCPMain;
 import org.biojava.nbio.structure.align.ce.CeParameters;
 
 /**
- * Provides parameters to {@link CeCPMain}
+ * Provides parameters to {@link CeSymm}
  * 
  * @author Spencer Bliven
+ * @author Aleix Lafita
  *
  */
 public class CESymmParameters extends CeParameters {
@@ -30,9 +30,10 @@ public class CESymmParameters extends CeParameters {
 		NOT_REFINED,
 		SINGLE,
 		MULTIPLE,
+		NON_CLOSED,
 		SINGLE_OPTIMIZE,
 		MULTIPLE_OPTIMIZE;
-		public static RefineMethod DEFAULT = SINGLE_OPTIMIZE;
+		public static RefineMethod DEFAULT = NOT_REFINED;
 	}
 	
 	public CESymmParameters() {

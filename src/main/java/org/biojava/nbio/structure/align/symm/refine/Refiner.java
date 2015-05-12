@@ -14,11 +14,13 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 public interface Refiner {
 
 	/**
-	 * Returns a refined symmetry alignment, where the subunit residues are aligned consistently.
-	 * @param afpAlignments
-	 * @param ca1
-	 * @param ca2
-	 * @param order
+	 * Returns a refined symmetry alignment, where the subunit residues are aligned consistently and separated
+	 * into the blocks of the AFPChain.
+	 * 
+	 * @param afpAlignments List of returned self-alignments in CeSymm
+	 * @param ca1 coordinates of the structure
+	 * @param ca2 coordinates of the structure
+	 * @param order of symmetry detected by the OrderDetector
 	 * @return AFPChain refined symmetry alignment
 	 * @throws RefinerFailedException
 	 * @throws StructureException

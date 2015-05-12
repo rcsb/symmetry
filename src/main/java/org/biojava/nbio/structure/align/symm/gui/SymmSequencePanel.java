@@ -23,7 +23,6 @@ import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.aligpanel.AFPChainCoordManager;
 import org.biojava.nbio.structure.align.gui.jmol.JmolTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.util.AFPAlignmentDisplay;
 import org.biojava.nbio.structure.gui.events.AlignmentPositionListener;
 import org.biojava.nbio.structure.gui.util.AlignedPosition;
 
@@ -31,7 +30,7 @@ import org.biojava.nbio.structure.gui.util.AlignedPosition;
 /** 
  * A JPanel that can display the subunit colored sequence of a symmetry analzsis in a nice way and interact with Jmol.
  * 
- * @author lafita
+ * @author Aleix Lafita
  *
  */
 public class SymmSequencePanel  extends JPrintPanel implements AlignmentPositionListener, WindowListener{
@@ -74,7 +73,7 @@ public class SymmSequencePanel  extends JPrintPanel implements AlignmentPosition
 
    public void destroy(){
 
-      setAFPChain(null);
+      afpChain = null;;
       mouseMoLi.destroy();	
       jmol = null;
       ca1 = null;
@@ -135,9 +134,10 @@ public void paintComponent(Graphics g){
       }
       
       int colorPos = 0;
-      for ( int i = 0 ; i < afpChain.getAlnLength() ;i++){
+      for ( int i = 0 ; i < afpChain.getOptLength() ;i++){
 
-    	 if (i > boundaries.get(colorPos)) colorPos++;
+    	 int res = afpChain.getOptAln()[0][0][0]+i;
+    	 if (res > boundaries.get(colorPos)) colorPos++;
     	 
          char c = seq[i];
          g2D.setFont(seqFont);
@@ -148,7 +148,7 @@ public void paintComponent(Graphics g){
          
          Color bg = Color.white;
 
-         if (!alignedPos.contains(i)) bg = Color.white;
+         if (!alignedPos.contains(res)) bg = Color.white;
          else bg = subunitColors[colorPos];
             
         // draw a darker background
@@ -201,8 +201,6 @@ public void paintComponent(Graphics g){
             e.printStackTrace();
          }
       }
-
-
    }
 
  

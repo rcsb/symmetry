@@ -77,7 +77,7 @@ public class NonClosedRefiner implements Refiner {
 			if (sizes.get(gorder) == null) sizes.set(gorder,0);
 			else sizes.set(gorder, sizes.get(gorder)+1);
 		}
-		int maxNr = 0;
+		int maxNr = 0; //the number of residues of the subunits
 		for (int s=2; s<sizes.size(); s++){
 			if (sizes.get(s) != 0){
 				if (sizes.get(s) > maxNr){
@@ -89,7 +89,22 @@ public class NonClosedRefiner implements Refiner {
 		
 		//Now create the new AFP alignment from the selected groups
 		List<List<Integer>> subunits = new ArrayList<List<Integer>>();
-		for (List<Integer> g:groups) if (g.size() == order) subunits.add(g); //only consider consistent groups
+		for (List<Integer> g:groups) if (g.size() == order) subunits.add(g); //add the groups with the right order
+		
+		for (List<Integer> g:groups){  //from the groups of higher order take the consistent residues only
+			if (g.size() > order){
+				List<Integer> group = new ArrayList<Integer>();
+				for (int pos=0; pos<g.size() && group.size() < order; pos++){
+					boolean consistent = true;
+					for (List<Integer> sub:subunits){
+						if (sub.get(group.size()) > g.get(pos)) consistent = false;
+						break;
+					}
+					if (consistent) group.add(g.get(pos));
+				}
+				if (group.size()==order) subunits.add(group);
+			}
+		}
 		
 		int[][][] optAln = new int[order][2][subunits.size()];
 		for (int bk=0; bk<order; bk++){
@@ -102,14 +117,15 @@ public class NonClosedRefiner implements Refiner {
 			}
 		}
 		
-		afpChain = AlignmentTools.replaceOptAln(optAln, afpChain, ca1, ca2);
+		//Replace the alignment information without changing the superimposition
+		afpChain = AlignmentTools.replaceOptAln(optAln, afpChain, ca1, ca2, false);
 		
 		return afpChain;
 	}
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "d1dcec3";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A 
+		String name = "3EHQ.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A 
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //Repeats: 1B3U.A

@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Try to identify the possible symmetries and repeats in a structure by running an alignment of the structure
+ * Identify the symmetries in a structure by running an alignment of the structure
  * against itself disabling the diagonal of the identity alignment. Iterating recursively over all results
  * and disabling the diagonal of each previous result can also be done with the current implementation.
  * 
@@ -353,17 +353,19 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		}
 		
 	//STEP 4: symmetry alignment optimization
-		if (params.getRefineMethod() == RefineMethod.MULTIPLE_OPTIMIZE || params.getRefineMethod() == RefineMethod.SINGLE_OPTIMIZE){
-			SymmOptimizer optimizer = new SymmOptimizer();
+		SymmOptimizer optimizer = null;
+		if (params.getRefineMethod() == RefineMethod.MULTIPLE_OPTIMIZE || params.getRefineMethod() == RefineMethod.SINGLE_OPTIMIZE)
+			optimizer = new SymmOptimizer(SymmetryType.CLOSED);
+		else if (params.getRefineMethod() == RefineMethod.NON_CLOSED)
+			optimizer = new SymmOptimizer(SymmetryType.NON_CLOSED);
+		if (optimizer != null){
 			try {
+				order = afpChain.getBlockNum();
 				afpChain = optimizer.optimize(afpChain, ca1, ca2, order);
 			} catch (RefinerFailedException e) {
 				e.printStackTrace();
 			}
 		}
-
-		double tmScore2 = AFPChainScorer.getTMScore(afpChain, ca1, ca2);
-		afpChain.setTMScore(tmScore2);
 
 		return afpChain;
 	}

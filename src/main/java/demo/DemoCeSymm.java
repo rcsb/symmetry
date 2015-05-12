@@ -34,7 +34,7 @@ public class DemoCeSymm {
 		//name = "3C1B.A:,B:,E:,F:,C:,D:,G:,H:"; // nucleosome second axis
 		name = "3F2Q";
 		name = "d1wp5a_"; //special case C6
-		name = "d1rmga_"; //hard cases non-closed: d1rmga_, 1B3U.A
+		name = "1B3U.A"; //hard cases non-closed: d1rmga_, 1B3U.A
 		//name = "1N0R.A";  //Ankyrin: 1N0R.A, 3EHQ.A, 3EU9.A
 		//name = "1xqr.A";  //other repeats: 1xqr.A, 
 

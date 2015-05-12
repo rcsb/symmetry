@@ -76,7 +76,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	      
 	      this.afpChain = afp;
 	      this.ca = ca1;
-	      this.subunitColors = ColorBrewer.Spectral.getColorPalette(afpChain.getBlockNum());
+	      this.subunitColors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
 
 	      frame.addWindowListener(new WindowAdapter()
 	      {

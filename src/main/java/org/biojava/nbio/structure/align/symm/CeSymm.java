@@ -16,12 +16,9 @@ import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.ce.MatrixListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.symm.order.AngleOrderDetector;
-import org.biojava.nbio.structure.align.symm.order.MultiMethodOrderDetector;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
-import org.biojava.nbio.structure.align.symm.order.PeakCountingOrderDetector;
-import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.symm.refine.NonClosedRefiner;
 import org.biojava.nbio.structure.align.symm.refine.SymmOptimizer;
@@ -256,7 +253,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		calculator.addMatrixListener(this);
 		
 		//Set multiple to true if multiple alignments are needed for refinement
-		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE || params.getRefineMethod() == RefineMethod.MULTIPLE_OPTIMIZE);
+		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE);
 	
 	//STEP 1: perform the raw symmetry alignment
 		int i = 0;
@@ -299,24 +296,19 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		//Save the results to the CeSymm member variables
 		afpChain = afpAlignments.get(0);
 		
-	//STEP 2: calculate the order of symmetry / number of internal repeats
+		//Determine the symmetry Type or get the one in params
+		SymmetryType type = params.getSymmetryType();
+		if (type == SymmetryType.AUTO){
+			if (afpChain.getBlockNum() == 1) type = SymmetryType.NON_CLOSED;
+			else type = SymmetryType.CLOSED;
+		}
+		
+	//STEP 2: calculate the order of symmetry for CLOSED symmetry
 		int order = 1;
 		OrderDetector orderDetector = null;
 		switch (params.getOrderDetectorMethod()) {
 		case SEQUENCE_FUNCTION: 
 			orderDetector = new SequenceFunctionOrderDetector(params.getMaxSymmOrder(), 0.4f);
-			break;
-		case MULTI_METHOD:
-			orderDetector = new MultiMethodOrderDetector(100, 1.0); //TODO parameters?
-			break;
-		case ANGLE:
-			orderDetector = new AngleOrderDetector(params.getMaxSymmOrder(), 1.0);
-			break;
-		case PEAK_COUNTING:
-			orderDetector = new PeakCountingOrderDetector(params.getMaxSymmOrder());
-			break;
-		case ROTATION:
-			orderDetector = new RotationOrderDetector(params.getMaxSymmOrder());
 			break;
 		}
 		try {
@@ -329,23 +321,17 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		Refiner refiner = null;
 		switch (params.getRefineMethod()){
 		case MULTIPLE:
-			refiner = new MultipleRefiner(orderDetector);
-			break;
-		case MULTIPLE_OPTIMIZE:
-			refiner = new MultipleRefiner(orderDetector);
+			if (type == SymmetryType.CLOSED) refiner = new MultipleRefiner(orderDetector);
+			else refiner = new NonClosedRefiner();
 			break;
 		case SINGLE:
-			refiner = new SingleRefiner();
-			break;
-		case SINGLE_OPTIMIZE:
-			refiner = new SingleRefiner();
-			break;
-		case NON_CLOSED:
-			refiner = new NonClosedRefiner();
+			if (type == SymmetryType.CLOSED) refiner = new SingleRefiner();
+			else refiner = new NonClosedRefiner();
 			break;
 		case NOT_REFINED:
 			return afpChain;
 		}
+		
 		try {
 			afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
 		} catch (RefinerFailedException e) {
@@ -353,15 +339,11 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		}
 		
 	//STEP 4: symmetry alignment optimization
-		SymmOptimizer optimizer = null;
-		if (params.getRefineMethod() == RefineMethod.MULTIPLE_OPTIMIZE || params.getRefineMethod() == RefineMethod.SINGLE_OPTIMIZE)
-			optimizer = new SymmOptimizer(SymmetryType.CLOSED);
-		else if (params.getRefineMethod() == RefineMethod.NON_CLOSED)
-			optimizer = new SymmOptimizer(SymmetryType.NON_CLOSED);
-		if (optimizer != null){
+		if (params.getOptimization()){
+			SymmOptimizer optimizer = null;
+			optimizer = new SymmOptimizer(type, params.getSeed());
 			try {
-				order = afpChain.getBlockNum();
-				afpChain = optimizer.optimize(afpChain, ca1, ca2, order);
+				afpChain = optimizer.optimize(afpChain, ca1);
 			} catch (RefinerFailedException e) {
 				e.printStackTrace();
 			}

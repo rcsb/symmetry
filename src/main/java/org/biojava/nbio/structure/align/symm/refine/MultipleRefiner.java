@@ -55,15 +55,16 @@ public class MultipleRefiner implements Refiner {
 				continue;
 			}
 		}
-		//return cycleRefineAFP(afpAlignments, ca1, ca2, order);
-		//return maxLengthAFP(afpAlignments);
-		return maxScoreAFP(afpAlignments);
+		//return cycleRefine(afpAlignments, ca1, ca2, order);
+		//return maxLength(afpAlignments);
+		//return maxOrder(afpAlignments);
+		return maxScore(afpAlignments);
 	}
 	
 	/**
 	 *  Returns the alignment with the maximum length of the set of afpAlignments.
 	 */
-	private AFPChain maxLengthAFP(List<AFPChain> afpAlignments) {
+	private AFPChain maxLength(List<AFPChain> afpAlignments) {
 		
 		AFPChain maxAFP = null;
 		for (int i=0; i<afpAlignments.size(); i++){
@@ -76,15 +77,34 @@ public class MultipleRefiner implements Refiner {
 	}
 	
 	/**
-	 *  Returns the alignment with the maximum length of the set of afpAlignments.
+	 *  Returns the alignment with the maximum TM score of the set of afpAlignments.
 	 */
-	private AFPChain maxScoreAFP(List<AFPChain> afpAlignments) {
+	private AFPChain maxScore(List<AFPChain> afpAlignments) {
 		
 		AFPChain maxAFP = null;
 		for (int i=0; i<afpAlignments.size(); i++){
 			if (afpAlignments.get(i)!=null){
 				if (maxAFP==null) maxAFP = afpAlignments.get(i);
 				else if (maxAFP.getTMScore()<afpAlignments.get(i).getTMScore()) maxAFP = afpAlignments.get(i);
+			}
+		}
+		return maxAFP;
+	}
+	
+	/**
+	 *  Returns the signifcant alignment with the maximum order of the set of afpAlignments (and maximum TM score
+	 *  if there are more than one with the same order).
+	 */
+	private AFPChain maxOrder(List<AFPChain> afpAlignments) {
+		
+		AFPChain maxAFP = null;
+		for (int i=0; i<afpAlignments.size(); i++){
+			if (afpAlignments.get(i)!=null){
+				if (maxAFP==null) maxAFP = afpAlignments.get(i);
+				else if (maxAFP.getBlockNum()<afpAlignments.get(i).getBlockNum() && afpAlignments.get(i).getTMScore() > 0.4)
+					maxAFP = afpAlignments.get(i);
+				else if (maxAFP.getBlockNum()==afpAlignments.get(i).getBlockNum())
+					if (maxAFP.getTMScore()<afpAlignments.get(i).getTMScore()) maxAFP = afpAlignments.get(i);
 			}
 		}
 		return maxAFP;
@@ -100,7 +120,7 @@ public class MultipleRefiner implements Refiner {
 	 * ALGORITHM: cycle detection for each residue checking each time that the distance between residues is sufficient
 	 * RUNNING TIME: DFS of depth order, polynomial in length of the protein. No bottleneck.
 	 */
-	private static AFPChain cycleRefineAFP(List<AFPChain> allAlignments, Atom[] ca1, Atom[] ca2, int order) throws StructureException {
+	private static AFPChain cycleRefine(List<AFPChain> allAlignments, Atom[] ca1, Atom[] ca2, int order) throws StructureException {
 		
 		//Create the undirected alignment graph and initialize a variable to store the symmetry groups
 		List<List<Integer>> graph = SymmetryTools.buildAFPgraph(allAlignments, ca1, true);

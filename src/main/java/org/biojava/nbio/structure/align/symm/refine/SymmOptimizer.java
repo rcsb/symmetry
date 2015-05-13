@@ -16,7 +16,7 @@ import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.symm.SymmetryType;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
@@ -35,6 +35,7 @@ public class SymmOptimizer {
 
 	private static final boolean debug = false;
 	private SymmetryType type;
+	Random rnd;
 	
 	//Optimization parameters
 	private static final int Lmin = 4; //Minimum block length of aligned residues
@@ -71,16 +72,18 @@ public class SymmOptimizer {
 	String[] alnSequences;
 	String alnSymbols;
 	
-	public SymmOptimizer(SymmetryType type) {
+	public SymmOptimizer(SymmetryType type, long seed) {
 		this.type = type;
+		rnd = new Random(seed);
 	}
 	
-	public AFPChain optimize(AFPChain seedAFP, Atom[] ca1, Atom[] ca2, int order)
+	public AFPChain optimize(AFPChain seedAFP, Atom[] ca1)
 			throws RefinerFailedException,StructureException {
 		
 		//No multiple alignment can be generated if there is only one subunit.
-		if (order == 1) return seedAFP;
-		if (seedAFP.getBlockNum() == 0) throw new RefinerFailedException("Empty seed alignment");
+		this.order = seedAFP.getBlockNum();
+		if (order == 0) throw new RefinerFailedException("Empty seed alignment");
+		else if (order == 1) return seedAFP;
 		
 		//Set parameters from initial alignment
 		d0 = Math.max(seedAFP.getTotalRmsdOpt()*2,5);
@@ -175,7 +178,6 @@ public class SymmOptimizer {
 		scoreHistory = new ArrayList<Double>();
 		
 		//Initialize a random generator number
-		Random rnd = new Random();
 		int conv = 0;  //Number of steps without an alignment improvement
 		
 		int i = 1;
@@ -274,7 +276,7 @@ public class SymmOptimizer {
 			newAlgn[su][1] = chain2;
 		}
 		
-		afpChain = AlignmentTools.replaceOptAln(newAlgn, afpChain, ca, ca);
+		afpChain = AlignmentTools.replaceOptAln(newAlgn, afpChain, ca, ca, false);
 		updateSeqAln();
 	}
 
@@ -284,8 +286,6 @@ public class SymmOptimizer {
 	 */
 	private boolean shiftRow(){
 		
-		//Initialize a random generator number
-		Random rnd = new Random();
 		boolean moved = false;
 
 		int su = rnd.nextInt(order); //Select randomly the subunit that is going to be shifted
@@ -397,8 +397,6 @@ public class SymmOptimizer {
 	 */
 	private void moveResidue(){
 		
-		//Initialize a random generator number
-		Random rnd = new Random();
 		int su = rnd.nextInt(order);
 		int rl = rnd.nextInt(2);  //Randomly choose to move one residue from the right-end (0) or left-start (1)
 		
@@ -434,8 +432,6 @@ public class SymmOptimizer {
 	 */
 	private boolean expandBlock(){
 		
-		//Initialize a random generator number
-		Random rnd = new Random();
 		boolean moved = false;
 		
 		//If any freePool is empty, the block cannot be expanded (one or more subunits cannot)
@@ -552,9 +548,6 @@ public class SymmOptimizer {
 	private boolean shrinkBlock(){
 		
 		boolean moved = false;
-		
-		//Initialize a random generator number
-		Random rnd = new Random();
 		int rl = rnd.nextInt(2);  //Select between shrink right (0) or left (1)
 		int res = rnd.nextInt(subunitLen); //Residue as a pivot to shrink the subunits
 		
@@ -633,8 +626,6 @@ public class SymmOptimizer {
 		boolean moved = false;
 		if (subunitLen <= Lmin) return moved; //Let split moves everywhere if the subunit is larger than the minimum block size
 		
-		//Initialize a random generator number
-		Random rnd = new Random();
 		int res = rnd.nextInt(subunitLen); //Residue as a pivot to split the subunits
 		
 		for (int su=0; su<order; su++){
@@ -1012,27 +1003,25 @@ public class SymmOptimizer {
 						  };
 		for (String name:names){
 			
-		int order = 2;
+			System.out.println(name);
 			
-		System.out.println(name);
-		
-		AtomCache cache = new AtomCache();
-		Atom[] ca1 = cache.getAtoms(name);
-		Atom[] ca2 = cache.getAtoms(name);
-		
-		CeSymm ceSymm = new CeSymm();
-		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-		params.setRefineMethod(RefineMethod.SINGLE);
-		AFPChain afpChain = ceSymm.align(ca1, ca2);
-		
-		//Force the order of symmetry that we want
-		SymmOptimizer refiner = new SymmOptimizer(SymmetryType.CLOSED);
-		AFPChain refinedAFP = refiner.optimize(afpChain, ca1, ca2, order);
-		
-		afpChain.setName1(name);
-		afpChain.setName2(name);
-		
-		SymmetryJmol jmol = new SymmetryJmol(refinedAFP, ca1);
+			AtomCache cache = new AtomCache();
+			Atom[] ca1 = cache.getAtoms(name);
+			Atom[] ca2 = cache.getAtoms(name);
+			
+			CeSymm ceSymm = new CeSymm();
+			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
+			params.setRefineMethod(RefineMethod.SINGLE);
+			AFPChain afpChain = ceSymm.align(ca1, ca2);
+			
+			//Force the order of symmetry that we want
+			SymmOptimizer refiner = new SymmOptimizer(SymmetryType.CLOSED, 0);
+			AFPChain refinedAFP = refiner.optimize(afpChain, ca1);
+			
+			afpChain.setName1(name);
+			afpChain.setName2(name);
+			
+			SymmetryJmol jmol = new SymmetryJmol(refinedAFP, ca1);
 		}
 		
 		System.out.println("Finished Alaysis!");

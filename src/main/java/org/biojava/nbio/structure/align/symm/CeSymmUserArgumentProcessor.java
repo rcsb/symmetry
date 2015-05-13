@@ -5,27 +5,58 @@ import org.biojava.nbio.structure.align.ce.CeUserArgumentProcessor;
 import org.biojava.nbio.structure.align.ce.StartupParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.OrderDetectorMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 
 public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 	
 	protected static class CeSymmStartupParams extends CeUserArgumentProcessor.CeStartupParams {
 		
 		protected int maxSymmOrder;
+		private SymmetryType symmetryType;
 		protected OrderDetectorMethod orderDetectorMethod;
 		protected RefineMethod refineMethod;
+		private boolean optimization;
+		private long seed; 
 		
 
 		public CeSymmStartupParams() {
 			super();
 			maxSymmOrder = 8;
+			symmetryType = SymmetryType.DEFAULT;
 			orderDetectorMethod = OrderDetectorMethod.DEFAULT;
 			refineMethod = RefineMethod.DEFAULT;
+			optimization = true;
+			seed = 0;
 		}
 
 		public OrderDetectorMethod getOrderDetectorMethod() {
 			return orderDetectorMethod;
 		}
 		
+		public SymmetryType getSymmetryType() {
+			return symmetryType;
+		}
+
+		public void setSymmetryType(SymmetryType symmetryType) {
+			this.symmetryType = symmetryType;
+		}
+
+		public boolean getOptimization() {
+			return optimization;
+		}
+
+		public void setOptimization(boolean optimization) {
+			this.optimization = optimization;
+		}
+
+		public long getSeed() {
+			return seed;
+		}
+
+		public void setSeed(long seed) {
+			this.seed = seed;
+		}
+
 		public void setOrderDetectorMethod(OrderDetectorMethod orderDetectorMethod) {
 			this.orderDetectorMethod = orderDetectorMethod;
 		}
@@ -41,16 +72,18 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		public int getMaxSymmOrder() {
 			return maxSymmOrder;
 		}
-
-		public void setMaxSymmOrder(Integer max) {
-			this.maxSymmOrder = max;
+		
+		public void setMaxSymmOrder(int maxSymmOrder) {
+			this.maxSymmOrder = maxSymmOrder;
 		}
 
 		@Override
 		public String toString() {
 			return "CeSymmStartupParams [maxSymmOrder=" + maxSymmOrder
+					+ ", symmetryType=" + symmetryType
 					+ ", orderDetectorMethod=" + orderDetectorMethod
-					+ ", refineMethod=" + refineMethod + ", getWinSize()="
+					+ ", refineMethod=" + refineMethod + ", optimization="
+					+ optimization + ", seed=" + seed + ", getWinSize()="
 					+ getWinSize() + ", getScoringStrategy()="
 					+ getScoringStrategy() + ", getGapOpen()=" + getGapOpen()
 					+ ", getGapExtension()=" + getGapExtension()
@@ -111,6 +144,9 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		aligParams.setMaxSymmOrder(startParams.getMaxSymmOrder());
 		aligParams.setOrderDetectorMethod(startParams.getOrderDetectorMethod());
 		aligParams.setRefineMethod(startParams.getRefineMethod());
+		aligParams.setSymmetryType(startParams.getSymmetryType());
+		aligParams.setOptimization(startParams.getOptimization());
+		aligParams.setSeed(startParams.getSeed());
 		
 		return aligParams;
 	}

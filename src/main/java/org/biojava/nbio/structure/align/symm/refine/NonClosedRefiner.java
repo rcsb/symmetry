@@ -21,9 +21,6 @@ import org.biojava.nbio.structure.utils.SymmetryTools;
  * The goal is to find the internal repeats without the closed symmetry constraints.
  * The symmetry axis indicates the translation of the subunits in this case.
  * 
- * TODO: non robust to intermediate or terminal loops/non-symmetric domains (see 3EHQ.A)
- * TODO: non robust to changes in direction of the subunits. They have to share translation and rotation (we want that?).
- * 
  * @author Aleix Lafita
  * 
  */
@@ -125,7 +122,7 @@ public class NonClosedRefiner implements Refiner {
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "3EHQ.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A 
+		String name = "4BSZ";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A 
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //Repeats: 1B3U.A
@@ -143,7 +140,7 @@ public class NonClosedRefiner implements Refiner {
 		//Initialize a new CeSymm class and its parameters and a new alignment class
 		CeSymm ceSymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-		params.setRefineMethod(RefineMethod.NON_CLOSED);
+		params.setRefineMethod(RefineMethod.SINGLE);
 		AFPChain afpChain = new AFPChain();
 		
 		//Perform the alignment and store

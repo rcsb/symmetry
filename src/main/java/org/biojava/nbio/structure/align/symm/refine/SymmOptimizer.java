@@ -24,61 +24,67 @@ import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.jama.Matrix;
 
 /**
- * Creates a refined alignment by a Monte Carlo optimization of a subunit multiple alignment.
+ * Optimizes an alignment by a Monte Carlo score optimization of the subunit multiple alignment.
  * 
- * This class pretends to use the CEMC approach for multiple structural alignment of the subunits
- * using the refined pairwise alignment obtained from the align method.
+ * This class pretends to use the same CEMC approach for multiple structural alignment of the subunits
+ * using the refined pairwise alignment.
  * 
  * @author Aleix Lafita
+ * 
  */
 public class SymmOptimizer {
 
-	private static final boolean debug = false;
+	private static final boolean debug = true;  //Prints the optimization moves and saves a file with the history in results
 	private SymmetryType type;
-	Random rnd;
+	private Random rnd;
 	
 	//Optimization parameters
-	private static final int Lmin = 4; //Minimum block length of aligned residues
-	public int iterFactor = 100; //Factor to control the max number of iterations of optimization
-	public double C = 5; //Probability function constant (probability of acceptance for bad moves)
+	private static final int AFPmin = 4; //Minimum block length of aligned residues
+	private static final int Lmin = 8;   //Minimum subunit length
+	private int iterFactor = 100; //Factor to control the max number of iterations of optimization
+	private double C = 5; //Probability function constant (probability of acceptance for bad moves)
 	
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
 	private static final double A = 10.0; //Penalty for alignment distances
-	public double d0; //Maximum distance that is not penalized - chosen from initial alignment RMSD
+	private double d0 = 5; //Maximum distance that is not penalized - chosen from initial alignment RMSD
 	
+	//Alignment Information
 	private AFPChain afpChain;
 	private Atom[] ca;
 	private int order;
-	public int subunitLen;
+	private int subunitLen;
+	
+	//Multiple Alignment Residues
+	private List<ArrayList<Integer>> block;     //List to store the residues aligned, in the block. Dimensions are: [order][subunitLen]
+	private List<ArrayList<Integer>> freePool; 	//List to store the residues not aligned. Dimensions are: [order][residues in the pool]
+	
+	//Score information
+	private double rmsd;     // Average RMSD of all rotation superpositions
+	private double tmScore;  // Average TM-score of all rotation superpositions
+	private double mcScore;  // Optimization score, calculated as the original CEMC algorithm
+	
+	//Superposition information
+	private Matrix rotation;        //The rotation matrix of symmetry
+	private Atom translation;       //The translation of the symmetry
+	private double[] colDistances;  //Stores the average distance of the residues in a column. Length: subunitLen
+	private Matrix distanceMatrix;  //Stores the distance between all the aligned atoms in the subunits
 	
 	//Variables that store the history of the optimization, in order to be able to plot the evolution of the system.
 	private List<Integer> subunitLenHistory;
 	private List<Double> rmsdHistory;
 	private List<Double> scoreHistory;
 	
-	//List to store the residues aligned, in the block. Dimensions are: [order][subunitLen]
-	private List<ArrayList<Integer>> block;
-	//List to store the residues not aligned, that are part of the free pool. Dimensions are: [order][residues in the pool]
-	private List<ArrayList<Integer>> freePool;
-	
-	public double rmsd;     // Average RMSD of all rotation superpositions
-	public double tmScore;  // Average TM-score of all rotation superpositions
-	public double mcScore;  // Optimization score, calculated as the original CEMC algorithm
-	double[] colDistances;  //Stores the average distance of the residues in a column. Length: subunitLen
-	Matrix distanceMatrix;  //Stores the distance between all the atoms in the subunits
-	
-	//Multiple alignment String sequences
-	String[] alnSequences;
-	String alnSymbols;
+	//Multiple alignment String sequences. TODO Consider moving the methods to the new MultipleAlignment DS.
+	private String[] alnSequences;
+	private String alnSymbols;
 	
 	public SymmOptimizer(SymmetryType type, long seed) {
 		this.type = type;
 		rnd = new Random(seed);
 	}
 	
-	public AFPChain optimize(AFPChain seedAFP, Atom[] ca1)
-			throws RefinerFailedException,StructureException {
+	public AFPChain optimize(AFPChain seedAFP, Atom[] ca1) throws RefinerFailedException,StructureException {
 		
 		//No multiple alignment can be generated if there is only one subunit.
 		this.order = seedAFP.getBlockNum();
@@ -88,16 +94,19 @@ public class SymmOptimizer {
 		//Set parameters from initial alignment
 		d0 = Math.max(seedAFP.getTotalRmsdOpt()*2,5);
 		
+		//Initialize the variables with the seed alignment and run the optimization
 		initialize(seedAFP, ca1);
 		optimizeMC(iterFactor*ca.length);
 		
-		/*try {
-			saveHistory("/scratch/mcopt/"+afpChain.getName1()+"_MC.csv");
-			if (debug) System.out.println("Saved history.");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
-		
+		//Save the history to the results folder in the symmetry project
+		if (debug){
+			try {
+				saveHistory("src/main/java/results/SymmOptimizerHistory.csv");
+				System.out.println("Saved optimization history to 'results'.");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		return afpChain;
 	}
 	
@@ -113,7 +122,7 @@ public class SymmOptimizer {
 		block = new ArrayList<ArrayList<Integer>>();
 		freePool = new ArrayList<ArrayList<Integer>>();
 		
-		//Store the residues that have been added either to the block or to the freePool
+		//Store the residues that have been added to the block
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		
 		//Generate the initial state of the system from the aligned blocks of the AFPChain
@@ -141,6 +150,7 @@ public class SymmOptimizer {
 				freePool.get(order-1).add(i);
 			}
 		}
+		
 		//Set the scores and RMSD of the initial state
 		switch (type){
 		case CLOSED: 
@@ -148,15 +158,9 @@ public class SymmOptimizer {
 			break;
 		case NON_CLOSED: 
 			checkOrder();
-			updateFlexibleScore();
+			updateNonClosedScore();
 			break;
-		}
-		
-		/*//Set the constant d0 to control the bad alignment penalty term (A) from the initial state. Now calculate from originalAFP RMSD.
-		calculatePenaltyDistance();
-		//Calculate MCscore again with the new d0 parameter
-		mcScore = scoreFunctionMC(colDistances);*/
-		
+		}		
 	}
 	
 	
@@ -177,12 +181,10 @@ public class SymmOptimizer {
 		rmsdHistory = new ArrayList<Double>();
 		scoreHistory = new ArrayList<Double>();
 		
-		//Initialize a random generator number
 		int conv = 0;  //Number of steps without an alignment improvement
-		
 		int i = 1;
 		
-		while (i<maxIter && conv<(maxIter/10)){
+		while (i<maxIter && conv<(maxIter/20)){
 			
 			moveResidue();  //At the beginning of each iteration move randomly a residue from the freePool
 			
@@ -226,7 +228,7 @@ public class SymmOptimizer {
 				updateClosedScore();
 				break;
 			case NON_CLOSED: 
-				updateFlexibleScore();
+				updateNonClosedScore();
 				break;
 			}
 			
@@ -276,7 +278,13 @@ public class SymmOptimizer {
 			newAlgn[su][1] = chain2;
 		}
 		
+		//Generate the optimized AFPChain to return
 		afpChain = AlignmentTools.replaceOptAln(newAlgn, afpChain, ca, ca, false);
+		afpChain.getBlockRotationMatrix()[0] = rotation;
+		afpChain.getBlockShiftVector()[0] = translation;
+		afpChain.setTMScore(tmScore);
+		afpChain.setTotalRmsdOpt(rmsd);
+		
 		updateSeqAln();
 	}
 
@@ -548,6 +556,8 @@ public class SymmOptimizer {
 	private boolean shrinkBlock(){
 		
 		boolean moved = false;
+		if (subunitLen <= Lmin) return moved; //Do not let shrink moves if the subunit is smaller than the minimum length
+		
 		int rl = rnd.nextInt(2);  //Select between shrink right (0) or left (1)
 		int res = rnd.nextInt(subunitLen); //Residue as a pivot to shrink the subunits
 		
@@ -573,7 +583,7 @@ public class SymmOptimizer {
 				}
 				rightRes++;
 			}
-			if ((rightRes-res) <= Lmin) return moved;  //If the block (consecutive residues) is short don't shrink
+			if ((rightRes-res) <= AFPmin) return moved;  //If the block (consecutive residues) is short don't shrink
 			//Shrink the block and add the residues to the freePool
 			for (int su=0; su<order; su++){
 				Integer residue = block.get(su).get(rightRes-1);
@@ -606,7 +616,7 @@ public class SymmOptimizer {
 				}
 				leftRes--;
 			}
-			if ((res-leftRes) <= Lmin) return moved;  //If the block (consecutive residues) is short don't shrink
+			if ((res-leftRes) <= AFPmin) return moved;  //If the block (consecutive residues) is short don't shrink
 			//Shrink the block and add the residues to the freePool
 			for (int su=0; su<order; su++){
 				Integer residue = block.get(su).get(leftRes+1);
@@ -624,7 +634,7 @@ public class SymmOptimizer {
 	private boolean splitBlock(){
 		
 		boolean moved = false;
-		if (subunitLen <= Lmin) return moved; //Let split moves everywhere if the subunit is larger than the minimum block size
+		if (subunitLen <= Lmin) return moved; //Let split moves everywhere if the subunit is larger than the minimum length
 		
 		int res = rnd.nextInt(subunitLen); //Residue as a pivot to split the subunits
 		
@@ -642,6 +652,7 @@ public class SymmOptimizer {
 	/**
 	 *  Calculates the average RMSD and Score of all subunit superimpositions of the structure, corresponding to the
 	 *  aligned residues in block. It also updates the Monte Carlo score, the optimized value, from the distances matrix.
+	 *  It uses a different transformation for every subunit pair (flexible).
 	 */
 	private void updateFlexibleScore() throws StructureException{
 		
@@ -671,6 +682,63 @@ public class SymmOptimizer {
 		colDistances = distances;
 		
 		//Assign the new values to the member variables
+		rmsd /= total;
+		tmScore /= total;
+		mcScore = scoreFunctionMC(colDistances);
+	}
+	
+	/**
+	 *  Calculates the average RMSD and Score of all subunit superimpositions of the structure, corresponding to the
+	 *  aligned residues in block. It also updates the Monte Carlo score, the optimized value, from the distances matrix.
+	 *  It uses the same transformation for every subunit pair (obtained from the 2-end vs 1-(end-1) superposition, non closed).
+	 */
+	private void updateNonClosedScore() throws StructureException{
+		
+		//Reset values
+		rmsd = 0.0;
+		tmScore = 0.0;
+		mcScore = 0.0;
+		colDistances = new double[subunitLen];
+		
+		//Calculate the aligned atom arrays
+		Atom[] arr1 = new Atom[subunitLen*(order-1)];
+		Atom[] arr2 = new Atom[subunitLen*(order-1)];
+		int pos = 0;
+		for (int j=0; j<(order-1); j++){
+			for (int k=0; k<subunitLen; k++){
+				arr1[pos] = ca[block.get(j).get(k)];
+				arr2[pos] = (Atom) ca[block.get(j+1).get(k)];  //TODO clone necessary?
+				pos++;
+			}
+		}
+		//Calculate the new transformation information
+		SVDSuperimposer svd = new SVDSuperimposer(arr1, arr2);
+		rotation = svd.getRotation();
+		translation = svd.getTranslation();
+		
+		//Construct all possible transformations of the molecule (order)*(order-1)/2
+		for (int i=0; i<order-1; i++){
+			for (int j=i+1; j<order; j++){
+				//Calculate the subunit alignment pairs
+				Atom[] su1 = new Atom[subunitLen];
+				Atom[] su2 = new Atom[subunitLen];
+				for (int k=0; k<subunitLen; k++){
+					su1[k] = (Atom) ca[block.get(i).get(k)].clone();
+					su2[k] = ca[block.get(j).get(k)];
+				}
+				//Rotate atoms of the first subunit (because it is smaller and rotation is made in the forward direction)
+				for (int n=0; n<(j-i); n++) Calc.shift(su1, translation);  //Faster if translation could be multiplied by a number
+				Calc.rotate(su1, rotation.times(j-i));
+				
+				//Update score information and distances
+				rmsd += SVDSuperimposer.getRMS(su1, su2);
+				tmScore += SVDSuperimposer.getTMScore(su1, su2, ca.length, ca.length);
+				for (int k=0; k<subunitLen; k++) colDistances[k] += Math.abs(Calc.getDistance(arr1[k], arr2[k]));
+			}
+		}
+		//Divide the variables for the total number of comparisons to get the average
+		int total = (order)*(order-1)/2;
+		for (int i=0; i<subunitLen; i++) colDistances[i] /= total;
 		rmsd /= total;
 		tmScore /= total;
 		mcScore = scoreFunctionMC(colDistances);
@@ -800,6 +868,7 @@ public class SymmOptimizer {
 		Arrays.fill(rowDistances, 0.0);
 		double avgDist = 0.0;
 		
+		//Calculate the index of the subunit with the maximum distance to the others
 		for (int i=0; i<order; i++){
 			for (int j=0; j<subunitLen; j++){
 				rowDistances[i] += distanceMatrix.get(j, i);
@@ -824,9 +893,8 @@ public class SymmOptimizer {
 			freePool.remove(index);
 			block.remove(index);
 			order -= 1;
-			checkOrder(); //call recursively the method to delete all non-relevant subunits
+			checkOrder(); //call recursively the method to delete all non-relevant subunits (2 is the minimum)
 		}
-		
 	}
 	
 	/**
@@ -1014,7 +1082,6 @@ public class SymmOptimizer {
 			params.setRefineMethod(RefineMethod.SINGLE);
 			AFPChain afpChain = ceSymm.align(ca1, ca2);
 			
-			//Force the order of symmetry that we want
 			SymmOptimizer refiner = new SymmOptimizer(SymmetryType.CLOSED, 0);
 			AFPChain refinedAFP = refiner.optimize(afpChain, ca1);
 			

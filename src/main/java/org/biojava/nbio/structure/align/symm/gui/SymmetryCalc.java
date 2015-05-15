@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 /** Extension from the Biojava class that allows a constructor with one structure only.
  *  
- * @author lafita
+ * @author Aleix Lafita
  */
 
 public class SymmetryCalc implements AlignmentCalculationRunnable {

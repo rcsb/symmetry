@@ -40,7 +40,7 @@ import org.jcolorbrewer.ColorBrewer;
  * It only displays the structure with the colored subunits and rotation axis.
  * Provides links to other Jmol displays (Muliple Alignments) through the menus.
  * 
- * @author lafita
+ * @author Aleix Lafita
  * 
  */
 public class SymmetryJmol extends AbstractAlignmentJmol {

@@ -8,6 +8,8 @@ import java.util.List;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
@@ -40,6 +42,7 @@ public class NonClosedRefiner implements Refiner {
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		
 		//Calculate the connected groups of the alignment graph
+		//TODO now it does not work for close symmetry because it assumes that the residues are connected sequentially
 		List<List<Integer>> groups = new ArrayList<List<Integer>>();
 		for (int i=0; i<graph.size(); i++){
 			if (!alreadySeen.contains(i)){
@@ -74,10 +77,10 @@ public class NonClosedRefiner implements Refiner {
 			int gorder = groups.get(i).size();
 			sizes.set(gorder, sizes.get(gorder)+1);
 		}
-		int maxNr = 0; //the number of residues of the subunits - minimum 8 residues
+		int maxNr = 0; //the number of residues of the subunits - minimum 5 residues
 		for (int s=2; s<sizes.size(); s++){
 			if (sizes.get(s) != 0){
-				if (sizes.get(s) > maxNr || sizes.get(s) >= 8){
+				if (sizes.get(s) > maxNr || sizes.get(s) >= 5){
 					order = s;
 					maxNr = sizes.get(s);
 				}
@@ -89,7 +92,7 @@ public class NonClosedRefiner implements Refiner {
 		for (List<Integer> g:groups) if (g.size() == order) subunits.add(g); //add the groups with the right order
 		
 		//from the groups of higher order take the consistent residues only
-		/*for (List<Integer> g:groups){
+		for (List<Integer> g:groups){
 			if (g.size() > order){
 				List<Integer> group = new ArrayList<Integer>();
 				for (int pos=0; pos<g.size() && group.size() < order; pos++){
@@ -102,7 +105,7 @@ public class NonClosedRefiner implements Refiner {
 				}
 				if (group.size()==order) subunits.add(group);
 			}
-		}*/
+		}
 		
 		int[][][] optAln = new int[order][2][subunits.size()];
 		for (int bk=0; bk<order; bk++){
@@ -123,7 +126,7 @@ public class NonClosedRefiner implements Refiner {
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "3EU9.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
+		String name = "d1dcec3";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //Repeats: 1B3U.A
@@ -144,7 +147,7 @@ public class NonClosedRefiner implements Refiner {
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
 		//params.setOptimization(false);
-		//params.setSymmetryType(SymmetryType.NON_CLOSED);
+		params.setSymmetryType(SymmetryType.NON_CLOSED);
 		AFPChain afpChain = new AFPChain();
 		
 		//Perform the alignment and store
@@ -154,6 +157,7 @@ public class NonClosedRefiner implements Refiner {
 		
 		//Display the AFP alignment of the subunits
 		SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
+		//StructureAlignmentDisplay.display(afpChain, ca1, ca2);
 		jmol.setTitle(name);
 	}
 }

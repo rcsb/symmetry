@@ -45,7 +45,7 @@ public class DemoCeSymm {
 
 		CeSymm ceSymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-		params.setRefineMethod(RefineMethod.NOT_REFINED);
+		params.setRefineMethod(RefineMethod.SINGLE);
 
 		try {
 			ChemCompGroupFactory.setChemCompProvider(new ReducedChemCompProvider());

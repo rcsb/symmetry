@@ -4,7 +4,6 @@ import org.biojava.nbio.structure.*;
 import org.biojava.nbio.structure.align.gui.AlignmentTextPanel;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.jmol.MultipleAlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.model.Block;
@@ -29,9 +28,10 @@ import javax.swing.JMenuBar;
 import javax.swing.JScrollPane;
 
 /**
- * Class pretended to provide the visualizations options for the Symmetry analysis.
+ * Class that provides the visualizations options for the Symmetry analysis: multiple sequence alignments,
+ * multiple structural alignments, sequence panel, etc.
  * 
- * @author lafita
+ * @author Aleix Lafita
  * 
  */
 public class SymmetryDisplay {
@@ -130,7 +130,7 @@ public class SymmetryDisplay {
 		multAln.updateCache(PoseMethod.REFERENCE);
 		
 		//Display the alignment of the subunits
-		MultipleAlignmentJmol jmol = StructureAlignmentDisplay.display(multAln);
+		StructureAlignmentDisplay.display(multAln);
 	}
 	
 	/**
@@ -173,7 +173,7 @@ public class SymmetryDisplay {
 		multAln.updateCache(PoseMethod.REFERENCE);
 		
 		//Display the alignment of the subunits
-		MultipleAlignmentJmol jmol = StructureAlignmentDisplay.display(multAln);
+		StructureAlignmentDisplay.display(multAln);
 	}
 	
 	/**

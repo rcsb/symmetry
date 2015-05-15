@@ -3,7 +3,6 @@ package org.biojava.nbio.structure.align.symm.gui;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.StructureAlignment;
-import org.biojava.nbio.structure.align.StructureAlignmentFactory;
 import org.biojava.nbio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.nbio.structure.align.gui.AlignmentCalculationRunnable;
 import org.biojava.nbio.structure.align.gui.ParameterGUI;
@@ -26,7 +25,7 @@ import java.awt.event.ActionEvent;
  *  A JFrame that allows to trigger a symmetry analysis, either from files in a directory or after manual upload. 
  * 	Adapted from the biojava AlignmentGui class.
  *
- * @author lafita
+ * @author Aleix Lafita
  *
  */
 public class SymmetryGui extends JFrame {

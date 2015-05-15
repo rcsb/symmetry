@@ -19,7 +19,7 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 /**
  *  Create a menu for the Symmetry analysis GUI. Adapted from MenuCreator in biojava.
  *	
- *	@author lafita
+ *	@author Aleix Lafita
  *
  */
 public class SymmetryMenu extends MenuCreator {

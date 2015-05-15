@@ -117,6 +117,8 @@ public class SymmOptimizer {
 		ca = ca1;
 		order = afpChain.getBlockNum();
 		subunitLen = afpChain.getOptLen()[0];
+		rotation = afpChain.getBlockRotationMatrix()[0];
+		translation = afpChain.getBlockShiftVector()[0];
 		
 		//Initialize alignment variables
 		block = new ArrayList<ArrayList<Integer>>();
@@ -158,7 +160,8 @@ public class SymmOptimizer {
 			break;
 		case NON_CLOSED: 
 			checkOrder();
-			updateNonClosedScore();
+			//updateNonClosedScore();
+			updateFlexibleScore();
 			break;
 		}		
 	}
@@ -228,7 +231,8 @@ public class SymmOptimizer {
 				updateClosedScore();
 				break;
 			case NON_CLOSED: 
-				updateNonClosedScore();
+				//updateNonClosedScore();
+				updateFlexibleScore();
 				break;
 			}
 			
@@ -707,7 +711,7 @@ public class SymmOptimizer {
 		for (int j=0; j<(order-1); j++){
 			for (int k=0; k<subunitLen; k++){
 				arr1[pos] = ca[block.get(j).get(k)];
-				arr2[pos] = (Atom) ca[block.get(j+1).get(k)];  //TODO clone necessary?
+				arr2[pos] = ca[block.get(j+1).get(k)];
 				pos++;
 			}
 		}
@@ -880,8 +884,8 @@ public class SymmOptimizer {
 		avgDist -= rowDistances[index];
 		avgDist /= order-1;
 		
-		//Delete the least similar subunit if its distance to the others is 1.5 times the average
-		if (rowDistances[index] > 1.5*avgDist){
+		//Delete the least similar subunit if its distance to the others is 1.5 times the average (and not below 2.25 A)
+		if (rowDistances[index] > 1.5*avgDist && rowDistances[index] > 2.25){
 			freePool.get(index).addAll(block.get(index));
 			if (index == 0) {
 				freePool.get(index+1).addAll(freePool.get(index));

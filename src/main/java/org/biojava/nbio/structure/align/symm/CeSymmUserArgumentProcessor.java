@@ -16,7 +16,7 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		protected OrderDetectorMethod orderDetectorMethod;
 		protected RefineMethod refineMethod;
 		private boolean optimization;
-		private long seed; 
+		private int seed; 
 		
 
 		public CeSymmStartupParams() {
@@ -49,11 +49,11 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 			this.optimization = optimization;
 		}
 
-		public long getSeed() {
+		public int getSeed() {
 			return seed;
 		}
 
-		public void setSeed(long seed) {
+		public void setSeed(int seed) {
 			this.seed = seed;
 		}
 

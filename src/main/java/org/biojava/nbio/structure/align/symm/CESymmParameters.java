@@ -18,7 +18,7 @@ public class CESymmParameters extends CeParameters {
 	private OrderDetectorMethod orderDetectorMethod;
 	private RefineMethod refineMethod;
 	private boolean optimization;  //true means that optimization is performed after refinement
-	private long seed;             //random number generator seed in the Monte Carlo optimization, for reproducibility of results
+	private int seed;             //random number generator seed in the Monte Carlo optimization, for reproducibility of results
 	
 	public static enum OrderDetectorMethod {
 		SEQUENCE_FUNCTION;
@@ -156,7 +156,7 @@ public class CESymmParameters extends CeParameters {
 		params.add("OrderDetectorMethod");
 		params.add("RefineMethod");
 		params.add("Optimization");
-		params.add("RandomSeed");
+		params.add("Seed");
 		return params;
 	}
 
@@ -180,7 +180,7 @@ public class CESymmParameters extends CeParameters {
 		params.add(OrderDetectorMethod.class);
 		params.add(RefineMethod.class);
 		params.add(Boolean.class);
-		params.add(Long.class);
+		params.add(Integer.class);
 		return params;
 	}
 
@@ -210,7 +210,7 @@ public class CESymmParameters extends CeParameters {
 		this.orderDetectorMethod = orderDetectorMethod;
 	}
 	
-	public void setMaxSymmOrder(int maxSymmOrder) {
+	public void setMaxSymmOrder(Integer maxSymmOrder) {
 		this.maxSymmOrder = maxSymmOrder;
 	}
 
@@ -230,15 +230,15 @@ public class CESymmParameters extends CeParameters {
 		return optimization;
 	}
 
-	public void setOptimization(boolean optimization) {
+	public void setOptimization(Boolean optimization) {
 		this.optimization = optimization;
 	}
 
-	public long getSeed() {
+	public int getSeed() {
 		return seed;
 	}
 
-	public void setSeed(long seed) {
+	public void setSeed(Integer seed) {
 		this.seed = seed;
 	}
 	

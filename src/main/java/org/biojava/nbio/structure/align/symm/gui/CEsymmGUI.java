@@ -34,7 +34,6 @@ import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.jcolorbrewer.ColorBrewer;
 
 /**
  * Prompts the user for a structure, then displays the CE-Symm symmetry.

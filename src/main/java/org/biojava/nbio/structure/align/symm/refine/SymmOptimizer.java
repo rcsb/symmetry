@@ -67,7 +67,8 @@ public class SymmOptimizer {
 	//Superposition information
 	private Matrix rotation;        //The rotation matrix of symmetry
 	private Atom translation;       //The translation of the symmetry
-	private double[] colDistances;  //Stores the average distance of the residues in a column. Length: subunitLen
+	private double[] colDistances;  //Stores the average distance of the algined residues in a column. Length: subunitLen
+	private double[] rowDistances;  //Stores the average distance from one subunit to all the others. Similarity measure between subunits.
 	private Matrix distanceMatrix;  //Stores the distance between all the aligned atoms in the subunits
 	
 	//Variables that store the history of the optimization, in order to be able to plot the evolution of the system.
@@ -159,9 +160,9 @@ public class SymmOptimizer {
 			updateClosedScore();
 			break;
 		case NON_CLOSED: 
-			checkOrder();
-			//updateNonClosedScore();
-			updateFlexibleScore();
+			//checkOrder();
+			updateNonClosedScore();
+			//updateFlexibleScore();
 			break;
 		}		
 	}
@@ -231,8 +232,8 @@ public class SymmOptimizer {
 				updateClosedScore();
 				break;
 			case NON_CLOSED: 
-				//updateNonClosedScore();
-				updateFlexibleScore();
+				updateNonClosedScore();
+				//updateFlexibleScore();
 				break;
 			}
 			
@@ -658,6 +659,7 @@ public class SymmOptimizer {
 	 *  aligned residues in block. It also updates the Monte Carlo score, the optimized value, from the distances matrix.
 	 *  It uses a different transformation for every subunit pair (flexible).
 	 */
+	@Deprecated
 	private void updateFlexibleScore() throws StructureException{
 		
 		//The first index is the score and the second the RMSD
@@ -693,7 +695,7 @@ public class SymmOptimizer {
 	
 	/**
 	 *  Calculates the average RMSD and Score of all subunit superimpositions of the structure, corresponding to the
-	 *  aligned residues in block. It also updates the Monte Carlo score, the optimized value, from the distances matrix.
+	 *  aligned residues in block. It also updates the Monte Carlo score, the optimized value, from the distances.
 	 *  It uses the same transformation for every subunit pair (obtained from the 2-end vs 1-(end-1) superposition, non closed).
 	 */
 	private void updateNonClosedScore() throws StructureException{
@@ -703,6 +705,7 @@ public class SymmOptimizer {
 		tmScore = 0.0;
 		mcScore = 0.0;
 		colDistances = new double[subunitLen];
+		rowDistances = new double[order];
 		
 		//Calculate the aligned atom arrays
 		Atom[] arr1 = new Atom[subunitLen*(order-1)];
@@ -711,7 +714,7 @@ public class SymmOptimizer {
 		for (int j=0; j<(order-1); j++){
 			for (int k=0; k<subunitLen; k++){
 				arr1[pos] = ca[block.get(j).get(k)];
-				arr2[pos] = ca[block.get(j+1).get(k)];
+				arr2[pos] = (Atom) ca[block.get(j+1).get(k)].clone();
 				pos++;
 			}
 		}
@@ -720,24 +723,79 @@ public class SymmOptimizer {
 		rotation = svd.getRotation();
 		translation = svd.getTranslation();
 		
-		//Construct all possible transformations of the molecule (order)*(order-1)/2
+		//Construct all possible transformations of the molecule (order-1) and compare pairwise subunits
 		for (int i=0; i<order-1; i++){
-			for (int j=i+1; j<order; j++){
+			//Rotate one more time the atoms of the first alignment array
+			Calc.rotate(arr2, rotation);
+			Calc.shift(arr2, translation);
+			
+			for (int j=0; j<order-1-i; j++){
 				//Calculate the subunit alignment pairs
-				Atom[] su1 = new Atom[subunitLen];
-				Atom[] su2 = new Atom[subunitLen];
-				for (int k=0; k<subunitLen; k++){
-					su1[k] = (Atom) ca[block.get(i).get(k)].clone();
-					su2[k] = ca[block.get(j).get(k)];
-				}
-				//Rotate atoms of the first subunit (because it is smaller and rotation is made in the forward direction)
-				for (int n=0; n<(j-i); n++) Calc.shift(su1, translation);  //Faster if translation could be multiplied by a number
-				Calc.rotate(su1, rotation.times(j-i));
+				Atom[] su1 = Arrays.copyOfRange(arr1,(j)*subunitLen,(j+1)*subunitLen);
+				Atom[] su2 = Arrays.copyOfRange(arr2,(j+i)*subunitLen,(j+i+1)*subunitLen);
 				
 				//Update score information and distances
 				rmsd += SVDSuperimposer.getRMS(su1, su2);
-				tmScore += SVDSuperimposer.getTMScore(su1, su2, ca.length, ca.length);
-				for (int k=0; k<subunitLen; k++) colDistances[k] += Math.abs(Calc.getDistance(arr1[k], arr2[k]));
+				tmScore += SVDSuperimposer.getTMScore(su1, su2, ca.length, ca.length);  //incorrect
+				for (int k=0; k<subunitLen; k++) colDistances[k] += Math.abs(Calc.getDistance(su1[k], su2[k]));
+			}
+		}
+		//Divide the variables for the total number of comparisons to get the average
+		int total = (order)*(order-1)/2;
+		for (int i=0; i<subunitLen; i++) colDistances[i] /= total;
+		rmsd /= total;
+		tmScore /= total;
+		mcScore = scoreFunctionMC(colDistances);
+	}
+	
+	/**
+	 *  Calculates the average RMSD and Score of all subunit superimpositions of the structure rotations, corresponding to the
+	 *  aligned residues in block. It also updates the Monte Carlo score, the optimized value, from the distances.
+	 *  It uses the same transformation for every subunit pair (obtained from the one rotation superposition, closed).
+	 *  
+	 *  The only difference between the closed and non-closed optimization is that the superposition is made with the whole
+	 *  rotation in the closed symmetry, and without the first and last subunits in the non-closed, because they do not align.
+	 */
+	private void updateClosedScore() throws StructureException{
+		
+		//Reset values
+		rmsd = 0.0;
+		tmScore = 0.0;
+		mcScore = 0.0;
+		colDistances = new double[subunitLen];
+		rowDistances = new double[order];
+		
+		//Calculate the aligned atom arrays
+		Atom[] arr1 = new Atom[subunitLen*order];
+		Atom[] arr2 = new Atom[subunitLen*order];
+		int pos = 0;
+		for (int j=0; j<order; j++){
+			for (int k=0; k<subunitLen; k++){
+				arr1[pos] = ca[block.get(j).get(k)];
+				arr2[pos] = (Atom) ca[block.get((j+1)%order).get(k)].clone();
+				pos++;
+			}
+		}
+		//Calculate the new transformation information
+		SVDSuperimposer svd = new SVDSuperimposer(arr1, arr2);
+		rotation = svd.getRotation();
+		translation = svd.getTranslation();
+		
+		//Construct all possible transformations of the molecule (order-1) and compare pairwise subunits
+		for (int i=0; i<order-1; i++){
+			//Rotate one more time the atoms of the first alignment array
+			Calc.rotate(arr2, rotation);
+			Calc.shift(arr2, translation);
+			
+			for (int j=0; j<order-1-i; j++){
+				//Calculate the subunit alignment pairs
+				Atom[] su1 = Arrays.copyOfRange(arr1,(j)*subunitLen,(j+1)*subunitLen);
+				Atom[] su2 = Arrays.copyOfRange(arr2,(j+i)*subunitLen,(j+i+1)*subunitLen);
+				
+				//Update score information and distances
+				rmsd += SVDSuperimposer.getRMS(su1, su2);
+				tmScore += SVDSuperimposer.getTMScore(su1, su2, ca.length, ca.length);  //incorrect
+				for (int k=0; k<subunitLen; k++) colDistances[k] += Math.abs(Calc.getDistance(su1[k], su2[k]));
 			}
 		}
 		//Divide the variables for the total number of comparisons to get the average
@@ -752,7 +810,8 @@ public class SymmOptimizer {
 	 *  Calculates the average RMSD and Score of all possible rotation superimpositions of the molecule, corresponding to the
 	 *  aligned residues in block. It also updates the Monte Carlo score, the optimized value, from the distances matrix.
 	 */
-	private void updateClosedScore() throws StructureException{
+	@Deprecated
+	private void updateClosedScoreOld() throws StructureException{
 		
 		//The first index is the score and the second the RMSD
 		double[] ScoreRMSD = {0.0,0.0};
@@ -784,6 +843,7 @@ public class SymmOptimizer {
 	 *  Raw implementation of the RMSD, TMscore and distances calculation for a better algorithm efficiency.
 	 *  Superimpose flexibly two subunits.
 	 */
+	@Deprecated
 	private void calculateFlexibleScore(int su1, int su2, double[] ScoreRMSD, double[] distances, Matrix table) throws StructureException{
 		
 		Atom[] arr1 = new Atom[subunitLen];
@@ -824,6 +884,7 @@ public class SymmOptimizer {
 	 *  Raw implementation of the RMSD, TMscore and distances calculation for a better algorithm efficiency.
 	 *  Superimpose the original structure with a specified rotation of itself.
 	 */
+	@Deprecated
 	private void calculateClosedScore(int rotation, double[] ScoreRMSD, double[] distances) throws StructureException{
 		
 		Atom[] arr1 = new Atom[subunitLen*order];
@@ -866,10 +927,7 @@ public class SymmOptimizer {
 	 */
 	private void checkOrder() throws StructureException{
 		
-		updateFlexibleScore();
 		int index = 0;
-		double[] rowDistances = new double[order];
-		Arrays.fill(rowDistances, 0.0);
 		double avgDist = 0.0;
 		
 		//Calculate the index of the subunit with the maximum distance to the others
@@ -944,7 +1002,7 @@ public class SymmOptimizer {
 	 *    
 	 *  Set a minimum distance to avoid short refined alignments.
 	 */
-	private void calculatePenaltyDistance(){
+	private void calculatePenaltyDistance() {
 	
 		double[] distances = colDistances.clone();
 		Arrays.sort(distances);
@@ -962,7 +1020,7 @@ public class SymmOptimizer {
 		//Option 3: boundary of top 10%
 		double d3 = distances[index10];
 		
-		d0=Math.max(d1,4);
+		d0=Math.max(d1,5);  //The minimum d0 value is 5A, otherwise the alignment will be too short.
 	}
 	
 	/**

@@ -4,6 +4,7 @@ import org.biojava.nbio.structure.*;
 import org.biojava.nbio.structure.align.gui.AlignmentTextPanel;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.MultipleAlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.model.Block;
@@ -15,6 +16,8 @@ import org.biojava.nbio.structure.align.model.MultipleAlignmentImpl;
 import org.biojava.nbio.structure.align.model.StructureAlignmentException;
 import org.biojava.nbio.structure.align.model.Pose.PoseMethod;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
+import org.biojava.nbio.structure.jama.Matrix;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.io.IOException;
@@ -127,10 +130,46 @@ public class SymmetryDisplay {
 			
 			block.getAlignRes().add(chain);
 		}
-		multAln.updateCache(PoseMethod.REFERENCE);
 		
 		//Display the alignment of the subunits
-		StructureAlignmentDisplay.display(multAln);
+		displayMultipleAlignment(multAln, afpChain.getBlockRotationMatrix()[0], afpChain.getBlockShiftVector()[0]);
+	}
+	
+	/**
+	 * Method that displays a multiple structure alignment of the given alignment.
+	 * @param afpChain AFP alignment with subunits segmented as blocks
+	 * @param rot Matrix of rotation
+	 * @param shift Atom with translation coordinates
+	 * @throws StructureAlignmentException 
+	 * @throws StructureException 
+	 * @throws IOException 
+	 */
+	public static void displayMultipleAlignment(MultipleAlignment multAln, Matrix rot, Atom shift) throws StructureException, StructureAlignmentException, IOException{
+		
+		//Apply the symmetry transformation different number of times
+		int size = multAln.size();
+	   	if (multAln.getAtomArrays() == null) multAln.getParent().updateAtomArrays();
+	   
+		for (int i=0; i<size; i++){
+			if (multAln.getAtomArrays().get(i).length < 1) 
+				throw new StructureException("Length of atoms arrays is too short! " + multAln.getAtomArrays().get(i).length);
+		}
+		
+		List<Atom[]> rotatedAtoms = new ArrayList<Atom[]>();
+		//Rotate the atom coordinates of all the structures
+		for (int i=0; i<size; i++){
+			Structure displayS = multAln.getAtomArrays().get(i)[0].getGroup().getChain().getParent().clone();
+			Atom[] rotCA = StructureTools.getAtomCAArray(displayS);
+			//Rotate the structure the appropiate number of times
+			for (int k=0; k<i; k++){
+				Calc.rotate(displayS, rot);
+				Calc.shift(displayS, shift);
+			}
+			rotatedAtoms.add(rotCA);
+		}
+		MultipleAlignmentJmol jmol = new MultipleAlignmentJmol(multAln, rotatedAtoms);
+		jmol.setTitle(jmol.getStructure().getPDBHeader().getTitle());
+		
 	}
 	
 	/**
@@ -170,10 +209,7 @@ public class SymmetryDisplay {
 				block.getAlignRes().add(chain);
 			}
 		}
-		multAln.updateCache(PoseMethod.REFERENCE);
-		
-		//Display the alignment of the subunits
-		StructureAlignmentDisplay.display(multAln);
+		displayMultipleAlignment(multAln, afpChain.getBlockRotationMatrix()[0], afpChain.getBlockShiftVector()[0]);
 	}
 	
 	/**
@@ -262,7 +298,8 @@ public class SymmetryDisplay {
 		String[] subunits = new String[order];  //the alignment string of every subunit, with its gaps
 		String[] symb = new String[order];   //the string with the alignment information (black if not aligned)
 		for (int i=0; i<order; i++){
-			subunits[i] = "Subunit "+(i+1)+": ";
+			if (i<10) subunits[i] = "Subunit 0"+(i+1)+": ";
+			else subunits[i] = "Subunit "+(i+1)+": ";
 		}
 		Arrays.fill(symb, "           ");
 		

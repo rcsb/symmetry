@@ -77,10 +77,10 @@ public class NonClosedRefiner implements Refiner {
 			int gorder = groups.get(i).size();
 			sizes.set(gorder, sizes.get(gorder)+1);
 		}
-		int maxNr = 0; //the number of residues of the subunits - minimum 5 residues
+		int maxNr = 0; //the number of residues of the subunits - minimum 8 residues
 		for (int s=2; s<sizes.size(); s++){
 			if (sizes.get(s) != 0){
-				if (sizes.get(s) > maxNr || sizes.get(s) >= 5){
+				if (sizes.get(s) > maxNr || sizes.get(s) >= 8){
 					order = s;
 					maxNr = sizes.get(s);
 				}
@@ -91,7 +91,22 @@ public class NonClosedRefiner implements Refiner {
 		List<List<Integer>> subunits = new ArrayList<List<Integer>>();
 		for (List<Integer> g:groups) if (g.size() == order) subunits.add(g); //add the groups with the right order
 		
-		//from the groups of higher order take the consistent residues only
+		//Delete all inconsistent groups in subunits (if they define different subunits)
+		List<Integer> deleteIndices = new ArrayList<Integer>();
+		for (int i=1; i<subunits.size(); i++){
+			for (int j=0; j<subunits.get(i).size()-1; j++){
+				if (subunits.get(i).get(j) > subunits.get(0).get(j+1)){
+					deleteIndices.add(i);
+					break;
+				}
+			}
+		}
+		for (int i=deleteIndices.size()-1; i>=0; i--){
+			int index = deleteIndices.get(i);
+			subunits.remove(index);
+		}
+		
+		//From the groups of higher order take the consistent residues only (the ones that fall inside the subunits) - needs review
 		for (List<Integer> g:groups){
 			if (g.size() > order){
 				List<Integer> group = new ArrayList<Integer>();
@@ -99,9 +114,11 @@ public class NonClosedRefiner implements Refiner {
 					boolean consistent = true;
 					for (List<Integer> sub:subunits){
 						if (sub.get(group.size()) > g.get(pos)) consistent = false;
-						break;
+						if (group.size() < order-1) {
+							if (sub.get(group.size()+1) < g.get(pos)) consistent = false;
+						}
 					}
-					if (consistent) group.add(g.get(pos));
+					if (consistent && group.size()<order) group.add(g.get(pos));
 				}
 				if (group.size()==order) subunits.add(group);
 			}
@@ -126,7 +143,7 @@ public class NonClosedRefiner implements Refiner {
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "d1dcec3";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
+		String name = "1N0R.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //Repeats: 1B3U.A
@@ -157,7 +174,7 @@ public class NonClosedRefiner implements Refiner {
 		
 		//Display the AFP alignment of the subunits
 		SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
-		//StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+		//StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
 		jmol.setTitle(name);
 	}
 }

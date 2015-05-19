@@ -1008,9 +1008,10 @@ public class SymmOptimizer {
 	 *    1- Pick the 90% of the distances range (softer condition, results in longer subunits).
 	 *    2- Pick the average value of the top 10% distances (can be softer than 1 depending on the range scale).
 	 *    3- Pick the value at the boundary of the top 10% distances (hardest condition, restricts the subunits to the core only).
-	 *    4- Pick the double of the highest column distance of the seed alignment (this is the softest condition of all).
+	 *    4- A function of the RMSD of the seed alignment and the order (this is the softest condition of all, but longer subunits are obtained).
+	 *    		Justification: the more subunits the higher the variability between the columns.
 	 *    
-	 *  Set a minimum distance to avoid short refined alignments. The minimum distance chosen is 5A.
+	 *  A minimum distance of 5A is set always to avoid short alignments in the very good symmetric cases.
 	 */
 	private void calculatePenaltyDistance() {
 		
@@ -1031,7 +1032,7 @@ public class SymmOptimizer {
 		double d3 = distances[index10];
 		
 		//Option 4: the highest distance of the seed alignment.
-		double d4 = distances[subunitLen-1]*2;
+		double d4 = rmsd*(0.5*order);
 		
 		d0=Math.max(d4,5);  //The minimum d0 value is 5A
 	}

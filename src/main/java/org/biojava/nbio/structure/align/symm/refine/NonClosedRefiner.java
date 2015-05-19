@@ -77,11 +77,11 @@ public class NonClosedRefiner implements Refiner {
 			int gorder = groups.get(i).size();
 			sizes.set(gorder, sizes.get(gorder)+1);
 		}
-		int maxNr = 0; //the number of residues of the subunits for a given order
+		int maxNr = 0; //the number of residues of the subunits for a given order - minimum of 8
 		for (int s=2; s<sizes.size(); s++){
 			if (sizes.get(s) != 0){
 				//Even if the number of residues is smaller, if the order of symmetry is higher and of sufficient length select that order
-				if (sizes.get(s) > maxNr || (sizes.get(s) > 3 && sizes.get(s) > maxNr/2)) {
+				if (sizes.get(s) > maxNr/2 || sizes.get(s) >= 8) {
 					order = s;
 					maxNr = sizes.get(s);
 				}
@@ -144,7 +144,7 @@ public class NonClosedRefiner implements Refiner {
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "d1wp5a_";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
+		String name = "2bnh.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //Repeats: 1B3U.A

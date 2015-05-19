@@ -24,7 +24,9 @@ import javax.swing.JTextField;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.gui.DisplayAFP;
+import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.jmol.AbstractAlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.JmolPanel;
 import org.biojava.nbio.structure.align.gui.jmol.JmolTools;
@@ -144,7 +146,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 			hBox1.add(new JLabel("Color"));
 			hBox1.add(colors);
 			
-			String[] colorPattelete = new String[] {"Color Set", "Spectral", "Pastel", "Paired", "Reds", "Blues" ,"Greens" , "Oranges"};
+			String[] colorPattelete = new String[] {"Color Set", "Spectral", "2Colors", "3Colors", "Pastel", "Paired", "Reds", "Blues" ,"Greens" , "Oranges"};
 			JComboBox pattelete = new JComboBox(colorPattelete);
 			
 			pattelete.addActionListener(new ActionListener() {
@@ -156,9 +158,12 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 					evalString("save selection; select *; color grey; select ligand; color CPK;");
 					if (value=="Color Set"){
 						subunitColors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
-						
 					} else if (value=="Spectral"){
 						subunitColors = ColorBrewer.Spectral.getColorPalette(afpChain.getBlockNum());
+					} else if (value=="2Colors"){
+						subunitColors = ColorBrewer.Set1.getColorPalette(2);
+					} else if (value=="3Colors"){
+						subunitColors = ColorBrewer.Set1.getColorPalette(3);
 					} else if (value=="Pastel"){
 						subunitColors = ColorBrewer.Pastel1.getColorPalette(afpChain.getBlockNum());
 					} else if (value=="Paired"){
@@ -278,7 +283,17 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		    //TODO The method should only display one sequence and color the subunits, but many problems to adapt
 		    //SymmetryDisplay.showSequenceImage(afpChain, ca, this, subunitColors);
 		    DisplayAFP.showAlignmentImage(afpChain, ca, ca, this);
-		    
+		
+	    } else if (cmd.equals(MenuCreator.FATCAT_TEXT)){
+	          if ( afpChain == null) {
+	             System.err.println("Currently not viewing an alignment!");
+	             return;
+	          }
+	          String result = afpChain.toFatcat(ca, ca);
+	          result += AFPChain.newline;
+	          result += afpChain.toRotMat();
+	          DisplayAFP.showAlignmentImage(afpChain, result);
+	          
 		} else if (cmd.equals(SymmetryMenu.SUBUNIT_DISPLAY)){
 	    	 if ( afpChain == null) {
 	              System.err.println("Currently not viewing a symmetry!");
@@ -369,10 +384,8 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	   
 	   private static void printJmolScript4Block(Atom[] ca, int blockNum,
 				int[] optLen, int[][][] optAln, StringWriter jmol, int bk, Color[] colors) {
-			//the block nr determines the color...
-			 int colorPos = bk;
-			 
-			 Color c1 = colors[colorPos];
+						 
+			 Color c1 = colors[bk%colors.length];
 			 
 			 List<String> pdb1 = new ArrayList<String>();
 			 for ( int i=0;i< optLen[bk];i++) {

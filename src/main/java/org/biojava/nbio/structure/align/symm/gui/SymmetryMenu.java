@@ -13,7 +13,6 @@ import javax.swing.KeyStroke;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.MyAlignmentLoadListener;
 import org.biojava.nbio.structure.align.gui.MyDistMaxListener;
-import org.biojava.nbio.structure.align.gui.MenuCreator.DotPlotListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 
 /**
@@ -26,7 +25,7 @@ public class SymmetryMenu extends MenuCreator {
 	
 	//Menu Options for the Symmetry Display
 	public static final String SEQUENCE_PANEL = "Sequence Panel";
-	public static final String SEQUENCE_ALIGN = "Sequence Alignment";
+	public static final String SEQUENCE_ALIGN = "Multiple Sequence Alignment";
 	public static final String SUBUNIT_DISPLAY = "Subunit Superimposition";
 	public static final String MULTIPLE_STRUCT = "Multiple Structure Alignment";
 	public static final String SYMMETRY = "New Symmetry Analysis";
@@ -94,6 +93,10 @@ public class SymmetryMenu extends MenuCreator {
 			aligpI.setMnemonic(KeyEvent.VK_P);
 			aligpI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, keyMask));
 			view.add(aligpI);
+			
+			JMenuItem textF = MenuCreator.getIcon(parent,FATCAT_TEXT);
+			textF.setMnemonic(KeyEvent.VK_F);
+			view.add(textF);
 		}
 
 		if ( afpChain != null){

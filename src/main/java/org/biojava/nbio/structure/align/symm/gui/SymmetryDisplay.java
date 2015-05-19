@@ -3,7 +3,6 @@ package org.biojava.nbio.structure.align.symm.gui;
 import org.biojava.nbio.structure.*;
 import org.biojava.nbio.structure.align.gui.AlignmentTextPanel;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.MultipleAlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
@@ -14,7 +13,6 @@ import org.biojava.nbio.structure.align.model.BlockSetImpl;
 import org.biojava.nbio.structure.align.model.MultipleAlignment;
 import org.biojava.nbio.structure.align.model.MultipleAlignmentImpl;
 import org.biojava.nbio.structure.align.model.StructureAlignmentException;
-import org.biojava.nbio.structure.align.model.Pose.PoseMethod;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.jama.Matrix;
 

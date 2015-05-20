@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.AbstractStructureAlignment;
@@ -423,7 +422,7 @@ public class CeSymm extends AbstractStructureAlignment implements
 
 		// angle order cutoff
 		RotationAxis rot = new RotationAxis(afpChain);
-		order = rot.guessOrderFromAngle(1.0 * Calc.radiansPerDegree, 8);
+		order = rot.guessOrderFromAngle(Math.PI/180.0, 8);
 		if (order > 1) return true;
 		
 		// asymmetric

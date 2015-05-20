@@ -1,5 +1,6 @@
 package org.biojava.nbio.structure.align.symm.gui;
 
+import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.*;
 import org.biojava.nbio.structure.align.gui.AlignmentTextPanel;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
@@ -164,7 +165,9 @@ public class SymmetryDisplay {
 		}
 		MultipleAlignmentJmol jmol = new MultipleAlignmentJmol(multAln, rotatedAtoms);
 		jmol.setTitle(jmol.getStructure().getPDBHeader().getTitle());
-		
+		//Include the rotation axis also in the multiple alignments
+		RotationAxis axis = new RotationAxis(rot, shift);
+		jmol.evalString(axis.getJmolScript(rotatedAtoms.get(0)));
 	}
 	
 	/**

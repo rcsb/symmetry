@@ -160,9 +160,9 @@ public class NonClosedRefiner implements Refiner {
 		CeSymm ceSymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
-		//params.setOptimization(false);
-		params.setSeed(2);
 		params.setSymmetryType(SymmetryType.NON_CLOSED);
+		params.setOptimization(true);
+		//params.setSeed(2);
 		AFPChain afpChain = new AFPChain();
 		
 		//Perform the alignment and store

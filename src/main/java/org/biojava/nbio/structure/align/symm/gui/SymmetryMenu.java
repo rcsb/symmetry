@@ -24,7 +24,6 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 public class SymmetryMenu extends MenuCreator {
 	
 	//Menu Options for the Symmetry Display
-	public static final String SEQUENCE_PANEL = "Sequence Panel";
 	public static final String SEQUENCE_ALIGN = "Multiple Sequence Alignment";
 	public static final String SUBUNIT_DISPLAY = "Subunit Superimposition";
 	public static final String MULTIPLE_STRUCT = "Multiple Structure Alignment";
@@ -89,7 +88,7 @@ public class SymmetryMenu extends MenuCreator {
 		view.setMnemonic(KeyEvent.VK_V);
 
 		if ( parent != null){
-			JMenuItem aligpI = MenuCreator.getIcon(parent,SEQUENCE_PANEL);
+			JMenuItem aligpI = MenuCreator.getIcon(parent,ALIGNMENT_PANEL);
 			aligpI.setMnemonic(KeyEvent.VK_P);
 			aligpI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, keyMask));
 			view.add(aligpI);

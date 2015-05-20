@@ -86,10 +86,9 @@ public class SymmOptimizer {
 	
 	public AFPChain optimize(AFPChain seedAFP, Atom[] ca1) throws RefinerFailedException,StructureException {
 		
-		//No multiple alignment can be generated if there is only one subunit.
+		//No multiple alignment can be generated if there is only one subunit
 		this.order = seedAFP.getBlockNum();
-		if (order == 0) throw new RefinerFailedException("Empty seed alignment");
-		else if (order == 1) return seedAFP;
+		if (order == 1) return seedAFP;
 		
 		//Initialize the variables with the seed alignment and run the optimization
 		initialize(seedAFP, ca1);
@@ -282,8 +281,8 @@ public class SymmOptimizer {
 			newAlgn[su][1] = chain2;
 		}
 		
-		//Generate the optimized AFPChain to return
-		afpChain = AlignmentTools.replaceOptAln(newAlgn, afpChain, ca, ca, false);
+		//Generate the optimized AFPChain to return - override superimposition information
+		afpChain = AlignmentTools.replaceOptAln(newAlgn, afpChain, ca, ca);
 		afpChain.getBlockRotationMatrix()[0] = rotation;
 		afpChain.getBlockShiftVector()[0] = translation;
 		afpChain.setTMScore(tmScore);
@@ -727,7 +726,7 @@ public class SymmOptimizer {
 			//Rotate one more time the atoms of the first alignment array
 			Calc.rotate(arr2, rotation);
 			Calc.shift(arr2, translation);
-			if (i==0) tmScore += SVDSuperimposer.getTMScore(arr1, arr2, ca.length, ca.length);  //incorrect (include 1 vs end)
+			if (i==0) tmScore += SVDSuperimposer.getTMScore(arr1, arr2, ca.length, ca.length);
 			
 			for (int j=0; j<order-1-i; j++){
 				//Calculate the subunit alignment pairs
@@ -787,10 +786,10 @@ public class SymmOptimizer {
 		
 		//Construct all possible transformations of the molecule (order-1) and compare pairwise subunits
 		for (int i=0; i<order-1; i++){
-			//Rotate one more time the atoms of the first alignment array
+			//Rotate one more time the atoms of the first atom array
 			Calc.rotate(arr2, rotation);
 			Calc.shift(arr2, translation);
-			tmScore += SVDSuperimposer.getTMScore(arr1, arr2, ca.length, ca.length);
+			if (i==0) tmScore += SVDSuperimposer.getTMScore(arr1, arr2, ca.length, ca.length);
 			
 			for (int j=0; j<order-1-i; j++){
 				//Calculate the subunit alignment pairs
@@ -812,7 +811,6 @@ public class SymmOptimizer {
 		for (int i=0; i<subunitLen; i++) colDistances[i] /= total;
 		for (int i=0; i<order; i++) rowDistances[i] /= (order-1)*subunitLen;
 		rmsd /= total;
-		tmScore /= (order-1);
 		mcScore = scoreFunctionMC();
 	}
 	

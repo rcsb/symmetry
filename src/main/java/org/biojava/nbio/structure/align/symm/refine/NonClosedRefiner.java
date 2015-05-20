@@ -77,14 +77,11 @@ public class NonClosedRefiner implements Refiner {
 			int gorder = groups.get(i).size();
 			sizes.set(gorder, sizes.get(gorder)+1);
 		}
-		int maxNr = 0; //the number of residues of the subunits for a given order - minimum of 8
+		int maxNr = 0; //the total number of residues aligned of the subunits - max determines the order
 		for (int s=2; s<sizes.size(); s++){
-			if (sizes.get(s) != 0){
-				//Even if the number of residues is smaller, if the order of symmetry is higher and of sufficient length select that order
-				if (sizes.get(s) > maxNr/2 || sizes.get(s) >= 8) {
-					order = s;
-					maxNr = sizes.get(s);
-				}
+			if (sizes.get(s)*s > maxNr) {
+				order = s;
+				maxNr = sizes.get(s)*s;
 			}
 		}
 		
@@ -137,14 +134,14 @@ public class NonClosedRefiner implements Refiner {
 		}
 		
 		//Replace the alignment information without changing the superimposition
-		afpChain = AlignmentTools.replaceOptAln(optAln, afpChain, ca1, ca2, false);
+		afpChain = AlignmentTools.replaceOptAln(optAln, afpChain, ca1, ca2);
 		
 		return afpChain;
 	}
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "2bnh.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
+		String name = "3EHQ.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //Repeats: 1B3U.A
@@ -166,6 +163,7 @@ public class NonClosedRefiner implements Refiner {
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
 		//params.setOptimization(false);
+		params.setSeed(2);
 		params.setSymmetryType(SymmetryType.NON_CLOSED);
 		AFPChain afpChain = new AFPChain();
 		

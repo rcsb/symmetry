@@ -242,40 +242,6 @@ public class SymmetryDisplay {
 	}
 	
 	/**
-	 * This method is still in development because the sequence panel has still some bugs.
-	 */
-	public static void showSequenceImage(AFPChain afpChain, Atom[] ca1, SymmetryJmol jmol, Color[] subunitColors) {
-
-		SymmSequencePanel me = new SymmSequencePanel();
-		me.setSubunitColors(subunitColors);
-		me.setStructureAlignmentJmol(jmol);
-		me.setCa1(ca1);
-		me.setAFPChain(afpChain);
-
-		JFrame frame = new JFrame();
-
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.setTitle(afpChain.getName1() + " vs. " + afpChain.getName2() + " | " + afpChain.getAlgorithmName() + " V. " + afpChain.getVersion());
-		me.setPreferredSize(new Dimension(me.getCoordManager().getPreferredWidth() , me.getCoordManager().getPreferredHeight()));
-
-		JMenuBar menu = MenuCreator.getAlignmentTextMenu(frame,me,afpChain);
-		frame.setJMenuBar(menu);
-
-		JScrollPane scroll = new JScrollPane(me);
-		scroll.setAutoscrolls(true);
-
-		Box vBox = Box.createVerticalBox();
-		vBox.add(scroll);
-
-		frame.getContentPane().add(vBox);
-
-		frame.pack();
-		frame.setVisible(true);
-		// make sure they get cleaned up correctly:
-		frame.addWindowListener(me);
-	}
-	
-	/**
 	 * 	Method that calculates a multiple alignment of the subunits as a String to be displayed.
 	 */
 	private static String calculateMultipleAln(AFPChain afpChain, Atom[] ca1) {

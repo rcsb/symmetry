@@ -333,7 +333,8 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		}
 		
 		try {
-			afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
+			if (order == 1 && type == SymmetryType.CLOSED) return afpChain;
+			else afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
 		} catch (RefinerFailedException e) {
 			e.printStackTrace();
 		}
@@ -390,7 +391,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 				order = orderDetector.calculateOrder(afpChain, ca1);
 			} catch (OrderDetectionFailedException e) {
 				e.printStackTrace();
-				// try the other method
+				// try another method
 			}
 
 		if (order > 1) return true;

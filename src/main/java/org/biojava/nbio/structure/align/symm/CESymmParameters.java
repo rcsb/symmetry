@@ -29,7 +29,7 @@ public class CESymmParameters extends CeParameters {
 		NOT_REFINED,
 		SINGLE,
 		MULTIPLE;
-		public static RefineMethod DEFAULT = SINGLE;
+		public static RefineMethod DEFAULT = NOT_REFINED;
 	}
 	
 	/**
@@ -55,7 +55,7 @@ public class CESymmParameters extends CeParameters {
 		symmetryType = SymmetryType.DEFAULT;
 		refineMethod = RefineMethod.DEFAULT;
 		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
-		optimization = true;
+		optimization = false;
 		seed = 0;
 	}
 

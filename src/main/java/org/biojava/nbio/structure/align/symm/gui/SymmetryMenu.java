@@ -82,8 +82,15 @@ public class SymmetryMenu extends MenuCreator {
 		JMenuItem exitI = getExitMenuItem();
 		file.add(exitI);
 		menu.add(file);
+		
+		//Alignment tab to connect with regular pairwise alignments
+		JMenu align = new JMenu("Align");
+		align.setMnemonic(KeyEvent.VK_A);
+		JMenuItem pairI = getPairwiseAlignmentMenuItem();
+		align.add(pairI);
+		menu.add(align);
 
-		//ALIGNMENT tab
+		//VIEW tab
 		JMenu view = new JMenu("View");
 		view.setMnemonic(KeyEvent.VK_V);
 

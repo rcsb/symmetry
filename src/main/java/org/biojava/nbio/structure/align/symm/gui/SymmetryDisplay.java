@@ -16,14 +16,11 @@ import org.biojava.nbio.structure.align.model.StructureAlignmentException;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.jama.Matrix;
 
-import java.awt.Color;
-import java.awt.Dimension;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.Box;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JScrollPane;
@@ -157,7 +154,7 @@ public class SymmetryDisplay {
 		//Rotate the atom coordinates of all the structures
 		for (int i=0; i<size; i++){
 			Structure displayS = multAln.getAtomArrays().get(i)[0].getGroup().getChain().getParent().clone();
-			Atom[] rotCA = StructureTools.getAtomCAArray(displayS);
+			Atom[] rotCA = StructureTools.getRepresentativeAtomArray(displayS);
 			//Rotate the structure the appropiate number of times
 			for (int k=0; k<i; k++){
 				Calc.rotate(displayS, rot);

@@ -265,7 +265,7 @@ public class SymmetryDisplay {
 			if (i<10) subunits[i] = "Subunit 0"+(i+1)+": ";
 			else subunits[i] = "Subunit "+(i+1)+": ";
 		}
-		Arrays.fill(symb, "           ");
+		Arrays.fill(symb, "            ");
 		
 		int[] position = new int[order];  //the positions in every subunit
 		int[] next_position = new int[order];
@@ -344,7 +344,7 @@ public class SymmetryDisplay {
 	    }
 		result+="\nMultiple Subunit Alignment for "+afpChain.getName1()+"\nSubunit size: "+subunitSize+"\n\n";
 		for (int j=0; j<order; j++){
-			result+=subunits[j]+"\n";
+			result+=subunits[j]+" "+ca1[groups.get(j).get(subunitSize-1)].getGroup().getResidueNumber().getSeqNum()+":"+ca1[groups.get(j).get(subunitSize-1)].getGroup().getChainId()+"\n";
 			if (j<order-1){
 				result += symb[j]+"\n";
 			}

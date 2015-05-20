@@ -139,10 +139,12 @@ public class NonClosedRefiner implements Refiner {
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "1dfj.I";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
+		String name = "1NFI.E";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A, 1NFI.E
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
-								  //Repeats: 1B3U.A
+								  //HEAT: 1B3U.A
+								  //Ig-repeats: 2rik.A
+								  //hevein: 1k7u.A
 								  //Rossman fold: d1heta2
 								  //benchmark H: d1af0a1, d1dcec3, d1kx9a_, d1l0sa_
 								  //benchmark NIH: d1v0fd2, d2b1ea_

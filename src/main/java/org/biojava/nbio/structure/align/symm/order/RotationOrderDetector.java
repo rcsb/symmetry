@@ -28,7 +28,7 @@ public class RotationOrderDetector implements OrderDetector {
 
 	private int maxOrder;
 
-	public static final double DEFAULT_ANGLE_INCR = 5*Calc.radiansPerDegree;
+	public static final double DEFAULT_ANGLE_INCR = Math.toRadians(5);
 	private double angleIncr = DEFAULT_ANGLE_INCR; // angular resolution
 
 	private RotationOrderMethod method;
@@ -97,7 +97,7 @@ public class RotationOrderDetector implements OrderDetector {
 	 */
 	public static Pair<double[],double[]> sampleRotations(Atom[] ca, RotationAxis axis, double degreesIncrement) throws StructureException {
 		
-		final double angleIncr = degreesIncrement*Calc.radiansPerDegree;
+		final double angleIncr = Math.toRadians(degreesIncrement);
 		final int steps = (int)Math.floor(2*Math.PI/angleIncr);
 
 		double[] angles = new double[steps];

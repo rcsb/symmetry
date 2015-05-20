@@ -44,8 +44,8 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 		
 		try {
 
-			Atom[] ca1 = StructureTools.getAtomCAArray(structure);
-			Atom[] ca2 = StructureTools.getAtomCAArray(structure.clone());
+			Atom[] ca1 = StructureTools.getRepresentativeAtomArray(structure);
+			Atom[] ca2 = StructureTools.getRepresentativeAtomArray(structure.clone());
 
 			//System.out.println("ca1 size:" + ca1.length + " ca2 size: " + ca2.length);
 			AFPChain afpChain = algorithm.align(ca1, ca2);

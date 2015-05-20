@@ -25,10 +25,12 @@ package org.biojava.nbio.structure.align.symm.gui;
 
 import javax.swing.JOptionPane;
 
+import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.ResidueNumber;
 import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -86,8 +88,9 @@ public class CEsymmGUI {
 			else if(pdb.length()==0) continue; // Empty
 			
 			try {
-				ca1 = cache.getAtoms(pdb);
-				ca2 = cache.getAtoms(pdb);
+				Structure structure = cache.getStructure(pdb);
+				ca1 = StructureTools.getRepresentativeAtomArray(structure);
+				ca2 = StructureTools.cloneAtomArray(ca1);
 				caInter = cache.getAtoms(pdb);
 			} catch (Exception e) {
 				String error = e.getMessage();
@@ -116,6 +119,7 @@ public class CEsymmGUI {
 			
 			RotationAxis axis = new RotationAxis(afp);
 			SymmetryJmol jmol = new SymmetryJmol(afp, ca1);
+			jmol.setTitle(cesymm.algorithmName + ": "+pdb);
 			//showCurrentAlig(afp, ca1, ca2);
 			
 			System.out.println("Theta="+axis.getAngle());

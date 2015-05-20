@@ -8,8 +8,6 @@ import java.util.List;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
@@ -141,7 +139,7 @@ public class NonClosedRefiner implements Refiner {
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "3EHQ.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
+		String name = "1dfj.I";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //Repeats: 1B3U.A

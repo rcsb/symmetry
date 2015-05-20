@@ -283,8 +283,8 @@ public class SymmOptimizer {
 		
 		//Generate the optimized AFPChain to return - override superimposition information
 		afpChain = AlignmentTools.replaceOptAln(newAlgn, afpChain, ca, ca);
-		afpChain.getBlockRotationMatrix()[0] = rotation;
-		afpChain.getBlockShiftVector()[0] = translation;
+		Arrays.fill(afpChain.getBlockRotationMatrix(),rotation);
+		Arrays.fill(afpChain.getBlockShiftVector(),translation);
 		afpChain.setTMScore(tmScore);
 		afpChain.setTotalRmsdOpt(rmsd);
 		

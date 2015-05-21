@@ -3,6 +3,11 @@ package org.biojava.nbio.structure.align.symm;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
@@ -341,15 +346,35 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		
 	//STEP 4: symmetry alignment optimization
 		if (params.getOptimization()){
-			SymmOptimizer optimizer = null;
-			optimizer = new SymmOptimizer(type, params.getSeed());
+			//Perform several optimizations in different threads
 			try {
-				afpChain = optimizer.optimize(afpChain, ca1);
+				ExecutorService executor = Executors.newCachedThreadPool();
+				List<Future<AFPChain>> afpFuture = new ArrayList<Future<AFPChain>>();
+				int seed = 0;
+				
+				//Repeat the optimization 10 times in parallel, to obtain a more robust result.
+				for (int rep=0; rep<10; rep++){
+					Callable<AFPChain> worker = new SymmOptimizer(afpChain, ca1, type, seed+i);
+		  			Future<AFPChain> submit = executor.submit(worker);
+		  			afpFuture.add(submit);
+				}
+				
+				//When all the optimizations are finished take the one with the best result (best TM-score)
+				for (int rep=0; rep<afpFuture.size(); rep++){
+					if (afpFuture.get(rep).get().getTMScore() < afpChain.getTMScore()){
+						afpChain = afpFuture.get(rep).get();
+					}
+				}
+				executor.shutdown();
+					
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (ExecutionException e) {
+				e.printStackTrace();
 			} catch (RefinerFailedException e) {
 				e.printStackTrace();
 			}
 		}
-
 		return afpChain;
 	}
 

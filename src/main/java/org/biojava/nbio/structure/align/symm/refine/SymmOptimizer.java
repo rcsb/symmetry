@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
@@ -25,14 +26,14 @@ import org.biojava.nbio.structure.jama.Matrix;
 
 /**
  * Optimizes an alignment by a Monte Carlo score optimization of the subunit multiple alignment.
- * 
+ * Implements Callable in order to parallelize multiple optimizations.
  * This class pretends to use the same CEMC approach for multiple structural alignment of the subunits
  * using the refined pairwise alignment.
  * 
  * @author Aleix Lafita
  * 
  */
-public class SymmOptimizer {
+public class SymmOptimizer implements Callable<AFPChain> {
 
 	private static final boolean debug = false;  //Prints the optimization moves and saves a file with the history in results
 	private SymmetryType type;
@@ -56,8 +57,8 @@ public class SymmOptimizer {
 	private int subunitLen;
 	
 	//Multiple Alignment Residues
-	private List<ArrayList<Integer>> block;     //List to store the residues aligned, in the block. Dimensions are: [order][subunitLen]
-	private List<ArrayList<Integer>> freePool; 	//List to store the residues not aligned. Dimensions are: [order][residues in the pool]
+	private List<List<Integer>> block;     //List to store the residues aligned, in the block. Dimensions are: [order][subunitLen]
+	private List<List<Integer>> freePool; 	//List to store the residues not aligned. Dimensions are: [order][residues in the pool]
 	
 	//Score information
 	private double rmsd;     // Average RMSD of all rotation superpositions
@@ -79,30 +80,35 @@ public class SymmOptimizer {
 	private String[] alnSequences;
 	private String alnSymbols;
 	
-	public SymmOptimizer(SymmetryType type, long seed) {
-		this.type = type;
-		rnd = new Random(seed);
-	}
-	
-	public AFPChain optimize(AFPChain seedAFP, Atom[] ca1) throws RefinerFailedException,StructureException {
+	/**
+	 * Constructor. Initializes all the variables needed for the optimization.
+	 * @param seedAFP AFPChain with the symmetry subunits split in blocks.
+	 * @param ca1
+	 * @param type
+	 * @param seed
+	 * @throws RefinerFailedException 
+	 * @throws StructureException 
+	 */
+	public SymmOptimizer(AFPChain seedAFP, Atom[] ca1, SymmetryType type, long seed) throws RefinerFailedException, StructureException {
 		
 		//No multiple alignment can be generated if there is only one subunit
 		this.order = seedAFP.getBlockNum();
-		if (order == 1) return seedAFP;
+		if (order == 1) throw new RefinerFailedException("Optimization: Non-Symmetric Seed Alignment.");
 		
-		//Initialize the variables with the seed alignment and run the optimization
+		this.type = type;
+		rnd = new Random(seed);
+		
+		//Initialize the variables with the seed alignment
 		initialize(seedAFP, ca1);
+	}
+	
+	@Override
+	public AFPChain call() throws Exception {
+		
 		optimizeMC(iterFactor*ca.length);
 		
 		//Save the history to the results folder in the symmetry project
-		if (debug){
-			try {
-				saveHistory("src/main/java/results/SymmOptimizerHistory.csv");
-				System.out.println("Saved optimization history to 'results'.");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		if (debug) saveHistory("src/main/java/results/SymmOptimizerHistory.csv");
 		return afpChain;
 	}
 	
@@ -117,15 +123,15 @@ public class SymmOptimizer {
 		translation = afpChain.getBlockShiftVector()[0];
 		
 		//Initialize alignment variables
-		block = new ArrayList<ArrayList<Integer>>();
-		freePool = new ArrayList<ArrayList<Integer>>();
+		block = new ArrayList<List<Integer>>();
+		freePool = new ArrayList<List<Integer>>();
 		
 		//Store the residues that have been added to the block
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		
 		//Generate the initial state of the system from the aligned blocks of the AFPChain
 		for (int i=0; i<order; i++){
-			ArrayList<Integer> residues = new ArrayList<Integer>();
+			List<Integer> residues = new ArrayList<Integer>();
 			for (int j=0; j<subunitLen; j++){
 				Integer residue = afpChain.getOptAln()[i][0][j];
 				residues.add(residue);
@@ -175,7 +181,6 @@ public class SymmOptimizer {
 	 *  	4- Shrink Block: move a block column to the freePool.
 	 *  	5- Split and Shrink Block: split a block in the middle and shrink one column.
 	 */
-	@SuppressWarnings("unchecked")
 	private void optimizeMC(int maxIter) throws StructureException{
 		
 		//Initialize the history variables
@@ -191,16 +196,19 @@ public class SymmOptimizer {
 			moveResidue();  //At the beginning of each iteration move randomly a residue from the freePool
 			
 			//Save the state of the system in case the modifications are not favorable
-			List<ArrayList<Integer>> lastBlock = new ArrayList<ArrayList<Integer>>();
-			List<ArrayList<Integer>> lastFreePool = new ArrayList<ArrayList<Integer>>();
+			List<List<Integer>> lastBlock = new ArrayList<List<Integer>>();
+			List<List<Integer>> lastFreePool = new ArrayList<List<Integer>>();
 			for (int k=0; k<order; k++){
-				lastBlock.add((ArrayList<Integer>) block.get(k).clone());
-				lastFreePool.add((ArrayList<Integer>) freePool.get(k).clone());
+				List<Integer> b = new ArrayList<Integer>();
+				List<Integer> p = new ArrayList<Integer>();
+				for (int l=0; l<subunitLen; l++) b.add(block.get(k).get(l));
+				for (int l=0; l<freePool.get(k).size(); l++) p.add(freePool.get(k).get(l));
+				lastBlock.add(b);
+				lastFreePool.add(p);
 			}
 			double lastScore = mcScore;
 			double lastRMSD = rmsd;
 			double lastTMscore = tmScore;
-			double[] lastColDistances = colDistances.clone();
 			
 			
 			boolean moved = false;
@@ -251,7 +259,6 @@ public class SymmOptimizer {
 					mcScore = lastScore;
 					rmsd = lastRMSD;
 					tmScore = lastTMscore;
-					colDistances = lastColDistances;
 					conv ++; //Increment the number of steps without a change in score
 					
 				} else conv = 0;
@@ -1121,7 +1128,7 @@ public class SymmOptimizer {
 	private void saveHistory(String filePath) throws IOException{
 		
 	    FileWriter writer = new FileWriter(filePath);
-	    writer.append("Step,Subunit.Length,RMSD,Score\n");
+	    writer.append("Step,Length,RMSD,Score\n");
 	    
 	    for (int i=0; i<subunitLenHistory.size(); i++){
 	    		writer.append(i*100+","+subunitLenHistory.get(i)+","+rmsdHistory.get(i)+","+scoreHistory.get(i)+"\n");
@@ -1131,7 +1138,7 @@ public class SymmOptimizer {
 	    writer.close();
 	}
 	
-	public static void main(String[] args) throws IOException, StructureException, RefinerFailedException{
+	public static void main(String[] args) throws Exception{
 		
 		//Easy cases: 4i4q, 4dou
 		//Hard cases: d2vdka_,d1n6dd3, d1n7na1
@@ -1141,7 +1148,7 @@ public class SymmOptimizer {
 						  //"d1ffta_", "d1i5pa2", "d1jlya1", "d1lnsa1", "d1r5za_", "d1ttua3", "d1vmob_", "d1wd3a2", "d2hyrb1", //C3
 						  //"d1m1ha1", "d1pexa_", //C4
 						  //"d1vkde_", "d2h2na1", "d2jaja_" //C5
-						  "d1b0ja2"  //C2
+						  "d2jaja_"  //C2
 						  };
 		for (String name:names){
 			
@@ -1157,8 +1164,8 @@ public class SymmOptimizer {
 			params.setOptimization(false);
 			AFPChain afpChain = ceSymm.align(ca1, ca2);
 			
-			SymmOptimizer refiner = new SymmOptimizer(SymmetryType.CLOSED, 0);
-			AFPChain refinedAFP = refiner.optimize(afpChain, ca1);
+			SymmOptimizer optimizer = new SymmOptimizer(afpChain, ca1, SymmetryType.CLOSED, 0);
+			AFPChain refinedAFP = optimizer.call();
 			
 			refinedAFP.setName1(name);
 			refinedAFP.setName2(name);

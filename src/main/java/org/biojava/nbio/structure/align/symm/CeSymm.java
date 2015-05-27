@@ -57,7 +57,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 	private AFPChain afpChain;
 	private List<AFPChain> afpAlignments;
-	private SymmetryType type;
+	public SymmetryType type;
 
 	private Atom[] ca1;
 	private Atom[] ca2;
@@ -357,9 +357,10 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		  			afpFuture.add(submit);
 				}
 				
-				//When all the optimizations are finished take the one with the best result (best TM-score)
+				//When all the optimizations are finished take the one with the best result (best MC-score)
+				afpChain.setAlignScore(0);
 				for (int rep=0; rep<afpFuture.size(); rep++){
-					if (afpFuture.get(rep).get().getTMScore() > afpChain.getTMScore()){
+					if (afpFuture.get(rep).get().getAlignScore() > afpChain.getAlignScore()){
 						afpChain = afpFuture.get(rep).get();
 					}
 				}

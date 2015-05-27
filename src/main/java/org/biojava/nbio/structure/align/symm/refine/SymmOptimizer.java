@@ -294,6 +294,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		Arrays.fill(afpChain.getBlockShiftVector(),translation);
 		afpChain.setTMScore(tmScore);
 		afpChain.setTotalRmsdOpt(rmsd);
+		afpChain.setAlignScore(mcScore);
 		
 		updateSeqAln();
 	}

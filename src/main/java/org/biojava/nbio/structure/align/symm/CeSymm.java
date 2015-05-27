@@ -57,6 +57,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 	private AFPChain afpChain;
 	private List<AFPChain> afpAlignments;
+	private SymmetryType type;
 
 	private Atom[] ca1;
 	private Atom[] ca2;
@@ -76,8 +77,6 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		CeSymmUserArgumentProcessor processor = new CeSymmUserArgumentProcessor(); 
 		processor.process(args);
 	}
-
-
 
 	public static String toDBSearchResult(AFPChain afpChain) {
 		StringBuffer str = new StringBuffer();
@@ -118,7 +117,6 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		Atom[] ca2 = cache.getAtoms(name2);
 
 		return align(ca1, ca2, params);
-
 	}
 
 	private static Matrix align(AFPChain afpChain, Atom[] ca1, Atom[] ca2, CESymmParameters params, 
@@ -302,7 +300,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		afpChain = afpAlignments.get(0);
 		
 		//Determine the symmetry Type or get the one in params
-		SymmetryType type = params.getSymmetryType();
+		type = params.getSymmetryType();
 		if (type == SymmetryType.AUTO){
 			if (afpChain.getBlockNum() == 1) type = SymmetryType.NON_CLOSED;
 			else type = SymmetryType.CLOSED;
@@ -350,18 +348,18 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			try {
 				ExecutorService executor = Executors.newCachedThreadPool();
 				List<Future<AFPChain>> afpFuture = new ArrayList<Future<AFPChain>>();
-				int seed = 0;
+				int seed = params.getSeed();
 				
-				//Repeat the optimization 10 times in parallel, to obtain a more robust result.
-				for (int rep=0; rep<10; rep++){
-					Callable<AFPChain> worker = new SymmOptimizer(afpChain, ca1, type, seed+i);
+				//Repeat the optimization 5 times in parallel, to obtain a more robust result.
+				for (int rep=0; rep<5; rep++){
+					Callable<AFPChain> worker = new SymmOptimizer(afpChain, ca1, type, seed+rep);
 		  			Future<AFPChain> submit = executor.submit(worker);
 		  			afpFuture.add(submit);
 				}
 				
 				//When all the optimizations are finished take the one with the best result (best TM-score)
 				for (int rep=0; rep<afpFuture.size(); rep++){
-					if (afpFuture.get(rep).get().getTMScore() < afpChain.getTMScore()){
+					if (afpFuture.get(rep).get().getTMScore() > afpChain.getTMScore()){
 						afpChain = afpFuture.get(rep).get();
 					}
 				}

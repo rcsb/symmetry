@@ -32,6 +32,7 @@ import org.biojava.nbio.structure.align.gui.jmol.JmolTools;
 import org.biojava.nbio.structure.align.gui.jmol.MyJmolStatusListener;
 import org.biojava.nbio.structure.align.gui.jmol.RasmolCommandListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.model.StructureAlignmentException;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.webstart.AligUIManager;
 import org.jcolorbrewer.ColorBrewer;
@@ -47,7 +48,7 @@ import org.jcolorbrewer.ColorBrewer;
 public class SymmetryJmol extends AbstractAlignmentJmol {
 	   
 	private Color[] subunitColors;
-	AFPChain afpChain;
+	private AFPChain afpChain;
 	private Atom[] ca;
 	
 	/**
@@ -280,7 +281,15 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		       return;
 		    }
 		    //The colors are not the same as in the jmol display, the code can be adapted
-		    DisplayAFP.showAlignmentImage(afpChain, ca, ca, this);
+		    try {
+				DisplayAFP.showAlignmentImage(afpChain, ca, ca, this);
+			} catch (StructureAlignmentException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (StructureException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		
 	    } else if (cmd.equals(MenuCreator.FATCAT_TEXT)){
 	          if ( afpChain == null) {

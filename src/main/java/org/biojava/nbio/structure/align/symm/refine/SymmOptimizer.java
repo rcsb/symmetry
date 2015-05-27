@@ -54,15 +54,15 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	private AFPChain afpChain;
 	private Atom[] ca;
 	private int order;
-	private int subunitLen;
+	public int subunitLen;
 	
 	//Multiple Alignment Residues
 	private List<List<Integer>> block;     //List to store the residues aligned, in the block. Dimensions are: [order][subunitLen]
 	private List<List<Integer>> freePool; 	//List to store the residues not aligned. Dimensions are: [order][residues in the pool]
 	
 	//Score information
-	private double rmsd;     // Average RMSD of all rotation superpositions
-	private double tmScore;  // Average TM-score of all rotation superpositions
+	public double rmsd;     // Average RMSD of all rotation superpositions
+	public double tmScore;  // Average TM-score of all rotation superpositions
 	private double mcScore;  // Optimization score, calculated as the original CEMC algorithm
 	
 	//Superposition information
@@ -1147,9 +1147,9 @@ public class SymmOptimizer implements Callable<AFPChain> {
 						  //"d1k32f2", "d1okca_", "d1q7fa_", "d1qlga_", "d1uyox_", "d1wp5a_", "d1zxua1", "d2agsa2", "d2ivza1", //C6
 						  //"d1ffta_", "d1i5pa2", "d1jlya1", "d1lnsa1", "d1r5za_", "d1ttua3", "d1vmob_", "d1wd3a2", "d2hyrb1", //C3
 						  //"d1m1ha1", "d1pexa_", //C4
-						  //"d1vkde_", "d2h2na1", "d2jaja_" //C5
-						  "d2jaja_"  //C2
-						  };
+						  //"d1vkde_", "d2h2na1", "d2jaja_", //C5
+						  "4i4q"};
+		
 		for (String name:names){
 			
 			System.out.println(name);
@@ -1161,16 +1161,13 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			CeSymm ceSymm = new CeSymm();
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 			params.setRefineMethod(RefineMethod.SINGLE);
-			params.setOptimization(false);
+			params.setOptimization(true);
+			
 			AFPChain afpChain = ceSymm.align(ca1, ca2);
+			afpChain.setName1(name);
+			afpChain.setName2(name);
 			
-			SymmOptimizer optimizer = new SymmOptimizer(afpChain, ca1, SymmetryType.CLOSED, 0);
-			AFPChain refinedAFP = optimizer.call();
-			
-			refinedAFP.setName1(name);
-			refinedAFP.setName2(name);
-			
-			new SymmetryJmol(refinedAFP, ca1);
+			new SymmetryJmol(afpChain, ca1);
 		}
 		
 		System.out.println("Finished Alaysis!");

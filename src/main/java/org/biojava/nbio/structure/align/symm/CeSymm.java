@@ -351,7 +351,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 				int seed = params.getSeed();
 				
 				//Repeat the optimization 5 times in parallel, to obtain a more robust result.
-				for (int rep=0; rep<5; rep++){
+				for (int rep=0; rep<10; rep++){
 					Callable<AFPChain> worker = new SymmOptimizer(afpChain, ca1, type, seed+rep);
 		  			Future<AFPChain> submit = executor.submit(worker);
 		  			afpFuture.add(submit);
@@ -430,6 +430,6 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	}
 	
 	public boolean isSignificant() throws StructureException {
-		return CeSymm.isSignificant(this.afpChain,this.ca1);
+		return isSignificant(this.afpChain,this.ca1);
 	}
 }

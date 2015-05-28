@@ -40,7 +40,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	private Random rnd;
 	
 	//Optimization parameters
-	private static final int AFPmin = 4; //Minimum block length of aligned residues
+	//private static final int AFPmin = 4; //Minimum block length of aligned residues
 	private static final int Lmin = 8;   //Minimum subunit length
 	private int iterFactor = 100; //Factor to control the max number of iterations of optimization
 	private double C = 5; //Probability function constant (probability of acceptance for bad moves)
@@ -48,7 +48,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
 	private static final double A = 10.0; //Penalty for alignment distances
-	private double d0 = 5; //Maximum distance that is not penalized - chosen from initial alignment RMSD
+	private double d0 = 5; //Maximum distance that is not penalized - chosen from seed alignment
 	
 	//Alignment Information
 	private AFPChain afpChain;
@@ -413,7 +413,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	/**
 	 *  Move all the block residues of all subunits one position to the left or right and move the corresponding
 	 *  boundary residues from the freePool to the block, and viceversa. Extension of the shift method to allow
-	 *  shifting the whole alignment block (because shifting one at a time can be very unfavorable).
+	 *  shifting all rows (because shifting one at a time can be very unfavorable).
 	 */
 	private boolean shiftAll(){
 		
@@ -708,7 +708,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 				}
 				rightRes++;
 			}
-			if ((rightRes-res) <= AFPmin) return moved;  //If the block (consecutive residues) is short don't shrink
+			//if ((rightRes-res) <= AFPmin) return moved;  //If the block (consecutive residues) is short don't shrink
 			//Shrink the block and add the residues to the freePool
 			for (int su=0; su<order; su++){
 				Integer residue = block.get(su).get(rightRes-1);
@@ -741,7 +741,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 				}
 				leftRes--;
 			}
-			if ((res-leftRes) <= AFPmin) return moved;  //If the block (consecutive residues) is short don't shrink
+			//if ((res-leftRes) <= AFPmin) return moved;  //If the block (consecutive residues) is short don't shrink
 			//Shrink the block and add the residues to the freePool
 			for (int su=0; su<order; su++){
 				Integer residue = block.get(su).get(leftRes+1);
@@ -1263,7 +1263,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 						  //"d1ffta_", "d1i5pa2", "d1jlya1", "d1lnsa1", "d1r5za_", "d1ttua3", "d1vmob_", "d1wd3a2", "d2hyrb1", //C3
 						  //"d1m1ha1", "d1pexa_", //C4
 						  //"d1vkde_", "d2h2na1", "d2jaja_", //C5
-						  "4dou"};
+						  "d1ffta_"};
 		
 		for (String name:names){
 			

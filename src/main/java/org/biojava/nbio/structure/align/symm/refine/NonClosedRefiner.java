@@ -40,7 +40,7 @@ public class NonClosedRefiner implements Refiner {
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		
 		//Calculate the connected groups of the alignment graph
-		//TODO now it does not work for close symmetry because it assumes that the residues are connected sequentially
+		//TODO it does not work for close symmetry because it assumes that the residues are connected sequentially (no CP)
 		List<List<Integer>> groups = new ArrayList<List<Integer>>();
 		for (int i=0; i<graph.size(); i++){
 			if (!alreadySeen.contains(i)){
@@ -139,7 +139,7 @@ public class NonClosedRefiner implements Refiner {
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "1N0R.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A, 1NFI.E
+		String name = "1NFI.E";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A, 1NFI.E
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //HEAT: 1B3U.A

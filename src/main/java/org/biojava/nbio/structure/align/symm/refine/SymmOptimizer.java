@@ -35,7 +35,7 @@ import org.biojava.nbio.structure.jama.Matrix;
  */
 public class SymmOptimizer implements Callable<AFPChain> {
 
-	private static final boolean debug = false;  //Prints the optimization moves and saves a file with the history in results
+	private static final boolean debug = true;  //Prints the optimization moves and saves a file with the history in results
 	private SymmetryType type;
 	private Random rnd;
 	
@@ -210,12 +210,11 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			double lastRMSD = rmsd;
 			double lastTMscore = tmScore;
 			
-			
 			boolean moved = false;
 			
 			while (!moved){
 				//Randomly select one of the steps to modify the alignment
-				int move = rnd.nextInt(4);
+				int move = rnd.nextInt(5);
 				switch (move){
 				case 0: moved = shiftRow();
 						if (debug) System.out.println("did shift");
@@ -228,6 +227,9 @@ public class SymmOptimizer implements Callable<AFPChain> {
 						break;
 				case 3: moved = splitBlock();
 						if (debug) System.out.println("did split");
+						break;
+				case 4: moved = shiftAll();
+						if (debug) System.out.println("did shift all");
 						break;
 				}
 			}
@@ -404,6 +406,118 @@ public class SymmOptimizer implements Callable<AFPChain> {
 				moved = true;
 			}
 			break;
+		}
+		return moved;
+	}
+	
+	/**
+	 *  Move all the block residues of all subunits one position to the left or right and move the corresponding
+	 *  boundary residues from the freePool to the block, and viceversa. Extension of the shift method to allow
+	 *  shifting the whole alignment block (because shifting one at a time can be very unfavorable).
+	 */
+	private boolean shiftAll(){
+		
+		boolean moved = false;
+		int rl = rnd.nextInt(2);  //Select between moving right (0) or left (1)
+		int res = rnd.nextInt(subunitLen); //Residue as a pivot to make the shift
+
+		//Loop through all the subunits to shift them all
+		for (int su=0; su<order; su++){
+			
+			if (freePool.get(su).size()==0) return moved;  //If the freePool is empty the subunit cannot be shifted
+			
+			switch(rl){
+			case 0: //Move to the right
+				//Check that there is at least one residue in the freePool to the left (smaller) than the pivot
+				if (freePool.get(su).get(0)<block.get(su).get(res)){
+					
+					int leftGap = res-1;  //Find the nearest gap to the left of the res
+					for (int i = res; i>=0; i--){
+						if(leftGap < 0){
+							break;
+						} else if (block.get(su).get(i) > block.get(su).get(leftGap)+1){
+							break;
+						}
+						leftGap--;
+					}
+					
+					int rightGap = res+1;  //Find the nearest gap to the right of the res
+					for (int i = res; i<=subunitLen; i++){
+						if(rightGap == subunitLen){
+							break;
+						} else if (block.get(su).get(i)+1 < block.get(su).get(rightGap)){
+							break;
+						}
+						rightGap++;
+					}
+					
+					//Move the residue at the left of the block from the freePool to the block
+					Integer residue = block.get(su).get(leftGap+1)-1;
+					block.get(su).add(leftGap+1,residue);
+					freePool.get(su).remove(residue);
+					
+					//Move the residue at the right of the block to the freePool
+					if (rightGap == subunitLen){
+						freePool.get(su).add(block.get(su).get(rightGap));
+						block.get(su).remove(rightGap);
+					}
+					else{
+						freePool.get(su).add(block.get(su).get(rightGap+1));
+						block.get(su).remove(rightGap+1);
+					}
+					Collections.sort(freePool.get(su));
+					
+					moved = true;
+				}
+				break;
+				
+			case 1: //Move to the left
+				//Check that there is at least one residue in the freePool to the right (bigger) than the pivot
+				if (freePool.get(su).get(freePool.get(su).size()-1)>block.get(su).get(res)){
+					
+					int leftGap = res-1;  //Find the nearest gap to the left of the res
+					for (int i = res; i>=0; i--){
+						if(leftGap <= 0){
+							leftGap = 0;
+							break;
+						} else if (block.get(su).get(i) > block.get(su).get(leftGap)+1){
+							leftGap++;
+							break;
+						}
+						leftGap--;
+					}
+					
+					int rightGap = res+1;  //Find the nearest gap to the right of the res
+					for (int i = res; i<=subunitLen; i++){
+						if(rightGap >= subunitLen){
+							rightGap = subunitLen;
+							break;
+						} else if (block.get(su).get(i)+1 < block.get(su).get(rightGap)){
+							break;
+						}
+						rightGap++;
+					}
+					
+					//Move the residue at the right of the block from the freePool to the block
+					Integer residue = block.get(su).get(rightGap-1)+1;
+					if (rightGap == subunitLen){
+						block.get(su).add(residue);
+						freePool.get(su).remove(residue);
+					}
+					else {
+						block.get(su).add(rightGap,residue);
+						freePool.get(su).remove(residue);
+					}
+					
+					//Move the residue at the left of the block to the freePool
+					freePool.get(su).add(block.get(su).get(leftGap));
+					Collections.sort(freePool.get(su));
+					block.get(su).remove(leftGap);
+					
+					moved = true;
+				}
+				break;
+			}
 		}
 		return moved;
 	}
@@ -1126,7 +1240,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	/**
 	 * Save the evolution of the optimization process as a csv file.
 	 */
-	private void saveHistory(String filePath) throws IOException{
+	private void saveHistory(String filePath) throws IOException {
 		
 	    FileWriter writer = new FileWriter(filePath);
 	    writer.append("Step,Length,RMSD,Score\n");
@@ -1149,7 +1263,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 						  //"d1ffta_", "d1i5pa2", "d1jlya1", "d1lnsa1", "d1r5za_", "d1ttua3", "d1vmob_", "d1wd3a2", "d2hyrb1", //C3
 						  //"d1m1ha1", "d1pexa_", //C4
 						  //"d1vkde_", "d2h2na1", "d2jaja_", //C5
-						  "4i4q"};
+						  "4dou"};
 		
 		for (String name:names){
 			

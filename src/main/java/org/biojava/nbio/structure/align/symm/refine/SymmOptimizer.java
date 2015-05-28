@@ -162,7 +162,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			calculatePenaltyDistance();
 			updateClosedScore();
 			break;
-		case NON_CLOSED:
+		case OPEN:
 			//checkOrder();
 			updateNonClosedScore();
 			calculatePenaltyDistance();
@@ -239,7 +239,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			case CLOSED: 
 				updateClosedScore();
 				break;
-			case NON_CLOSED: 
+			case OPEN: 
 				updateNonClosedScore();
 				//updateFlexibleScore();
 				break;
@@ -1263,7 +1263,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 						  //"d1ffta_", "d1i5pa2", "d1jlya1", "d1lnsa1", "d1r5za_", "d1ttua3", "d1vmob_", "d1wd3a2", "d2hyrb1", //C3
 						  //"d1m1ha1", "d1pexa_", //C4
 						  //"d1vkde_", "d2h2na1", "d2jaja_", //C5
-						  "d1ffta_"};
+						  "d1nf4a_"};
 		
 		for (String name:names){
 			
@@ -1275,6 +1275,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			
 			CeSymm ceSymm = new CeSymm();
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
+			params.setSymmetryType(SymmetryType.CLOSED);
 			params.setRefineMethod(RefineMethod.SINGLE);
 			params.setOptimization(true);
 			

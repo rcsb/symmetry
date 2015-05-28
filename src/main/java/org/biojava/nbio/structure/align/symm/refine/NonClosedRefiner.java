@@ -139,7 +139,7 @@ public class NonClosedRefiner implements Refiner {
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "1N0R.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A, 1NFI.E
+		String name = "d2biba1";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A, 1NFI.E
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //HEAT: 1B3U.A
@@ -152,6 +152,7 @@ public class NonClosedRefiner implements Refiner {
 								  //benchmark R: d1blxb_, d1rmga_, d3bsda_
 								  //benchmark C6: d1wp5a_
 								  //TIM barrel duplication and twist: 1pii
+								  //beta-hairpin: d2biba1
 
 		AtomCache cache = new AtomCache();
 
@@ -163,7 +164,7 @@ public class NonClosedRefiner implements Refiner {
 		CeSymm ceSymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
-		params.setSymmetryType(SymmetryType.NON_CLOSED);
+		params.setSymmetryType(SymmetryType.OPEN);
 		params.setOptimization(true);
 		//params.setSeed(2);
 		AFPChain afpChain = new AFPChain();

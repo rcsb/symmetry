@@ -44,7 +44,7 @@ public class CESymmParameters extends CeParameters {
 	 */
 	public enum SymmetryType {
 		CLOSED,
-		NON_CLOSED,
+		OPEN,
 		AUTO;
 		public static SymmetryType DEFAULT = AUTO;
 	}

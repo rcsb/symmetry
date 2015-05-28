@@ -302,7 +302,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		//Determine the symmetry Type or get the one in params
 		type = params.getSymmetryType();
 		if (type == SymmetryType.AUTO){
-			if (afpChain.getBlockNum() == 1) type = SymmetryType.NON_CLOSED;
+			if (afpChain.getBlockNum() == 1) type = SymmetryType.OPEN;
 			else type = SymmetryType.CLOSED;
 		}
 		

@@ -18,16 +18,16 @@ import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
- * Creates a non-closed symmetry refined alignment with the self-alignments obtained from CeSymm.
+ * Creates an open symmetry refined alignment with the self-alignments obtained from CeSymm.
  * The goal is to find the internal repeats without the closed symmetry constraints.
- * The symmetry axis indicates the translation of the subunits in this case.
+ * The symmetry axis indicates also the translation of the subunits in this case.
  * 
  * @author Aleix Lafita
  * 
  */
-public class NonClosedRefiner implements Refiner {
+public class OpenRefiner implements Refiner {
 
-	public NonClosedRefiner() {
+	public OpenRefiner() {
 		super();
 	}
 	

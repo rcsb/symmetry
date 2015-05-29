@@ -25,7 +25,7 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
-import org.biojava.nbio.structure.align.symm.refine.NonClosedRefiner;
+import org.biojava.nbio.structure.align.symm.refine.OpenRefiner;
 import org.biojava.nbio.structure.align.symm.refine.SymmOptimizer;
 import org.biojava.nbio.structure.align.symm.refine.MultipleRefiner;
 import org.biojava.nbio.structure.align.symm.refine.Refiner;
@@ -325,11 +325,11 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		switch (params.getRefineMethod()){
 		case MULTIPLE:
 			if (type == SymmetryType.CLOSED) refiner = new MultipleRefiner(orderDetector);
-			else refiner = new NonClosedRefiner();
+			else refiner = new OpenRefiner();
 			break;
 		case SINGLE:
 			if (type == SymmetryType.CLOSED) refiner = new SingleRefiner();
-			else refiner = new NonClosedRefiner();
+			else refiner = new OpenRefiner();
 			break;
 		case NOT_REFINED:
 			return afpChain;

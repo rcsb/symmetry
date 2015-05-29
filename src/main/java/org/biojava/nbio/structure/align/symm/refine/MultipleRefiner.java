@@ -29,7 +29,7 @@ import org.biojava.nbio.structure.utils.SymmetryTools;
 public class MultipleRefiner implements Refiner {
 	
 	private static final boolean debug = false;
-	OrderDetector orderDetector;
+	private OrderDetector orderDetector;
 
 	/**
 	 * The class needs an orderDetector because the order might differ among the alignments.
@@ -56,9 +56,7 @@ public class MultipleRefiner implements Refiner {
 			}
 		}
 		//return cycleRefine(afpAlignments, ca1, ca2, order);
-		//return maxLength(afpAlignments);
-		//return maxOrder(afpAlignments);
-		return maxScore(afpAlignments);
+		return maxOrder(afpAlignments);
 	}
 	
 	/**
@@ -101,7 +99,7 @@ public class MultipleRefiner implements Refiner {
 		for (int i=0; i<afpAlignments.size(); i++){
 			if (afpAlignments.get(i)!=null){
 				if (maxAFP==null) maxAFP = afpAlignments.get(i);
-				else if (maxAFP.getBlockNum()<afpAlignments.get(i).getBlockNum() && afpAlignments.get(i).getTMScore() > 0.4)
+				else if (maxAFP.getBlockNum()<afpAlignments.get(i).getBlockNum() && afpAlignments.get(i).getTMScore() > CeSymm.symmetryThreshold-0.1)
 					maxAFP = afpAlignments.get(i);
 				else if (maxAFP.getBlockNum()==afpAlignments.get(i).getBlockNum())
 					if (maxAFP.getTMScore()<afpAlignments.get(i).getTMScore()) maxAFP = afpAlignments.get(i);
@@ -350,7 +348,7 @@ public class MultipleRefiner implements Refiner {
 		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN¨, "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ"}; //Correct ones
 		//String[] names = {"1VYM"}
 		//String[] names = {"d1poqa_", "1itb.A", "3jut.A", "2jaj.A", "d1jlya1" ,"1hiv"}; //New structures to test
-		String[] names = {"2i5i.a"};
+		String[] names = {"1vzw"};
 		
 		for (int i=0; i<names.length; i++){
 			
@@ -369,6 +367,7 @@ public class MultipleRefiner implements Refiner {
 			CeSymm ceSymm = new CeSymm();
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 			params.setRefineMethod(RefineMethod.MULTIPLE);
+			params.setOptimization(true);
 			AFPChain afpChain = new AFPChain();
 			
 			//Perform the alignment and store
@@ -379,6 +378,7 @@ public class MultipleRefiner implements Refiner {
 				
 			//Display the AFP alignment of the subunits
 			SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
+			jmol.setTitle(name);
 		}
 	}
 }

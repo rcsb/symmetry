@@ -35,7 +35,7 @@ import org.biojava.nbio.structure.jama.Matrix;
  */
 public class SymmOptimizer implements Callable<AFPChain> {
 
-	private static final boolean debug = false;  //Prints the optimization moves and saves a file with the history in results
+	private static final boolean debug = true;  //Prints the optimization moves and saves a file with the history in results
 	private SymmetryType type;
 	private Random rnd;
 	
@@ -43,7 +43,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	//private static final int AFPmin = 4; //Minimum block length of aligned residues
 	private static final int Lmin = 8;   //Minimum subunit length
 	private int iterFactor = 100; //Factor to control the max number of iterations of optimization
-	private double C = 5; //Probability function constant (probability of acceptance for bad moves)
+	private double C = 20; //Probability function constant (probability of acceptance for bad moves)
 	
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
@@ -164,9 +164,9 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			break;
 		case OPEN:
 			//checkOrder();
-			updateNonClosedScore();
+			updateOpenScore();
 			calculatePenaltyDistance();
-			updateNonClosedScore();
+			updateOpenScore();
 			break;
 		}		
 	}
@@ -240,7 +240,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 				updateClosedScore();
 				break;
 			case OPEN: 
-				updateNonClosedScore();
+				updateOpenScore();
 				//updateFlexibleScore();
 				break;
 			}
@@ -810,15 +810,15 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		//Assign the new values to the member variables
 		rmsd /= total;
 		tmScore /= total;
-		mcScore = scoreFunctionMC();
+		mcScore = scoreFunctionCEMC();
 	}
 	
 	/**
 	 *  Calculates the average RMSD and Score of all subunit superimpositions of the structure, corresponding to the
 	 *  aligned residues in block. It also updates the Monte Carlo score, the optimized value, from the distances.
-	 *  It uses the same transformation for every subunit pair (obtained from the 2-end vs 1-(end-1) superposition, non closed).
+	 *  It uses the same transformation for every subunit pair (obtained from the 2-end vs 1-(end-1) superposition, open symm).
 	 */
-	private void updateNonClosedScore() throws StructureException {
+	private void updateOpenScore() throws StructureException {
 		
 		//Reset values
 		rmsd = 0.0;
@@ -848,7 +848,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			//Rotate one more time the atoms of the first alignment array
 			Calc.rotate(arr2, rotation);
 			Calc.shift(arr2, translation);
-			if (i==0) tmScore += SVDSuperimposer.getTMScore(arr1, arr2, ca.length, ca.length);
+			//if (i==0) tmScore += SVDSuperimposer.getTMScore(arr1, arr2, ca.length, ca.length);
 			
 			for (int j=0; j<order-1-i; j++){
 				//Calculate the subunit alignment pairs
@@ -870,7 +870,8 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		for (int i=0; i<subunitLen; i++) colDistances[i] /= total;
 		for (int i=0; i<order; i++) rowDistances[i] /= (order-1)*subunitLen;
 		rmsd /= total;
-		mcScore = scoreFunctionMC();
+		mcScore = scoreFunctionCEMC();
+		tmScore = scoreFunctionSymmetry();
 	}
 	
 	/**
@@ -911,7 +912,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			//Rotate one more time the atoms of the first atom array
 			Calc.rotate(arr2, rotation);
 			Calc.shift(arr2, translation);
-			if (i==0) tmScore += SVDSuperimposer.getTMScore(arr1, arr2, ca.length, ca.length);
+			//if (i==0) tmScore += SVDSuperimposer.getTMScore(arr1, arr2, ca.length, ca.length);
 			
 			for (int j=0; j<order-1-i; j++){
 				//Calculate the subunit alignment pairs
@@ -933,7 +934,8 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		for (int i=0; i<subunitLen; i++) colDistances[i] /= total;
 		for (int i=0; i<order; i++) rowDistances[i] /= (order-1)*subunitLen;
 		rmsd /= total;
-		mcScore = scoreFunctionMC();
+		mcScore = scoreFunctionCEMC();
+		tmScore = scoreFunctionSymmetry();
 	}
 	
 	/**
@@ -966,13 +968,14 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		//Assign the new values to the member variables
 		rmsd /= (order-1);
 		tmScore /= (order-1);
-		mcScore = scoreFunctionMC();
+		mcScore = scoreFunctionCEMC();
 	}
 	
 	/**
 	 *  Raw implementation of the RMSD, TMscore and distances calculation for a better algorithm efficiency.
 	 *  Superimpose flexibly two subunits.
 	 */
+	@Deprecated
 	private void calculateFlexibleScore(int su1, int su2, double[] ScoreRMSD) throws StructureException{
 		
 		Atom[] arr1 = new Atom[subunitLen];
@@ -1058,7 +1061,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	private void checkOrder() throws StructureException{
 		
 		//First update the scores again because the number of subunits might change distances
-		updateNonClosedScore();
+		updateOpenScore();
 		
 		int index = 0;
 		double avgDist = 0.0;
@@ -1090,10 +1093,9 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	
 	/**
 	 *  Calculates the optimization score from the column average distances.
-	 *  
 	 *  Function: sum(M/(d1/d0)^2)  and add the penalty A if (d1>d0).
 	 */
-	private double scoreFunctionMC(){
+	private double scoreFunctionCEMC(){
 		
 		double score = 0.0;
 		
@@ -1101,12 +1103,39 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		for (int col=0; col<subunitLen; col++){
 			
 			double d1 = colDistances[col];
-			double colScore = M/Math.pow(1+d1/d0,2);
+			double colScore = M/(1+(d1*d1)/(d0*d0));
 			
 			if (d1>d0) colScore-=A;
 			score += colScore;
 		}
 		return score;
+	}
+	
+	/**
+	 *  Calculates a normalized score for the symmetry, to be able to compare between results and set a threshold.
+	 *  Function: sum(1/(d1/d0)^2)  and divided by the max length of a subunit (including gaps).
+	 */
+	private double scoreFunctionSymmetry(){
+		
+		double score = 0.0;
+		double d0 = 2.25*order;
+		
+		//Loop through all the columns
+		for (int col=0; col<subunitLen; col++){
+			double d1 = colDistances[col];
+			double colScore = 1/(1+Math.pow(d1/d0,2));
+			score += colScore;
+		}
+		
+		int Ln = ca.length/order;
+		/*int Ln = 0;
+		//Loop through all the subunits to get the minimum length of all subunits
+		for (int su=0; su<order; su++){
+			int suLen = block.get(su).get(subunitLen-1) - block.get(su).get(0);
+			if (suLen>Ln) Ln = suLen;
+		}*/
+		
+		return score/Ln;
 	}
 	
 	/**
@@ -1117,9 +1146,9 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	 */
 	private double probabilityFunction(double AS, int m, int maxIter) {
 		
-		double prob = (C+AS)/Math.sqrt(m);
-		double norm = (1-(m*1.0)/maxIter);  //Normalization factor
-		return Math.min(Math.max(prob*norm,0.0),1.0);
+		double prob = (C+AS)/(4*Math.sqrt(m));
+		double norm = (1-(m*1.0)/maxIter);  //Normalization factor (step/maxIter)
+		return Math.min(Math.max(prob*norm*norm,0.0),1.0);
 	}
 	
 	/**
@@ -1130,6 +1159,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	 *    3- Pick the value at the boundary of the top 10% distances (hardest condition, restricts the subunits to the core only).
 	 *    4- A function of the RMSD of the seed alignment and the order (this is the softest condition of all, but longer subunits are obtained).
 	 *    		Justification: the more subunits the higher the variability between the columns.
+	 *    5- A fixed function of the order of symmetry.
 	 *    
 	 *  A minimum distance of 5A is set always to avoid short alignments in the very good symmetric cases.
 	 */
@@ -1154,7 +1184,10 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		//Option 4: the highest distance of the seed alignment.
 		double d4 = rmsd*(0.5*order);
 		
-		d0=Math.max(d4,5);  //The minimum d0 value is 5A
+		//Option 5: TM-score function, depends only on the length of the protein
+		double d5 =  1.24 * Math.cbrt((ca.length) - 15.) - 1.8;
+		
+		d0=5;
 	}
 	
 	/**
@@ -1263,7 +1296,9 @@ public class SymmOptimizer implements Callable<AFPChain> {
 						  //"d1ffta_", "d1i5pa2", "d1jlya1", "d1lnsa1", "d1r5za_", "d1ttua3", "d1vmob_", "d1wd3a2", "d2hyrb1", //C3
 						  //"d1m1ha1", "d1pexa_", //C4
 						  //"d1vkde_", "d2h2na1", "d2jaja_", //C5
-						  "d1nf4a_"};
+						  //"d1a0pa1", "d1bg1a1", "d1bhgb1", "d1chda_", "d1e3ha1", "d1em8c_", "d1f7va1",  //C1 difficult
+						  //"d1ao6a1", "d1aorb2", "1hiv.a", "d1b4ra_", "d1b65b_", "d1bhdb_", "d1ckva_", //C2
+						  "4i4q"};  //other
 		
 		for (String name:names){
 			
@@ -1275,15 +1310,17 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			
 			CeSymm ceSymm = new CeSymm();
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-			params.setSymmetryType(SymmetryType.CLOSED);
+			params.setSymmetryType(SymmetryType.AUTO);
 			params.setRefineMethod(RefineMethod.SINGLE);
 			params.setOptimization(true);
+			params.setSeed(0);
 			
 			AFPChain afpChain = ceSymm.align(ca1, ca2);
 			afpChain.setName1(name);
 			afpChain.setName2(name);
 			
-			new SymmetryJmol(afpChain, ca1);
+			SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
+			jmol.setTitle(name);
 		}
 		
 		System.out.println("Finished Alaysis!");

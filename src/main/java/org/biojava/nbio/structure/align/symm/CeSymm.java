@@ -53,7 +53,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	public static final String algorithmName = "jCE-symmetry";
 	public static final String version = "1.0";
 	private static final Logger logger = LoggerFactory.getLogger(CeSymm.class);
-	private static final double symmetryThreshold = 0.4;
+	public static final double symmetryThreshold = 0.4;
 
 	private AFPChain afpChain;
 	private List<AFPChain> afpAlignments;

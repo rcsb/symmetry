@@ -106,10 +106,11 @@ public class SymmetryDisplay {
 		
 		//Initialize a new MultipleAlignment to store the aligned subunits, each one inside a BlockSet
 		MultipleAlignment multAln = new MultipleAlignmentImpl();
-		multAln.getParent().setAtomArrays(atomArrays);
-		multAln.getParent().setAlgorithmName(afpChain.getAlgorithmName());
-		multAln.getStructureNames().clear();
-		for(int i=0; i<afpChain.getBlockNum(); i++) multAln.getStructureNames().add(afpChain.getName1());
+		multAln.getEnsemble().setAtomArrays(atomArrays);
+		multAln.getEnsemble().setAlgorithmName(afpChain.getAlgorithmName());
+		List<String> structureNames = new ArrayList<String>();
+		for(int i=0; i<afpChain.getBlockNum(); i++) structureNames.add(afpChain.getName1());
+		multAln.getEnsemble().setStructureNames(structureNames);
 		
 		//All the residues are aligned in one block only
 		BlockSet blockSet = new BlockSetImpl(multAln);
@@ -144,17 +145,17 @@ public class SymmetryDisplay {
 		
 		//Apply the symmetry transformation different number of times
 		int size = multAln.size();
-	   	if (multAln.getAtomArrays() == null) multAln.getParent().updateAtomArrays();
-	   
+
+		List<Atom[]> atomArrays = multAln.getEnsemble().getAtomArrays();
 		for (int i=0; i<size; i++){
-			if (multAln.getAtomArrays().get(i).length < 1) 
-				throw new StructureException("Length of atoms arrays is too short! " + multAln.getAtomArrays().get(i).length);
+			if (atomArrays.get(i).length < 1) 
+				throw new StructureException("Length of atoms arrays is too short! " + atomArrays.get(i).length);
 		}
 		
 		List<Atom[]> rotatedAtoms = new ArrayList<Atom[]>();
 		//Rotate the atom coordinates of all the structures
 		for (int i=0; i<size; i++){
-			Structure displayS = multAln.getAtomArrays().get(i)[0].getGroup().getChain().getParent().clone();
+			Structure displayS = atomArrays.get(i)[0].getGroup().getChain().getParent().clone();
 			Atom[] rotCA = StructureTools.getRepresentativeAtomArray(displayS);
 			//Rotate the structure the appropiate number of times
 			for (int k=0; k<i; k++){
@@ -186,10 +187,11 @@ public class SymmetryDisplay {
 				
 		//Initialize a new MultipleAlignment to store the aligned subunits, each one inside a BlockSet
 		MultipleAlignment multAln = new MultipleAlignmentImpl();
-		multAln.getParent().setAtomArrays(atomArrays);
-		multAln.getParent().setAlgorithmName(afpChain.getAlgorithmName());
-		multAln.getStructureNames().clear();
-		for(int i=0; i<afpChain.getBlockNum(); i++) multAln.getStructureNames().add(afpChain.getName1());
+		multAln.getEnsemble().setAtomArrays(atomArrays);
+		multAln.getEnsemble().setAlgorithmName(afpChain.getAlgorithmName());
+		List<String> structureNames = new ArrayList<String>();
+		for(int i=0; i<afpChain.getBlockNum(); i++) structureNames.add(afpChain.getName1());
+		multAln.getEnsemble().setStructureNames(structureNames);
 		int order = afpChain.getBlockNum();
 		
 		for (int bk=0; bk<order; bk++){

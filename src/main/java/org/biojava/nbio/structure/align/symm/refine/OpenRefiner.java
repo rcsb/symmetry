@@ -8,6 +8,8 @@ import java.util.List;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
@@ -139,7 +141,7 @@ public class OpenRefiner implements Refiner {
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "3EHQ.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A, 1NFI.E
+		String name = "2bnh.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A, 1NFI.E
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //HEAT: 1B3U.A
@@ -153,6 +155,8 @@ public class OpenRefiner implements Refiner {
 								  //benchmark C6: d1wp5a_
 								  //TIM barrel duplication and twist: 1pii
 								  //beta-hairpin: d2biba1
+								  //two fold: 1vym.A
+								  //clear repeats-turn-repeats example: 1S70.B - CeSymm makes slip alignment near identity...
 
 		AtomCache cache = new AtomCache();
 
@@ -166,7 +170,7 @@ public class OpenRefiner implements Refiner {
 		params.setRefineMethod(RefineMethod.SINGLE);
 		params.setSymmetryType(SymmetryType.OPEN);
 		params.setOptimization(true);
-		//params.setSeed(2);
+		//params.setSeed(11);
 		AFPChain afpChain = new AFPChain();
 		
 		//Perform the alignment and store
@@ -176,7 +180,7 @@ public class OpenRefiner implements Refiner {
 		
 		//Display the AFP alignment of the subunits
 		SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
-		//StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+		//StructureAlignmentJmol jmol2 = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
 		jmol.setTitle(name);
 	}
 }

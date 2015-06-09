@@ -14,6 +14,8 @@ import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.SVDSuperimposer;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
@@ -40,8 +42,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	private Random rnd;
 	
 	//Optimization parameters
-	//private static final int AFPmin = 4; //Minimum block length of aligned residues
-	private static final int Lmin = 8;   //Minimum subunit length
+	private static final int Lmin = 15;   //Minimum subunit length
 	private int iterFactor = 100; //Factor to control the max number of iterations of optimization
 	private double C = 20; //Probability function constant (probability of acceptance for bad moves)
 	
@@ -154,6 +155,9 @@ public class SymmOptimizer implements Callable<AFPChain> {
 				freePool.get(order-1).add(i);
 			}
 		}
+		//Move randomly residues of the free Pool to ensure that they are distributed equally to all subunits
+		for (int i=0; i<ca.length-(subunitLen*order); i++) moveResidue();
+		
 		
 		//Set the scores and RMSD of the initial state (seed alignment). Check the order and 
 		switch (type){
@@ -241,11 +245,11 @@ public class SymmOptimizer implements Callable<AFPChain> {
 				break;
 			case OPEN: 
 				updateOpenScore();
-				//updateFlexibleScore();
 				break;
 			}
 			
-			double AS = mcScore-lastScore;  //Change in the optimization Score
+			//Calculate change in the optimization Score
+			double AS = mcScore-lastScore;
 			double prob=1.0;
 			
 			if (AS<0){
@@ -411,113 +415,75 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	}
 	
 	/**
-	 *  Move all the block residues of all subunits one position to the left or right and move the corresponding
-	 *  boundary residues from the freePool to the block, and viceversa. Extension of the shift method to allow
-	 *  shifting all rows (because shifting one at a time can be very unfavorable).
+	 *  Move all the subunits one position to the left or right. Corresponds to shrinking all subunits at
+	 *  one extreme and extending one position at the other. This move is specially designed for symmetry
+	 *  because the boundaries of the subunits are not defined and they need to be moved as well.
 	 */
 	private boolean shiftAll(){
 		
 		boolean moved = false;
 		int rl = rnd.nextInt(2);  //Select between moving right (0) or left (1)
-		int res = rnd.nextInt(subunitLen); //Residue as a pivot to make the shift
-
-		//Loop through all the subunits to shift them all
-		for (int su=0; su<order; su++){
 			
-			if (freePool.get(su).size()==0) return moved;  //If the freePool is empty the subunit cannot be shifted
+		switch(rl){
+		case 0: //Move subunits to the right
 			
-			switch(rl){
-			case 0: //Move to the right
-				//Check that there is at least one residue in the freePool to the left (smaller) than the pivot
-				if (freePool.get(su).get(0)<block.get(su).get(res)){
-					
-					int leftGap = res-1;  //Find the nearest gap to the left of the res
-					for (int i = res; i>=0; i--){
-						if(leftGap < 0){
-							break;
-						} else if (block.get(su).get(i) > block.get(su).get(leftGap)+1){
-							break;
-						}
-						leftGap--;
-					}
-					
-					int rightGap = res+1;  //Find the nearest gap to the right of the res
-					for (int i = res; i<=subunitLen; i++){
-						if(rightGap == subunitLen){
-							break;
-						} else if (block.get(su).get(i)+1 < block.get(su).get(rightGap)){
-							break;
-						}
-						rightGap++;
-					}
-					
-					//Move the residue at the left of the block from the freePool to the block
-					Integer residue = block.get(su).get(leftGap+1)-1;
-					block.get(su).add(leftGap+1,residue);
-					freePool.get(su).remove(residue);
-					
-					//Move the residue at the right of the block to the freePool
-					if (rightGap == subunitLen){
-						freePool.get(su).add(block.get(su).get(rightGap));
-						block.get(su).remove(rightGap);
-					}
-					else{
-						freePool.get(su).add(block.get(su).get(rightGap+1));
-						block.get(su).remove(rightGap+1);
-					}
-					Collections.sort(freePool.get(su));
-					
-					moved = true;
-				}
-				break;
-				
-			case 1: //Move to the left
-				//Check that there is at least one residue in the freePool to the right (bigger) than the pivot
-				if (freePool.get(su).get(freePool.get(su).size()-1)>block.get(su).get(res)){
-					
-					int leftGap = res-1;  //Find the nearest gap to the left of the res
-					for (int i = res; i>=0; i--){
-						if(leftGap <= 0){
-							leftGap = 0;
-							break;
-						} else if (block.get(su).get(i) > block.get(su).get(leftGap)+1){
-							leftGap++;
-							break;
-						}
-						leftGap--;
-					}
-					
-					int rightGap = res+1;  //Find the nearest gap to the right of the res
-					for (int i = res; i<=subunitLen; i++){
-						if(rightGap >= subunitLen){
-							rightGap = subunitLen;
-							break;
-						} else if (block.get(su).get(i)+1 < block.get(su).get(rightGap)){
-							break;
-						}
-						rightGap++;
-					}
-					
-					//Move the residue at the right of the block from the freePool to the block
-					Integer residue = block.get(su).get(rightGap-1)+1;
-					if (rightGap == subunitLen){
-						block.get(su).add(residue);
-						freePool.get(su).remove(residue);
-					}
-					else {
-						block.get(su).add(rightGap,residue);
-						freePool.get(su).remove(residue);
-					}
-					
-					//Move the residue at the left of the block to the freePool
-					freePool.get(su).add(block.get(su).get(leftGap));
-					Collections.sort(freePool.get(su));
-					block.get(su).remove(leftGap);
-					
-					moved = true;
-				}
-				break;
+			//There needs to be at least one residue available to the right (end) to make the shift
+			if (freePool.get(order-1).size() == 0) return moved;  //The freePool is empty
+			else if (freePool.get(order-1).get(freePool.get(order-1).size()-1) < block.get(order-1).get(subunitLen-1)){
+				//If it is true it means that there are no available residues at the rightmost of the last subunit
+				return moved;
 			}
+			//This list will store all the residues added to the subunits (needed to maintain the freePool correct)
+			List<Integer> extendedResiduesR = new ArrayList<Integer>();
+			
+			//Loop through all the subunits from last to first
+			for (int su=order-1; su>=0; su--){
+				//Extend the subunit to the right
+				Integer extendRes = block.get(su).get(subunitLen-1)+1;
+				extendedResiduesR.add(extendRes);
+				Integer shrinkRes = block.get(su).get(0);
+				block.get(su).add(extendRes);
+				freePool.get(su).add(shrinkRes);
+				block.get(su).remove(shrinkRes);
+			}
+			for (Integer res:extendedResiduesR){
+				//Remove the residues used for extension from the freePool
+				for (int su=0; su<order; su++){
+					if (freePool.get(su).remove(res)) break;
+				}
+			}
+			moved = true;
+			break;
+			
+		case 1: //Move subunits to the left
+			
+			//There needs to be at least one residue available to the left (start) to make the shift
+			if (freePool.get(0).size() == 0) return moved;  //The freePool is empty
+			else if (freePool.get(0).get(0) > block.get(0).get(0)){
+				//If it is true it means that there are no available residues at the start of the first subunit
+				return moved;
+			}
+			//This list will store all the residues added to the subunits (needed to maintain the freePool correct)
+			List<Integer> extendedResiduesL = new ArrayList<Integer>();
+			
+			//Loop through all the subunits from last to first
+			for (int su=order-1; su>=0; su--){
+				//Extend the subunit to the left
+				Integer extendRes = block.get(su).get(0)-1;
+				extendedResiduesL.add(extendRes);
+				Integer shrinkRes = block.get(su).get(subunitLen-1);
+				block.get(su).add(0,extendRes);
+				freePool.get(su).add(shrinkRes);
+				block.get(su).remove(shrinkRes);
+			}
+			for (Integer res:extendedResiduesL){
+				//Remove the residues used for extension from the freePool
+				for (int su=0; su<order; su++){
+					if (freePool.get(su).remove(res)) break;
+				}
+			}
+			moved = true;
+			break;
 		}
 		return moved;
 	}
@@ -811,6 +777,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		rmsd /= total;
 		tmScore /= total;
 		mcScore = scoreFunctionCEMC();
+		tmScore = scoreFunctionSymmetry();
 	}
 	
 	/**
@@ -825,7 +792,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		tmScore = 0.0;
 		mcScore = 0.0;
 		colDistances = new double[subunitLen];
-		rowDistances = new double[order];
+		//rowDistances = new double[order];
 		
 		//Calculate the aligned atom arrays
 		Atom[] arr1 = new Atom[subunitLen*(order-1)];
@@ -860,15 +827,15 @@ public class SymmOptimizer implements Callable<AFPChain> {
 				for (int k=0; k<subunitLen; k++) {
 					double distance = Math.abs(Calc.getDistance(su1[k], su2[k]));
 					colDistances[k] += distance;
-					rowDistances[j] += distance;
-					rowDistances[(j+i+1)] += distance;
+					//rowDistances[j] += distance;
+					//rowDistances[(j+i+1)] += distance;
 				}
 			}
 		}
 		//Divide the variables for the total number of comparisons to get the average
 		int total = ((order)*(order-1))/2;
 		for (int i=0; i<subunitLen; i++) colDistances[i] /= total;
-		for (int i=0; i<order; i++) rowDistances[i] /= (order-1)*subunitLen;
+		//for (int i=0; i<order; i++) rowDistances[i] /= (order-1)*subunitLen;
 		rmsd /= total;
 		mcScore = scoreFunctionCEMC();
 		tmScore = scoreFunctionSymmetry();
@@ -889,7 +856,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		tmScore = 0.0;
 		mcScore = 0.0;
 		colDistances = new double[subunitLen];
-		rowDistances = new double[order];
+		//rowDistances = new double[order];
 		
 		//Calculate the aligned atom arrays
 		Atom[] arr1 = new Atom[subunitLen*order];
@@ -923,16 +890,16 @@ public class SymmOptimizer implements Callable<AFPChain> {
 				rmsd += SVDSuperimposer.getRMS(su1, su2);
 				for (int k=0; k<subunitLen; k++) {
 					double distance = Math.abs(Calc.getDistance(su1[k], su2[k]));
-					colDistances[k] += distance;
-					rowDistances[j] += distance;
-					rowDistances[(j+i+1)%order] += distance;
+					colDistances[k] += distance;  //provisional max distances
+					//rowDistances[j] += distance;
+					//rowDistances[(j+i+1)%order] += distance;
 				}
 			}
 		}
 		//Divide the variables for the total number of comparisons to get the average
 		int total = ((order)*(order-1))/2;
 		for (int i=0; i<subunitLen; i++) colDistances[i] /= total;
-		for (int i=0; i<order; i++) rowDistances[i] /= (order-1)*subunitLen;
+		//for (int i=0; i<order; i++) rowDistances[i] /= (order-1)*subunitLen;
 		rmsd /= total;
 		mcScore = scoreFunctionCEMC();
 		tmScore = scoreFunctionSymmetry();
@@ -1016,6 +983,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	 *  Raw implementation of the RMSD, TMscore and distances calculation for a better algorithm efficiency.
 	 *  Superimpose the original structure with a specified rotation of itself.
 	 */
+	@Deprecated
 	private void calculateClosedScore(int rotation, double[] ScoreRMSD) throws StructureException{
 		
 		Atom[] arr1 = new Atom[subunitLen*order];
@@ -1103,9 +1071,15 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		for (int col=0; col<subunitLen; col++){
 			
 			double d1 = colDistances[col];
-			double colScore = M/(1+(d1*d1)/(d0*d0));
 			
-			if (d1>d0) colScore-=A;
+			//CEMC condition
+			double colScore = M/(1+(d1*d1)/(d0*d0));
+			//if (d1>d0) colScore-=A;
+			
+			//P2 condition
+			colScore -= A;
+			colScore *= 2;
+
 			score += colScore;
 		}
 		return score;
@@ -1113,27 +1087,22 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	
 	/**
 	 *  Calculates a normalized score for the symmetry, to be able to compare between results and set a threshold.
-	 *  Function: sum(1/(d1/d0)^2)  and divided by the max length of a subunit (including gaps).
+	 *  Function: (1/Ln)*sum(1/(d1/d0)^2). Ln is the max possible length of a subunit (protein length over order).
+	 *  The difference with TM score is the normalization factor Ln and the use of average distances.
 	 */
 	private double scoreFunctionSymmetry(){
 		
 		double score = 0.0;
-		double d0 = 2.25*order;
+		//d0 is calculated as in the TM-score
+		double d0 =  1.24 * Math.cbrt((ca.length) - 15.) - 1.8;
 		
 		//Loop through all the columns
 		for (int col=0; col<subunitLen; col++){
 			double d1 = colDistances[col];
-			double colScore = 1/(1+Math.pow(d1/d0,2));
+			double colScore = 1/(1+((d1*d1)/(d0*d0)));
 			score += colScore;
 		}
-		
 		int Ln = ca.length/order;
-		/*int Ln = 0;
-		//Loop through all the subunits to get the minimum length of all subunits
-		for (int su=0; su<order; su++){
-			int suLen = block.get(su).get(subunitLen-1) - block.get(su).get(0);
-			if (suLen>Ln) Ln = suLen;
-		}*/
 		
 		return score/Ln;
 	}
@@ -1141,14 +1110,14 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	/**
 	 *  Calculates the probability of accepting a bad move given the iteration step and the score change.
 	 *  
-	 *  Function: p=(C-AS)/m^0.5   *from the CEMC algorithm.
+	 *  Function: p=(C-AS)/m   *from the CEMC algorithm.
 	 *  Added a normalization factor so that the probability approaches 0 when the maxIter is reached.
 	 */
 	private double probabilityFunction(double AS, int m, int maxIter) {
 		
-		double prob = (C+AS)/(4*Math.sqrt(m));
+		double prob = (C+AS)/(m);
 		double norm = (1-(m*1.0)/maxIter);  //Normalization factor (step/maxIter)
-		return Math.min(Math.max(prob*norm*norm,0.0),1.0);
+		return Math.min(Math.max(prob*norm,0.0),0.2);
 	}
 	
 	/**
@@ -1159,7 +1128,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	 *    3- Pick the value at the boundary of the top 10% distances (hardest condition, restricts the subunits to the core only).
 	 *    4- A function of the RMSD of the seed alignment and the order (this is the softest condition of all, but longer subunits are obtained).
 	 *    		Justification: the more subunits the higher the variability between the columns.
-	 *    5- A fixed function of the order of symmetry.
+	 *    5- A function of the length of the protein (TM-score function)
 	 *    
 	 *  A minimum distance of 5A is set always to avoid short alignments in the very good symmetric cases.
 	 */
@@ -1181,13 +1150,13 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		//Option 3: boundary of top 10%
 		double d3 = distances[index10];
 		
-		//Option 4: the highest distance of the seed alignment.
+		//Option 4: a function of the seed RMSD
 		double d4 = rmsd*(0.5*order);
 		
-		//Option 5: TM-score function, depends only on the length of the protein
+		//Option 5: TM-score function, depends on the length of the protein only
 		double d5 =  1.24 * Math.cbrt((ca.length) - 15.) - 1.8;
 		
-		d0=5;
+		//d0=d4;
 	}
 	
 	/**
@@ -1296,9 +1265,10 @@ public class SymmOptimizer implements Callable<AFPChain> {
 						  //"d1ffta_", "d1i5pa2", "d1jlya1", "d1lnsa1", "d1r5za_", "d1ttua3", "d1vmob_", "d1wd3a2", "d2hyrb1", //C3
 						  //"d1m1ha1", "d1pexa_", //C4
 						  //"d1vkde_", "d2h2na1", "d2jaja_", //C5
-						  //"d1a0pa1", "d1bg1a1", "d1bhgb1", "d1chda_", "d1e3ha1", "d1em8c_", "d1f7va1",  //C1 difficult
-						  //"d1ao6a1", "d1aorb2", "1hiv.a", "d1b4ra_", "d1b65b_", "d1bhdb_", "d1ckva_", //C2
-						  "4i4q"};  //other
+						  //"d3d5rc1", "d1fz9f_", "d1u4qb3", "d1viia_", "d2a1bf_", "d2axth1",  //C1 border cases
+						  //"d1g73b_", "d3pmra_", "d3b5zd2", "d1o5hb_", "d2c2lb1", "d2g38b1", "d1s2xa_", "d1r8ia_"     //SLIP alignment
+						  //"d1osya_", "d1xq4a_", "d1yioa2", "d1dcea2", //C2
+						  "d2yvxa3"};  //other
 		
 		for (String name:names){
 			
@@ -1313,13 +1283,14 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			params.setSymmetryType(SymmetryType.AUTO);
 			params.setRefineMethod(RefineMethod.SINGLE);
 			params.setOptimization(true);
-			params.setSeed(0);
+			params.setSeed((int) System.currentTimeMillis());
 			
 			AFPChain afpChain = ceSymm.align(ca1, ca2);
 			afpChain.setName1(name);
 			afpChain.setName2(name);
 			
 			SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
+			//StructureAlignmentJmol jmol2 = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
 			jmol.setTitle(name);
 		}
 		

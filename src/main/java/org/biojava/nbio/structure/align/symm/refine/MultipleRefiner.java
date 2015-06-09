@@ -16,6 +16,7 @@ import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
@@ -295,6 +296,7 @@ public class MultipleRefiner implements Refiner {
 	 *      - helical: 1B3U.A, 1EZG.A, 1DFJ.I, 1AWC.B, 1D0B.A
 	 *      - unknown: 1WD3, 1Z7X, 1DCE
 	 *      - DIFFICULT: 1BPL (7), 1W0P (?)
+	 *      - CeSymm first alignment failed: d2p62a1
 	 *  	
 	 * Did not work for:  1VYM.A (buggy rotation axis)
 	 *                    3HKE.A (partial alignment)
@@ -348,13 +350,14 @@ public class MultipleRefiner implements Refiner {
 		//String[] names = {"2F9H.A", "1SQU.A", "3HDP", "2AFG.A", "4DOU", "1HCE", "1TIE", "4I4Q", "1GEN", "1HXN¨, "1G61.A", "1U6D", "1JOF.A", "1JTD.B", "1TL2.A", "2I5I.A", "1GOT.B", "1VZW", "1NSJ"}; //Correct ones
 		//String[] names = {"1VYM"}
 		//String[] names = {"d1poqa_", "1itb.A", "3jut.A", "2jaj.A", "d1jlya1" ,"1hiv"}; //New structures to test
-		String[] names = {"1vzw"};
+		String[] names = {"d3d5aj1"};
 		
 		for (int i=0; i<names.length; i++){
 			
 			//Set the name of the protein structure to analyze
 			System.out.println("Analyzing protein "+names[i]);
 			AtomCache cache = new AtomCache();
+			cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
 			String name = names[i];
 
 			//Parse atoms of the protein into two DS

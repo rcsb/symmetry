@@ -32,7 +32,6 @@ import org.biojava.nbio.structure.align.gui.jmol.JmolTools;
 import org.biojava.nbio.structure.align.gui.jmol.MyJmolStatusListener;
 import org.biojava.nbio.structure.align.gui.jmol.RasmolCommandListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.model.StructureAlignmentException;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.webstart.AligUIManager;
 import org.jcolorbrewer.ColorBrewer;
@@ -60,7 +59,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	}
 	
 	/**
-	 * Main Constructor.
+	 * Main Constructor with an AFPChain.
 	 * @param afpChain
 	 * @param ca1
 	 * @param subunitColors
@@ -266,7 +265,6 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		  jmolPanel.evalString(cmd);
 		  
 	      resetDisplay();
-		
 	}
 	
 	/**
@@ -283,9 +281,6 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		    //The colors are not the same as in the jmol display, the code can be adapted
 		    try {
 				DisplayAFP.showAlignmentImage(afpChain, ca, ca, this);
-			} catch (StructureAlignmentException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
 			} catch (StructureException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -362,10 +357,8 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		   return jmol.toString();
 	
 	   }
-	   
 	
-	   private static String getJmolString(AFPChain afpChain, Atom[] ca1, Color[] subunitColors)
-	   {
+	   private static String getJmolString(AFPChain afpChain, Atom[] ca1, Color[] subunitColors) {
 	
 	      int blockNum = afpChain.getBlockNum();      
 	      int[] optLen = afpChain.getOptLen();
@@ -424,7 +417,6 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		     structure = ca[0].getGroup().getChain().getParent();
 		 }
 		 jmolPanel.setStructure(structure);
-		
 	}
 
 	@Override
@@ -437,6 +429,5 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	         evalString(script);
 	         jmolPanel.evalString("save STATE state_1");
 	      }
-		
 	}
 }

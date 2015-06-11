@@ -42,7 +42,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 	private Random rnd;
 	
 	//Optimization parameters
-	private static final int Lmin = 15;   //Minimum subunit length
+	private static final int Lmin = 8;   //Minimum subunit length
 	private int iterFactor = 100; //Factor to control the max number of iterations of optimization
 	private double C = 20; //Probability function constant (probability of acceptance for bad moves)
 	
@@ -445,6 +445,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 				block.get(su).add(extendRes);
 				freePool.get(su).add(shrinkRes);
 				block.get(su).remove(shrinkRes);
+				Collections.sort(freePool.get(su));
 			}
 			for (Integer res:extendedResiduesR){
 				//Remove the residues used for extension from the freePool
@@ -475,6 +476,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 				block.get(su).add(0,extendRes);
 				freePool.get(su).add(shrinkRes);
 				block.get(su).remove(shrinkRes);
+				Collections.sort(freePool.get(su));
 			}
 			for (Integer res:extendedResiduesL){
 				//Remove the residues used for extension from the freePool
@@ -1268,7 +1270,8 @@ public class SymmOptimizer implements Callable<AFPChain> {
 						  //"d3d5rc1", "d1fz9f_", "d1u4qb3", "d1viia_", "d2a1bf_", "d2axth1",  //C1 border cases
 						  //"d1g73b_", "d3pmra_", "d3b5zd2", "d1o5hb_", "d2c2lb1", "d2g38b1", "d1s2xa_", "d1r8ia_"     //SLIP alignment
 						  //"d1osya_", "d1xq4a_", "d1yioa2", "d1dcea2", //C2
-						  "d2yvxa3"};  //other
+						  //coiled coil: LPP-56 1jcd, CspB 
+						  "1N0R.A"};  //other
 		
 		for (String name:names){
 			

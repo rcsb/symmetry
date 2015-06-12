@@ -2,6 +2,7 @@ package org.biojava.nbio.structure.align.symm.refine;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.channels.IllegalSelectorException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -27,14 +28,13 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AtomCache;
 
 /**
- * Optimizes an alignment by a Monte Carlo score optimization of the subunit multiple alignment.
- * Implements Callable in order to parallelize multiple optimizations.
- * This class pretends to use the same CEMC approach for multiple structural alignment of the subunits
- * using the refined pairwise alignment.
- * Becuase gaps are allowed in some of the subunits, a {@link MultipleAlignment} format has to be returned.
+ * Optimizes an alignment by a Monte Carlo score optimization of the subunit multiple alignment.<p>
+ * Implements Callable in order to parallelize multiple optimizations.<p>
+ * Becuase gaps are allowed in some of the subunits, a {@link MultipleAlignment} format  returned.
  * 
  * @author Aleix Lafita
  * 
@@ -49,11 +49,10 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	private static final int Rmin = 2;   //Minimum number of aligned structures without a gap
 	private static final int Lmin = 8;   //Minimum subunit length
 	private int iterFactor = 1000; //Factor to control the max number of iterations of optimization
-	private double C = 20; //Probability function constant (probability of acceptance for bad moves)
+	private double C = 10; //Probability function constant (probability of acceptance for bad moves)
 	
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
-	private static final double A = 10.0; //Penalty for alignment distances
 	private static final double G = 10.0; //Penalty for gaps
 	private double d0 = 5; //Maximum distance that is not penalized - chosen from seed alignment
 	
@@ -62,7 +61,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	private AFPChain seedAFP;
 	private Atom[] ca;
 	private int order;
-	public int subunitLen;
+	private int subunitLen;
 	private int gaps;    //the number of gaps in the alignment
 	
 	//Multiple Alignment Residues
@@ -155,7 +154,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 		case CLOSED: 
 			updateClosedScore();
 			break;
-		case OPEN:
+		default:    //case OPEN:
 			updateOpenScore();
 			break;
 		}
@@ -201,7 +200,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			boolean moved = false;
 			
 			while (!moved){
-				//Randomly select one of the steps to modify the alignment
+				//Randomly select one of the steps to modify the alignment. The movements are not equally probable.
 				int move = rnd.nextInt(4);
 				switch (move){
 				case 0: moved = shiftRow();
@@ -210,10 +209,10 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 				case 1: moved = expandBlock();
 						if (debug) System.out.println("did expand");
 						break;
-				case 2: moved = shrinkBlock();
+				case 2:	moved = shrinkBlock();
 						if (debug) System.out.println("did shrink");
 						break;
-				case 3: moved = insertGap();
+				case 3:	moved = insertGap();
 						if (debug) System.out.println("did insert gap");
 						break;
 				}
@@ -224,7 +223,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			case CLOSED: 
 				updateClosedScore();
 				break;
-			case OPEN: 
+			default:     //case OPEN:
 				updateOpenScore();
 				break;
 			}
@@ -344,11 +343,11 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			}
 		}
 		
-		//Shrink the columns that have more gaps than allowed
+		//Shrink the columns that have more gaps than allowed (from higher indicies to lower ones, to not interfere)
 		for (int col=shrinkColumns.size()-1; col>=0; col--){
 			for (int su=0; su<order; su++){
 				Integer residue = block.get(su).get(shrinkColumns.get(col));
-				block.get(su).remove(residue);
+				block.get(su).remove((int) shrinkColumns.get(col));
 				if (residue != null) freePool.add(residue);
 				else gaps--;
 				Collections.sort(freePool);
@@ -389,18 +388,60 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	 *  The boundaries are determined by any irregularity (either a gap or a discontinuity in the alignment.
 	 */
 	private boolean shiftRow(){
-		
-		boolean moved = false;
 
 		int su = rnd.nextInt(order); //Select randomly the subunit that is going to be shifted
 		int rl = rnd.nextInt(2);  //Select between moving right (0) or left (1)
 		int res = rnd.nextInt(subunitLen); //Residue as a pivot to make the shift
 		
+		//When the pivot residue is null try to add a residue from the freePool
+		if (block.get(su).get(res) == null){
+			//Residues not null at the right and left of the pivot null residue
+			int rightRes = res;
+			int leftRes = res;
+			//Find the boundary to the right abd left (a residue different than null)
+			while (block.get(su).get(rightRes) == null && rightRes<subunitLen-1) rightRes++;
+			while (block.get(su).get(leftRes) == null && leftRes>0) leftRes--;
+			
+			//If they both are null return because it means that the whole block is null
+			if (block.get(su).get(leftRes) == null && block.get(su).get(rightRes) == null) return false;
+			else if (block.get(su).get(leftRes) == null){
+				//Choose the sequentially previous residue of the known one
+				Integer residue = block.get(su).get(rightRes)-1;
+				if (freePool.contains(residue)) {
+					block.get(su).set(res,residue);
+					freePool.remove(residue);
+					gaps--;
+				} else return false;
+			} 
+			else if (block.get(su).get(rightRes) == null){
+				//Choose the sequentially next residue of the known one
+				Integer residue = block.get(su).get(leftRes)+1;
+				if (freePool.contains(residue)) {
+					block.get(su).set(res,residue);
+					freePool.remove(residue);
+					gaps--;
+				} else return false;
+			} 
+			else { 
+				//If the boundaries are consecutive residues no residue can be added
+				if (block.get(su).get(rightRes) == block.get(su).get(leftRes)+1) return false;
+				else{
+					//Choose randomly a residue in between left and right
+					Integer residue = rnd.nextInt(block.get(su).get(rightRes)-block.get(su).get(leftRes)-1) + block.get(su).get(leftRes)+1;
+					if (freePool.contains(residue)) {
+						block.get(su).set(res,residue);
+						freePool.remove(residue);
+						gaps--;
+					}
+					else throw new IllegalStateException("The freePool does not contain a residue in between two aligned positions");
+				}
+			}
+			return true;
+		}
+		
+		//When the residue is different than null try to shift the whole block of consecutive (without gap) residues
 		switch(rl){
 		case 0: //Move to the right
-			//Check if there is a boundary to shift (a residue different than null to the right)
-			while (block.get(su).get(res) == null && res<subunitLen-1) res++;
-			if (block.get(su).get(res) == null) return moved;
 			
 			int leftBoundary = res-1;  //Find the nearest boundary to the left of the pivot
 			int leftPrevRes = res;
@@ -429,19 +470,18 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			rightBoundary--;
 			
 			//Residues at the boundary
-			if (rightBoundary == leftBoundary) return moved;  //If the boundaries are the same they can't be shifted
 			Integer residueR0 = block.get(su).get(rightBoundary);
 			Integer residueL0 = block.get(su).get(leftBoundary);
 			
 			//Remove the residue at the right of the block and add it to the freePool
 			block.get(su).remove(rightBoundary);
 			if (residueR0 != null) freePool.add(residueR0);
-			else throw new IllegalArgumentException("The residue right boundary in shift is null! Cannot be...");
+			else throw new IllegalStateException("The residue right boundary in shift is null! Cannot be...");
 			Collections.sort(freePool);
 			
 			//Add the residue at the left of the block from the freePool to the block
 			if (residueL0 != null) residueL0 -= 1;
-			else throw new IllegalArgumentException("The residue left boundary in shift is null! Cannot be...");
+			else throw new IllegalStateException("The residue left boundary in shift is null! Cannot be...");
 			if (freePool.contains(residueL0)){
 				block.get(su).add(leftBoundary,residueL0);
 				freePool.remove(residueL0);
@@ -450,14 +490,9 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 				block.get(su).add(leftBoundary,null);
 				gaps++;
 			}
-			
-			moved = true;
 			break;
 			
 		case 1: //Move to the left
-			//Check if there is a boundary to shidt (a residue different than null to the right)
-			while (block.get(su).get(res) == null && res>0) res--;
-			if (block.get(su).get(res) == null) return moved;
 			
 			int leftBoundary1 = res-1;  //Find the nearest boundary to the left of the pivot
 			int leftPrevRes1 = res;
@@ -486,13 +521,12 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			rightBoundary1--;
 			
 			//Residues at the boundary
-			if (rightBoundary1 == leftBoundary1) return moved;  //If the boundaries are the same they can't be shifted
 			Integer residueR1 = block.get(su).get(rightBoundary1);
 			Integer residueL1 = block.get(su).get(leftBoundary1);
 			
 			//Add the residue at the right of the block from the freePool to the block
 			if (residueR1 != null) residueR1 += 1;
-			else throw new IllegalArgumentException("The residue right boundary in shift is null! Cannot be...");
+			else throw new IllegalStateException("The residue right boundary in shift is null! Cannot be...");
 			if (freePool.contains(residueR1)){
 				if (rightBoundary1==subunitLen-1) block.get(su).add(residueR1);
 				else block.get(su).add(rightBoundary1+1,residueR1);
@@ -506,14 +540,13 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			//Remove the residue at the left of the block and add it to the freePool
 			block.get(su).remove(leftBoundary1);
 			if (residueL1 != null) freePool.add(residueL1);
-			else throw new IllegalArgumentException("The residue left boundary in shift is null! Cannot be...");
+			else throw new IllegalStateException("The residue left boundary in shift is null! Cannot be...");
 			Collections.sort(freePool);
 			
-			moved = true;
 			break;
 		}
 		checkGaps();
-		return moved;
+		return true;
 	}
 	
 	/**
@@ -600,6 +633,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			Collections.sort(freePool);
 		}
 		subunitLen--;
+		checkGaps();
 		return true;
 	}
 	
@@ -732,7 +766,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	
 	/**
 	 *  Calculates the optimization score from the column average distances.
-	 *  Function: sum(M/(d1/d0)^2) minus the penalty A, minus the gap penalty (G) times gaps
+	 *  Function: sum(M/(d1/d0)^2) minus the gap penalty (G) for each gap
 	 */
 	private double scoreFunctionCEMC(){
 		
@@ -742,8 +776,6 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 		for (int col=0; col<subunitLen; col++){
 			double d1 = colDistances[col];
 			double colScore = M/(1+(d1*d1)/(d0*d0));
-			colScore -= A;
-			colScore *= 2;
 			score += colScore;
 		}
 		return score-gaps*G;
@@ -802,7 +834,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	
 	public static void main(String[] args) throws Exception{
 		
-		String[] names = {"1n0r.A"};  //other
+		String[] names = { "d1hl2a_" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
 		
 		for (String name:names){
 			
@@ -815,17 +847,20 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			CeSymm ceSymm = new CeSymm();
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 			params.setRefineMethod(RefineMethod.SINGLE);
+			params.setSymmetryType(SymmetryType.OPEN);
 			params.setOptimization(false);
 			
 			AFPChain seedAFP = ceSymm.align(ca1, ca2);
 			seedAFP.setName1(name);
 			//SingleRefiner refiner = new SingleRefiner();
 			//seedAFP = refiner.refine(Arrays.asList(seedAFP), ca1, ca2, 8);
-			SymmGapOptimizer optimizer = new SymmGapOptimizer(seedAFP, ca1, SymmetryType.OPEN, 0);
+			SymmGapOptimizer optimizer = new SymmGapOptimizer(seedAFP, ca1, SymmetryType.CLOSED, 0);
 			MultipleAlignment multAln = optimizer.call();
+			//SymmOptimizer optimizer = new SymmOptimizer(seedAFP, ca1, SymmetryType.CLOSED, 0);
+			//AFPChain multAln = optimizer.call();
 			
 			StructureAlignmentDisplay.display(multAln);
-			//SymmetryJmol jmol = new SymmetryJmol(seedAFP, ca1);
+			//SymmetryJmol jmol = new SymmetryJmol(multAln, ca1);
 			//jmol.setTitle(name);
 		}
 		

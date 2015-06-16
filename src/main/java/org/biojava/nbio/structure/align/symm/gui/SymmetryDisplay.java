@@ -4,6 +4,7 @@ import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.*;
 import org.biojava.nbio.structure.align.gui.AlignmentTextPanel;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
+import org.biojava.nbio.structure.align.gui.MultipleAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.MultipleAlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
@@ -13,7 +14,7 @@ import org.biojava.nbio.structure.align.multiple.BlockSet;
 import org.biojava.nbio.structure.align.multiple.BlockSetImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
-import org.biojava.nbio.structure.align.multiple.StructureAlignmentException;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.jama.Matrix;
 
@@ -25,6 +26,7 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JScrollPane;
+import javax.vecmath.Matrix4d;
 
 /**
  * Class that provides the visualizations options for the Symmetry analysis: multiple sequence alignments,
@@ -34,64 +36,15 @@ import javax.swing.JScrollPane;
  * 
  */
 public class SymmetryDisplay {
-
-	/**
-	 * Method that displays two superimposed subunits as a structural alignment in jmol.
-	 * Use the new method for multiple subunit alignment.
-	 * @param afpChain
-	 * @param ca1
-	 * @param ca2
-	 */
-	@Deprecated
-	public static void display2SuperimposedSubunits(AFPChain afpChain, Atom[] ca1, Atom[] ca2){
-		
-		//Create the atom arrays corresponding to the first and second subunits only
-		Atom[] ca1block = Arrays.copyOfRange(ca1, afpChain.getOptAln()[0][0][0], afpChain.getOptAln()[0][0][afpChain.getOptAln()[0][0].length-1]+1);
-		Atom[] ca2block = Arrays.copyOfRange(ca2, afpChain.getOptAln()[0][1][0], afpChain.getOptAln()[0][1][afpChain.getOptAln()[0][1].length-1]+1);
-		
-		//Modify the optimal alignment to include only one subunit (block)
-		int[][][] optAln = new int[1][][];
-		int[][] block = new int[2][];
-		//Normalize the residues of the subunits, to be in the range of ca1block and ca2block
-		int start1 = afpChain.getOptAln()[0][0][0];
-		int start2 = afpChain.getOptAln()[0][1][0];
-		int[] chain1 = new int[afpChain.getOptLen()[0]];
-		int[] chain2 = new int[afpChain.getOptLen()[0]];
-		for (int i=0; i<chain1.length; i++){
-			chain1[i] = afpChain.getOptAln()[0][0][i] - start1;
-			chain2[i] = afpChain.getOptAln()[0][1][i] - start2;
-		}
-		block[0] = chain1;
-		block[1] = chain2;
-		optAln[0] = block;
-		
-		//Modify the AFP chain to adapt the new optimal alignment of two subunits.
-		AFPChain displayAFP = new AFPChain();
-		
-		try {
-			displayAFP = AlignmentTools.replaceOptAln(optAln, displayAFP, ca1block, ca2block);
-		} catch (StructureException e1) {
-			e1.printStackTrace();
-		}
-
-		//Set the name of the protein
-		displayAFP.setName1(afpChain.getName1()+" su1");
-		displayAFP.setName2(afpChain.getName2()+" su2");
-		
-		//Display the alignment of the subunits
-		StructureAlignmentJmol jmolPanel = new StructureAlignmentJmol(displayAFP, ca1block, ca2block);
-		jmolPanel.evalString("hide ligand;");
-	}
 	
 	/**
 	 * Method that displays all superimposed subunits as a multiple alignment in jmol.
 	 * @param afpChain AFP alignment with subunits segmented as blocks
 	 * @param ca1
-	 * @throws StructureAlignmentException 
 	 * @throws StructureException 
 	 * @throws IOException 
 	 */
-	public static void displaySuperimposedSubunits(AFPChain afpChain, Atom[] ca1) throws StructureException, StructureAlignmentException, IOException{
+	public static void displaySuperimposedSubunits(AFPChain afpChain, Atom[] ca1) throws StructureException, IOException{
 		
 		//Create new structure containing the atom arrays corresponding to separate subunits
 		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
@@ -128,58 +81,30 @@ public class SymmetryDisplay {
 			block.getAlignRes().add(chain);
 		}
 		
+		//Set the transformations
+		List<Matrix4d> transforms = new ArrayList<Matrix4d>();
+		Matrix4d original = Calc.getTransformation(afpChain.getBlockRotationMatrix()[0], afpChain.getBlockShiftVector()[0]);
+		for (int str=0; str<multAln.size(); str++){
+			Matrix4d transform = (Matrix4d) original.clone();
+			for (int st=0; st<str; st++) transform.mul(original);
+			transforms.add(transform);
+		}
+		multAln.setTransformations(transforms);
+		MultipleAlignmentScorer.calculateScores(multAln);
+		
 		//Display the alignment of the subunits
-		displayMultipleAlignment(multAln, afpChain.getBlockRotationMatrix()[0], afpChain.getBlockShiftVector()[0]);
-	}
-	
-	/**
-	 * Method that displays a multiple structure alignment of the given alignment.
-	 * @param afpChain AFP alignment with subunits segmented as blocks
-	 * @param rot Matrix of rotation
-	 * @param shift Atom with translation coordinates
-	 * @throws StructureAlignmentException 
-	 * @throws StructureException 
-	 * @throws IOException 
-	 */
-	public static void displayMultipleAlignment(MultipleAlignment multAln, Matrix rot, Atom shift) throws StructureException, StructureAlignmentException, IOException{
+		MultipleAlignmentDisplay.display(multAln).evalString(new RotationAxis(afpChain).getJmolScript(ca1));
 		
-		//Apply the symmetry transformation different number of times
-		int size = multAln.size();
-
-		List<Atom[]> atomArrays = multAln.getEnsemble().getAtomArrays();
-		for (int i=0; i<size; i++){
-			if (atomArrays.get(i).length < 1) 
-				throw new StructureException("Length of atoms arrays is too short! " + atomArrays.get(i).length);
-		}
-		
-		List<Atom[]> rotatedAtoms = new ArrayList<Atom[]>();
-		//Rotate the atom coordinates of all the structures
-		for (int i=0; i<size; i++){
-			Structure displayS = atomArrays.get(i)[0].getGroup().getChain().getParent().clone();
-			Atom[] rotCA = StructureTools.getRepresentativeAtomArray(displayS);
-			//Rotate the structure the appropiate number of times
-			for (int k=0; k<i; k++){
-				Calc.rotate(displayS, rot);
-				Calc.shift(displayS, shift);
-			}
-			rotatedAtoms.add(rotCA);
-		}
-		MultipleAlignmentJmol jmol = new MultipleAlignmentJmol(multAln, rotatedAtoms);
-		jmol.setTitle(jmol.getStructure().getPDBHeader().getTitle());
-		//Include the rotation axis also in the multiple alignments
-		RotationAxis axis = new RotationAxis(rot, shift);
-		jmol.evalString(axis.getJmolScript(rotatedAtoms.get(0)));
 	}
 	
 	/**
 	 * Method that displays the multiple structure alignment of all symmetry rotations in jmol.
 	 * @param afpChain AFP alignment with subunits segmented as blocks
 	 * @param ca1
-	 * @throws StructureAlignmentException 
 	 * @throws StructureException 
 	 * @throws IOException 
 	 */
-	public static void displayMultipleAlignment(AFPChain afpChain, Atom[] ca1) throws StructureException, StructureAlignmentException, IOException{
+	public static void displayMultipleAlignment(AFPChain afpChain, Atom[] ca1) throws StructureException, IOException{
 			
 		//Create a list with multiple references to the atom array of the structure
 		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
@@ -209,7 +134,18 @@ public class SymmetryDisplay {
 				block.getAlignRes().add(chain);
 			}
 		}
-		displayMultipleAlignment(multAln, afpChain.getBlockRotationMatrix()[0], afpChain.getBlockShiftVector()[0]);
+		//Set the transformations
+		List<Matrix4d> transforms = new ArrayList<Matrix4d>();
+		Matrix4d original = Calc.getTransformation(afpChain.getBlockRotationMatrix()[0], afpChain.getBlockShiftVector()[0]);
+		for (int str=0; str<multAln.size(); str++){
+			Matrix4d transform = (Matrix4d) original.clone();
+			for (int st=0; st<str; st++) transform.mul(original);
+			transforms.add(transform);
+		}
+		multAln.setTransformations(transforms);
+		
+		//Display the multiple alignment of the rotations
+		MultipleAlignmentDisplay.display(multAln).evalString(new RotationAxis(afpChain).getJmolScript(ca1));
 	}
 	
 	/**

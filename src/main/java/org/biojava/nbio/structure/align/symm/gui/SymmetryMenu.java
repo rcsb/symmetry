@@ -16,7 +16,7 @@ import org.biojava.nbio.structure.align.gui.MyDistMaxListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 
 /**
- *  Create a menu for the Symmetry analysis GUI. Adapted from MenuCreator in biojava.
+ *  Create a menu for the Symmetry analysis GUI. Extends MenuCreator in biojava.
  *	
  *	@author Aleix Lafita
  *
@@ -30,9 +30,9 @@ public class SymmetryMenu extends MenuCreator {
 	public static final String SYMMETRY = "New Symmetry Analysis";
 	
 	/** 
-	 *  Provide a JMenuBar that can be added to a JFrame
+	 *  Provide a JMenuBar for the SymmetryJmol Frame.
 	 */
-	public static JMenuBar initMenu(JFrame frame, SymmetryJmol parent, AFPChain afpChain){
+	public static JMenuBar initJmolMenu(JFrame frame, SymmetryJmol parent, AFPChain afpChain){
 
 		JMenuBar menu = new JMenuBar();
 
@@ -103,15 +103,15 @@ public class SymmetryMenu extends MenuCreator {
 			JMenuItem textF = MenuCreator.getIcon(parent,FATCAT_TEXT);
 			textF.setMnemonic(KeyEvent.VK_F);
 			view.add(textF);
-		}
-
-		if ( afpChain != null){
+			
 			JMenuItem distMax = new  JMenuItem("Show Distance Matrices");
 			distMax.setMnemonic(KeyEvent.VK_D);
 			afpChain.setDisTable2(null); //we only have one structure, so we don't want to display the second duplicated matrix
-			distMax.addActionListener(new MyDistMaxListener(afpChain));
+			distMax.addActionListener(new MyDistMaxListener(parent));
 			view.add(distMax);
-
+		}
+			
+		if ( afpChain != null){
 			JMenuItem dotplot = new JMenuItem("Show Dot Plot");
 			dotplot.setMnemonic(KeyEvent.VK_O);
 			dotplot.addActionListener(new DotPlotListener(afpChain));

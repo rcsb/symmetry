@@ -11,6 +11,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.Box;
@@ -34,6 +35,7 @@ import org.biojava.nbio.structure.align.gui.jmol.RasmolCommandListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.webstart.AligUIManager;
+import org.biojava.nbio.structure.jama.Matrix;
 import org.jcolorbrewer.ColorBrewer;
 
 /** 
@@ -72,7 +74,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	      nrOpenWindows++;
 	      jmolPanel = new JmolPanel();
 	      frame = new JFrame();
-	      JMenuBar menu = SymmetryMenu.initMenu(frame,this, afp);
+	      JMenuBar menu = SymmetryMenu.initJmolMenu(frame,this, afp);
 	      frame.setJMenuBar(menu);
 	      
 	      this.afpChain = afp;
@@ -280,7 +282,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		    }
 		    //The colors are not the same as in the jmol display, the code can be adapted
 		    try {
-				DisplayAFP.showAlignmentImage(afpChain, ca, ca, this);
+				DisplayAFP.showAlignmentPanel(afpChain, ca, ca, this);
 			} catch (StructureException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
@@ -429,5 +431,11 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	         evalString(script);
 	         jmolPanel.evalString("save STATE state_1");
 	      }
+	}
+
+	@Override
+	public List<Matrix> getDistanceMatrices() {
+		if (afpChain==null) return null;
+		else return Arrays.asList(afpChain.getDisTable1());
 	}
 }

@@ -2,7 +2,6 @@ package org.biojava.nbio.structure.align.symm.refine;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.channels.IllegalSelectorException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,7 +14,7 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.SVDSuperimposer;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.MultipleAlignmentDisplay;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.multiple.Block;
 import org.biojava.nbio.structure.align.multiple.BlockImpl;
@@ -23,12 +22,10 @@ import org.biojava.nbio.structure.align.multiple.BlockSet;
 import org.biojava.nbio.structure.align.multiple.BlockSetImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
-import org.biojava.nbio.structure.align.multiple.StructureAlignmentException;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AtomCache;
 
 /**
@@ -90,9 +87,8 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	 * @param seed
 	 * @throws RefinerFailedException 
 	 * @throws StructureException 
-	 * @throws StructureAlignmentException 
 	 */
-	public SymmGapOptimizer(AFPChain seedAFP, Atom[] ca1, SymmetryType type, long seed) throws RefinerFailedException, StructureException, StructureAlignmentException {
+	public SymmGapOptimizer(AFPChain seedAFP, Atom[] ca1, SymmetryType type, long seed) throws RefinerFailedException, StructureException {
 		
 		//No multiple alignment can be generated if there is only one subunit
 		this.order = seedAFP.getBlockNum();
@@ -115,7 +111,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 		return msa;
 	}
 	
-	private void initialize(AFPChain afpChain, Atom[] ca1) throws StructureException, StructureAlignmentException {
+	private void initialize(AFPChain afpChain, Atom[] ca1) throws StructureException {
 		
 		//Initialize member variables
 		seedAFP = afpChain;
@@ -169,9 +165,8 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	 *  	3- Shrink Block: move a block column to the freePool.<p>
 	 *  	4- Insert gap: insert a gap in a random position of the alignment.
 	 *  
-	 * @throws StructureAlignmentException when the MultipleAlignment is generated.
 	 */
-	private void optimizeMC(int maxIter) throws StructureException, StructureAlignmentException{
+	private void optimizeMC(int maxIter) throws StructureException{
 		
 		//Initialize the history variables
 		subunitLenHistory = new ArrayList<Integer>();
@@ -267,9 +262,8 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 
 	/**
 	 * Once the optimization has ended, this method translates the internal data structures to a MultipleAlignment.
-	 * @throws StructureAlignmentException 
 	 */
-	private void generateMultipleAlignment() throws StructureAlignmentException {
+	private void generateMultipleAlignment() {
 		
 		//Organize information
 		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
@@ -834,7 +828,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	
 	public static void main(String[] args) throws Exception{
 		
-		String[] names = { "d1hl2a_" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
+		String[] names = { "d1i4na_" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
 		
 		for (String name:names){
 			
@@ -847,7 +841,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			CeSymm ceSymm = new CeSymm();
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 			params.setRefineMethod(RefineMethod.SINGLE);
-			params.setSymmetryType(SymmetryType.OPEN);
+			params.setSymmetryType(SymmetryType.AUTO);
 			params.setOptimization(false);
 			
 			AFPChain seedAFP = ceSymm.align(ca1, ca2);
@@ -859,7 +853,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			//SymmOptimizer optimizer = new SymmOptimizer(seedAFP, ca1, SymmetryType.CLOSED, 0);
 			//AFPChain multAln = optimizer.call();
 			
-			StructureAlignmentDisplay.display(multAln);
+			MultipleAlignmentDisplay.display(multAln);
 			//SymmetryJmol jmol = new SymmetryJmol(multAln, ca1);
 			//jmol.setTitle(name);
 		}

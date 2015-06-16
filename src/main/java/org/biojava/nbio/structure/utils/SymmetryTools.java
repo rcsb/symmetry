@@ -2,6 +2,7 @@ package org.biojava.nbio.structure.utils;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -9,7 +10,6 @@ import javax.swing.JFrame;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Group;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.ce.CECalculator;
 import org.biojava.nbio.structure.align.helper.AlignTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
@@ -38,7 +38,8 @@ public class SymmetryTools {
 	}
 
 	/**
-	 * Returns the "reset value" for graying out the main diagonal. If we're blanking out the main diagonal, this value is always Integer.MIN_VALUE. This is possible if {@code gradientPolyCoeff = {Integer.MIN_VALUE}} and {@code gradientExpCoeff = 0}.
+	 * Returns the "reset value" for graying out the main diagonal. If we're blanking out the main diagonal, this value is always Integer.MIN_VALUE. 
+	 * This is possible if {@code gradientPolyCoeff = {Integer.MIN_VALUE}} and {@code gradientExpCoeff = 0}.
 	 * @param unpenalizedScore
 	 * @param nResFromMainDiag
 	 * @param gradientPolyCoeff
@@ -329,10 +330,16 @@ public class SymmetryTools {
 	}
 	
 	/**
-	 * Builds an undirected graph in the form of an adjacency list where the vertices are the residues 
-	 * of the protein and the edges mean that the two residues are aligned.
+	 * Calculates a graph in the format of adjacency list from the set of alignments, where each vertex is a 
+	 * residue and each edge means the connection between the two residues in one of the alignments.
+	 * List dimensions: AdjList[vertices][edges]
+	 * 
+	 * @param allAlignment List of AFPChain
+	 * @param ca1 Atom array of the symmetric structure
+	 * @param undirected boolean make the graph undirected if true, make it directed otherwise
+	 * @author Aleix Lafita
 	 */
-	public static List<List<Integer>> buildAFPgraph(AFPChain afpChain, Atom[] ca1) {
+	public static List<List<Integer>> buildAFPgraph(List<AFPChain> allAlignments, Atom[] ca1, boolean undirected) {
 		
 		//Initialize the adjacency list that stores the graph
 		List<List<Integer>> adjList = new ArrayList<List<Integer>>();
@@ -341,21 +348,25 @@ public class SymmetryTools {
 			adjList.add(edges);
 		}
 		
-		for (int i=0; i<afpChain.getOptAln().length; i++){
-			for (int j=0; j<afpChain.getOptAln()[i][0].length; j++){
-			
-				//The vertex is the residue in the first chain and the edge the one in the second chain
-				int vertex = afpChain.getOptAln()[i][0][j];
-				int edge = afpChain.getOptAln()[i][1][j];
-				if (!adjList.get(vertex).contains(edge)){
-					adjList.get(vertex).add(edge);
-				}
-				//Make the graph undirected by inserting the back edge
-				if (!adjList.get(edge).contains(vertex)){
-					adjList.get(edge).add(vertex);
+		for (int k=0; k < allAlignments.size(); k++){
+			for (int i=0; i<allAlignments.get(k).getOptAln().length; i++){
+				for (int j=0; j<allAlignments.get(k).getOptAln()[i][0].length; j++){
+				
+					//The vertex is the residue in the first chain and the edge the one in the second chain
+					int vertex = allAlignments.get(k).getOptAln()[i][0][j];
+					int edge = allAlignments.get(k).getOptAln()[i][1][j];
+					if (!adjList.get(vertex).contains(edge)){
+						adjList.get(vertex).add(edge);
+					}
+					//Make the graph undirected (optional feature)
+					if (undirected) {
+						if (!adjList.get(edge).contains(vertex)) adjList.get(edge).add(vertex);
+					}
 				}
 			}
-		}		
+		}
+		//Sort the edges in the adjacency list to visit them in increasing order in the DFS
+		for (List<Integer> v:adjList) Collections.sort(v);
 		return adjList;
 	}
 }

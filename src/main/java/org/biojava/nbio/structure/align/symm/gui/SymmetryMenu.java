@@ -3,6 +3,7 @@ package org.biojava.nbio.structure.align.symm.gui;
 import java.awt.event.KeyEvent;
 
 import javax.swing.Box;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -15,22 +16,23 @@ import org.biojava.nbio.structure.align.gui.MyDistMaxListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 
 /**
- *  Create a menu for the Symmetry analysis GUI. Adapted from MenuCreator in biojava.
+ *  Create a menu for the Symmetry analysis GUI. Extends MenuCreator in biojava.
  *	
- *	@author lafita
+ *	@author Aleix Lafita
  *
  */
 public class SymmetryMenu extends MenuCreator {
 	
 	//Menu Options for the Symmetry Display
+	public static final String SEQUENCE_ALIGN = "Multiple Sequence Alignment";
 	public static final String SUBUNIT_DISPLAY = "Subunit Superimposition";
-	public static final String SUBUNIT_ALIGN = "Multiple Subunit Alignment";
+	public static final String MULTIPLE_STRUCT = "Multiple Structure Alignment";
 	public static final String SYMMETRY = "New Symmetry Analysis";
 	
 	/** 
-	 *  Provide a JMenuBar that can be added to a JFrame
+	 *  Provide a JMenuBar for the SymmetryJmol Frame.
 	 */
-	public static JMenuBar initMenu(JFrame frame, SymmetryJmol parent, AFPChain afpChain){
+	public static JMenuBar initJmolMenu(JFrame frame, SymmetryJmol parent, AFPChain afpChain){
 
 		JMenuBar menu = new JMenuBar();
 
@@ -80,74 +82,67 @@ public class SymmetryMenu extends MenuCreator {
 		JMenuItem exitI = getExitMenuItem();
 		file.add(exitI);
 		menu.add(file);
-
-		//ALIGN tab
+		
+		//Alignment tab to connect with regular pairwise alignments
 		JMenu align = new JMenu("Align");
 		align.setMnemonic(KeyEvent.VK_A);
 		JMenuItem pairI = getPairwiseAlignmentMenuItem();
 		align.add(pairI);
-
 		menu.add(align);
 
 		//VIEW tab
 		JMenu view = new JMenu("View");
-		view.getAccessibleContext().setAccessibleDescription("View Menu");
 		view.setMnemonic(KeyEvent.VK_V);
 
 		if ( parent != null){
 			JMenuItem aligpI = MenuCreator.getIcon(parent,ALIGNMENT_PANEL);
-			aligpI.setMnemonic(KeyEvent.VK_L);
-			aligpI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, keyMask));
+			aligpI.setMnemonic(KeyEvent.VK_P);
+			aligpI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, keyMask));
 			view.add(aligpI);
-
-			JMenuItem textI = MenuCreator.getIcon(parent,TEXT_ONLY);
-			textI.setMnemonic(KeyEvent.VK_T);
-			view.add(textI);
-
-			JMenuItem pairsI = MenuCreator.getIcon(parent,PAIRS_ONLY);
-			pairsI.setMnemonic(KeyEvent.VK_P);
-			view.add(pairsI);
-
+			
 			JMenuItem textF = MenuCreator.getIcon(parent,FATCAT_TEXT);
 			textF.setMnemonic(KeyEvent.VK_F);
 			view.add(textF);
-		}
-
-		if ( afpChain != null){
+			
 			JMenuItem distMax = new  JMenuItem("Show Distance Matrices");
 			distMax.setMnemonic(KeyEvent.VK_D);
-			distMax.addActionListener(new MyDistMaxListener(afpChain));
+			afpChain.setDisTable2(null); //we only have one structure, so we don't want to display the second duplicated matrix
+			distMax.addActionListener(new MyDistMaxListener(parent));
 			view.add(distMax);
-
+		}
+			
+		if ( afpChain != null){
 			JMenuItem dotplot = new JMenuItem("Show Dot Plot");
 			dotplot.setMnemonic(KeyEvent.VK_O);
 			dotplot.addActionListener(new DotPlotListener(afpChain));
 			view.add(dotplot);
 		}
-
+		
 		menu.add(view);
 		
 		//SYMMETRY tab
 		JMenu sym = new JMenu("Symmetry");
 		sym.setMnemonic(KeyEvent.VK_S);
 		
+		JMenuItem seq = new JMenuItem(SEQUENCE_ALIGN);
+		seq.addActionListener(parent);
+		seq.setMnemonic(KeyEvent.VK_L);
+		
 		JMenuItem subunits = new JMenuItem(SUBUNIT_DISPLAY);
 		subunits.addActionListener(parent);
 		subunits.setMnemonic(KeyEvent.VK_D);
 		
-		JMenuItem mulAln = new JMenuItem(SUBUNIT_ALIGN);
-		mulAln.addActionListener(parent);
-		mulAln.setMnemonic(KeyEvent.VK_M);
+		JMenuItem mulStAln = new JMenuItem(MULTIPLE_STRUCT);
+		mulStAln.addActionListener(parent);
+		mulStAln.setMnemonic(KeyEvent.VK_T);
 		
-		JMenuItem newSym = new JMenuItem(SYMMETRY);
+		JMenuItem newSym = getNewSymmetryMenuItem();
 		newSym.addActionListener(parent);
-		newSym.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, keyMask));
-		newSym.setMnemonic(KeyEvent.VK_Y);
 		
+		sym.add(seq);
 		sym.add(subunits);
-		sym.add(mulAln);
+		sym.add(mulStAln);
 		sym.add(newSym);
-
 		menu.add(sym);
 
 		//HELP tab
@@ -173,5 +168,18 @@ public class SymmetryMenu extends MenuCreator {
 	protected static void showSymmDialog(){
 		SymmetryGui gui =  SymmetryGui.getInstance();
 		gui.setVisible(true);
+	}
+	
+	private static JMenuItem getNewSymmetryMenuItem() {
+		ImageIcon alignIcon = createImageIcon("/icons/window_new.png");
+
+		JMenuItem symI;
+		if ( alignIcon == null)
+			symI = new JMenuItem(SYMMETRY);
+		else 
+			symI = new JMenuItem(SYMMETRY, alignIcon);
+		symI.setMnemonic(KeyEvent.VK_Y);
+		symI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, keyMask));
+		return symI;
 	}
 }

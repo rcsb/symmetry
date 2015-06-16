@@ -6,6 +6,8 @@ import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.model.AfpChainWriter;
+import org.biojava.nbio.structure.align.symm.CESymmParameters;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.util.AtomCache;
@@ -33,11 +35,17 @@ public class DemoCeSymm {
 		name = "3C1B.I:,J:"; // nucleosome DNA
 		//name = "3C1B.A:,B:,E:,F:,C:,D:,G:,H:"; // nucleosome second axis
 		name = "3F2Q";
+		name = "d1wp5a_"; //special case C6
+		name = "3EU9.A"; //hard cases non-closed: d1rmga_
+		//name = "1N0R.A";  //Ankyrin: 1N0R.A, 3EHQ.A, 3EU9.A
+		name = "1B3U.A";  //other repeats: 1xqr.A, 
 
-		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75);
+		ScopFactory.setScopDatabase(ScopFactory.VERSION_2_0_4);
 
 
 		CeSymm ceSymm = new CeSymm();
+		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
+		params.setRefineMethod(RefineMethod.SINGLE);
 
 		try {
 			ChemCompGroupFactory.setChemCompProvider(new ReducedChemCompProvider());

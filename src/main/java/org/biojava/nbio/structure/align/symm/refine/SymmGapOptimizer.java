@@ -31,7 +31,7 @@ import org.biojava.nbio.structure.align.util.AtomCache;
 /**
  * Optimizes an alignment by a Monte Carlo score optimization of the subunit multiple alignment.<p>
  * Implements Callable in order to parallelize multiple optimizations.<p>
- * Becuase gaps are allowed in some of the subunits, a {@link MultipleAlignment} format  returned.
+ * Because gaps are allowed in the subunits, a {@link MultipleAlignment} format is returned.
  * 
  * @author Aleix Lafita
  * 
@@ -44,9 +44,9 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	
 	//Optimization parameters
 	private static final int Rmin = 2;   //Minimum number of aligned structures without a gap
-	private static final int Lmin = 8;   //Minimum subunit length
+	private static final int Lmin = 15;   //Minimum subunit length
 	private int iterFactor = 1000; //Factor to control the max number of iterations of optimization
-	private double C = 10; //Probability function constant (probability of acceptance for bad moves)
+	private double C = 20; //Probability function constant (probability of acceptance for bad moves)
 	
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
@@ -175,8 +175,9 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 		
 		int conv = 0;  //Number of steps without an alignment improvement
 		int i = 1;
+		int stepsToConverge = maxIter/50;
 		
-		while (i<maxIter && conv<(maxIter/20)){
+		while (i<maxIter && conv<stepsToConverge){
 			
 			//Save the state of the system in case the modifications are not favorable
 			List<List<Integer>> lastBlock = new ArrayList<List<Integer>>();
@@ -193,10 +194,12 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			int lastGaps = gaps;
 			
 			boolean moved = false;
+			int options = 3;
+			if (conv > stepsToConverge/2) options = 4;   //Only allow gap insertion when the convergence is approaching.
 			
 			while (!moved){
-				//Randomly select one of the steps to modify the alignment. The movements are not equally probable.
-				int move = rnd.nextInt(4);
+				//Randomly select one of the steps to modify the alignment.
+				int move = rnd.nextInt(options);
 				switch (move){
 				case 0: moved = shiftRow();
 						if (debug) System.out.println("did shift");
@@ -769,7 +772,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 		//Loop through all the columns
 		for (int col=0; col<subunitLen; col++){
 			double d1 = colDistances[col];
-			double colScore = M/(1+(d1*d1)/(d0*d0));
+			double colScore = (M*2)/(1+(d1*d1)/(d0*d0))-M;
 			score += colScore;
 		}
 		return score-gaps*G;
@@ -807,7 +810,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 		
 		double prob = (C+AS)/(m);
 		double norm = (1-(m*1.0)/maxIter);  //Normalization factor (step/maxIter)
-		return Math.min(Math.max(prob*norm,0.0),0.2);
+		return Math.min(Math.max(prob*norm,0.0),1.0);
 	}
 	
 	/**
@@ -828,7 +831,8 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	
 	public static void main(String[] args) throws Exception{
 		
-		String[] names = { "d1i4na_" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
+		//Easy TIM: "d1i4na_"
+		String[] names = { "4i4q" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
 		
 		for (String name:names){
 			

@@ -421,7 +421,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 		// angle order cutoff
 		RotationAxis rot = new RotationAxis(afpChain);
-		order = rot.guessOrderFromAngle(Math.PI/180.0, 8);
+		order = rot.guessOrderFromAngle(Math.toRadians(1.0), 8);
 		if (order > 1) return true;
 		
 		// asymmetric

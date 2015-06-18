@@ -160,9 +160,9 @@ public class DetectOrder {
 			maxorder = Integer.parseInt(cli.getOptionValue('x'));
 		}
 
-		int angleIncr = 5; //degrees
+		int angleIncrDeg = 5; //degrees
 		if(cli.hasOption('a') ) {
-			angleIncr = Integer.parseInt(cli.getOptionValue('a'));
+			angleIncrDeg = Integer.parseInt(cli.getOptionValue('a'));
 		}
 		String outfile = null;
 		if(cli.hasOption('o')) {
@@ -211,7 +211,7 @@ public class DetectOrder {
 						out = new PrintStream(outfile);
 					}
 					out.println("Angle\tDistance");
-					printSuperpositionDistance(ca1,axis,Math.toRadians(angleIncr),out);
+					printSuperpositionDistance(ca1,axis,Math.toRadians(angleIncrDeg),out);
 				} catch(FileNotFoundException e) {
 					e.printStackTrace();
 				} finally {

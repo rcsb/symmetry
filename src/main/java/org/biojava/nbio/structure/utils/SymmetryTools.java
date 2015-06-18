@@ -57,6 +57,18 @@ public class SymmetryTools {
 		return updateVal;
 	}
 
+	/**
+	 * Grays out the main diagonal of a duplicated distance matrix
+	 * @param ca2
+	 * @param rows Number of rows
+	 * @param cols Number of original columns
+	 * @param calculator Used to get the matrix if origM is null
+	 * @param origM starting matrix. If null, uses {@link CECalculator#getMatMatrix()}
+	 * @param blankWindowSize Width of section to gray out
+	 * @param gradientPolyCoeff
+	 * @param gradientExpCoeff
+	 * @return
+	 */
 	public static Matrix grayOutCEOrig(Atom[] ca2, int rows, int cols,
 			CECalculator calculator, Matrix origM, int blankWindowSize, double[] gradientPolyCoeff, double gradientExpCoeff) {
 

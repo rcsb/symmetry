@@ -24,12 +24,12 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
-import org.biojava.nbio.structure.align.symm.refine.OpenRefiner;
-import org.biojava.nbio.structure.align.symm.refine.SymmOptimizer;
 import org.biojava.nbio.structure.align.symm.refine.MultipleRefiner;
+import org.biojava.nbio.structure.align.symm.refine.OpenRefiner;
 import org.biojava.nbio.structure.align.symm.refine.Refiner;
 import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
 import org.biojava.nbio.structure.align.symm.refine.SingleRefiner;
+import org.biojava.nbio.structure.align.symm.refine.SymmOptimizer;
 import org.biojava.nbio.structure.align.util.AFPChainScorer;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -185,7 +185,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 
 		afpChain.setDistanceMatrix(origM);
 		
-		return origM;
+		return origMfinal;
 
 	}
 
@@ -256,7 +256,8 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		
 		//Set multiple to true if multiple alignments are needed for refinement
 		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE);
-	
+		Matrix lastMatrix = null;
+
 	//STEP 1: perform the raw symmetry alignment
 		int i = 0;
 		do {
@@ -278,14 +279,15 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			//Calculate and set the TM score for the newAFP alignment
 			double tmScore3 = AFPChainScorer.getTMScore(newAFP, ca1, ca2);
 			newAFP.setTMScore(tmScore3);
-			
 			if (debug) logger.info("Alignment "+(i+1)+" score: "+newAFP.getTMScore());
-			
 			//Determine if the alignment is significant to do more alignment iterations
-			if (!isSignificant(newAFP,ca1)){
+			if (tmScore3 < symmetryThreshold){
 				if(debug) logger.info("Not symmetric alignment with TM score: "+newAFP.getTMScore());
 				//If it is the first alignment save it anyway and try to optimize it
 				if (i==0) afpAlignments.add(newAFP);
+
+				//store final matrix & 
+				lastMatrix = newAFP.getDistanceMatrix().copy();
 				break;
 			}
 			//If it is a symmetric alignment add it to the allAlignments list
@@ -294,6 +296,11 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			i++;
 			
 		} while (i < params.getMaxSymmOrder() && multiple);
+		if(lastMatrix == null && afpAlignments.size()>1 ) {
+			AFPChain last = afpAlignments.get( afpAlignments.size()-1 );
+			lastMatrix = SymmetryTools.blankOutPreviousAlignment(last,ca2, last.getCa1Length(), last.getCa2Length(), calculator, origM, params.getWinSize());
+			lastMatrix = lastMatrix.getMatrix(0, last.getCa1Length()-1, 0, last.getCa2Length()-1);
+		}
 		
 		//Save the results to the CeSymm member variables
 		afpChain = afpAlignments.get(0);
@@ -373,6 +380,12 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 				e.printStackTrace();
 			}
 		}
+		// copy last distance matrix over for visualization
+		if(lastMatrix != null) {
+			for(i=1;i<20;i++)
+				lastMatrix.set(i, i, 10);
+			afpChain.setDistanceMatrix(  lastMatrix );
+		}
 		return afpChain;
 	}
 
@@ -431,4 +444,18 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	public boolean isSignificant() throws StructureException {
 		return isSignificant(this.afpChain,this.ca1);
 	}
+
+	/**
+	 * If available, get the list of subalignments.
+	 * 
+	 * Should be length one unless {@link CESymmParameters#getMaxSymmOrder()}
+	 * was set.
+	 * 
+	 * 
+	 * @return the afpAlignments
+	 */
+	public List<AFPChain> getAfpAlignments() {
+		return afpAlignments;
+	}
+
 }

@@ -1,11 +1,13 @@
 package org.biojava.nbio.structure.align.symm.refine;
 
 /**
- * Refine alignment failed.
- * @author lafita
+ * Refinement of the symmetry alignment failed.
+ * 
+ * @author Aleix Lafita
  */
 public class RefinerFailedException extends Exception {
-	private static final long serialVersionUID = -7040421412578699838L;
+	
+	private static final long serialVersionUID = -3592155787060329421L;
 
 	public RefinerFailedException() {
 		super();

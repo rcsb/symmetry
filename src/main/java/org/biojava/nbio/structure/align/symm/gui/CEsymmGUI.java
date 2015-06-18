@@ -25,14 +25,12 @@ package org.biojava.nbio.structure.align.symm.gui;
 
 import javax.swing.JOptionPane;
 
+import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.ResidueNumber;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.StructureAlignment;
-import org.biojava.nbio.structure.align.StructureAlignmentFactory;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
+import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -41,9 +39,7 @@ import org.biojava.nbio.structure.align.symm.CeSymm;
 
 /**
  * Prompts the user for a structure, then displays the CE-Symm symmetry.
- * 
- * Further alignments can be made through the menus, but they will not include
- * rotation axis graphics.
+ * Further alignments can be made through the menus.
  * 
  * @author Spencer Bliven
  *
@@ -53,13 +49,13 @@ public class CEsymmGUI {
 
 	public static void main(String[] args) {
 		
-		//Add CeSymm to the top of the algorithm list
-		StructureAlignment[] algorithms = StructureAlignmentFactory.getAllAlgorithms();
+		//Add CeSymm to the top of the algorithm list - NO LONGER NEEDED FOR SymmetryGUI
+		/*StructureAlignment[] algorithms = StructureAlignmentFactory.getAllAlgorithms();
 		StructureAlignmentFactory.clearAlgorithms();
 		StructureAlignmentFactory.addAlgorithm(new CeSymm());
 		for(StructureAlignment alg: algorithms) {
 			StructureAlignmentFactory.addAlgorithm(alg);
-		}
+		}*/
 
 		//Get the pdb name from the user
 		String pdb = null;
@@ -92,8 +88,9 @@ public class CEsymmGUI {
 			else if(pdb.length()==0) continue; // Empty
 			
 			try {
-				ca1 = cache.getAtoms(pdb);
-				ca2 = cache.getAtoms(pdb);
+				Structure structure = cache.getStructure(pdb);
+				ca1 = StructureTools.getRepresentativeAtomArray(structure);
+				ca2 = StructureTools.cloneAtomArray(ca1);
 				caInter = cache.getAtoms(pdb);
 			} catch (Exception e) {
 				String error = e.getMessage();
@@ -108,7 +105,8 @@ public class CEsymmGUI {
 		
 		// Perform the CESymm alignment
 		try {
-			StructureAlignment cesymm = StructureAlignmentFactory.getAlgorithm(CeSymm.algorithmName);
+			//StructureAlignment cesymm = StructureAlignmentFactory.getAlgorithm(CeSymm.algorithmName);
+			CeSymm cesymm = new CeSymm();
 
 			AFPChain afp = cesymm.align(ca1, ca2);
 			afp.setName1(pdb);
@@ -120,24 +118,22 @@ public class CEsymmGUI {
 			}
 			
 			RotationAxis axis = new RotationAxis(afp);
-			StructureAlignmentJmol jmolPanel = StructureAlignmentDisplay.display(afp, ca1, ca2);
-			
-			String cmd = axis.getJmolScript(ca1);
-			jmolPanel.evalString(cmd);
+			SymmetryJmol jmol = new SymmetryJmol(afp, ca1);
+			jmol.setTitle(cesymm.algorithmName + ": "+pdb);
+			//showCurrentAlig(afp, ca1, ca2);
 			
 			System.out.println("Theta="+axis.getAngle());
+			
 		} catch(StructureException e) {
 			e.printStackTrace();
 		}
-
-
 	}
 	
-	public static void showCurrentAlig(AFPChain myAFP, Atom[] ca1, Atom[] ca2)
+	private static void showCurrentAlig(AFPChain myAFP, Atom[] ca1, Atom[] ca2)
 			throws StructureException {
+		
 		AFPChain c = (AFPChain) myAFP.clone();
-		StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(c, ca1,
-				ca2);
+		SymmetryJmol jmol = new SymmetryJmol(c, ca1);
 
 		// draw a line from center of gravity to N terminus
 
@@ -157,7 +153,6 @@ public class CEsymmGUI {
 		jmol.evalString("draw l1 line 100 " + cs1 + " (" + res1.getSeqNum()
 				+ ":" + chainId1 + ".CA/1) ; draw l2 line 100 " + cs2 + " ("
 				+ res2.getSeqNum() + ":" + chainId2 + ".CA/2);");
-
 	}
 	
 }

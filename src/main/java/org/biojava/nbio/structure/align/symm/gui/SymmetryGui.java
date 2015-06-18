@@ -3,7 +3,6 @@ package org.biojava.nbio.structure.align.symm.gui;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.StructureAlignment;
-import org.biojava.nbio.structure.align.StructureAlignmentFactory;
 import org.biojava.nbio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.nbio.structure.align.gui.AlignmentCalculationRunnable;
 import org.biojava.nbio.structure.align.gui.ParameterGUI;
@@ -22,11 +21,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
-/** A JFrame that allows to trigger a symmetry analysis, either from files in a directory,
- * 	or after manual upload. 
+/** 
+ *  A JFrame that allows to trigger a symmetry analysis, either from files in a directory or after manual upload. 
  * 	Adapted from the biojava AlignmentGui class.
  *
- * @author lafita
+ * @author Aleix Lafita
  *
  */
 public class SymmetryGui extends JFrame {
@@ -301,26 +300,25 @@ public class SymmetryGui extends JFrame {
 
 
 		try {
-			Structure s1 = tab.getStructure1();
+			Structure s = tab.getStructure1();
 
-			if ( s1 == null) {
+			if ( s == null) {
 				System.err.println("Please select structure");
 				return ;
 			}
-			Structure s2 = s1.clone();
 
 			String name = "custom";
 
 			if  ( pos == 0){
 				name = tab1.getName1();
 			} else {
-				name = s1.getName();
+				name = s.getName();
 			}
 			
 			System.out.println("Analyzing: " + name);
 
 
-			alicalc = new SymmetryCalc(this,s1,s2,name);
+			alicalc = new SymmetryCalc(this,s,name);
 
 
 			thread = new Thread(alicalc);

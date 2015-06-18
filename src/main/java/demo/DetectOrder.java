@@ -16,7 +16,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
@@ -212,7 +211,7 @@ public class DetectOrder {
 						out = new PrintStream(outfile);
 					}
 					out.println("Angle\tDistance");
-					printSuperpositionDistance(ca1,axis,angleIncr*Calc.radiansPerDegree,out);
+					printSuperpositionDistance(ca1,axis,Math.toRadians(angleIncr),out);
 				} catch(FileNotFoundException e) {
 					e.printStackTrace();
 				} finally {

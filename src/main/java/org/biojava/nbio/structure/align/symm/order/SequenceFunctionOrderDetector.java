@@ -38,6 +38,8 @@ public class SequenceFunctionOrderDetector implements OrderDetector {
 			throw new OrderDetectionFailedException(e);
 		}
 	}
+	
+	//Order Detector Fails: "d1osya_", "d1xq4a_", "d1yioa2", "d1dcea2"
 
 	@Override
 	public String toString() {

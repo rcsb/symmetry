@@ -5,18 +5,21 @@ import org.apache.commons.math3.util.Pair;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.census3.stats.CensusStatUtils;
+import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Determines order by smoothing and counting the number of peaks.
  * @author dmyersturnbull
  */
 public class PeakCountingOrderDetector implements OrderDetector {
+	private static final Logger logger = LoggerFactory.getLogger(PeakCountingOrderDetector.class);
 
-	private int maxOrder;
-	private double degreeSampling = 0.01;
+	private int maxOrder = 9;
+	private double degreeSampling = 1;
 	private double epsilon = 0.000001;
 	private double bandwidth = 0.1;
 	private int robustnessIterations = LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS;
@@ -33,23 +36,29 @@ public class PeakCountingOrderDetector implements OrderDetector {
 		try {
 
 			RotationAxis axis = new RotationAxis(afpChain);
+			logger.info("Calculating rotation samples");
 			Pair<double[],double[]> pair = RotationOrderDetector.sampleRotations(ca, axis, degreeSampling);
-
+			logger.info("Smoothing with LOESS");
 			LoessInterpolator loess = new LoessInterpolator(bandwidth, robustnessIterations, loessAccuracy);
 
 			double[] smoothed = loess.smooth(pair.getKey(), pair.getValue());
-
-			for (double d : pair.getKey()) {
-				System.out.print(CensusStatUtils.formatD(d) + "\t");
-			}
-			System.out.println();
-
-			for (double d : smoothed) {
-				System.out.print(CensusStatUtils.formatD(d) + "\t");
-			}
-			System.out.println();
+			logger.info("Counting Peaks");
 			
 			int nPeaks = countPeaks(smoothed, epsilon * Math.PI/180);
+			logger.info("Found {} peaks",nPeaks);
+			
+			String newline = System.getProperty("line.separator");
+			StringBuilder msg = new StringBuilder("Angle and Smoothed Distance:");
+			msg.append(newline);
+			for (double d : pair.getKey()) {
+				msg.append(CensusStatUtils.formatD(d) + "\t");
+			}
+			msg.append(newline);
+			
+			for (double d : smoothed) {
+				msg.append(CensusStatUtils.formatD(d) + "\t");
+			}
+			logger.info(msg.toString());
 			
 			/*
 			 *  TODO Currently this isn't likely to handle order=1 well,
@@ -119,6 +128,15 @@ public class PeakCountingOrderDetector implements OrderDetector {
 
 	public void setLoessAccuracy(double loessAccuracy) {
 		this.loessAccuracy = loessAccuracy;
+	}
+
+	@Override
+	public String toString() {
+		return "PeakCountingOrderDetector [maxOrder=" + maxOrder
+				+ ", degreeSampling=" + degreeSampling + ", epsilon=" + epsilon
+				+ ", bandwidth=" + bandwidth + ", robustnessIterations="
+				+ robustnessIterations + ", loessAccuracy=" + loessAccuracy
+				+ "]";
 	}
 
 	public static void main(String[] args) throws Exception {

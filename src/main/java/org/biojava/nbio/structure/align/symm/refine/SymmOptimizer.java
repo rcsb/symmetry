@@ -1,5 +1,6 @@
 package org.biojava.nbio.structure.align.symm.refine;
 
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -109,7 +110,9 @@ public class SymmOptimizer implements Callable<AFPChain> {
 		optimizeMC(iterFactor*ca.length);
 		
 		//Save the history to the results folder in the symmetry project
-		if (debug) saveHistory("src/main/java/results/SymmOptimizerHistory.csv");
+		try {
+			if (debug) saveHistory("src/main/java/results/SymmOptimizerHistory.csv");
+		} catch(FileNotFoundException e) {}
 		return afpChain;
 	}
 	

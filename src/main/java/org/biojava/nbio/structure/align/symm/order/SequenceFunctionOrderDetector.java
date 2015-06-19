@@ -41,4 +41,9 @@ public class SequenceFunctionOrderDetector implements OrderDetector {
 	
 	//Order Detector Fails: "d1osya_", "d1xq4a_", "d1yioa2", "d1dcea2"
 
+	@Override
+	public String toString() {
+		return "SequenceFunctionOrderDetector [maxSymmetry=" + maxSymmetry
+				+ ", minimumMetricChange=" + minimumMetricChange + "]";
+	}
 }

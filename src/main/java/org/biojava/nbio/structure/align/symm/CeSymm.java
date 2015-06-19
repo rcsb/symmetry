@@ -297,6 +297,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			
 		} while (i < params.getMaxSymmOrder() && multiple);
 		if(lastMatrix == null && afpAlignments.size()>1 ) {
+			// we reached the maximum order, so need to blank out the final alignment
 			AFPChain last = afpAlignments.get( afpAlignments.size()-1 );
 			lastMatrix = SymmetryTools.blankOutPreviousAlignment(last,ca2, last.getCa1Length(), last.getCa2Length(), calculator, origM, params.getWinSize());
 			lastMatrix = lastMatrix.getMatrix(0, last.getCa1Length()-1, 0, last.getCa2Length()-1);

@@ -123,7 +123,7 @@ public class HybridOrderDetector extends RotationOrderDetector implements OrderD
 		logger.trace("Optimizing orders from {} with prime factors {}-{}",startOrder,primes[minFactor],primes[maxFactor]);
 		final double threshold = startScore * scoreThreshold;
 		
-		if( minFactor > maxFactor) {
+		if( minFactor > maxFactor || startOrder > getMaxOrder()) {
 			return -1;
 		}
 		

@@ -178,6 +178,7 @@ public class DetectOrder {
 		}
 		//methods.add(new AngleOrderDetectorPlus(maxorder,100));
 		//methods.add(new HybridOrderDetector(maxorder, Math.PI/16, false, .85));
+		//methods.add(new MultipassOrderDetector(maxorder));
 		boolean displayAlignment = cli.hasOption('d') && ! cli.hasOption("nodisplay");
 
 //		System.out.println("Name:" + name);

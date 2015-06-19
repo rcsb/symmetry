@@ -22,6 +22,7 @@ import org.biojava.nbio.structure.align.multiple.BlockSet;
 import org.biojava.nbio.structure.align.multiple.BlockSetImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
@@ -51,7 +52,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	//Score function parameters
 	private static final double M = 20.0; //Maximum score of a match
 	private static final double G = 10.0; //Penalty for gaps
-	private double d0 = 5; //Maximum distance that is not penalized - chosen from seed alignment
+	private final double d0 = 5; //Maximum distance that is not penalized
 	
 	//Alignment Information
 	private MultipleAlignment msa;
@@ -104,7 +105,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	@Override
 	public MultipleAlignment call() throws Exception {
 		
-		optimizeMC(iterFactor*ca.length);
+		optimizeMC(iterFactor*ca.length*order);
 		
 		//Save the history to the results folder in the symmetry project
 		if (debug) saveHistory("src/main/java/results/SymmOptimizerHistory.csv");
@@ -194,12 +195,10 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 			int lastGaps = gaps;
 			
 			boolean moved = false;
-			int options = 3;
-			if (conv > stepsToConverge/2) options = 4;   //Only allow gap insertion when the convergence is approaching.
 			
 			while (!moved){
 				//Randomly select one of the steps to modify the alignment.
-				int move = rnd.nextInt(options);
+				int move = rnd.nextInt(4);
 				switch (move){
 				case 0: moved = shiftRow();
 						if (debug) System.out.println("did shift");
@@ -308,9 +307,9 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 		}
 		
 		//Set the scores
-		msa.putScore("MC-Score", mcScore);
+		msa.putScore("SymmMC-Score", mcScore);
 		msa.putScore("Symm-Score", tmScore);
-		msa.putScore("RMSD", rmsd);
+		msa.putScore(MultipleAlignmentScorer.RMSD, rmsd);
 		
 		//Set the algorithm information
 		msa.getEnsemble().setAlgorithmName(seedAFP.getAlgorithmName());
@@ -562,6 +561,21 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 		case 0:
 			
 			int rightBoundary = res;
+			int[] previousPos = new int[order];
+			for (int su=0; su<order; su++) previousPos[su] = -1;
+			
+			//Search a position to the right that has at minimum Rmin non consecutive residues (otherwise not enough freePool residues to expand)
+			while (subunitLen-1>rightBoundary){
+				int noncontinuous = 0;
+				for (int su=0; su<order; su++){
+					if (block.get(su).get(rightBoundary) == null) continue;
+					else if (previousPos[su] == -1) previousPos[su] = block.get(su).get(rightBoundary);
+					else if (block.get(su).get(rightBoundary) > previousPos[su]+1) noncontinuous++;
+				}
+				if (noncontinuous < Rmin) rightBoundary++;
+				else break;
+			}
+			rightBoundary--;
 			
 			//Expand the block with the residues at the subunit boundaries
 			for (int su=0; su<order; su++){
@@ -589,6 +603,20 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 		case 1:
 			
 			int leftBoundary = res;
+			int[] nextPos = new int[order];
+			for (int su=0; su<order; su++) nextPos[su] = -1;
+			
+			//Search a position to the right that has at minimum Rmin non consecutive residues (otherwise not enough freePool residues to expand)
+			while (leftBoundary>0){
+				int noncontinuous = 0;
+				for (int su=0; su<order; su++){
+					if (block.get(su).get(leftBoundary) == null) continue;
+					else if (nextPos[su] == -1) nextPos[su] = block.get(su).get(leftBoundary);
+					else if (block.get(su).get(leftBoundary) < nextPos[su]-1) noncontinuous++;
+				}
+				if (noncontinuous < Rmin) leftBoundary--;
+				else break;
+			}
 			
 			//Expand the block with the residues at the subunit boundaries
 			for (int su=0; su<order; su++){
@@ -772,7 +800,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 		//Loop through all the columns
 		for (int col=0; col<subunitLen; col++){
 			double d1 = colDistances[col];
-			double colScore = (M*2)/(1+(d1*d1)/(d0*d0))-M;
+			double colScore = M/(1+(d1*d1)/(d0*d0));
 			score += colScore;
 		}
 		return score-gaps*G;
@@ -832,7 +860,7 @@ public class SymmGapOptimizer implements Callable<MultipleAlignment> {
 	public static void main(String[] args) throws Exception{
 		
 		//Easy TIM: "d1i4na_"
-		String[] names = { "4i4q" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
+		String[] names = { "d1i4na_" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
 		
 		for (String name:names){
 			

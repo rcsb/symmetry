@@ -9,10 +9,11 @@ import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Chain;
+import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.jama.Matrix;
 
 /**
@@ -47,7 +48,7 @@ public class ChainSorter {
 		List<Atom[]> chainAtoms = new ArrayList<Atom[]>();
 		for (Chain c:structure.getChains()){
 			Atom[] atoms = StructureTools.getRepresentativeAtomArray(c);
-			chainAtoms.add(atoms);
+			if (atoms.length > 0) chainAtoms.add(atoms);
 		}
 		return cyclicSorter(chainAtoms);
 	}
@@ -60,7 +61,7 @@ public class ChainSorter {
 	 * <li>Pick the farthest chain from all others as the first (for open cases, can be random for closed).
 	 * <li>Iteratively pick the closest chain to the last one from the remaining set.
 	 * </ul>
-	 * In case of homo n-meric cyclic symmetry (Cn) the following theorem applies: 
+	 * In case of n-meric cyclic symmetry (Cn) the following theorem applies: 
 	 * "the closest point of another point is either the previous or the next in the 
 	 * 3D rotation around the axis of symmetry". That is true because the points are situated at
 	 * the edge of a circle. Thus, this property can be used to sort the chains in cyclic order.
@@ -142,20 +143,57 @@ public class ChainSorter {
 	}
 	
 	/**
+	 * Application: any quaternary symmetry supported.<p>
+	 * Assumes that the input Structure contains the chains in the biological assembly, 
+	 * otherwise the asymmetric unit symmetry will also be detected.
+	 * 
+	 * @param structure Structure containing the Chains
+	 * @return
+	 */
+	public static Atom[] quaternaryAxisSorter(Structure structure){
+		
+		//TODO
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		return null;
+	}
+	
+	/**
 	 * Test the chain ordering in some canonical examples:
-	 * <ul><li>4PJO: Hetero-heptamer, chain order B,A,G,E,F,D,C
-	 * <li>3CW1: Hetero-heptamer, chain order 
-	 * <li>1KQ1: Homo-hexamer, chain order A,B,M,K,I,H
+	 * <ul><li>4PJO: C7 Hetero-heptamer, chain order B,A,G,E,F,D,C
+	 * <li>3CW1: C7 Hetero-heptamer, chain order C,F,E,G,D,A,B
+	 * <li>1KQ1: C6 Homo-hexamer, chain order A,B,M,K,I,H
+	 * <li>
 	 * </ul>
 	 */
 	public static void main(String[] args) throws Exception {
 		
-		//String name  = "3CW1.A:,B:,C:,D:,E:,F:,G:";
-		//String name = "4PJO.A:,B:,C:,D:,E:,F:,G:";
-		String name  = "1KQ1.A:,B:,H:,I:,K:,M:";
+		//String name  = "3CW1";
+		//String name = "4PJO";
+		String name  = "1KQ1";
 		
-		AtomCache cache = new AtomCache();
-		Structure structure = cache.getStructure(name);
+		//Make sure that the biological assembly of the protein is loaded if available
+		Structure structure = null;
+		try {
+			structure = StructureIO.getBiologicalAssembly(name, 1);
+		} catch (StructureException e) {
+			structure = StructureIO.getBiologicalAssembly(name, 0);
+		}
 		
 		Atom[] ca1 = cyclicSorter(structure);
 		//Atom[] ca1 = StructureTools.getRepresentativeAtomArray(structure);

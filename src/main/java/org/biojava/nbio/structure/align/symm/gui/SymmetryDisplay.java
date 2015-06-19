@@ -68,6 +68,7 @@ public class SymmetryDisplay {
 		//All the residues are aligned in one block only
 		BlockSet blockSet = new BlockSetImpl(multAln);
 		Block block = new BlockImpl(blockSet);
+		block.setAlignRes(new ArrayList<List<Integer>>());
 		
 		for (int bk=0; bk<afpChain.getBlockNum(); bk++){
 			
@@ -124,6 +125,7 @@ public class SymmetryDisplay {
 			//Every subunit has a new BlockSet
 			BlockSet blockSet = new BlockSetImpl(multAln);
 			Block block = new BlockImpl(blockSet);
+			block.setAlignRes(new ArrayList<List<Integer>>());
 			
 			for (int k=0; k<order; k++){
 				List<Integer> chain = new ArrayList<Integer>();

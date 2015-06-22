@@ -32,6 +32,9 @@ public class OrderDetectorDeterminationAdaptor implements OrderDetermination {
 			throw new IllegalArgumentException("Alignment mapping needed to use adaptor");
 		}
 		try {
+			if(result.getId() == null) {
+				throw new NullPointerException("Null ID");
+			}
 			Atom[] ca1 = cache.getAtoms(result.getId());
 			Atom[] ca2 = cache.getAtoms(result.getId());
 			AFPChain afpChain = result.getAlignment().buildAfpChain(ca1, ca2);

@@ -1,14 +1,15 @@
 package demo;
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.Structure;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.model.AfpChainWriter;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -39,13 +40,20 @@ public class DemoCeSymm {
 		name = "3EU9.A"; //hard cases non-closed: d1rmga_
 		//name = "1N0R.A";  //Ankyrin: 1N0R.A, 3EHQ.A, 3EU9.A
 		name = "1B3U.A";  //other repeats: 1xqr.A, 
+		name = "d2ivza1";
+		name = "1ITB.A";
+		//name = "1vzw";
+		//name = "d1flgb_";
 
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_2_0_4);
 
 
 		CeSymm ceSymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-		params.setRefineMethod(RefineMethod.SINGLE);
+		params.setRefineMethod(RefineMethod.MULTIPLE);
+		//params.setMaxSymmOrder(3);
+		params.setOptimization(true);
+		params.setSymmetryType(SymmetryType.CLOSED);
 
 		try {
 			ChemCompGroupFactory.setChemCompProvider(new ReducedChemCompProvider());
@@ -59,7 +67,7 @@ public class DemoCeSymm {
 			
 			System.out.println(AfpChainWriter.toDBSearchResult(afpChain));
 			
-			StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+			SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
 			
 			RotationAxis axis = new RotationAxis(afpChain);
 			jmol.evalString(axis.getJmolScript(ca1));

@@ -8,6 +8,7 @@ import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 
 public class MultipassOrderDetector implements OrderDetector {
@@ -30,6 +31,8 @@ public class MultipassOrderDetector implements OrderDetector {
 		CESymmParameters params = (CESymmParameters) ce.getParameters();
 		params.setMaxSymmOrder(maxOrder);
 		params.setRefineMethod(RefineMethod.MULTIPLE);
+		params.setSymmetryType(SymmetryType.CLOSED);
+		params.setOptimization(false);
 		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 		try {
 			AFPChain best = ce.align(ca, ca2);
@@ -39,7 +42,15 @@ public class MultipassOrderDetector implements OrderDetector {
 			throw new OrderDetectionFailedException(e);
 		}
 		List<AFPChain> alignments = ce.getAfpAlignments();
-		return alignments.size() + 1;
+		// For high orders, take it from the number of alignments with unrefined TM above threshold
+		if(alignments.size() > 1) {
+			return alignments.size() + 1;
+		}
+		// For C1/C2, look at refined TM
+		if( alignments.get(0).getTMScore() >= CeSymm.symmetryThreshold )
+			return 2;
+		else
+			return 1;
 	}
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()

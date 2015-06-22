@@ -38,7 +38,7 @@ import org.biojava.nbio.structure.jama.Matrix;
  */
 public class SymmOptimizer implements Callable<AFPChain> {
 
-	private static final boolean debug = true;  //Prints the optimization moves and saves a file with the history in results
+	private static final boolean debug = false;  //Prints the optimization moves and saves a file with the history in results
 	private SymmetryType type;
 	private Random rnd;
 	

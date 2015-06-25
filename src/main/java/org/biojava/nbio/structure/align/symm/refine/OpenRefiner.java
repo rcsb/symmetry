@@ -141,11 +141,12 @@ public class OpenRefiner implements Refiner {
 	
 	public static void main(String[] args) throws StructureException, IOException{
 		
-		String name = "2bnh.A";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A, 1NFI.E
+		String name = "1ppr.O";  //Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A, 1NFI.E
 								  //Helical: 1EZG.A, 1D0B.A
 								  //LRR: 2bnh.A, 1dfj.I
 								  //HEAT: 1B3U.A
-								  //Ig-repeats: 2rik.A
+								  //TPR: 2FO7
+								  //Ig-repeats: 2rik.A, 1fnf.A
 								  //hevein: 1k7u.A
 								  //Rossman fold: d1heta2
 								  //benchmark H: d1af0a1, d1dcec3, d1kx9a_, d1l0sa_
@@ -155,7 +156,7 @@ public class OpenRefiner implements Refiner {
 								  //benchmark C6: d1wp5a_
 								  //TIM barrel duplication and twist: 1pii
 								  //beta-hairpin: d2biba1
-								  //two fold: 1vym.A
+								  //duplication: 1vym.A, 1ppr.O
 								  //clear repeats-turn-repeats example: 1S70.B - CeSymm makes slip alignment near identity...
 
 		AtomCache cache = new AtomCache();

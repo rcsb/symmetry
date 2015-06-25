@@ -7,9 +7,8 @@ import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.model.AfpChainWriter;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
+import org.biojava.nbio.structure.align.symm.order.AngleOrderDetectorPlus;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.io.mmcif.ChemCompGroupFactory;
@@ -38,14 +37,14 @@ public class DemoCeSymm {
 		name = "d1wp5a_"; //special case C6
 		name = "3EU9.A"; //hard cases non-closed: d1rmga_
 		//name = "1N0R.A";  //Ankyrin: 1N0R.A, 3EHQ.A, 3EU9.A
-		name = "1B3U.A";  //other repeats: 1xqr.A, 
+		name = "d3k3aj_";  //other repeats: 1xqr.A, 1b3u.A
 
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_2_0_4);
 
 
 		CeSymm ceSymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-		params.setRefineMethod(RefineMethod.SINGLE);
+		//params.setRefineMethod(RefineMethod.SINGLE);
 
 		try {
 			ChemCompGroupFactory.setChemCompProvider(new ReducedChemCompProvider());
@@ -54,17 +53,19 @@ public class DemoCeSymm {
 			Atom[] ca2 = StructureTools.getRepresentativeAtomArray(struct.clone());
 //			Atom[] ca2 = StructureTools.cloneAtomArray(ca1); // loses ligands
 			AFPChain afpChain = ceSymm.align(ca1, ca2);
+			
 			afpChain.setName1(name);
 			afpChain.setName2(name);
 			
 			System.out.println(AfpChainWriter.toDBSearchResult(afpChain));
 			
 			StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+			//new SymmetryJmol(newAFP, ca2);
 			
 			RotationAxis axis = new RotationAxis(afpChain);
 			jmol.evalString(axis.getJmolScript(ca1));
 			
-			int symmNr = new SequenceFunctionOrderDetector().calculateOrder(afpChain, ca1);
+			int symmNr = new AngleOrderDetectorPlus(8).calculateOrder(afpChain, ca1);
 			System.out.println("Symmetry order of: " + symmNr);
 			
 		} catch (Exception e){

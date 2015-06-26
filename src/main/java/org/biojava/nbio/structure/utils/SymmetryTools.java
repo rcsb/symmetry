@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JFrame;
+import javax.vecmath.Matrix4d;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Group;
@@ -380,5 +381,24 @@ public class SymmetryTools {
 		//Sort the edges in the adjacency list to visit them in increasing order in the DFS
 		for (List<Integer> v:adjList) Collections.sort(v);
 		return adjList;
+	}
+	
+	/**
+	 * Method that compares two symmetry axis and returns true if they are equivalent (within a confidence interval)
+	 * They are considered equivalent if the difference of every entry is within the confidence interval.
+	 * 
+	 * @param axis1
+	 * @param axis2
+	 * @return true if they are equivalent, false otherwise
+	 */
+	public static boolean areEquivalentAxis(Matrix4d axis1, Matrix4d axis2, double confidence) {
+				
+		for (int row=0; row<4; row++){
+			for (int col=0; col<4; col++){
+				if (axis1.getElement(row, col) - axis2.getElement(row, col) < confidence) continue;
+				else return false;
+			}
+		}
+		return true;
 	}
 }

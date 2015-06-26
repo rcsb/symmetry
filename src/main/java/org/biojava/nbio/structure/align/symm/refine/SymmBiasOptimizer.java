@@ -55,6 +55,10 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 	private int iterFactor = 100; //Factor to control the max number of iterations of optimization
 	private double C = 20; //Probability function constant (probability of acceptance for bad moves)
 	
+	//Score function parameters - they are defined by the user
+	private double Gopen = 10.0; //Penalty for opening gap
+	private double Gextend = 5.0; //Penalty for extending gaps
+	
 	//Alignment Information
 	private MultipleAlignment msa;
 	private AFPChain seedAFP;
@@ -122,6 +126,7 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 		ca = ca1;
 		order = afpChain.getBlockNum();
 		subunitLen = afpChain.getOptLen()[0];
+		C = 10*order;
 		
 		//Initialize MultipleAlignment
 		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
@@ -164,7 +169,7 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 		//Set the MC score and RMSD of the initial state (seed alignment)
 		updateTransformation();
 		subunitMultipleAlignment();
-		mcScore = MultipleAlignmentScorer.getCEMCScore(msa);
+		mcScore = MultipleAlignmentScorer.getMultipleMCScore(msa, Gopen, Gextend);
 	}
 	
 	/**
@@ -227,7 +232,7 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 			//Get the properties of the new alignment
 			updateTransformation();
 			subunitMultipleAlignment();
-			mcScore = MultipleAlignmentScorer.getCEMCScore(msa);
+			mcScore = MultipleAlignmentScorer.getMultipleMCScore(msa, Gopen, Gextend);
 			
 			//Calculate change in the optimization Score
 			double AS = mcScore-lastScore;
@@ -278,7 +283,8 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 		//Create transformations from the symmetry operation
 		List<Matrix4d> transformations = new ArrayList<Matrix4d>();		
 		for (int i=0; i<order; i++){
-			Matrix4d transformTimes = new Matrix4d(transformation);
+			Matrix4d transformTimes = new Matrix4d();
+			transformTimes.setIdentity();
 			for (int j=0; j<i; j++) transformTimes.mul(transformation);
 			transformations.add(transformTimes);
 		}
@@ -300,14 +306,15 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 		//Superimpose and calculate scores clear
 		updateTransformation();
 		subunitMultipleAlignment();
-		mcScore = MultipleAlignmentScorer.getCEMCScore(msa);
+		mcScore = MultipleAlignmentScorer.getMultipleMCScore(msa, Gopen, Gextend);
 		double tmScore = MultipleAlignmentScorer.getAvgTMScore(msa) * order;   //because the max size of the alignment is length/order
 		rmsd = MultipleAlignmentScorer.getRMSD(msa);
 		
 		//Create transformations from the symmetry operation
 		List<Matrix4d> transformations = new ArrayList<Matrix4d>();
 		for (int i=0; i<order; i++){
-			Matrix4d transformTimes = new Matrix4d(transformation);
+			Matrix4d transformTimes = new Matrix4d();
+			transformTimes.setIdentity();
 			for (int j=0; j<i; j++) transformTimes.mul(transformation);
 			transformations.add(transformTimes);
 		}
@@ -332,8 +339,8 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 		}
 		
 		//Set the scores
-		msa.putScore(MultipleAlignmentScorer.CEMC_SCORE, mcScore);
-		msa.putScore(MultipleAlignmentScorer.AVG_TMSCORE, tmScore);
+		msa.putScore(MultipleAlignmentScorer.MC_SCORE, mcScore);
+		msa.putScore(MultipleAlignmentScorer.AVGTM_SCORE, tmScore);
 		msa.putScore(MultipleAlignmentScorer.RMSD, rmsd);
 	}
 	
@@ -398,6 +405,7 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 						if (rnd.nextDouble() > 0.5) {   //Introduce some randomness in the choice
 							su = s;
 							res = col;
+							maxDist = residueDistances.get(s, col);
 						}
 					}
 				}
@@ -775,12 +783,12 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 	/**
 	 *  Calculates the probability of accepting a bad move given the iteration step and the score change.
 	 *  
-	 *  Function: p=(C-AS)/m   *from the CEMC algorithm.
+	 *  Function: p=(C-AS)/(C)
 	 *  Added a normalization factor so that the probability approaches 0 when the maxIter is reached.
 	 */
 	private double probabilityFunction(double AS, int m, int maxIter) {
 		
-		double prob = (C+AS)/(m);
+		double prob = (C+AS)/(C*Math.sqrt(m));
 		double norm = (1-(m*1.0)/maxIter);  //Normalization factor (step/maxIter)
 		return Math.min(Math.max(prob*norm,0.0),1.0);
 	}
@@ -804,7 +812,9 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 	public static void main(String[] args) throws Exception{
 		
 		//Easy TIM: "d1i4na_"
-		String[] names = { "d1eexa_" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
+		//Crystallins: 4GCR, d4gcra1, d4gcra2
+		//Aspartic proteinases: 
+		String[] names = { "4i4q" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
 		
 		for (String name:names){
 			
@@ -816,14 +826,14 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 			
 			CeSymm ceSymm = new CeSymm();
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-			//params.setRefineMethod(RefineMethod.SINGLE);
+			params.setRefineMethod(RefineMethod.SINGLE);
 			params.setSymmetryType(SymmetryType.AUTO);
 			params.setOptimization(false);
 			
 			AFPChain seedAFP = ceSymm.align(ca1, ca2);
 			seedAFP.setName1(name);
-			SingleRefiner refiner = new SingleRefiner();
-			seedAFP = refiner.refine(Arrays.asList(seedAFP), ca1, ca2, 8);
+			//SingleRefiner refiner = new SingleRefiner();
+			//seedAFP = refiner.refine(Arrays.asList(seedAFP), ca1, ca2, 8);
 			SymmBiasOptimizer optimizer = new SymmBiasOptimizer(seedAFP, ca1, SymmetryType.CLOSED, 0);
 			MultipleAlignment multAln = optimizer.call();
 			//SymmOptimizer optimizer = new SymmOptimizer(seedAFP, ca1, SymmetryType.CLOSED, 0);

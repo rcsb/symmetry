@@ -1274,7 +1274,7 @@ public class SymmOptimizer implements Callable<AFPChain> {
 						  //"d1g73b_", "d3pmra_", "d3b5zd2", "d1o5hb_", "d2c2lb1", "d2g38b1", "d1s2xa_", "d1r8ia_"     //SLIP alignment
 						  //"d1osya_", "d1xq4a_", "d1yioa2", "d1dcea2", //C2
 						  //coiled coil: LPP-56 1jcd, CspB 
-						  "1jof.A"};  //other
+						  "4gcr"};  //other
 		
 		for (String name:names){
 			

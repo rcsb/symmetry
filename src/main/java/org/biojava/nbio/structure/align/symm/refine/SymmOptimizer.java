@@ -1295,8 +1295,8 @@ public class SymmOptimizer implements Callable<AFPChain> {
 			afpChain.setName1(name);
 			afpChain.setName2(name);
 			
-			SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
-			//StructureAlignmentJmol jmol2 = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+			//SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
+			StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
 			jmol.setTitle(name);
 		}
 		

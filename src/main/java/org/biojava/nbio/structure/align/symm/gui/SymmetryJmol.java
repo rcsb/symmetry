@@ -22,17 +22,20 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
 import javax.swing.JTextField;
+import javax.vecmath.Matrix4d;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.gui.DisplayAFP;
 import org.biojava.nbio.structure.align.gui.MenuCreator;
+import org.biojava.nbio.structure.align.gui.MultipleAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.AbstractAlignmentJmol;
 import org.biojava.nbio.structure.align.gui.jmol.JmolPanel;
 import org.biojava.nbio.structure.align.gui.jmol.JmolTools;
 import org.biojava.nbio.structure.align.gui.jmol.MyJmolStatusListener;
 import org.biojava.nbio.structure.align.gui.jmol.RasmolCommandListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignmentWriter;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.webstart.AligUIManager;
 import org.biojava.nbio.structure.jama.Matrix;
@@ -49,37 +52,61 @@ import org.jcolorbrewer.ColorBrewer;
 public class SymmetryJmol extends AbstractAlignmentJmol {
 	   
 	private Color[] subunitColors;
-	private AFPChain afpChain;
+	private MultipleAlignment msa;
 	private Atom[] ca;
 	
 	/**
 	 * Empty Constructor.
 	 * @throws StructureException
 	 */
-	public SymmetryJmol() throws StructureException{
-		this(null,null);
+	public SymmetryJmol() throws StructureException {
+		this(null, null);
 	}
 	
 	/**
-	 * Main Constructor with an AFPChain.
-	 * @param afpChain
-	 * @param ca1
-	 * @param subunitColors
+	 * Constructor with a MultipleAlignment of the subunits. Default axis.
+	 * The atoms in the alignment must be the complete structure,
+	 * but the alignment should only contain one Block with every
+	 * subunit as a new row.
+	 * 
+	 * @param MultipleAlignment subunit multiple alignment (generated from optimization)
 	 * @throws StructureException
 	 */
-	public SymmetryJmol(AFPChain afp, Atom[] ca1) throws StructureException {
+	public SymmetryJmol(MultipleAlignment alignment) throws StructureException {
+		
+		this(alignment, new ArrayList<RotationAxis>());
+		
+		//Get the DEFAULT rotation axis if the user does not input it
+		if (alignment.getTransformations() != null){
+			Matrix4d transform = alignment.getTransformations().get(alignment.getTransformations().size()-1);
+			RotationAxis axis = new RotationAxis(transform);
+			evalString(axis.getJmolScript(ca));
+		}
+	}
+	
+	/**
+	 * Main Constructor with a MultipleAlignment of the subunits.
+	 * The atoms in the alignment must be the complete structure,
+	 * but the alignment should only contain one Block with every
+	 * subunit as a new row.
+	 * 
+	 * @param MultipleAlignment subunit multiple alignment (generated from optimization)
+	 * @param axis set of rotation axis that describe the symmetry of the structure
+	 * @throws StructureException
+	 */
+	public SymmetryJmol(MultipleAlignment alignment, List<RotationAxis> axis) throws StructureException {
 		  
 	      AligUIManager.setLookAndFeel();
 
 	      nrOpenWindows++;
 	      jmolPanel = new JmolPanel();
 	      frame = new JFrame();
-	      JMenuBar menu = SymmetryMenu.initJmolMenu(frame,this, afp);
+	      JMenuBar menu = SymmetryMenu.initJmolMenu(frame, this, alignment);
 	      frame.setJMenuBar(menu);
 	      
-	      this.afpChain = afp;
-	      this.ca = ca1;
-	      this.subunitColors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
+	      this.msa = alignment;
+	      this.ca = msa.getEnsemble().getAtomArrays().get(0);
+	      this.subunitColors = ColorBrewer.Set1.getColorPalette(alignment.size());
 
 	      frame.addWindowListener(new WindowAdapter()
 	      {
@@ -147,7 +174,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 			hBox1.add(new JLabel("Color"));
 			hBox1.add(colors);
 			
-			String[] colorPattelete = new String[] {"Color Set", "Spectral", "2Colors", "3Colors", "Pastel", "Paired", "Reds", "Blues" ,"Greens" , "Oranges"};
+			String[] colorPattelete = new String[] {"Color Set", "Spectral", "2Colors", "3Colors", "Pastel", "Reds", "Blues" ,"Greens"};
 			JComboBox pattelete = new JComboBox(colorPattelete);
 			
 			pattelete.addActionListener(new ActionListener() {
@@ -158,32 +185,31 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 					String value = source.getSelectedItem().toString();
 					evalString("save selection; select *; color grey; select ligand; color CPK;");
 					if (value=="Color Set"){
-						subunitColors = ColorBrewer.Set1.getColorPalette(afpChain.getBlockNum());
+						subunitColors = ColorBrewer.Set1.getColorPalette(msa.size());
+						colorPalette = ColorBrewer.Set1;
 					} else if (value=="Spectral"){
-						subunitColors = ColorBrewer.Spectral.getColorPalette(afpChain.getBlockNum());
+						subunitColors = ColorBrewer.Spectral.getColorPalette(msa.size());
+						colorPalette = ColorBrewer.Spectral;
 					} else if (value=="2Colors"){
 						subunitColors = ColorBrewer.Set1.getColorPalette(2);
+						colorPalette = ColorBrewer.Set1;
 					} else if (value=="3Colors"){
 						subunitColors = ColorBrewer.Set1.getColorPalette(3);
+						colorPalette = ColorBrewer.Set1;
 					} else if (value=="Pastel"){
-						subunitColors = ColorBrewer.Pastel1.getColorPalette(afpChain.getBlockNum());
-					} else if (value=="Paired"){
-						subunitColors = ColorBrewer.Paired.getColorPalette(afpChain.getBlockNum());
+						subunitColors = ColorBrewer.Pastel1.getColorPalette(msa.size());
+						colorPalette = ColorBrewer.Pastel1;
 					} else if (value=="Reds"){
-						subunitColors = ColorBrewer.Reds.getColorPalette(afpChain.getBlockNum());
+						subunitColors = ColorBrewer.Reds.getColorPalette(msa.size());
+						colorPalette = ColorBrewer.Reds;
 					} else if (value=="Blues"){
-						subunitColors = ColorBrewer.Blues.getColorPalette(afpChain.getBlockNum());
+						subunitColors = ColorBrewer.Blues.getColorPalette(msa.size());
+						colorPalette = ColorBrewer.Blues;
 					} else if (value=="Greens"){
-						subunitColors = ColorBrewer.Greens.getColorPalette(afpChain.getBlockNum());
-					} else if (value=="Oranges"){
-						subunitColors = ColorBrewer.Oranges.getColorPalette(afpChain.getBlockNum());
-					} else {
-						subunitColors = ColorBrewer.Greys.getColorPalette(afpChain.getBlockNum());
+						subunitColors = ColorBrewer.Greens.getColorPalette(msa.size());
+						colorPalette = ColorBrewer.Greens;
 					}
-					StringWriter script = new StringWriter();
-					for(int bk = 0; bk < afpChain.getBlockNum(); bk ++)
-				         printJmolScript4Block(ca, afpChain.getBlockNum(), afpChain.getOptLen(), afpChain.getOptAln(), script, bk, subunitColors);
-					evalString(script.toString()+"restore selection; ");
+					evalString(getJmolString(msa, ca, subunitColors)+"; restore selection;");
 				}
 			});
 
@@ -261,12 +287,16 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		  
 	      // init coordinates
 	      initCoords();
-	      //Rotation axis
-		  RotationAxis axis = new RotationAxis(afpChain);
-		  String cmd = axis.getJmolScript(ca1);
-		  jmolPanel.evalString(cmd);
-		  
+	      printSymmetryAxis(axis);
 	      resetDisplay();
+	}
+	
+	private void printSymmetryAxis(List<RotationAxis> symmetryAxis){
+		
+		for (int a=0; a<symmetryAxis.size(); a++){
+			String script = symmetryAxis.get(a).getJmolScript(ca, a);
+			evalString(script);
+		}
 	}
 	
 	/**
@@ -276,57 +306,55 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
    	public void actionPerformed(ActionEvent e) {
 		String cmd = e.getActionCommand();		    
 		if (cmd.equals(MenuCreator.ALIGNMENT_PANEL)){
-		    if ( afpChain == null) {
-		       System.err.println("Currently not viewing an alignment!");
+		    if (msa == null) {
+		       System.err.println("Currently not displaying a symmetry!");
 		       return;
 		    }
-		    //The colors are not the same as in the jmol display, the code can be adapted
 		    try {
-				DisplayAFP.showAlignmentPanel(afpChain, ca, ca, this);
+		    	MultipleAlignmentDisplay.showMultipleAligmentPanel(msa, this, colorPalette);
 			} catch (StructureException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		
 	    } else if (cmd.equals(MenuCreator.FATCAT_TEXT)){
-	          if ( afpChain == null) {
-	             System.err.println("Currently not viewing an alignment!");
+	          if (msa == null) {
+	             System.err.println("Currently not displaying a symmetry!");
 	             return;
 	          }
-	          String result = afpChain.toFatcat(ca, ca);
+	          String result = MultipleAlignmentWriter.toFatCat(msa);
 	          result += AFPChain.newline;
-	          result += afpChain.toRotMat();
-	          DisplayAFP.showAlignmentImage(afpChain, result);
+	          result += MultipleAlignmentWriter.toTransformMatrices(msa);
+	          MultipleAlignmentDisplay.showAlignmentImage(msa, result);
 	          
 		} else if (cmd.equals(SymmetryMenu.SUBUNIT_DISPLAY)){
-	    	 if ( afpChain == null) {
-	              System.err.println("Currently not viewing a symmetry!");
+	    	 if (msa == null) {
+	              System.err.println("Currently not displaying a symmetry!");
 	              return;
 	    	 }
 	         try {
-					SymmetryDisplay.displaySuperimposedSubunits(afpChain, ca);
+					//SymmetryDisplay.displaySuperimposedSubunits(msa);
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
 	         
 		} else if (cmd.equals(SymmetryMenu.SEQUENCE_ALIGN)){
-	    	 if (afpChain == null) {
-	              System.err.println("Currently not viewing a symmetry!");
+	    	 if (msa == null) {
+	              System.err.println("Currently not displaying a symmetry!");
 	              return;
 	    	 }
 	         try {
-					SymmetryDisplay.showAlignmentImage(afpChain, ca);
+	        	 	MultipleAlignmentWriter.toFASTA(msa);
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
 	         
 		} else if (cmd.equals(SymmetryMenu.MULTIPLE_STRUCT)){
-	    	 if ( afpChain == null) {
-	              System.err.println("Currently not viewing a symmetry!");
+	    	 if (msa == null) {
+	              System.err.println("Currently not displaying a symmetry!");
 	              return;
 	          }
 	    	  try {
-				SymmetryDisplay.displayMultipleAlignment(afpChain, ca);
+	    		  //SymmetryDisplay.displayMultipleAlignment(msa);
 			} catch (Exception e1){
 				e1.printStackTrace();
 			}
@@ -336,45 +364,17 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	    	  SymmetryMenu.showSymmDialog();
 	    }
       }
-   
-	   public static String getJmolScript4Block(AFPChain afpChain, Atom[] ca, int blockNr, Color[] subunitColors){
-		   int blockNum = afpChain.getBlockNum();
-		   
-		   if ( blockNr >= blockNum)
-			   return DEFAULT_SCRIPT;
-			   		   
-		   int[] optLen = afpChain.getOptLen();
-		   int[][][] optAln = afpChain.getOptAln();
 	
-		   if ( optLen == null)
-			   return DEFAULT_SCRIPT;
-	
-		   StringWriter jmol = new StringWriter();
-		   jmol.append(DEFAULT_SCRIPT);
-		      
-		   printJmolScript4Block(ca, blockNum, optLen, optAln, jmol, blockNr, subunitColors);
-		   
-		   jmol.append(LIGAND_DISPLAY_SCRIPT);
-		   //System.out.println(jmol);
-		   return jmol.toString();
-	
-	   }
-	
-	   private static String getJmolString(AFPChain afpChain, Atom[] ca1, Color[] subunitColors) {
-	
-	      int blockNum = afpChain.getBlockNum();      
-	      int[] optLen = afpChain.getOptLen();
-	      int[][][] optAln = afpChain.getOptAln();
-	
-	      if ( optLen == null)
-	         return DEFAULT_SCRIPT;
-	
+	public static String getJmolString(MultipleAlignment msa, Atom[] ca, Color[] subunitColors) {
+		
 	      StringWriter jmol = new StringWriter();
 	      jmol.append(DEFAULT_SCRIPT);
 	      
-	      for(int bk = 0; bk < blockNum; bk++ ) {
+	      List<List<Integer>> alignRes = msa.getBlocks().get(0).getAlignRes();
+	      
+	      for(int str=0; str < alignRes.size(); str++) {
 	
-	         printJmolScript4Block(ca1, blockNum, optLen, optAln, jmol, bk, subunitColors);
+	         printJmolScript4Block(ca, alignRes, jmol, str, subunitColors);
 	         jmol.append("backbone 0.6 ;");
 	      }
 	      
@@ -382,34 +382,30 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	      //System.out.println(jmol);
 	      return jmol.toString();
 	      
-	   }
+	}
 	   
-	   private static void printJmolScript4Block(Atom[] ca, int blockNum,
-				int[] optLen, int[][][] optAln, StringWriter jmol, int bk, Color[] colors) {
+	private static void printJmolScript4Block(Atom[] ca, List<List<Integer>> alignRes, StringWriter jmol, int str, Color[] colors) {
 						 
-			 Color c1 = colors[bk%colors.length];
+			 Color c1 = colors[str%colors.length];
 			 
-			 List<String> pdb1 = new ArrayList<String>();
-			 for ( int i=0;i< optLen[bk];i++) {
-			    int pos1 = optAln[bk][0][i];
-			    pdb1.add(JmolTools.getPdbInfo(ca[pos1]));
+			 List<String> pdb = new ArrayList<String>();
+			 for (int i=0; i< alignRes.get(str).size(); i++) {
+			    Integer pos = alignRes.get(str).get(i);
+			    if (pos != null) pdb.add(JmolTools.getPdbInfo(ca[pos]));
 			 }
 
 			 // and now select the aligned residues...
 			 StringBuffer buf = new StringBuffer("select ");
 			 int count = 0;
-			 for (String res : pdb1 ){
-			    if ( count > 0)
-			       buf.append(",");
+			 for (String res : pdb){
+			    if (count > 0) buf.append(",");
 			    buf.append(res);
 			    count++;
 			 }
 			 buf.append("; color [" + c1.getRed() +"," + c1.getGreen() +"," +c1.getBlue()+"];");
 			 
-			 //buf.append("; set display selected;");
-			 // now color this block:
 			 jmol.append(buf);
-		}
+	}
 
 	@Override
 	protected void initCoords() {
@@ -424,8 +420,8 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	@Override
 	public void resetDisplay() {
 		
-		if (afpChain != null && ca != null) {
-	         String script = getJmolString(afpChain,ca,subunitColors);
+		if (msa != null && ca != null) {
+	         String script = getJmolString(msa, ca, subunitColors);
 	         //System.out.println(script);
 	         script += "select ligand; color CPK;";
 	         evalString(script);
@@ -435,7 +431,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 
 	@Override
 	public List<Matrix> getDistanceMatrices() {
-		if (afpChain==null) return null;
-		else return Arrays.asList(afpChain.getDisTable1());
+		if (msa==null) return null;
+		else return Arrays.asList(msa.getEnsemble().getDistanceMatrix().get(0));
 	}
 }

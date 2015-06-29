@@ -6,6 +6,8 @@ import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.StructureAlignment;
 import org.biojava.nbio.structure.align.gui.AlignmentCalculationRunnable;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.slf4j.Logger;
@@ -53,7 +55,7 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 			afpChain.setName1(name);
 			afpChain.setName2(name);
 
-			SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
+			StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(afpChain, ca1, ca1);
 
 			String title = jmol.getTitle();
 			

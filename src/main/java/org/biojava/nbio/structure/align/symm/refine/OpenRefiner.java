@@ -180,8 +180,8 @@ public class OpenRefiner implements Refiner {
 		afpChain.setName2(name);
 		
 		//Display the AFP alignment of the subunits
-		SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
-		//StructureAlignmentJmol jmol2 = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
-		jmol.setTitle(name);
+		//SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
+		StructureAlignmentJmol jmol2 = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
+		jmol2.setTitle(name);
 	}
 }

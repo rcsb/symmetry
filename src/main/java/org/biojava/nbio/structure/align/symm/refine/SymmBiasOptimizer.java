@@ -814,7 +814,7 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 		//Easy TIM: "d1i4na_"
 		//Crystallins: 4GCR, d4gcra1, d4gcra2
 		//Aspartic proteinases: 
-		String[] names = { "4i4q" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
+		String[] names = { "d4gcra1" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
 		
 		for (String name:names){
 			

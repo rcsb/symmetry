@@ -13,12 +13,15 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.AbstractStructureAlignment;
+import org.biojava.nbio.structure.align.MultipleStructureAligner;
 import org.biojava.nbio.structure.align.StructureAlignment;
 import org.biojava.nbio.structure.align.ce.CECalculator;
 import org.biojava.nbio.structure.align.ce.CeCPMain;
 import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.ce.MatrixListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsembleImpl;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
@@ -46,7 +49,7 @@ import org.slf4j.LoggerFactory;
  * @author andreas
  * 
  */
-public class CeSymm extends AbstractStructureAlignment implements MatrixListener, StructureAlignment {
+public class CeSymm extends AbstractStructureAlignment implements MatrixListener, StructureAlignment, MultipleStructureAligner {
 
 	private static final boolean debug = false;
 	public static final String algorithmName = "jCE-symmetry";
@@ -222,9 +225,7 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	@Override
 	public AFPChain align(Atom[] ca1, Atom[] ca2) throws StructureException {
 
-		if (params == null)
-			params = new CESymmParameters();
-
+		if (params == null)	params = new CESymmParameters();
 		return align(ca1, ca2, params);
 	}
 
@@ -382,11 +383,11 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 			}
 		}
 		// copy last distance matrix over for visualization
-		if(lastMatrix != null) {
+		/*if(lastMatrix != null) {
 			for(i=1;i<20;i++)
 				lastMatrix.set(i, i, 10);
 			afpChain.setDistanceMatrix(  lastMatrix );
-		}
+		}*/
 		return afpChain;
 	}
 
@@ -459,4 +460,22 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		return afpAlignments;
 	}
 
+	@Override
+	public MultipleAlignment align(List<Atom[]> atomArrays) throws StructureException {
+		
+		if (params == null)	params = new CESymmParameters();
+		return align(atomArrays, params);
+	}
+
+	@Override
+	public MultipleAlignment align(List<Atom[]> atomArrays, Object params) throws StructureException {
+		
+		if (atomArrays.size() != 1) 
+			throw new IllegalArgumentException("For symmetry analysis only one Structure is needed, "+atomArrays.size()+" given.");
+		
+		AFPChain afp = align(atomArrays.get(0), atomArrays.get(0), params);
+		MultipleAlignment msa = new MultipleAlignmentEnsembleImpl(afp, ca1, ca2).getMultipleAlignments().get(0);
+		
+		return msa;
+	}
 }

@@ -42,14 +42,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Identify the symmetries in a structure by running an alignment of the structure
- * against itself disabling the diagonal of the identity alignment. Iterating recursively over all results
- * and disabling the diagonal of each previous result can also be done with the current implementation.
+ * Identify the symmetries in a structure by running an alignment of 
+ * the structure against itself disabling the diagonal of the identity 
+ * alignment. Iterating recursively over all results and disabling the 
+ * diagonal of each previous result can also be done with the current 
+ * implementation.
  * 
- * @author andreas
+ * @author Andreas Prlic
+ * @author Spencer Bliven
+ * @author Aleix Lafita
  * 
  */
-public class CeSymm extends AbstractStructureAlignment implements MatrixListener, StructureAlignment, MultipleStructureAligner {
+public class CeSymm extends AbstractStructureAlignment 
+	implements MatrixListener, StructureAlignment, MultipleStructureAligner {
 
 	private static final boolean debug = false;
 	public static final String algorithmName = "jCE-symmetry";
@@ -75,8 +80,9 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	}
 
 	public static void main(String[] args) {
-		// Responsible for creating a CeMain instance
-		CeSymmUserArgumentProcessor processor = new CeSymmUserArgumentProcessor(); 
+		// Responsible for creating a CeSymm instance
+		CeSymmUserArgumentProcessor processor = 
+				new CeSymmUserArgumentProcessor();
 		processor.process(args);
 	}
 
@@ -121,8 +127,9 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		return align(ca1, ca2, params);
 	}
 
-	private static Matrix align(AFPChain afpChain, Atom[] ca1, Atom[] ca2, CESymmParameters params, 
-			Matrix origM, CECalculator calculator, int counter) throws StructureException {
+	private static Matrix align(AFPChain afpChain, Atom[] ca1, Atom[] ca2, 
+			CESymmParameters params, Matrix origM, CECalculator calculator, 
+			int counter) throws StructureException {
 
 		int fragmentLength = params.getWinSize();
 		Atom[] ca2clone = SymmetryTools.cloneAtoms(ca2);
@@ -230,7 +237,8 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	}
 
 	@Override
-	public AFPChain align(Atom[] ca10, Atom[] ca2O, Object param) throws StructureException {
+	public AFPChain align(Atom[] ca10, Atom[] ca2O, Object param) 
+			throws StructureException {
 		
 	//STEP 0: prepare all the information for the symmetry alignment
 		if (!(param instanceof CESymmParameters))
@@ -403,7 +411,6 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 					"Need to provide CESymmParameters, but provided "
 							+ parameters.getClass().getName());
 		}
-
 		params = (CESymmParameters) parameters;
 	}
 
@@ -417,7 +424,8 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		return version;
 	}
 	
-	public static boolean isSignificant(AFPChain afpChain, Atom[] ca1) throws StructureException {
+	public static boolean isSignificant(AFPChain afpChain, Atom[] ca1) 
+			throws StructureException {
 
 		// TM-score cutoff
 		if (afpChain.getTMScore() < symmetryThreshold) return false;
@@ -425,7 +433,8 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 		// sequence-function order cutoff
 		int order = 1;
 			try {
-				OrderDetector orderDetector = new SequenceFunctionOrderDetector(8, 0.4f);
+				OrderDetector orderDetector = 
+						new SequenceFunctionOrderDetector(8, 0.4f);
 				order = orderDetector.calculateOrder(afpChain, ca1);
 			} catch (OrderDetectionFailedException e) {
 				e.printStackTrace();
@@ -448,11 +457,9 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	}
 
 	/**
-	 * If available, get the list of subalignments.
-	 * 
+	 * If available, get the list of subalignments.<p>
 	 * Should be length one unless {@link CESymmParameters#getMaxSymmOrder()}
 	 * was set.
-	 * 
 	 * 
 	 * @return the afpAlignments
 	 */
@@ -461,20 +468,25 @@ public class CeSymm extends AbstractStructureAlignment implements MatrixListener
 	}
 
 	@Override
-	public MultipleAlignment align(List<Atom[]> atomArrays) throws StructureException {
+	public MultipleAlignment align(List<Atom[]> atomArrays) 
+			throws StructureException {
 		
 		if (params == null)	params = new CESymmParameters();
 		return align(atomArrays, params);
 	}
 
 	@Override
-	public MultipleAlignment align(List<Atom[]> atomArrays, Object params) throws StructureException {
+	public MultipleAlignment align(List<Atom[]> atomArrays, Object params) 
+			throws StructureException {
 		
 		if (atomArrays.size() != 1) 
-			throw new IllegalArgumentException("For symmetry analysis only one Structure is needed, "+atomArrays.size()+" given.");
+			throw new IllegalArgumentException(
+					"For symmetry analysis only one Structure is needed, "+
+							atomArrays.size()+" given.");
 		
 		AFPChain afp = align(atomArrays.get(0), atomArrays.get(0), params);
-		MultipleAlignment msa = new MultipleAlignmentEnsembleImpl(afp, ca1, ca2).getMultipleAlignments().get(0);
+		MultipleAlignment msa = new MultipleAlignmentEnsembleImpl(
+				afp, ca1, ca2, false).getMultipleAlignments().get(0);
 		
 		return msa;
 	}

@@ -4,6 +4,7 @@ import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.StructureAlignment;
 import org.biojava.nbio.structure.align.ce.AbstractUserArgumentProcessor;
+import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.gui.AlignmentCalculationRunnable;
 import org.biojava.nbio.structure.align.gui.ParameterGUI;
 import org.biojava.nbio.structure.align.gui.SelectPDBPanel;
@@ -273,7 +274,8 @@ public class SymmetryGui extends JFrame {
 		System.out.println("configure parameters for " + algorithm.getAlgorithmName());
 
 		// show a new config GUI
-		new ParameterGUI(algorithm);
+		ConfigStrucAligParams params = algorithm.getParameters();
+		new ParameterGUI(params, algorithm.getAlgorithmName());
 	}
 
 	public void cleanUp() {

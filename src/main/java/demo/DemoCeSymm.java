@@ -37,7 +37,7 @@ public class DemoCeSymm {
 		name = "d1wp5a_"; //special case C6
 		name = "3EU9.A"; //hard cases non-closed: d1rmga_
 		//name = "1N0R.A";  //Ankyrin: 1N0R.A, 3EHQ.A, 3EU9.A
-		name = "d3k3aj_";  //other repeats: 1xqr.A, 1b3u.A
+		name = "1yox_A:,B:,C:";  //other repeats: 1xqr.A, 1b3u.A
 
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_2_0_4);
 

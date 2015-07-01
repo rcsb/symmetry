@@ -20,22 +20,24 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
- * Recursive version of CeSymm that aims at identifying all symmetry axis (internal or quaternary) 
- * of a particular structure.
+ * Recursive version of CeSymm that aims at identifying all symmetry axis 
+ * (internal or quaternary) of a particular structure.
  * <p>
  * Works in the following way:
  * <ul><li>Run CeSymm on the original structure.
  * <li>Calculate the symmetric unit boundaries.
  * <li>Run CeSymm on each of the symmetric units to find further symmetries.
  * <li>Repeat the last two steps until no more significant results are found.
- * <li>Combine all the symmetry axis to find the smallest subset of axis that describe the symmetry of the structure.
+ * <li>Combine all the symmetry axis to find the smallest subset of axis that 
+ * describe the symmetry of the structure.
  * <li>Run a final optimization of all symmetric units correctly superimposed.
  * </ul></li>
- * The recursion levels are calculated in different threads in order to improve the running time.
- * 
+ * The recursion levels could be calculated in different threads in order 
+ * to improve the running time. TODO
  * 
  * @author Aleix Lafita
  *
@@ -68,9 +70,10 @@ public class CESymmRecursive {
 	}
 	
 	/**
-	 * Uses a depth first search mode to calculate all symmetries in the input array of atoms.
-	 * After the calculation use {@link #getMultipleAlignment()} on the recurser instance
-	 * to get the result.
+	 * Uses a depth first search mode to calculate all symmetries in the input 
+	 * array of atoms.
+	 * After the calculation use {@link #getMultipleAlignment()} on the 
+	 * recurser instance to get the result.
 	 * 
 	 * @param atoms
 	 * @return used for the recursion only, ignore the return Integer
@@ -83,27 +86,36 @@ public class CESymmRecursive {
 		AFPChain afp = aligner.align(atoms, atoms, params);
 		
 		//Base case of the recursion
-		if (afp.getTMScore() < CeSymm.symmetryThreshold || afp.getOptLength() < 8) return 0;
+		if (afp.getTMScore() < CeSymm.symmetryThreshold || 
+				afp.getOptLength() < 8) return 0;
 		
-		//Calculate the symmetry axis and add it to the list only if it is unique
-		Matrix4d matrixT = Calc.getTransformation(afp.getBlockRotationMatrix()[0], afp.getBlockShiftVector()[0]);
+		//Calculate the symmetry axis and add it to the list if it is unique
+		int bnum = afp.getBlockNum();
+		Matrix rot = afp.getBlockRotationMatrix()[bnum-1];
+		Atom s = afp.getBlockShiftVector()[bnum-1];
+		Matrix4d matrixT = Calc.getTransformation(rot, s);
+		
 		boolean equivalent = false;
 		for (int i=0; i<axis.size(); i++){
-			if (!SymmetryTools.areEquivalentAxis(matrixT, axis.get(i), 0.2)) continue;
-			else {
+			if (!SymmetryTools.areEquivalentAxis(matrixT, axis.get(i), 0.1)){
+				continue;
+			} else {
 				equivalent = true;
 				break;
 			}
 		}
 		if (!equivalent) axis.add(matrixT);
+		int children = 0;
 		
 		//If the alignment is meaningful, create one more level of recursion
 		for (int bk=0; bk<afp.getBlockNum(); bk++){
-			Atom[] atomsR = Arrays.copyOfRange(atoms, afp.getOptAln()[bk][0][0], afp.getOptAln()[bk][0][afp.getOptLen()[bk]-1]+1);
+			Atom[] atomsR = Arrays.copyOfRange(atoms, 
+					afp.getOptAln()[bk][0][0], 
+					afp.getOptAln()[bk][0][afp.getOptLen()[bk]-1]+1);
 						
-			int children = recurse(atomsR);
+			children = recurse(atomsR);
 			if (children == 0){
-				//This is the lowest level of recursion, so add the residues and matrix information
+				//This is the lowest level of recursion
 				msa.getEnsemble().getAtomArrays().add(allAtoms);
 				Matrix4d transform = new Matrix4d();
 				transform.setIdentity();
@@ -113,32 +125,40 @@ public class CESymmRecursive {
 				for (Integer res:afp.getOptAln()[bk][0]) residues.add(res);
 				msa.getBlocks().get(0).getAlignRes().add(residues);
 				
-				//Ensure that the size of the alignment is equal for all subunits. Insert gaps otherwise
-				if (residues.size() > subunitLen) subunitLen = residues.size();
+				//Ensure that the size of the alignment is equal for all
+				if (residues.size() > subunitLen) 
+					subunitLen = residues.size();
+				
 				for (int i=0; i<msa.getBlocks().get(0).size(); i++){
-					while (msa.getBlocks().get(0).getAlignRes().get(i).size() < subunitLen){
+					while (msa.getBlocks().get(0).getAlignRes().get(i).size() <
+							subunitLen){
 						msa.getBlocks().get(0).getAlignRes().get(i).add(null);
 					}
 				}
 			}
 			else {
-				//If the lower levels succeeded just update the matrices of the childs
+				//If the lower levels succeeded just update the info
 				Matrix4d transform = new Matrix4d();
 				transform.setIdentity();
-				for (int b=0; b<bk; b++) transform.mul(matrixT);
-				for (int child = 0; child<children; child++){
-					int index = msa.getTransformations().size() - children + child;
+				for (int b=0; b<bk; b++) {
+					transform.mul(matrixT);
+				}
+				for (int c = 0; c<children; c++){
+					int index = msa.getTransformations().size() - children + c;
 					msa.getTransformations().get(index).mul(transform);
-					for (int res=0; res<msa.getBlocks().get(0).getAlignRes().get(index).size(); res++){
-						Integer residue = msa.getBlocks().get(0).getAlignRes().get(index).get(res);
+					Block b = msa.getBlocks().get(0);
+					int size = b.getAlignRes().get(index).size();
+					for (int res=0; res<size; res++){
+						Integer residue = b.getAlignRes().get(index).get(res);
 						if (residue != null) {
-							msa.getBlocks().get(0).getAlignRes().get(index).set(res, residue+afp.getOptAln()[bk][0][0]);
+							b.getAlignRes().get(index).set(
+									res, residue+afp.getOptAln()[bk][0][0]);
 						}
 					}
-				}
+				} //End of children update
 			}
 		}
-		return afp.getBlockNum();
+		return afp.getBlockNum()+children;
 	}
 	
 	/**
@@ -159,11 +179,12 @@ public class CESymmRecursive {
 	
 	public static void main(String[] args) throws Exception {
 		
-		//Structures with more than one symmetry axis: 4gcr, 1vym.A
-		//Same symmetry axis but combined internal/quaternary: 1VYM, 1F9Z
+		//Structures with more than one symmetry axis: 4gcr, 1vym.A, 1yox.A
+		//Domain swapping: 1g6s
+		//Internal+quaternary: 1VYM, 1F9Z, 1YOX_A:,B:,C:
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9
-		String name = "1VYM.A";
+		String name = "1iy9";
 		
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));
@@ -177,7 +198,8 @@ public class CESymmRecursive {
 		
 		MultipleAlignment msa = recurser.getMultipleAlignment();
 		msa.getEnsemble().setStructureNames(new ArrayList<String>());
-		for (int s=0; s<msa.getBlocks().get(0).size(); s++) msa.getEnsemble().getStructureNames().add(name+"_"+(s+1));
+		for (int s=0; s<msa.getBlocks().get(0).size(); s++) 
+			msa.getEnsemble().getStructureNames().add(name+"_"+(s+1));
 		
 		//MultipleAlignmentOptimizerMC optimizer = new MultipleAlignmentOptimizerMC(msa, new MultipleMcParameters(), 0);
 		//msa = optimizer.call();

@@ -31,7 +31,7 @@ import org.biojava.nbio.structure.align.symm.refine.OpenRefiner;
 import org.biojava.nbio.structure.align.symm.refine.Refiner;
 import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
 import org.biojava.nbio.structure.align.symm.refine.SingleRefiner;
-import org.biojava.nbio.structure.align.symm.refine.SymmBiasOptimizer;
+import org.biojava.nbio.structure.align.symm.refine.SymmOptimizer;
 import org.biojava.nbio.structure.align.util.AFPChainScorer;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -469,7 +469,7 @@ public class CeSymm extends AbstractStructureAlignment
 				//Repeat the optimization in parallel
 				for (int rep=0; rep<2; rep++){
 					Callable<MultipleAlignment> worker = 
-							new SymmBiasOptimizer(afp, ca1, type, seed+rep);
+							new SymmOptimizer(afp, ca1, type, seed+rep);
 		  			Future<MultipleAlignment> submit = executor.submit(worker);
 		  			future.add(submit);
 				}

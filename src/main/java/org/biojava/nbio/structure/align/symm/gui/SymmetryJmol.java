@@ -106,7 +106,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	      
 	      this.msa = alignment;
 	      this.ca = msa.getEnsemble().getAtomArrays().get(0);
-	      this.subunitColors = ColorBrewer.Set1.getColorPalette(alignment.size());
+	      this.subunitColors = ColorBrewer.Spectral.getColorPalette(alignment.size());
 
 	      frame.addWindowListener(new WindowAdapter()
 	      {

@@ -2,7 +2,7 @@ package org.biojava.nbio.structure.align.symm.gui;
 
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.StructureAlignment;
+import org.biojava.nbio.structure.align.MultipleStructureAligner;
 import org.biojava.nbio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.gui.AlignmentCalculationRunnable;
@@ -14,8 +14,6 @@ import org.biojava.nbio.structure.align.webstart.AligUIManager;
 import org.biojava.nbio.structure.gui.util.PDBUploadPanel;
 import org.biojava.nbio.structure.gui.util.ScopSelectPanel;
 import org.biojava.nbio.structure.gui.util.StructurePairSelector;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
@@ -23,41 +21,40 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 
 /** 
- *  A JFrame that allows to trigger a symmetry analysis, either from files in a directory or after manual upload. 
- * 	Adapted from the biojava AlignmentGui class.
+ *  A JFrame that allows to trigger a symmetry analysis, either from files
+ *  in a directory or after manual upload
+ * 	Adapted from the AlignmentGui class in biojava.
  *
  * @author Aleix Lafita
  *
  */
 public class SymmetryGui extends JFrame {
 
-	private final static long serialVersionUID =0l;
+	private final static long serialVersionUID = 0l;
 
-	private static final Logger logger = LoggerFactory.getLogger(SymmetryGui.class);
+	private MultipleStructureAligner algorithm;
 
-	StructureAlignment algorithm;
+	private JButton abortB;
 
-	JButton abortB;
+	private SelectPDBPanel  tab1 ;
+	private PDBUploadPanel  tab2;
+	private ScopSelectPanel tab3;
 
-	SelectPDBPanel  tab1 ;
-	PDBUploadPanel  tab2;
-	ScopSelectPanel tab3;
-
-	Thread thread;
-	AlignmentCalculationRunnable alicalc;
-	JTabbedPane masterPane;
-	JTabbedPane tabPane;
-	JProgressBar progress;
+	private Thread thread;
+	private AlignmentCalculationRunnable alicalc;
+	private JTabbedPane masterPane;
+	private JTabbedPane tabPane;
+	private JProgressBar progress;
 
 	public static void main(String[] args){
-		
 		SymmetryGui.getInstance();
-
 	}
 
-	static final ResourceManager resourceManager = ResourceManager.getResourceManager("ce");
+	static final ResourceManager resourceManager = 
+			ResourceManager.getResourceManager("ce");
 
-	private static final String MAIN_TITLE = "CE-Symm: Symmetry Analysis Tool - Main - V." + resourceManager.getString("ce.version");;
+	private static final String MAIN_TITLE = 
+			"Symmetry Analysis Tool: CE-Symm - V.1.0";
 
 	private static final SymmetryGui me = new SymmetryGui();
 
@@ -78,7 +75,6 @@ public class SymmetryGui extends JFrame {
 	}
 
 	public static SymmetryGui getInstanceNoVisibilityChange(){
-
 		return me;
 	}
 
@@ -169,7 +165,7 @@ public class SymmetryGui extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent evt) {
 				JComboBox cb = (JComboBox)evt.getSource();
-				String algorithmName = (String)cb.getSelectedItem();
+				String algorithmName = (String) cb.getSelectedItem();
 				// Perform action...
 				//System.out.println("calc structure alignment");
 				updateAlgorithm();
@@ -270,7 +266,7 @@ public class SymmetryGui extends JFrame {
 	}
 
 	protected void configureParameters() {
-		StructureAlignment algorithm = getStructureAlignment();
+		MultipleStructureAligner algorithm = getStructureAlignment();
 		System.out.println("configure parameters for " + algorithm.getAlgorithmName());
 
 		// show a new config GUI
@@ -350,7 +346,7 @@ public class SymmetryGui extends JFrame {
 	}
 
 
-	public StructureAlignment getStructureAlignment() {
+	public MultipleStructureAligner getStructureAlignment() {
 		return algorithm;
 	}
 

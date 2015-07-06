@@ -2,18 +2,24 @@ package org.biojava.nbio.structure.utils;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JFrame;
-import javax.vecmath.Matrix4d;
 
 import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Chain;
+import org.biojava.nbio.structure.ChainImpl;
 import org.biojava.nbio.structure.Group;
+import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.ce.CECalculator;
 import org.biojava.nbio.structure.align.helper.AlignTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.multiple.Block;
+import org.biojava.nbio.structure.align.multiple.BlockImpl;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.gui.ScaleableMatrixPanel;
 import org.biojava.nbio.structure.jama.Matrix;
 
@@ -384,21 +390,67 @@ public class SymmetryTools {
 	}
 	
 	/**
-	 * Method that compares two symmetry axis and returns true if they are equivalent (within a confidence interval)
-	 * They are considered equivalent if the difference of every entry is within the confidence interval.
+	 * Method that converts the symmetric units of a structure into different
+	 * chains, so that internal symmetry can be translated into quaternary.<p>
+	 * Application: obtain the overall internal+quaternary symmetry axis with 
+	 * the quaternary symmetry code in biojava.
 	 * 
-	 * @param axis1
-	 * @param axis2
-	 * @return true if they are equivalent, false otherwise
+	 * @param symmetry MultipleAlignment of the subunits only
+	 * @return Structure with different chains for every symmetric unit
 	 */
-	public static boolean areEquivalentAxis(Matrix4d axis1, Matrix4d axis2, double confidence) {
-				
-		for (int row=0; row<4; row++){
-			for (int col=0; col<4; col++){
-				if (axis1.getElement(row, col) - axis2.getElement(row, col) < confidence) continue;
-				else return false;
-			}
+	public static Structure toQuaternary(MultipleAlignment symmetry) {
+		
+		if (!symmetry.getEnsemble().getAlgorithmName().contains("symm")){
+			throw new IllegalArgumentException(
+					"The input alignment is not a symmetry alignment.");
 		}
-		return true;
+		
+		Atom[] atoms = symmetry.getEnsemble().getAtomArrays().get(0);
+		Structure original = atoms[0].getGroup().getChain().getParent();
+		
+		Structure symm = original.clone();
+		symm.setChains(new ArrayList<Chain>());
+		
+		//Create new structure containing the subunit atoms
+		for (int i=0; i<symmetry.size(); i++){
+			Chain newCh = new ChainImpl();
+			symm.addChain(newCh);
+			Block align = symmetry.getBlocks().get(0);
+			Atom[] subunit = Arrays.copyOfRange(atoms, 
+					align.getAlignRes().get(i).get(0),
+					align.getAlignRes().get(i).get(align.length()-1)+1);
+			for (int k=0; k<subunit.length; k++)
+				newCh.addGroup((Group) subunit[k].getGroup().clone());
+		}
+		
+		return symm;
 	}
+	
+	/**
+	 * Method that converts a subunit symmetric alignment into an alignment
+	 * of whole structures.<p>
+	 * Example: if the structure has subunits A,B and C, the original alignment
+	 * is A-B-C, and the returned alignment is ABC-BCA-CAB.
+	 * 
+	 * @param symmetry MultipleAlignment of the subunits only
+	 * @return Structure with different chains for every symmetric unit
+	 */
+	public static MultipleAlignment toFullAlignment(MultipleAlignment symm) {
+		
+		if (!symm.getEnsemble().getAlgorithmName().contains("symm")){
+			throw new IllegalArgumentException(
+					"The input alignment is not a symmetry alignment.");
+		}
+		
+		MultipleAlignment full = symm.clone();
+		
+		for (int str=0; str<full.size(); str++){
+			//Create a new Block with swapped AlignRes (move first to last)
+			Block b = full.getBlocks().get(full.getBlocks().size()-1).clone();
+			b.getAlignRes().add(b.getAlignRes().get(0));
+			b.getAlignRes().remove(0);
+		}
+		return full;
+	}
+	
 }

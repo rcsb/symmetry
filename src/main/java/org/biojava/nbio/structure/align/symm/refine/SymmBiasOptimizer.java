@@ -4,7 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -119,14 +118,18 @@ public class SymmBiasOptimizer implements Callable<MultipleAlignment> {
 		return msa;
 	}
 	
-	private void initialize(AFPChain afpChain, Atom[] ca1) throws StructureException {
+	private void initialize(AFPChain afpChain, Atom[] ca1) throws StructureException, RefinerFailedException {
 		
 		//Initialize member variables
 		seedAFP = afpChain;
 		ca = ca1;
 		order = afpChain.getBlockNum();
-		subunitLen = afpChain.getOptLen()[0];
 		C = 10*order;
+		
+		subunitLen = afpChain.getOptLen()[0];
+		if (subunitLen < 1) 
+			throw new RefinerFailedException(
+					"Empty seed alignment! Nothing to optimize...");
 		
 		//Initialize MultipleAlignment
 		List<Atom[]> atomArrays = new ArrayList<Atom[]>();

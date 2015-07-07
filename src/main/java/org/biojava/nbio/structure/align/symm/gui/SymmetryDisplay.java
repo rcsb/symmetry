@@ -13,6 +13,8 @@ import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsemble;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
+import org.biojava.nbio.structure.gui.ScaleableMatrixPanel;
+import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 import java.io.IOException;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.swing.JFrame;
 import javax.vecmath.Matrix4d;
 
 /**
@@ -152,7 +155,7 @@ public class SymmetryDisplay {
 	 */
 	public static void subunitDisplay(MultipleAlignment msa) 
 			throws StructureException {
-		
+
 		//Modify atom arrays to include the subunit atoms only
 		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
 		Structure divided = SymmetryTools.toQuaternary(msa);
@@ -166,12 +169,12 @@ public class SymmetryDisplay {
 
 		MultipleAlignmentEnsemble newEnsemble = msa.getEnsemble().clone();
 		newEnsemble.setAtomArrays(atomArrays);
-		
+
 		MultipleAlignment newMSA = newEnsemble.getMultipleAlignments().get(0);
 		Block subunits = newMSA.getBlocks().get(0);
 
 		for (int su=0; su<subunits.size(); su++){
-			
+
 			//Determine start and end of the subunit
 			int count = 0;
 			Integer start = null;
@@ -179,7 +182,7 @@ public class SymmetryDisplay {
 				start = subunits.getAlignRes().get(su).get(0+count);
 				count++;
 			}
-			
+
 			for (int res=0; res<subunits.length(); res++) {
 				Integer residue = subunits.getAlignRes().get(su).get(res);
 				if (residue!=null) residue -= start;
@@ -203,5 +206,28 @@ public class SymmetryDisplay {
 
 		MultipleAlignmentJmol jmol = MultipleAlignmentDisplay.display(full);
 		jmol.setColorByBlocks(true);
+	}
+
+	/**
+	 * Show a Matrix in a new JFrame.
+	 * Is this method used antwhere? If so, it should use the biojava
+	 * code to display matrices.
+	 * 
+	 * @param m Matrix to display
+	 * @param string title of the frame
+	 */
+	@Deprecated
+	public static void showMatrix(Matrix m, String string) {
+		ScaleableMatrixPanel smp = new ScaleableMatrixPanel();
+		JFrame frame = new JFrame();
+
+		smp.setMatrix((Matrix)m.clone());
+		//smp.getMatrixPanel().setScale(0.8f);
+
+		frame.setTitle(string);
+		frame.getContentPane().add(smp);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.pack();
+		frame.setVisible(true);
 	}
 }

@@ -16,7 +16,8 @@ import org.biojava.nbio.structure.align.gui.MyDistMaxListener;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 
 /**
- *  Create a menu for the Symmetry analysis GUI. Extends MenuCreator in biojava.
+ *  Create a menu for the Symmetry analysis GUI.
+ *  Extends MenuCreator in biojava.
  *	
  *	@author Aleix Lafita
  *
@@ -24,15 +25,15 @@ import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 public class SymmetryMenu extends MenuCreator {
 	
 	//Menu Options for the Symmetry Display
-	public static final String SEQUENCE_ALIGN = "Multiple Sequence Alignment";
 	public static final String SUBUNIT_DISPLAY = "Subunit Superimposition";
 	public static final String MULTIPLE_STRUCT = "Multiple Structure Alignment";
 	public static final String SYMMETRY = "New Symmetry Analysis";
 	
 	/** 
-	 *  Provide a JMenuBar for the SymmetryJmol Frame.
+	 * Provide a JMenuBar for the SymmetryJmol Frame.
 	 */
-	public static JMenuBar initJmolMenu(JFrame frame, SymmetryJmol parent, MultipleAlignment msa){
+	public static JMenuBar initJmolMenu(JFrame frame, 
+			SymmetryJmol parent, MultipleAlignment msa){
 
 		JMenuBar menu = new JMenuBar();
 
@@ -85,9 +86,15 @@ public class SymmetryMenu extends MenuCreator {
 		
 		//Alignment tab to connect with regular pairwise alignments
 		JMenu align = new JMenu("Align");
+		
 		align.setMnemonic(KeyEvent.VK_A);
 		JMenuItem pairI = getPairwiseAlignmentMenuItem();
 		align.add(pairI);
+		
+		align.setMnemonic(KeyEvent.VK_M);
+		JMenuItem multI = getMultipleAlignmentMenuItem();
+		align.add(multI);
+		
 		menu.add(align);
 
 		//VIEW tab
@@ -116,10 +123,6 @@ public class SymmetryMenu extends MenuCreator {
 		JMenu sym = new JMenu("Symmetry");
 		sym.setMnemonic(KeyEvent.VK_S);
 		
-		JMenuItem seq = new JMenuItem(SEQUENCE_ALIGN);
-		seq.addActionListener(parent);
-		seq.setMnemonic(KeyEvent.VK_L);
-		
 		JMenuItem subunits = new JMenuItem(SUBUNIT_DISPLAY);
 		subunits.addActionListener(parent);
 		subunits.setMnemonic(KeyEvent.VK_D);
@@ -131,7 +134,6 @@ public class SymmetryMenu extends MenuCreator {
 		JMenuItem newSym = getNewSymmetryMenuItem();
 		newSym.addActionListener(parent);
 		
-		sym.add(seq);
 		sym.add(subunits);
 		sym.add(mulStAln);
 		sym.add(newSym);
@@ -151,7 +153,6 @@ public class SymmetryMenu extends MenuCreator {
 		menu.add(about);
 
 		return menu;
-
 	}
 	
 	/** 
@@ -166,10 +167,12 @@ public class SymmetryMenu extends MenuCreator {
 		ImageIcon alignIcon = createImageIcon("/icons/window_new.png");
 
 		JMenuItem symI;
-		if ( alignIcon == null)
+		if ( alignIcon == null) {
 			symI = new JMenuItem(SYMMETRY);
-		else 
+		} else { 
 			symI = new JMenuItem(SYMMETRY, alignIcon);
+		}
+		
 		symI.setMnemonic(KeyEvent.VK_Y);
 		symI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y, keyMask));
 		return symI;

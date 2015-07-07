@@ -20,6 +20,8 @@ import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.ce.MatrixListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsemble;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsembleImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
@@ -493,6 +495,10 @@ public class CeSymm extends AbstractStructureAlignment
 			} catch (RefinerFailedException e) {
 				e.printStackTrace();
 			}
+		} else {
+			MultipleAlignmentEnsemble e = 
+					new MultipleAlignmentEnsembleImpl(afp, ca1, ca1, false);
+			msa = e.getMultipleAlignments().get(0);
 		}
 		return msa;
 	}

@@ -273,7 +273,17 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			
 			i++;
 		}
-		returnMultipleAlignment();
+		//Superimpose and calculate scores
+		updateTransformation();
+		subunitMultipleAlignment();
+		mcScore = MultipleAlignmentScorer.getMultipleMCScore(msa, Gopen, Gextend);
+		double tmScore = MultipleAlignmentScorer.getAvgTMScore(msa) * order;
+		rmsd = MultipleAlignmentScorer.getRMSD(msa);
+				
+		//Set the scores
+		msa.putScore(MultipleAlignmentScorer.MC_SCORE, mcScore);
+		msa.putScore(MultipleAlignmentScorer.AVGTM_SCORE, tmScore);
+		msa.putScore(MultipleAlignmentScorer.RMSD, rmsd);
 	}
 
 	/**
@@ -298,53 +308,6 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		BlockSet bs = new BlockSetImpl(msa);
 		Block b = new BlockImpl(bs);
 		b.setAlignRes(block);
-	}
-	
-	/**
-	 * This method translates the internal data structures to the return type MultipleAlignment.
-	 * @throws StructureException 
-	 */
-	private void returnMultipleAlignment() throws StructureException {
-		
-		//Superimpose and calculate scores clear
-		updateTransformation();
-		subunitMultipleAlignment();
-		mcScore = MultipleAlignmentScorer.getMultipleMCScore(msa, Gopen, Gextend);
-		double tmScore = MultipleAlignmentScorer.getAvgTMScore(msa) * order;   //because the max size of the alignment is length/order
-		rmsd = MultipleAlignmentScorer.getRMSD(msa);
-		
-		//Create transformations from the symmetry operation
-		List<Matrix4d> transformations = new ArrayList<Matrix4d>();
-		for (int i=0; i<order; i++){
-			Matrix4d transformTimes = new Matrix4d();
-			transformTimes.setIdentity();
-			for (int j=0; j<i; j++) transformTimes.mul(transformation);
-			transformations.add(transformTimes);
-		}
-		msa.setTransformations(transformations);
-		
-		//Override the MultipleAlignment with the optimized alignment to return
-		msa.setBlockSets(new ArrayList<BlockSet>());
-		BlockSet bs = new BlockSetImpl(msa);
-		
-		//Translate the blocks into a block set
-		for (int bkNr=0;bkNr<order;bkNr++){
-			List<List<Integer>> newAlgnRes = new ArrayList<List<Integer>>();
-			for (int su=0; su<order; su++){
-				List<Integer> chain = new ArrayList<Integer>();
-				for (int k=0; k<subunitLen; k++){
-					chain.add(block.get((su+bkNr)%order).get(k));
-				}
-				newAlgnRes.add(chain);
-			}
-			Block bk = new BlockImpl(bs);
-			bk.setAlignRes(newAlgnRes);
-		}
-		
-		//Set the scores
-		msa.putScore(MultipleAlignmentScorer.MC_SCORE, mcScore);
-		msa.putScore(MultipleAlignmentScorer.AVGTM_SCORE, tmScore);
-		msa.putScore(MultipleAlignmentScorer.RMSD, rmsd);
 	}
 	
 	/**
@@ -817,7 +780,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		//Easy TIM: "d1i4na_"
 		//Crystallins: 4GCR, d4gcra1, d4gcra2
 		//Aspartic proteinases: 
-		String[] names = { "d4gcra1" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
+		String[] names = { "1n0r.A" };  //Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
 		
 		for (String name:names){
 			
@@ -831,7 +794,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 			params.setRefineMethod(RefineMethod.SINGLE);
 			params.setSymmetryType(SymmetryType.AUTO);
-			params.setOptimization(false);
+			params.setOptimization(true);
 			
 			AFPChain seedAFP = ceSymm.align(ca1, ca2);
 			seedAFP.setName1(name);

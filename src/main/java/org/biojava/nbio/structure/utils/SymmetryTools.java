@@ -18,7 +18,6 @@ import org.biojava.nbio.structure.align.ce.CECalculator;
 import org.biojava.nbio.structure.align.helper.AlignTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.multiple.Block;
-import org.biojava.nbio.structure.align.multiple.BlockImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.gui.ScaleableMatrixPanel;
 import org.biojava.nbio.structure.jama.Matrix;
@@ -416,9 +415,24 @@ public class SymmetryTools {
 			Chain newCh = new ChainImpl();
 			symm.addChain(newCh);
 			Block align = symmetry.getBlocks().get(0);
-			Atom[] subunit = Arrays.copyOfRange(atoms, 
-					align.getAlignRes().get(i).get(0),
-					align.getAlignRes().get(i).get(align.length()-1)+1);
+			
+			//Determine start and end of the subunit
+			int count = 0;
+			Integer start = null;
+			while (start == null && count<align.length()){
+				start = align.getAlignRes().get(i).get(0+count);
+				count++;
+			}
+			count = 1;
+			Integer end = null;
+			while (end == null && count<symmetry.length()){
+				end = align.getAlignRes().get(i).get(align.length()-count);
+				count++;
+			}
+			end++;
+			
+			Atom[] subunit = Arrays.copyOfRange(atoms, start,end);
+			
 			for (int k=0; k<subunit.length; k++)
 				newCh.addGroup((Group) subunit[k].getGroup().clone());
 		}
@@ -444,13 +458,13 @@ public class SymmetryTools {
 		
 		MultipleAlignment full = symm.clone();
 		
-		for (int str=0; str<full.size(); str++){
+		for (int str=1; str<full.size(); str++){
 			//Create a new Block with swapped AlignRes (move first to last)
 			Block b = full.getBlocks().get(full.getBlocks().size()-1).clone();
 			b.getAlignRes().add(b.getAlignRes().get(0));
 			b.getAlignRes().remove(0);
+			full.getBlockSets().get(0).getBlocks().add(b);
 		}
 		return full;
 	}
-	
 }

@@ -23,14 +23,14 @@ import org.slf4j.LoggerFactory;
 
 public class SymmetryCalc implements AlignmentCalculationRunnable {
 	
-	private static final Logger logger = LoggerFactory.getLogger(SymmetryCalc.class);
-
-	boolean interrupted = false;
-
-	String pdb;
-	String name;
-	Structure structure;
-	SymmetryGui parent;
+	private static final Logger logger = 
+			LoggerFactory.getLogger(SymmetryCalc.class);
+	
+	private boolean interrupted = false;
+	
+	private String name;
+	private Structure structure;
+	private SymmetryGui parent;
 
 	/** Requests for a structure to analyze.
 	 */
@@ -43,7 +43,7 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 	@Override
 	public void run() {
 
-		// the structure has been downloaded, now calculate the alignment ...
+		//The structure has been downloaded, now calculate the alignment ...
 		MultipleStructureAligner algorithm = parent.getStructureAlignment();
 		CESymmParameters params = (CESymmParameters) algorithm.getParameters();
 		
@@ -55,7 +55,7 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 
 			List<String> names = new ArrayList<String>();
 			for (int su=0; su<msa.size(); su++){
-				names.add(name+"_"+su+1);
+				names.add(name+"_"+(su+1));
 			}
 			msa.getEnsemble().setStructureNames(names);
 
@@ -70,16 +70,10 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 		} catch (StructureException e){
 			e.printStackTrace();
 			logger.warn(e.getMessage());
-
 		}
 		parent.notifyCalcFinished();
-
 	}
-
-	/** stops what is currently happening and does not continue
-	 * 
-	 *
-	 */
+	
 	@Override
 	public void interrupt() {
 		interrupted = true;
@@ -89,19 +83,12 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 	public void cleanup() {
 
 		parent.notifyCalcFinished();
-
-		parent=null;
-		// cleanup...
-
+		parent = null;
 		structure = null;
 	}
-
-	/** does not do anything here...
-	 * 
-	 */
+	
 	@Override
 	public void setNrCPUs(int useNrCPUs) {
 		// TODO Auto-generated method stub
-		// 
 	}
 }

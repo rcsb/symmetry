@@ -42,14 +42,14 @@ public class MultipleRefiner implements Refiner {
 	}
 	
 	@Override
-	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] ca1, Atom[] ca2, int order)
-			throws RefinerFailedException,StructureException {
+	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] atoms, 
+			int order) throws RefinerFailedException,StructureException {
 		
 		//Use the help of the SINGLE refiner to increase the consistency of the alignments
 		for (int i=0; i<afpAlignments.size(); i++){
 			try {
-				order = orderDetector.calculateOrder(afpAlignments.get(i), ca1);
-				afpAlignments.set(i,SingleRefiner.refineSymmetry(afpAlignments.get(i), ca1, ca2, order));
+				order = orderDetector.calculateOrder(afpAlignments.get(i), atoms);
+				afpAlignments.set(i,SingleRefiner.refineSymmetry(afpAlignments.get(i), atoms, atoms, order));
 			} //It means that one of the refined alignments has length 0, so continue without refining
 			catch (Exception ignore){
 				//afpAlignments[i] = null;
@@ -380,8 +380,8 @@ public class MultipleRefiner implements Refiner {
 			afpChain.setName2(name);
 				
 			//Display the AFP alignment of the subunits
-			SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
-			jmol.setTitle(name);
+			//SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
+			//jmol.setTitle(name);
 		}
 	}
 }

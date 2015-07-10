@@ -7,6 +7,7 @@ import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.model.AfpChainWriter;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.order.AngleOrderDetectorPlus;
 import org.biojava.nbio.structure.align.util.AtomCache;
@@ -37,14 +38,16 @@ public class DemoCeSymm {
 		name = "d1wp5a_"; //special case C6
 		name = "3EU9.A"; //hard cases non-closed: d1rmga_
 		//name = "1N0R.A";  //Ankyrin: 1N0R.A, 3EHQ.A, 3EU9.A
-		name = "d3k3aj_";  //other repeats: 1xqr.A, 1b3u.A
+		name = "1yox_A:,B:,C:";  //other repeats: 1xqr.A, 1b3u.A
+		name = "4i4q";
 
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_2_0_4);
 
 
 		CeSymm ceSymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-		//params.setRefineMethod(RefineMethod.SINGLE);
+		params.setRefineMethod(RefineMethod.SINGLE);
+		params.setOptimization(true);
 
 		try {
 			ChemCompGroupFactory.setChemCompProvider(new ReducedChemCompProvider());

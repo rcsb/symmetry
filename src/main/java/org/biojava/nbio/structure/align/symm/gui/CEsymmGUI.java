@@ -31,6 +31,9 @@ import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.ResidueNumber;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.StructureAlignment;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -117,11 +120,11 @@ public class CEsymmGUI {
 				Calc.rotate(atom, mat);
 			}
 			
-			RotationAxis axis = new RotationAxis(afp);
-			SymmetryJmol jmol = new SymmetryJmol(afp, ca1);
+			StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(afp, ca1, ca1);
 			jmol.setTitle(cesymm.algorithmName + ": "+pdb);
 			//showCurrentAlig(afp, ca1, ca2);
 			
+			RotationAxis axis = new RotationAxis(afp);
 			System.out.println("Theta="+axis.getAngle());
 			
 		} catch(StructureException e) {
@@ -133,7 +136,7 @@ public class CEsymmGUI {
 			throws StructureException {
 		
 		AFPChain c = (AFPChain) myAFP.clone();
-		SymmetryJmol jmol = new SymmetryJmol(c, ca1);
+		StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(myAFP, ca1, ca1);
 
 		// draw a line from center of gravity to N terminus
 

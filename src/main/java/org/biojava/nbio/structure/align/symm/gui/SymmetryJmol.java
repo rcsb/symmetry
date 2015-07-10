@@ -176,10 +176,10 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		hBox1.add(new JLabel("Color"));
 		hBox1.add(colors);
 
-		String[] colorPattelete = new String[] {"Color Set", "Spectral", "2Colors", "3Colors", "Pastel", "Reds", "Blues" ,"Greens"};
-		JComboBox pattelete = new JComboBox(colorPattelete);
+		String[] colorOptions = new String[] {"Color Set", "Spectral", "2Colors", "3Colors", "Pastel", "Reds", "Blues" ,"Greens"};
+		JComboBox palette = new JComboBox(colorOptions);
 
-		pattelete.addActionListener(new ActionListener() {
+		palette.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -216,8 +216,8 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		});
 
 		hBox1.add(Box.createGlue());
-		hBox1.add(new JLabel("Symmetry"));
-		hBox1.add(pattelete);
+		hBox1.add(new JLabel("Palette"));
+		hBox1.add(palette);
 
 
 		// CHeck boxes
@@ -313,7 +313,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 				return;
 			}
 			try {
-				MultipleAlignmentDisplay.showMultipleAligmentPanel(msa, this, colorPalette);
+				MultipleAlignmentDisplay.showMultipleAligmentPanel(msa, this);
 			} catch (StructureException e1) {
 				e1.printStackTrace();
 			}
@@ -369,7 +369,6 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 			jmol.append("backbone 0.6 ;");
 		}
 
-		jmol.append(LIGAND_DISPLAY_SCRIPT);
 		//System.out.println(jmol);
 		return jmol.toString();
 

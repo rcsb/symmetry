@@ -58,6 +58,7 @@ public class CeSymm extends AbstractStructureAlignment
 implements MatrixListener, MultipleStructureAligner {
 
 	private static final boolean debug = false;
+	
 	public static final String algorithmName = "jCE-symmetry";
 	public static final String version = "1.0";
 	private static final Logger logger = LoggerFactory.getLogger(CeSymm.class);
@@ -66,7 +67,8 @@ implements MatrixListener, MultipleStructureAligner {
 	private AFPChain afpChain;
 	private MultipleAlignment msa;
 	private List<AFPChain> afpAlignments;
-	public SymmetryType type;
+	private SymmetryType type;
+	private boolean refined;
 
 	private Atom[] ca1;
 	private Atom[] ca2;
@@ -79,6 +81,7 @@ implements MatrixListener, MultipleStructureAligner {
 	public CeSymm() {
 		super();
 		params = new CESymmParameters();
+		refined = false;
 	}
 
 	public static void main(String[] args) {
@@ -231,6 +234,7 @@ implements MatrixListener, MultipleStructureAligner {
 		this.calculator = calculator;
 	}
 
+	@Deprecated
 	@Override
 	public AFPChain align(Atom[] ca1, Atom[] ca2) throws StructureException {
 
@@ -238,6 +242,7 @@ implements MatrixListener, MultipleStructureAligner {
 		return align(ca1, ca2, params);
 	}
 
+	@Deprecated
 	@Override
 	public AFPChain align(Atom[] ca10, Atom[] ca2O, Object param) 
 			throws StructureException {
@@ -322,6 +327,9 @@ implements MatrixListener, MultipleStructureAligner {
 
 		//Save the results to the CeSymm member variables
 		afpChain = afpAlignments.get(0);
+		String name = ca1[0].getGroup().getChain().getParent().getIdentifier();
+		afpChain.setName1(name);
+		afpChain.setName2(name);
 
 		//Determine the symmetry Type or get the one in params
 		type = params.getSymmetryType();
@@ -363,12 +371,17 @@ implements MatrixListener, MultipleStructureAligner {
 		}
 
 		try {
-			if (order == 1 && type == SymmetryType.CLOSED) return afpChain;
-			else afpChain = refiner.refine(afpAlignments, ca1, ca2, order);
+			if (order == 1 && type == SymmetryType.CLOSED){
+				return afpChain;
+			}
+			else {
+				afpChain = refiner.refine(afpAlignments, ca1, order);
+				refined = true;
+			}
 		} catch (RefinerFailedException e) {
 			e.printStackTrace();
 		}
-
+		
 		return afpChain;
 	}
 
@@ -460,7 +473,7 @@ implements MatrixListener, MultipleStructureAligner {
 		AFPChain afp = align(atomArrays.get(0), atomArrays.get(0), params);
 
 		//STEP 4: symmetry alignment optimization
-		if (this.params.getOptimization()){
+		if (this.params.getOptimization() && refined){
 			//Perform several optimizations in different threads
 			try {
 				ExecutorService executor = Executors.newCachedThreadPool();

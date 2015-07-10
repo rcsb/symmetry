@@ -44,11 +44,11 @@ public class SymmetryMenu extends MenuCreator {
 
 		if ( parent != null){
 			JMenuItem loadF = getLoadMenuItem();
-			loadF.addActionListener(new MyAlignmentLoadListener(parent));
+			loadF.addActionListener(new MyAlignmentLoadListener());
 			file.add(loadF);
 		}
 
-		JMenuItem saveF = getSaveAlignmentMenuItem(null);
+		JMenuItem saveF = getSaveAlignmentMenuItem(null, msa);
 		file.add(saveF);
 
 		JMenuItem openPDB = getShowPDBMenuItem();

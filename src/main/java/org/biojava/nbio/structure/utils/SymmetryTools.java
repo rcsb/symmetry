@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.biojava.nbio.structure.StructureImpl;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.ChainImpl;
@@ -444,8 +445,8 @@ public class SymmetryTools {
 	/**
 	 * Method that converts the symmetric units of a structure into different
 	 * chains, so that internal symmetry can be translated into quaternary.<p>
-	 * Application: obtain the overall internal+quaternary symmetry axis with 
-	 * the quaternary symmetry code in biojava.
+	 * Application: obtain the internal symmetry axis with the quaternary 
+	 * symmetry code in biojava.
 	 * 
 	 * @param symmetry MultipleAlignment of the subunits only
 	 * @return Structure with different chains for every symmetric unit
@@ -458,14 +459,19 @@ public class SymmetryTools {
 		}
 
 		Atom[] atoms = symmetry.getEnsemble().getAtomArrays().get(0);
-		Structure original = atoms[0].getGroup().getChain().getParent();
+		Structure cloned = atoms[0].getGroup().getChain().getParent().clone();
+		atoms = StructureTools.getRepresentativeAtomArray(cloned);
 
-		Structure symm = original.clone();
+		Structure symm = new StructureImpl();
 		symm.setChains(new ArrayList<Chain>());
+		char chainID = 'A';
 
 		//Create new structure containing the subunit atoms
 		for (int i=0; i<symmetry.size(); i++){
 			Chain newCh = new ChainImpl();
+			newCh.setChainID(chainID + "");
+			chainID++;
+			
 			symm.addChain(newCh);
 			Block align = symmetry.getBlocks().get(0);
 
@@ -489,7 +495,6 @@ public class SymmetryTools {
 			for (int k=0; k<subunit.length; k++)
 				newCh.addGroup((Group) subunit[k].getGroup().clone());
 		}
-
 		return symm;
 	}
 

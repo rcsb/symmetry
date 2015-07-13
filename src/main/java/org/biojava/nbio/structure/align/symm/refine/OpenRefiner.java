@@ -177,7 +177,7 @@ public class OpenRefiner implements Refiner {
 		//duplication: 1vym.A, 1ppr.O
 		//clear repeats-turn-repeats example: 1S70.B
 
-		String name = "1ppr.O_0-170";
+		String name = "2bnh.A";
 		List<Atom[]> atoms = new ArrayList<Atom[]>();
 
 		AtomCache cache = new AtomCache();

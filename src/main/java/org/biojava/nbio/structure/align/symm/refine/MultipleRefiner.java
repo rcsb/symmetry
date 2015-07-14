@@ -17,24 +17,26 @@ import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
+import org.biojava.nbio.structure.symmetry.utils.Graph;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
- * Creates a refined alignment with the multiple self-alignments obtained from blacking out previous alignments.
- * Still in development. Right now uses the single refiner in all of them and takes the best result as final.
+ * Creates a refined alignment with the multiple self-alignments 
+ * obtained from blacking out previous alignments.
+ * Still in development, because the clustering is not robust enough.
  * 
  * @author Aleix Lafita
  * 
  */
-
 public class MultipleRefiner implements Refiner {
 	
 	private static final boolean debug = false;
 	private OrderDetector orderDetector;
 
 	/**
-	 * The class needs an orderDetector because the order might differ among the alignments.
-	 * It will calculate the order for all of them and run the single refiner
+	 * The class needs an orderDetector because the order might differ 
+	 * among the different alignments.
+	 * 
 	 * @param orderDetector
 	 */
 	public MultipleRefiner(OrderDetector orderDetector) {
@@ -110,34 +112,31 @@ public class MultipleRefiner implements Refiner {
 	}
 
 	/**
-	 * Calculates from a set of AFP alignments the groups of residues (the group size is the order of symmetry)
-	 * that align together and are consistent, equivalent for each subunit). As a result a modified AFPChain with 
-	 * <order of symmetry> consistent groups is produced.
+	 * Calculates from a set of AFP alignments the groups of residues 
+	 * (the group size is the order of symmetry) that align together 
+	 * and are consistent, equivalent for each subunit). 
+	 * As a result a modified AFPChain with  <order of symmetry> 
+	 * consistent groups is returned.
 	 * 
 	 * INPUT: a list of AFP alignments and the Atom[] array of the protein.
-	 * OUTPUT: an AFP alignment with subunit groups consistent between each other.
-	 * ALGORITHM: cycle detection for each residue checking each time that the distance between residues is sufficient
-	 * RUNNING TIME: DFS of depth order, polynomial in length of the protein. No bottleneck.
+	 * OUTPUT: an AFP alignment with subunit groups consistent 
+	 * 			between each other.
+	 * ALGORITHM: cycle detection for each residue checking each time 
+	 * 				that the distance between residues is sufficient
+	 * RUNNING TIME: DFS of depth order, polynomial in length of the protein. 
+	 * 				No bottleneck.
 	 */
-	private static AFPChain cycleRefine(List<AFPChain> allAlignments, Atom[] ca1, Atom[] ca2, int order) throws StructureException {
+	private static AFPChain cycleRefine(List<AFPChain> allAlignments, 
+			Atom[] atoms, int order) throws StructureException {
 		
-		//Create the undirected alignment graph and initialize a variable to store the symmetry groups
-		List<List<Integer>> graph = SymmetryTools.buildAFPgraph(allAlignments, ca1, true);
+		Graph<Integer> graph = 
+				SymmetryTools.buildSymmetryGraph(allAlignments, atoms);
 		List<List<Integer>> groups = new ArrayList<List<Integer>>();
-		//Count the number of aligned residues to exclude the intersubunit loops from the interresidue distances
-		int aligned_res = 0;
-		for (List<Integer> v:graph){
-			//Count residues with order-1 edges (connected consistently in all the alignments)
-			if (v.size()>0){
-				aligned_res++;
-			}
-		}
 		
-		//Variable to store the residues already present in one of the selected groups
+		//Variable to store the residues already present in one of the groups
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		
-		//Loop through all the residues in the graph (only consider the first residues, because cycles must include them to be consistent).
-		for (int i=0; i<graph.size()/(order-order/2); i++){
+		for (int i=0; i<graph.size(); i++){
 			if (!alreadySeen.contains(i)){
 			if (debug) System.out.println("Cycle for residue "+i);
 			
@@ -204,7 +203,7 @@ public class MultipleRefiner implements Refiner {
 									int residueDist = Math.abs(group.get(g)-group.get(h));
 									//Special case when comparing the first and last groups, because the length of the protein has to be considered
 									if ((g==0 && h==order-1) || (h==0 && g==order-1)){
-										residueDist = ca1.length - Math.abs(group.get(g)-group.get(h));
+										residueDist = atoms.length - Math.abs(group.get(g)-group.get(h));
 									}
 									//If the distance between the two residues in number is lower they are too close in sequence and not consistent.
 									if (residueDist<(aligned_res/(order+2)) && h!=g){
@@ -279,7 +278,7 @@ public class MultipleRefiner implements Refiner {
 			}
 		}
 		
-		return AlignmentTools.replaceOptAln(optAlgn, allAlignments.get(order-2), ca1, ca2);
+		return AlignmentTools.replaceOptAln(optAlgn, allAlignments.get(order-2), atoms, ca2);
 	}
 	
 	/**

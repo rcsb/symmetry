@@ -16,9 +16,9 @@ import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.symmetry.utils.DirectedGraph;
 import org.biojava.nbio.structure.symmetry.utils.Graph;
 
@@ -43,7 +43,7 @@ public class CeSymmRecursive {
 	private MultipleAlignment msa;
 	private int subunitLen;
 	private Atom[] allAtoms;
-	private List<RotationAxis> axes;
+	private SymmetryAxes axes;
 	private Graph<MultipleAlignment> graph;
 
 	/**
@@ -69,7 +69,7 @@ public class CeSymmRecursive {
 		graph = new DirectedGraph<MultipleAlignment>();
 		graph.addVertex(null); //root vertex
 
-		axes = new ArrayList<RotationAxis>();
+		axes = new SymmetryAxes();
 		subunitLen = 0;
 	}
 
@@ -167,7 +167,7 @@ public class CeSymmRecursive {
 		return children*align.size();
 	}
 
-	private void buildAlignment(){
+	private void buildAlignment() throws StructureException {
 
 		//Find the depth in the graph that has equal levels of recursion
 		int depth = 0;
@@ -185,17 +185,18 @@ public class CeSymmRecursive {
 				children.addAll(ch);
 				childNr.add(ch.size());
 			}
-			//Check that all have the same number of children, and != 0
-			for (int i=1; i<childNr.size(); i++){
-				if (childNr.get(0) == 0) {
-					stop = true;
-					break;
-				}
-				if (childNr.get(0) != childNr.get(i)){
-					stop = true;
-					break;
+			//Check that no children is empty
+			if (childNr.get(0) == 0) stop = true;
+			else {
+				//Check that all have the same number of children
+				for (int i=1; i<childNr.size(); i++){
+					if (childNr.get(0) != childNr.get(i)){
+						stop = true;
+						break;
+					}
 				}
 			}
+			if (childNr.size()==0) stop = true;
 			depth++;
 		}
 
@@ -270,20 +271,23 @@ public class CeSymmRecursive {
 					//Get the symmetry axis of this level
 					MultipleAlignment align = graph.getVertex(vertex);
 					Matrix4d transform = align.getTransformations().get(1);
-					RotationAxis axis = new RotationAxis(transform);
-					axis.setAtoms(align.getEnsemble().getAtomArrays().get(0));
-					axes.add(axis);
+					List<List<Integer>> subunits = 
+							new ArrayList<List<Integer>>(2);
+					subunits.add(new ArrayList<Integer>());
+					subunits.add(new ArrayList<Integer>());
+					axes.addAxis(transform, subunits);
 				}
 			}
 			d++;
 		}
+		MultipleAlignmentScorer.calculateScores(msa);
 	}
 
 	/**
 	 * Return the symmetry axes.
-	 * @return List of RotationAxis
+	 * @return SymmetryAxes
 	 */
-	public List<RotationAxis> getSymmetryAxes(){
+	public SymmetryAxes getSymmetryAxes(){
 		return axes;
 	}
 
@@ -294,7 +298,7 @@ public class CeSymmRecursive {
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "1mmi";
+		String name = "1vym.A";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));

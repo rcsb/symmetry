@@ -36,6 +36,7 @@ import org.biojava.nbio.structure.align.gui.jmol.RasmolCommandListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentWriter;
+import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.webstart.AligUIManager;
 import org.biojava.nbio.structure.jama.Matrix;
@@ -75,8 +76,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	 */
 	public SymmetryJmol(MultipleAlignment alignment) throws StructureException{
 
-		this(alignment, new ArrayList<RotationAxis>());
-		
+		this(alignment, null);
 	}
 
 	/**
@@ -86,11 +86,12 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	 * subunit as a new row.
 	 * 
 	 * @param MultipleAlignment subunit multiple alignment 
-	 * (generated from optimization)
-	 * @param axis set of rotation axis that describe the symmetry of the structure
+	 * 			(generated from refinement or optimization)
+	 * @param axis set of symmetry axes to display
 	 * @throws StructureException
 	 */
-	public SymmetryJmol(MultipleAlignment alignment, List<RotationAxis> axis) throws StructureException {
+	public SymmetryJmol(MultipleAlignment alignment, SymmetryAxes axes) 
+			throws StructureException {
 
 		AligUIManager.setLookAndFeel();
 
@@ -285,15 +286,18 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 
 		// init coordinates
 		initCoords();
-		if (axis!=null) printSymmetryAxis(axis);
+		if (axes!=null) printSymmetryAxis(axes);
 		resetDisplay();
 	}
 
-	private void printSymmetryAxis(List<RotationAxis> symmetryAxis){
+	private void printSymmetryAxis(SymmetryAxes axes){
 
-		for (int a=0; a<symmetryAxis.size(); a++){
-			String script = symmetryAxis.get(a).getJmolScript(null, a);
+		int id = 0;
+		for (Matrix4d axis : axes.getAxes()) {
+			RotationAxis rot = new RotationAxis(axis);
+			String script = rot.getJmolScript(atoms, id);
 			evalString(script);
+			id++;
 		}
 	}
 

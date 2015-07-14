@@ -16,6 +16,7 @@ import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.symmetry.utils.Graph;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
@@ -50,10 +51,10 @@ public class OpenRefiner implements Refiner {
 	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] atoms, 
 			int order) throws RefinerFailedException, StructureException {
 
-		//Create a directed graph from the alignment
 		//The two vertices of the graph mean (previous, next)
-		List<List<Integer>> graph = 
-				SymmetryTools.buildAFPgraph(afpAlignments, atoms, true);
+		Graph<Integer> graph = 
+				SymmetryTools.buildSymmetryGraph(afpAlignments, atoms);
+		
 		AFPChain afpChain = afpAlignments.get(afpAlignments.size()-1);
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 
@@ -63,17 +64,19 @@ public class OpenRefiner implements Refiner {
 			if (!alreadySeen.contains(i)){
 				List<Integer> group = new ArrayList<Integer>();
 				int residue = i;
+				
 				while (residue != -1 && !alreadySeen.contains(residue)){
 					group.add(residue);
+					List<Integer> neigh = graph.getNeighborIndices(residue);
 					//Go to the next residue in sequence
-					if (graph.get(residue).size() > 1){
-						if (graph.get(residue).get(1) > residue) {
-							residue = graph.get(residue).get(1);
+					if (neigh.size() > 1) {
+						if (neigh.get(1) > residue) {
+							residue = neigh.get(1);
 						} else residue = -1;
 					}
-					else if (graph.get(residue).size() > 0) {
-						if (graph.get(residue).get(0) > residue) {
-							residue = graph.get(residue).get(0);
+					else if (neigh.size() > 0) {
+						if (neigh.get(0) > residue) {
+							residue = neigh.get(0);
 						} else residue = -1;
 					}
 					else residue = -1; //residue does not have a next
@@ -177,7 +180,7 @@ public class OpenRefiner implements Refiner {
 		//duplication: 1vym.A, 1ppr.O
 		//clear repeats-turn-repeats example: 1S70.B
 
-		String name = "2bnh.A";
+		String name = "1n0r.A";
 		List<Atom[]> atoms = new ArrayList<Atom[]>();
 
 		AtomCache cache = new AtomCache();

@@ -207,7 +207,6 @@ public class CeSymmIterative {
 				b.getAlignRes().get(su).add(group.get(su));
 			}
 		}
-		MultipleAlignmentScorer.calculateScores(msa);
 	}
 
 	/**

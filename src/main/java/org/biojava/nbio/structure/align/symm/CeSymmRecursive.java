@@ -280,7 +280,6 @@ public class CeSymmRecursive {
 			}
 			d++;
 		}
-		MultipleAlignmentScorer.calculateScores(msa);
 	}
 
 	/**
@@ -298,7 +297,7 @@ public class CeSymmRecursive {
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "1vym.A";
+		String name = "1g6s";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));

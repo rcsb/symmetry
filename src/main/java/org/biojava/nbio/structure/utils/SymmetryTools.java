@@ -16,8 +16,13 @@ import org.biojava.nbio.structure.align.ce.CECalculator;
 import org.biojava.nbio.structure.align.helper.AlignTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.multiple.Block;
+import org.biojava.nbio.structure.align.multiple.BlockImpl;
+import org.biojava.nbio.structure.align.multiple.BlockSet;
+import org.biojava.nbio.structure.align.multiple.BlockSetImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsemble;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsembleImpl;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.symmetry.utils.DirectedGraph;
 import org.biojava.nbio.structure.symmetry.utils.Graph;
@@ -230,7 +235,7 @@ public class SymmetryTools {
 
 	public Matrix getDkMatrix(Atom[] ca1, Atom[] ca2,int fragmentLength,
 			double[] dist1, double[] dist2, int rows, int cols) {
-		
+
 		Matrix diffDistMax =  Matrix.identity(ca1.length, ca2.length);
 
 		for ( int i = 0 ; i< rows; i++){
@@ -291,7 +296,8 @@ public class SymmetryTools {
 
 		int pos = 0;
 		for (Atom a : ca2){
-			Group g = (Group) a.getGroup().clone(); // works because each group has only a CA atom
+			Group g = (Group) a.getGroup().clone(); 
+			// works because each group has only a CA atom
 
 			ca2clone[pos] = g.getAtom(a.getName());
 
@@ -304,7 +310,7 @@ public class SymmetryTools {
 
 	public static Matrix getDkMatrix(Atom[] ca1, Atom[] ca2, int k, 
 			int fragmentLength) {
-		
+
 		double[] dist1 = AlignTools.getDiagonalAtK(ca1, k);
 		double[] dist2 = AlignTools.getDiagonalAtK(ca2, k);
 
@@ -410,7 +416,7 @@ public class SymmetryTools {
 			List<AFPChain> allAFPs, Atom[] atoms) {
 
 		Graph<Integer> graph = new DirectedGraph<Integer>();
-		
+
 		for (int n=0; n<atoms.length; n++){
 			graph.addVertex(n);
 		}
@@ -458,7 +464,7 @@ public class SymmetryTools {
 			Chain newCh = new ChainImpl();
 			newCh.setChainID(chainID + "");
 			chainID++;
-			
+
 			symm.addChain(newCh);
 			Block align = symmetry.getBlocks().get(0);
 
@@ -471,7 +477,7 @@ public class SymmetryTools {
 			}
 			count = 1;
 			Integer end = null;
-			while (end == null && count<symmetry.length()){
+			while (end == null && count<align.length()){
 				end = align.getAlignRes().get(i).get(align.length()-count);
 				count++;
 			}
@@ -512,10 +518,10 @@ public class SymmetryTools {
 		}
 		return full;
 	}
-	
+
 	/**
 	 * Method that converts a symmetry alignment into an alignment
-	 * of the subunits only as independent structures.
+	 * of the subunits only, as new independent structures.
 	 * <p>
 	 * This method changes the structure identifiers, the Atom arrays
 	 * and re-scles the aligned residues in the Blocks corresponding
@@ -533,12 +539,94 @@ public class SymmetryTools {
 					"The input alignment is not a symmetry alignment.");
 		}
 
-		MultipleAlignmentEnsemble e = symm.getEnsemble().clone();
-		MultipleAlignment subunits = e.getMultipleAlignments().get(0);
-		
-		
+		//Modify atom arrays to include the subunit atoms only
+		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
+		Structure divided = SymmetryTools.toQuaternary(symm);
+		for (int i=0; i<symm.size(); i++){
+			Structure newStr = new StructureImpl();
+			Chain newCh = divided.getChain(i);
+			newStr.addChain(newCh);
+			Atom[] subunit = StructureTools.getRepresentativeAtomArray(newCh);
+			atomArrays.add(subunit);
+		}
 
-		//TODO
+		MultipleAlignmentEnsemble newEnsemble = symm.getEnsemble().clone();
+		newEnsemble.setAtomArrays(atomArrays);
+
+		MultipleAlignment subunits = newEnsemble.getMultipleAlignments().get(0);
+		Block block = subunits.getBlocks().get(0);
+
+		for (int su=0; su<block.size(); su++){
+
+			//Determine start and end of the subunit
+			int count = 0;
+			Integer start = null;
+			while (start == null && count<block.length()){
+				start = block.getAlignRes().get(su).get(0+count);
+				count++;
+			}
+			Integer end = null;
+			while (end == null && count<block.length()){
+				end = block.getAlignRes().get(su).get(block.length()-count);
+				count++;
+			}
+			end++;
+			
+			//Add the name of the structure as a range identifier
+			String id = newEnsemble.getStructureNames().get(su) 
+					+ "_" + start + "-" + end;
+			newEnsemble.getStructureNames().set(su, id);
+
+			for (int res=0; res<block.length(); res++) {
+				Integer residue = block.getAlignRes().get(su).get(res);
+				if (residue!=null) residue -= start;
+				block.getAlignRes().get(su).set(res, residue);
+			}
+		}
+
 		return subunits;
 	}
+	
+	/**
+	 * Converts a refined symmetry AFPChain alignment into the standard
+	 * representation of symmetry in a MultipleAlignment, that contains
+	 * the entire Atom array of the strcuture and the symmetric subunits 
+	 * are orgaized in different rows in a single Block.
+	 * 
+	 * @param symm AFPChain created with a symmetry algorithm and refined
+	 * @param atoms Atom array of the entire structure
+	 * @return MultipleAlignment format of the symmetry
+	 */
+	public static MultipleAlignment fromAFP(AFPChain symm, Atom[] atoms){
+		
+		if (!symm.getAlgorithmName().contains("symm")){
+			throw new IllegalArgumentException(
+					"The input alignment is not a symmetry alignment.");
+		}
+		
+		MultipleAlignmentEnsemble e = 
+				new MultipleAlignmentEnsembleImpl(symm, atoms, atoms, false);
+		e.setAtomArrays(new ArrayList<Atom[]>());
+		String name = e.getStructureNames().get(0);
+		e.setStructureNames(new ArrayList<String>());
+		
+		MultipleAlignment result = new MultipleAlignmentImpl();
+		BlockSet bs = new BlockSetImpl(result);
+		Block b = new BlockImpl(bs);
+		b.setAlignRes(new ArrayList<List<Integer>>());
+		
+		int order = symm.getBlockNum();
+		for (int su=0; su<order; su++){
+			List<Integer> residues = e.getMultipleAlignments().get(0).
+					getBlocks().get(su).getAlignRes().get(0);
+			b.getAlignRes().add(residues);
+			e.getStructureNames().add(name);
+			e.getAtomArrays().add(atoms);
+		}
+		e.getMultipleAlignments().set(0, result);
+		result.setEnsemble(e);
+		
+		return result;
+	}
+	
 }

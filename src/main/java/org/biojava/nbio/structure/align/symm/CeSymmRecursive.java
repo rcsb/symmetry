@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.vecmath.Matrix4d;
-
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.multiple.Block;
@@ -251,34 +249,6 @@ public class CeSymmRecursive {
 					}
 				}
 			}
-		}
-
-		parents = new ArrayList<Integer>();
-		children = new ArrayList<Integer>();
-		children.add(0);
-		int d = 0;
-		while (true) {
-			parents = children;
-			children = new ArrayList<Integer>();
-			for (Integer vertex : parents){
-				children.addAll(graph.getChildren(vertex));
-			}
-			if (children.size() == 0) break;
-			else if (d>depth) break;
-			else {
-				for (Integer vertex : children){
-					
-					//Get the symmetry axis of this level
-					MultipleAlignment align = graph.getVertex(vertex);
-					Matrix4d transform = align.getTransformations().get(1);
-					List<List<Integer>> subunits = 
-							new ArrayList<List<Integer>>(2);
-					subunits.add(new ArrayList<Integer>());
-					subunits.add(new ArrayList<Integer>());
-					axes.addAxis(transform, subunits);
-				}
-			}
-			d++;
 		}
 	}
 

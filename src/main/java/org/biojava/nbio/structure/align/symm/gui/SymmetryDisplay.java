@@ -10,7 +10,6 @@ import org.biojava.nbio.structure.align.multiple.BlockImpl;
 import org.biojava.nbio.structure.align.multiple.BlockSet;
 import org.biojava.nbio.structure.align.multiple.BlockSetImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsemble;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.gui.ScaleableMatrixPanel;
@@ -26,8 +25,9 @@ import javax.swing.JFrame;
 import javax.vecmath.Matrix4d;
 
 /**
- * Class that provides the visualizations options for the Symmetry analysis: multiple sequence alignments,
- * multiple structural alignments, sequence panel, etc.
+ * Class that provides the visualizations options for the 
+ * Symmetry analysis: multiple sequence alignments,
+ * multiple structural alignments, alignment panel, etc.
  * 
  * @author Aleix Lafita
  * 
@@ -41,6 +41,7 @@ public class SymmetryDisplay {
 	 * @throws StructureException 
 	 * @throws IOException 
 	 */
+	@Deprecated
 	public static void displaySuperimposedSubunits(AFPChain afpChain, Atom[] ca1) throws StructureException, IOException{
 
 		//Create new structure containing the atom arrays corresponding to separate subunits
@@ -102,6 +103,7 @@ public class SymmetryDisplay {
 	 * @throws StructureException 
 	 * @throws IOException 
 	 */
+	@Deprecated
 	public static void displayMultipleAlignment(AFPChain afpChain, Atom[] ca1) throws StructureException, IOException{
 
 		//Create a list with multiple references to the atom array of the structure
@@ -156,40 +158,8 @@ public class SymmetryDisplay {
 	public static void subunitDisplay(MultipleAlignment msa) 
 			throws StructureException {
 
-		//Modify atom arrays to include the subunit atoms only
-		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
-		Structure divided = SymmetryTools.toQuaternary(msa);
-		for (int i=0; i<msa.size(); i++){
-			Structure newStr = new StructureImpl();
-			Chain newCh = divided.getChain(i);
-			newStr.addChain(newCh);
-			Atom[] subunit = StructureTools.getRepresentativeAtomArray(newCh);
-			atomArrays.add(subunit);
-		}
-
-		MultipleAlignmentEnsemble newEnsemble = msa.getEnsemble().clone();
-		newEnsemble.setAtomArrays(atomArrays);
-
-		MultipleAlignment newMSA = newEnsemble.getMultipleAlignments().get(0);
-		Block subunits = newMSA.getBlocks().get(0);
-
-		for (int su=0; su<subunits.size(); su++){
-
-			//Determine start and end of the subunit
-			int count = 0;
-			Integer start = null;
-			while (start == null && count<subunits.length()){
-				start = subunits.getAlignRes().get(su).get(0+count);
-				count++;
-			}
-
-			for (int res=0; res<subunits.length(); res++) {
-				Integer residue = subunits.getAlignRes().get(su).get(res);
-				if (residue!=null) residue -= start;
-				subunits.getAlignRes().get(su).set(res, residue);
-			}
-		}
-		MultipleAlignmentDisplay.display(newMSA);
+		MultipleAlignment subunits = SymmetryTools.toSubunitAlignment(msa);
+		MultipleAlignmentDisplay.display(subunits);
 	}
 
 	/**
@@ -211,7 +181,7 @@ public class SymmetryDisplay {
 	/**
 	 * Show a Matrix in a new JFrame.
 	 * Is this method used antwhere? If so, it should use the biojava
-	 * code to display matrices.
+	 * code to display matrices. - Aleix
 	 * 
 	 * @param m Matrix to display
 	 * @param string title of the frame

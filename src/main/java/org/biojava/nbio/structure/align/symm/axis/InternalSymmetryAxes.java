@@ -6,6 +6,7 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
+import org.biojava.nbio.structure.align.symm.CeSymmIterative;
 import org.biojava.nbio.structure.align.symm.CeSymmRecursive;
 import org.biojava.nbio.structure.align.symm.ChainSorter;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
@@ -76,7 +77,7 @@ public class InternalSymmetryAxes {
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "1YOX_A:,B:,C:";
+		String name = "1yox.A";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));
@@ -85,7 +86,8 @@ public class InternalSymmetryAxes {
 		params.setRefineMethod(RefineMethod.SINGLE);
 		params.setOptimization(true);
 
-		CeSymmRecursive recurser = new CeSymmRecursive(params);
+		//CeSymmRecursive recurser = new CeSymmRecursive(params);
+		CeSymmIterative recurser = new CeSymmIterative(params);
 		MultipleAlignment msa = recurser.execute(atoms);
 
 		AxisAligner axis = InternalSymmetryAxes.calculateAxes(msa);
@@ -108,5 +110,6 @@ public class InternalSymmetryAxes {
 		script += "save STATE state_1;";
 		
 		jmol.evalString(script);
+		
 	}
 }

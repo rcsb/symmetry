@@ -14,47 +14,49 @@ import javax.vecmath.Matrix4d;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.SVDSuperimposer;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.multiple.Block;
-import org.biojava.nbio.structure.align.multiple.BlockImpl;
-import org.biojava.nbio.structure.align.multiple.BlockSet;
-import org.biojava.nbio.structure.align.multiple.BlockSetImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentTools;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
+import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.jama.Matrix;
 
 /**
- * Optimizes a symmetry alignment by a Monte Carlo score 
- * optimization of the subunit multiple alignment.
+ * Optimizes a symmetry alignment by a Monte Carlo score optimization 
+ * of the subunit multiple alignment. The superposition of the subunits
+ * is not fully felxible, because it is constrained on the symmetry axes
+ * found in the structure. This is the main difference to the MultipleMC
+ * algorithm in biojava. Another major difference is that the free Pool
+ * is shared for all subunits, so that no residue can appear to more than
+ * one subunit at a time.
  * <p>
- * This algorithm does not use a unfiform distribution for 
- * selecting moves, farther residues have more probability 
- * to be shrinked or gapped.
+ * This algorithm does not use a unfiform distribution for selecting moves,
+ * farther residues have more probability to be shrinked or gapped. This 
+ * modification of the algorithm improves convergence and running time.
  * <p>
- * Implements Callable in order to parallelize optimizations.
- * Because gaps are allowed in the subunits, a 
- * {@link MultipleAlignment} format is returned.
+ * Use call method to parallelize optimizations, or use optimize method
+ * instead. 
+ * Because gaps are allowed in the subunits, a {@link MultipleAlignment} 
+ * format is returned.
  * 
  * @author Aleix Lafita
  * 
  */
 public class SymmOptimizer implements Callable<MultipleAlignment> {
 
-	private static final boolean debug = false; //save history and print info
-	private SymmetryType type;
+	//if debug: save history and print info (slower)
+	private static final boolean debug = true;
 	private Random rnd;
 
 	//Optimization parameters
 	private static final int Rmin = 2; //min aligned subunits per column
-	private static final int Lmin = 15; //min subunit length
+	private static final int Lmin = 8; //min subunit length
 	private int maxIterFactor = 100; //max iterations constant
 	private double C = 20; //probability of accept bad moves constant
 
@@ -64,17 +66,16 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 
 	//Alignment Information
 	private MultipleAlignment msa;
+	private SymmetryAxes axes;
 	private Atom[] atoms;
 	private int order;
-	private int subunitLen;
+	private int length; //total alignment columns (block size)
+	private int subunitCore;  //core length (without gaps)
 
-	//Multiple Alignment Residues
+	//Aligned Residues and Score
 	private List<List<Integer>> block; //residues aligned
 	private List<Integer> freePool; //residues not aligned
-
-	//Optimization information
 	private double mcScore; //alignment score to optimize
-	private Matrix4d transformation; //elementary symmetry operation
 
 	//Optimization history
 	private List<Integer> subunitLenHistory;
@@ -82,115 +83,88 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 	private List<Double> scoreHistory;
 
 	/**
-	 * Constructor with an AFPChain storing a refined symmetry alignment
-	 * Initializes all the variables needed for the optimization.
+	 * Constructor with a seed MultipleAligment storing a refined symmetry 
+	 * alignment of the subunits. To perform the optimization use the call
+	 * or optimize methods after instantiation.
 	 * 
-	 * @param seedAFP AFPChain with the symmetry subunits split in blocks.
-	 * @param atoms
-	 * @param type
-	 * @param seed
+	 * @param seedMSA multiple aligment with the symmetry subunits.
+	 * @param axes symmetry axes to contrain optimization
+	 * @param seed random seed
 	 * @throws RefinerFailedException 
 	 * @throws StructureException 
 	 */
-	public SymmOptimizer(AFPChain seedAFP, Atom[] atoms, SymmetryType type,
-			long seed) throws RefinerFailedException, StructureException {
+	public SymmOptimizer(MultipleAlignment mul, SymmetryAxes axes, long seed){
 
-		//No multiple alignment can be generated if there is only one subunit
-		this.order = seedAFP.getBlockNum();
-		if (order == 1) {
-			throw new RefinerFailedException(
-					"Optimization: Non-Symmetric Seed Alignment.");
-		}
-
-		this.type = type;
-		rnd = new Random(seed);
-
-		initialize(seedAFP, atoms);
+		this.axes = axes;
+		this.rnd = new Random(seed);
+		this.msa = mul;
+		this.atoms = msa.getEnsemble().getAtomArrays().get(0);
+		this.order = msa.size();
+		this.subunitCore = msa.getCoreLength();
 	}
 
-	@Override
-	public MultipleAlignment call() throws Exception {
-
-		optimizeMC(maxIterFactor*atoms.length);
-
-		//Save the history to the results folder in the symmetry project
-		try {
-			if (debug) 
-				saveHistory("src/main/java/results/SymmOptimizerHistory.csv");
-		} catch(FileNotFoundException e) {}
-
-		return msa;
-	}
-
-	private void initialize(AFPChain seedAFP, Atom[] ca1) 
+	private void initialize() 
 			throws StructureException, RefinerFailedException {
 
-		atoms = ca1;
-		order = seedAFP.getBlockNum();
+		if (order == 1) {
+			throw new RefinerFailedException(
+					"Optimization: Non-symmetric seed slignment. Order = 1");
+		}
+		if (subunitCore < Lmin) {
+			throw new RefinerFailedException(
+					"Optimization: Seed alignment too short. Length = "
+							+ subunitCore);
+		}
+
 		C = 20*order;
 
-		subunitLen = seedAFP.getOptLen()[0];
-		if (subunitLen < 1) {
-			throw new RefinerFailedException(
-					"Optimization: Empty seed alignment!");
-		}
-
-		//Initialize MultipleAlignment
-		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
-		List<String> structureNames = new ArrayList<String>();
-		for (int i=0; i<order; i++){
-			atomArrays.add(atoms);
-			structureNames.add(seedAFP.getName1());
-		}
-		msa = new MultipleAlignmentImpl();
-		msa.getEnsemble().setStructureNames(structureNames);
-		msa.getEnsemble().setAtomArrays(atomArrays);
-		msa.getEnsemble().setAlgorithmName(seedAFP.getAlgorithmName());
-		msa.getEnsemble().setVersion(seedAFP.getVersion());
-
 		//Initialize alignment variables
-		block = new ArrayList<List<Integer>>();
+		block = msa.getBlocks().get(0).getAlignRes();
 		freePool = new ArrayList<Integer>();
+		length = block.get(0).size();
 
-		//Store the residues that have been added to the block
-		List<Integer> alreadySeen = new ArrayList<Integer>();
-
-		//Generate the initial state of the system
-		for (int i=0; i<order; i++){
-			List<Integer> residues = new ArrayList<Integer>();
-			for (int j=0; j<subunitLen; j++){
-				Integer residue = seedAFP.getOptAln()[i][0][j];
-				residues.add(residue);
-				alreadySeen.add(residue);
-			}
-			block.add(residues);
+		//Store the residues aligned in the block
+		List<Integer> aligned = new ArrayList<Integer>();
+		for (int su=0; su<order; su++){
+			aligned.addAll(block.get(su));
 		}
 
 		//Add any residue not aligned to the free pool
 		for (int i=0; i<atoms.length; i++){
-			if (!alreadySeen.contains(i)){
+			if (!aligned.contains(i)){
 				freePool.add(i);
 			}
-		}		
+		}
+		checkGaps();
 
 		//Set the MC score and RMSD of the initial state (seed alignment)
 		updateTransformation();
-		subunitMultipleAlignment();
+		updateMultipleAlignment();
 		mcScore = MultipleAlignmentScorer.getMCScore(msa, Gopen, Gextend);
+	}
+
+	@Override
+	public MultipleAlignment call() throws Exception {
+		return optimize();
 	}
 
 	/**
 	 *  Optimization method based in a Monte-Carlo approach. 
 	 *  Starting from the refined alignment uses 4 types of moves:
 	 *  <p>
-	 *  	1- Shift Row: if there are enough freePool residues available.<p>
-	 *  	2- Expand Block: add another alignment column if there are residues
-	 *  		available.<p>
-	 *  	3- Shrink Block: move a block column to the freePool.<p>
-	 *  	4- Insert gap: insert a gap in a position of the alignment.
+	 *  <li>1- Shift Row: if there are enough freePool residues available.
+	 *  <li>2- Expand Block: add another alignment column.
+	 *  <li>3- Shrink Block: move a block column to the freePool.
+	 *  <li>4- Insert gap: insert a gap in a position of the alignment.
 	 *  
+	 *  @throws StructureException
+	 * 	@throws RefinerFailedException if the alignment is not symmetric or
+	 * 			too short.
 	 */
-	private void optimizeMC(int maxIter) throws StructureException{
+	public MultipleAlignment optimize() 
+			throws StructureException, RefinerFailedException{
+
+		initialize();
 
 		//Initialize the history variables
 		subunitLenHistory = new ArrayList<Integer>();
@@ -199,6 +173,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 
 		int conv = 0;  //Number of steps without an alignment improvement
 		int i = 1;
+		int maxIter = maxIterFactor*atoms.length;
 		int stepsToConverge = Math.max(maxIter/50,1000);
 
 		while (i<maxIter && conv<stepsToConverge){
@@ -213,6 +188,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 				lastBlock.add(b);
 			}
 			double lastScore = mcScore;
+			int lastSubunitCore = subunitCore;
 
 			boolean moved = false;
 
@@ -240,7 +216,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 
 			//Get the properties of the new alignment
 			updateTransformation();
-			subunitMultipleAlignment();
+			updateMultipleAlignment();
 			mcScore = MultipleAlignmentScorer.getMCScore(msa, Gopen, Gextend);
 
 			//Calculate change in the optimization Score
@@ -257,7 +233,8 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 				if (p>prob){
 					block = lastBlock;
 					freePool = lastFreePool;
-					subunitLen = block.get(0).size();
+					length = block.get(0).size();
+					subunitCore = lastSubunitCore;
 					mcScore = lastScore;
 					conv ++; //no change in score if rejected
 
@@ -272,10 +249,10 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 				if (i%100==1){
 					//Get the correct superposition again
 					updateTransformation();
-					subunitMultipleAlignment();
+					updateMultipleAlignment();
 					double rmsd = MultipleAlignmentScorer.getRMSD(msa);
 
-					subunitLenHistory.add(subunitLen);
+					subunitLenHistory.add(length);
 					rmsdHistory.add(rmsd);
 					scoreHistory.add(mcScore);
 				}	
@@ -285,7 +262,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		}
 		//Superimpose and calculate scores
 		updateTransformation();
-		subunitMultipleAlignment();
+		updateMultipleAlignment();
 		mcScore = MultipleAlignmentScorer.getMCScore(msa, Gopen, Gextend);
 		double tmScore = MultipleAlignmentScorer.getAvgTMScore(msa) * order;
 		double rmsd = MultipleAlignmentScorer.getRMSD(msa);
@@ -294,31 +271,42 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		msa.putScore(MultipleAlignmentScorer.MC_SCORE, mcScore);
 		msa.putScore(MultipleAlignmentScorer.AVGTM_SCORE, tmScore);
 		msa.putScore(MultipleAlignmentScorer.RMSD, rmsd);
+
+		//Save the history to the results folder of the symmetry project
+		try {
+			if (debug) 
+				saveHistory("src/main/java/results/SymmOptimizerHistory.csv");
+		} catch(FileNotFoundException e) {} catch (IOException e) {}
+
+		return msa;
 	}
 
 	/**
 	 * This method translates the internal data structures to a 
-	 * MultipleAlignment of the subunits only in order to use 
-	 * the normal methods to score MultipleAlignments.
+	 * MultipleAlignment of the subunits in order to use the 
+	 * methods to score MultipleAlignments.
 	 */
-	private void subunitMultipleAlignment() {
+	private void updateMultipleAlignment() {
 
 		msa.clear();
-		//Create transformations from the symmetry operation
-		List<Matrix4d> transformations = new ArrayList<Matrix4d>();		
-		for (int i=0; i<order; i++){
-			Matrix4d transformTimes = new Matrix4d();
-			transformTimes.setIdentity();
-			for (int j=0; j<i; j++) transformTimes.mul(transformation);
-			transformations.add(transformTimes);
+
+		//Override the alignment with the new information
+		Block b = msa.getBlocks().get(0);
+		b.setAlignRes(block);
+		subunitCore = b.getCoreLength();
+
+		//Create transformations from the SymmetryAxes info
+		List<Matrix4d> transformations = new ArrayList<Matrix4d>();
+		for (int su=0; su<order; su++){
+			List<Matrix4d> subunitTrans = axes.getSubunitTransforms(su);
+			Matrix4d totalTransform = new Matrix4d();
+			totalTransform.setIdentity();
+			for (Matrix4d t : subunitTrans){
+				totalTransform.mul(t);
+			}
+			transformations.add(totalTransform);
 		}
 		msa.setTransformations(transformations);
-
-		//Override the alignment with the optimized alignment of the subunits
-		msa.setBlockSets(new ArrayList<BlockSet>());
-		BlockSet bs = new BlockSetImpl(msa);
-		Block b = new BlockImpl(bs);
-		b.setAlignRes(block);
 	}
 
 	/**
@@ -335,7 +323,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 
 		List<Integer> shrinkColumns = new ArrayList<Integer>();
 		//Loop for each column
-		for (int res=0; res<subunitLen; res++){
+		for (int res=0; res<length; res++){
 			int gapCount = 0;
 			//Loop for each subunit and count the gaps
 			for (int su=0; su<order; su++){
@@ -355,7 +343,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 				if (residue != null) freePool.add(residue);
 				Collections.sort(freePool);
 			}
-			subunitLen--;
+			length--;
 		}
 
 		if (shrinkColumns.size()!=0) return true;
@@ -373,18 +361,18 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 	private boolean insertGap() throws StructureException {
 
 		//Let gaps only if the subunit is larger than the minimum length
-		if (subunitLen <= Lmin) return false;
+		if (subunitCore <= Lmin) return false;
 
 		//Select residue by maximum distance
 		updateTransformation();
-		subunitMultipleAlignment();
+		updateMultipleAlignment();
 		Matrix residueDistances = 
 				MultipleAlignmentTools.getAverageResidueDistances(msa);
 
 		double maxDist = Double.MIN_VALUE;
 		int su = 0;
 		int res = 0;
-		for (int col=0; col<subunitLen; col++){
+		for (int col=0; col<length; col++){
 			for (int s=0; s<order; s++){
 				if (residueDistances.get(s, col) != -1){
 					if (residueDistances.get(s, col) > maxDist){
@@ -424,7 +412,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 
 		int su = rnd.nextInt(order); //Select the subunit
 		int rl = rnd.nextInt(2);  //Select between moving right (0) or left (1)
-		int res = rnd.nextInt(subunitLen); //Residue as a pivot
+		int res = rnd.nextInt(length); //Residue as a pivot
 
 		//When the pivot residue is null try to add a residue from the freePool
 		if (block.get(su).get(res) == null){
@@ -432,7 +420,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			int right = res;
 			int left = res;
 			//Find the boundary to the right abd left
-			while (block.get(su).get(right) == null && right<subunitLen-1) {
+			while (block.get(su).get(right) == null && right<length-1) {
 				right++;
 			}
 			while (block.get(su).get(left) == null && left>0) {
@@ -477,9 +465,9 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 				else{
 					//Choose randomly a residue in between left and right to add
 					Integer residue = rnd.nextInt(block.get(su).get(right)-
-									block.get(su).get(left)-1) + 
-									block.get(su).get(left)+1;
-					
+							block.get(su).get(left)-1) + 
+							block.get(su).get(left)+1;
+
 					if (freePool.contains(residue)) {
 						block.get(su).set(res,residue);
 						freePool.remove(residue);
@@ -514,7 +502,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			int rightBoundary = res+1;
 			int rightPrevRes = res;
 			while (true){
-				if(rightBoundary == subunitLen) break;
+				if(rightBoundary == length) break;
 				else {
 					if (block.get(su).get(rightBoundary) == null) {
 						break;  //gap
@@ -574,7 +562,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			int rightBoundary1 = res+1;
 			int rightPrevRes1 = res;
 			while (true){
-				if(rightBoundary1 == subunitLen) break;
+				if(rightBoundary1 == length) break;
 				else {
 					if (block.get(su).get(rightBoundary1) == null) {
 						break;  //gap
@@ -596,7 +584,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			//Add the residue at the right of the block
 			residueR1 += 1; //cannot be null
 			if (freePool.contains(residueR1)){
-				if (rightBoundary1==subunitLen-1) block.get(su).add(residueR1);
+				if (rightBoundary1==length-1) block.get(su).add(residueR1);
 				else block.get(su).add(rightBoundary1+1,residueR1);
 				freePool.remove(residueR1);
 			}
@@ -628,7 +616,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		boolean moved = false;
 
 		int rl = rnd.nextInt(2);  //Select between right (0) or left (1)
-		int res = rnd.nextInt(subunitLen); //Residue as a pivot
+		int res = rnd.nextInt(length); //Residue as a pivot
 
 		switch (rl) {
 		case 0:
@@ -638,7 +626,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			for (int su=0; su<order; su++) previousPos[su] = -1;
 
 			//Search a position to the right that has at minimum Rmin
-			while (subunitLen-1>rightBoundary){
+			while (length-1>rightBoundary){
 				int noncontinuous = 0;
 				for (int su=0; su<order; su++){
 					if (block.get(su).get(rightBoundary) == null) {
@@ -661,22 +649,22 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			for (int su=0; su<order; su++){
 				Integer residueR = block.get(su).get(rightBoundary);
 				if (residueR == null){
-					if (rightBoundary == subunitLen-1) block.get(su).add(null); 
+					if (rightBoundary == length-1) block.get(su).add(null); 
 					else block.get(su).add(rightBoundary+1,null);
 				} else if (freePool.contains(residueR+1)){
 					Integer residueAdd = residueR+1;
-					if (rightBoundary == subunitLen-1) {
+					if (rightBoundary == length-1) {
 						block.get(su).add(residueAdd); 
 					}
 					else block.get(su).add(rightBoundary+1,residueAdd);
 					freePool.remove(residueAdd);
 				}
 				else {
-					if (rightBoundary == subunitLen-1) block.get(su).add(null);
+					if (rightBoundary == length-1) block.get(su).add(null);
 					else block.get(su).add(rightBoundary+1,null);
 				}
 			}
-			subunitLen++;
+			length++;
 			moved = true;
 			break;
 
@@ -719,7 +707,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 					block.get(su).add(leftBoundary, null);
 				}
 			}
-			subunitLen++;
+			length++;
 			moved = true;
 			break;
 		}
@@ -734,18 +722,18 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 	private boolean shrinkBlock() throws StructureException{
 
 		//Let shrink moves only if the subunit is larger enough
-		if (subunitLen <= Lmin) return false;
+		if (subunitCore <= Lmin) return false;
 
 		//Select column by maximum distance
 		updateTransformation();
-		subunitMultipleAlignment();
+		updateMultipleAlignment();
 		Matrix residueDistances = 
 				MultipleAlignmentTools.getAverageResidueDistances(msa);
-		
+
 		double maxDist = Double.MIN_VALUE;
-		double[] colDistances = new double[subunitLen];
+		double[] colDistances = new double[length];
 		int res = 0;
-		for (int col=0; col<subunitLen; col++){
+		for (int col=0; col<length; col++){
 			int normalize = 0;
 			for (int s=0; s<order; s++){
 				if (residueDistances.get(s, col) != -1){
@@ -769,60 +757,49 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			if (residue != null) freePool.add(residue);
 			Collections.sort(freePool);
 		}
-		subunitLen--;
+		length--;
 		checkGaps();
 		return true;
 	}
 
 	/**
-	 *  Calculates the symmetry operation Matrix (transformation) 
-	 *  for the new alignment.
+	 *  Calculates the set of symmetry operation Matrices (transformations) 
+	 *  of the new alignment, based on the symmetry relations in the
+	 *  SymmetryAxes object.
 	 */
 	private void updateTransformation() throws StructureException {
 
-		//Calculate the aligned atom arrays
-		List<Atom> list1 = new ArrayList<Atom>();
-		List<Atom> list2 = new ArrayList<Atom>();
-
-		switch (type) {
-		case CLOSED:
-			for (int j=0; j<order; j++){
-				for (int k=0; k<subunitLen; k++){
-					if (block.get(j).get(k)!=null && 
-							block.get((j+1)%order).get(k)!=null){
-						
-						list1.add(atoms[block.get(j).get(k)]);
-						list2.add((Atom) 
-								atoms[block.get((j+1)%order).get(k)].clone());
+		for (int t=0; t<axes.getAxes().size(); t++){
+			
+			Matrix4d axis = axes.getAxes().get(t);
+			List<Integer> chain1 = axes.getSubunitRelation(t).get(0);
+			List<Integer> chain2 = axes.getSubunitRelation(t).get(1);
+			
+			//Calculate the aligned atom arrays
+			List<Atom> list1 = new ArrayList<Atom>();
+			List<Atom> list2 = new ArrayList<Atom>();
+			
+			for (int pair=0; pair<chain1.size(); pair++){
+				int p1 = chain1.get(pair);
+				int p2 = chain2.get(pair);
+				
+				for (int k=0; k<length; k++){
+					Integer pos1 = block.get(p1).get(k);
+					Integer pos2 = block.get(p2).get(k);
+					if (pos1!=null && pos2!=null){
+						list1.add(atoms[pos1]);
+						list2.add(atoms[pos2]);
 					}
 				}
 			}
+			
 			Atom[] arr1 = list1.toArray(new Atom[list1.size()]);
 			Atom[] arr2 = list2.toArray(new Atom[list2.size()]);
 
 			//Calculate the new transformation information
 			SVDSuperimposer svd = new SVDSuperimposer(arr1, arr2);
-			transformation = svd.getTransformation();
-			break;
-
-		default: //case OPEN:
-			for (int j=0; j<order-1; j++){
-				for (int k=0; k<subunitLen; k++){
-					if (block.get(j).get(k)!=null && 
-							block.get((j+1)%order).get(k)!=null){
-						
-						list1.add(atoms[block.get(j).get(k)]);
-						list2.add((Atom) atoms[block.get(j+1).get(k)].clone());
-					}
-				}
-			}
-			Atom[] arr3 = list1.toArray(new Atom[list1.size()]);
-			Atom[] arr4 = list2.toArray(new Atom[list2.size()]);
-
-			//Calculate the new transformation information
-			SVDSuperimposer svd2 = new SVDSuperimposer(arr3, arr4);
-			transformation = svd2.getTransformation();
-			break;
+			axis = svd.getTransformation();
+			axes.updateAxis(t, axis);
 		}
 	}	
 
@@ -865,7 +842,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		//Crystallins: 4GCR, d4gcra1, d4gcra2
 		//Aspartic proteinases: 
 		//Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
-		String[] names = {"4i4q"};
+		String[] names = {"1n0r.A"};
 		AtomCache cache = new AtomCache();
 
 		for (String name:names){
@@ -878,14 +855,14 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 
 			CESymmParameters params = 
 					(CESymmParameters) ceSymm.getParameters();
-			
+
 			params.setRefineMethod(RefineMethod.SINGLE);
 			params.setSymmetryType(SymmetryType.AUTO);
 			params.setOptimization(true);
 			//params.setSeed(10);
 
 			MultipleAlignment symmetry = ceSymm.align(atoms);
-
+			
 			new SymmetryJmol(symmetry);
 		}
 	}

@@ -12,7 +12,7 @@ import org.biojava.nbio.structure.align.multiple.BlockSet;
 import org.biojava.nbio.structure.align.multiple.BlockSetImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;

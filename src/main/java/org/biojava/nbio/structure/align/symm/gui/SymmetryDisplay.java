@@ -11,7 +11,7 @@ import org.biojava.nbio.structure.align.multiple.BlockSet;
 import org.biojava.nbio.structure.align.multiple.BlockSetImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.gui.ScaleableMatrixPanel;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.utils.SymmetryTools;

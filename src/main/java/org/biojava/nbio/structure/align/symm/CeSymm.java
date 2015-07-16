@@ -25,7 +25,7 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsemble;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsembleImpl;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
@@ -535,13 +535,6 @@ implements MatrixListener, MultipleStructureAligner {
 
 			//STEP 5: symmetry alignment optimization
 			if (this.params.getOptimization()){
-				SymmOptimizer opt = new SymmOptimizer(msa, axes, 0);
-				try {
-					return opt.optimize();
-				} catch (RefinerFailedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
 				
 				//Perform several optimizations in different threads
 				try {

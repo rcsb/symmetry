@@ -23,8 +23,8 @@ import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsemble;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsembleImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.jama.Matrix;
-import org.biojava.nbio.structure.symmetry.utils.DirectedGraph;
 import org.biojava.nbio.structure.symmetry.utils.Graph;
 
 /**
@@ -32,7 +32,7 @@ import org.biojava.nbio.structure.symmetry.utils.Graph;
  * <p>
  * Methods include: blank out regions of DP Matrix, build symmetry graphs,
  * get rotation symmetry angles, split subunits in chains, convert between
- * storing formats.
+ * symmetry formats.
  * 
  * @author Spencer Bliven
  * @author Aleix Lafita
@@ -625,6 +625,9 @@ public class SymmetryTools {
 		}
 		e.getMultipleAlignments().set(0, result);
 		result.setEnsemble(e);
+		
+		double tmScore = symm.getTMScore();
+		result.putScore(MultipleAlignmentScorer.AVGTM_SCORE, tmScore);
 		
 		return result;
 	}

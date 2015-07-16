@@ -77,7 +77,7 @@ public class InternalSymmetryAxes {
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "1yox.A";
+		String name = "4gcr";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));

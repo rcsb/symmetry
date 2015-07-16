@@ -16,8 +16,11 @@ import org.biojava.nbio.structure.SVDSuperimposer;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.multiple.Block;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsemble;
+import org.biojava.nbio.structure.align.multiple.util.CoreSuperimposer;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentTools;
+import org.biojava.nbio.structure.align.multiple.util.MultipleSuperimposer;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
@@ -30,7 +33,7 @@ import org.biojava.nbio.structure.jama.Matrix;
 /**
  * Optimizes a symmetry alignment by a Monte Carlo score optimization 
  * of the subunit multiple alignment. The superposition of the subunits
- * is not fully felxible, because it is constrained on the symmetry axes
+ * is not free (felxible), because it is constrained on the symmetry axes
  * found in the structure. This is the main difference to the MultipleMC
  * algorithm in biojava. Another major difference is that the free Pool
  * is shared for all subunits, so that no residue can appear to more than
@@ -87,7 +90,8 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 	 * alignment of the subunits. To perform the optimization use the call
 	 * or optimize methods after instantiation.
 	 * 
-	 * @param seedMSA multiple aligment with the symmetry subunits.
+	 * @param seedMSA multiple aligment with the symmetry subunits. It will be
+	 * 			completely cloned, including its ensemble.
 	 * @param axes symmetry axes to contrain optimization
 	 * @param seed random seed
 	 * @throws RefinerFailedException 
@@ -97,7 +101,10 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 
 		this.axes = axes;
 		this.rnd = new Random(seed);
-		this.msa = mul;
+		
+		MultipleAlignmentEnsemble e = mul.getEnsemble().clone();
+		this.msa = e.getMultipleAlignments().get(0);
+		
 		this.atoms = msa.getEnsemble().getAtomArrays().get(0);
 		this.order = msa.size();
 		this.subunitCore = msa.getCoreLength();
@@ -138,7 +145,6 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		checkGaps();
 
 		//Set the MC score and RMSD of the initial state (seed alignment)
-		updateTransformation();
 		updateMultipleAlignment();
 		mcScore = MultipleAlignmentScorer.getMCScore(msa, Gopen, Gextend);
 	}
@@ -215,7 +221,6 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			}
 
 			//Get the properties of the new alignment
-			updateTransformation();
 			updateMultipleAlignment();
 			mcScore = MultipleAlignmentScorer.getMCScore(msa, Gopen, Gextend);
 
@@ -248,7 +253,6 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 
 				if (i%100==1){
 					//Get the correct superposition again
-					updateTransformation();
 					updateMultipleAlignment();
 					double rmsd = MultipleAlignmentScorer.getRMSD(msa);
 
@@ -261,7 +265,6 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 			i++;
 		}
 		//Superimpose and calculate scores
-		updateTransformation();
 		updateMultipleAlignment();
 		mcScore = MultipleAlignmentScorer.getMCScore(msa, Gopen, Gextend);
 		double tmScore = MultipleAlignmentScorer.getAvgTMScore(msa) * order;
@@ -285,8 +288,10 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 	 * This method translates the internal data structures to a 
 	 * MultipleAlignment of the subunits in order to use the 
 	 * methods to score MultipleAlignments.
+	 * 
+	 * @throws StructureException 
 	 */
-	private void updateMultipleAlignment() {
+	private void updateMultipleAlignment() throws StructureException {
 
 		msa.clear();
 
@@ -294,6 +299,9 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		Block b = msa.getBlocks().get(0);
 		b.setAlignRes(block);
 		subunitCore = b.getCoreLength();
+		
+		updateTransformation();
+		if (axes == null) return;
 
 		//Create transformations from the SymmetryAxes info
 		List<Matrix4d> transformations = new ArrayList<Matrix4d>();
@@ -364,7 +372,6 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		if (subunitCore <= Lmin) return false;
 
 		//Select residue by maximum distance
-		updateTransformation();
 		updateMultipleAlignment();
 		Matrix residueDistances = 
 				MultipleAlignmentTools.getAverageResidueDistances(msa);
@@ -766,40 +773,48 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 	 *  Calculates the set of symmetry operation Matrices (transformations) 
 	 *  of the new alignment, based on the symmetry relations in the
 	 *  SymmetryAxes object.
+	 *  <p>
+	 *  If the SymmetryAxes object is null, the superposition of the subunits
+	 *  is done without contraint.
 	 */
 	private void updateTransformation() throws StructureException {
 
-		for (int t=0; t<axes.getAxes().size(); t++){
-			
-			Matrix4d axis = axes.getAxes().get(t);
-			List<Integer> chain1 = axes.getSubunitRelation(t).get(0);
-			List<Integer> chain2 = axes.getSubunitRelation(t).get(1);
-			
-			//Calculate the aligned atom arrays
-			List<Atom> list1 = new ArrayList<Atom>();
-			List<Atom> list2 = new ArrayList<Atom>();
-			
-			for (int pair=0; pair<chain1.size(); pair++){
-				int p1 = chain1.get(pair);
-				int p2 = chain2.get(pair);
+		if (axes != null){
+			for (int t=0; t<axes.getAxes().size(); t++){
 				
-				for (int k=0; k<length; k++){
-					Integer pos1 = block.get(p1).get(k);
-					Integer pos2 = block.get(p2).get(k);
-					if (pos1!=null && pos2!=null){
-						list1.add(atoms[pos1]);
-						list2.add(atoms[pos2]);
+				Matrix4d axis = axes.getAxes().get(t);
+				List<Integer> chain1 = axes.getSubunitRelation(t).get(0);
+				List<Integer> chain2 = axes.getSubunitRelation(t).get(1);
+				
+				//Calculate the aligned atom arrays
+				List<Atom> list1 = new ArrayList<Atom>();
+				List<Atom> list2 = new ArrayList<Atom>();
+				
+				for (int pair=0; pair<chain1.size(); pair++){
+					int p1 = chain1.get(pair);
+					int p2 = chain2.get(pair);
+					
+					for (int k=0; k<length; k++){
+						Integer pos1 = block.get(p1).get(k);
+						Integer pos2 = block.get(p2).get(k);
+						if (pos1!=null && pos2!=null){
+							list1.add(atoms[pos1]);
+							list2.add(atoms[pos2]);
+						}
 					}
 				}
+				
+				Atom[] arr1 = list1.toArray(new Atom[list1.size()]);
+				Atom[] arr2 = list2.toArray(new Atom[list2.size()]);
+	
+				//Calculate the new transformation information
+				SVDSuperimposer svd = new SVDSuperimposer(arr1, arr2);
+				axis = svd.getTransformation();
+				axes.updateAxis(t, axis);
 			}
-			
-			Atom[] arr1 = list1.toArray(new Atom[list1.size()]);
-			Atom[] arr2 = list2.toArray(new Atom[list2.size()]);
-
-			//Calculate the new transformation information
-			SVDSuperimposer svd = new SVDSuperimposer(arr1, arr2);
-			axis = svd.getTransformation();
-			axes.updateAxis(t, axis);
+		} else {
+			MultipleSuperimposer imposer = new CoreSuperimposer();
+			imposer.superimpose(msa);
 		}
 	}	
 
@@ -842,7 +857,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		//Crystallins: 4GCR, d4gcra1, d4gcra2
 		//Aspartic proteinases: 
 		//Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
-		String[] names = {"1n0r.A"};
+		String[] names = {"4gcr"};
 		AtomCache cache = new AtomCache();
 
 		for (String name:names){

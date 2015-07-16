@@ -559,25 +559,15 @@ public class SymmetryTools {
 
 		for (int su=0; su<block.size(); su++){
 
-			//Determine start and end of the subunit
+			//Determine start of the subunit
 			int count = 0;
 			Integer start = null;
 			while (start == null && count<block.length()){
 				start = block.getAlignRes().get(su).get(0+count);
 				count++;
 			}
-			Integer end = null;
-			while (end == null && count<block.length()){
-				end = block.getAlignRes().get(su).get(block.length()-count);
-				count++;
-			}
-			end++;
 			
-			//Add the name of the structure as a range identifier
-			String id = newEnsemble.getStructureNames().get(su) 
-					+ "_" + start + "-" + end;
-			newEnsemble.getStructureNames().set(su, id);
-
+			//Normalize aligned residues
 			for (int res=0; res<block.length(); res++) {
 				Integer residue = block.getAlignRes().get(su).get(res);
 				if (residue!=null) residue -= start;

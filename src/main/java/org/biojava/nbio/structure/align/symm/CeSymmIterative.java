@@ -17,6 +17,8 @@ import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
+import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
+import org.biojava.nbio.structure.align.symm.refine.SymmOptimizer;
 import org.biojava.nbio.structure.align.util.AtomCache;
 
 /**
@@ -76,9 +78,12 @@ public class CeSymmIterative {
 	 * 
 	 * @param atoms atoms 
 	 * @return MultipleAlignment of the subunits
-	 * @throws Exception 
+	 * 
+	 * @throws StructureException 
+	 * @throws RefinerFailedException 
 	 */
-	public MultipleAlignment execute(Atom[] atoms) throws Exception {
+	public MultipleAlignment execute(Atom[] atoms) 
+			throws StructureException, RefinerFailedException {
 
 		allAtoms = atoms;
 		for (Integer res=0; res<allAtoms.length; res++){
@@ -88,8 +93,9 @@ public class CeSymmIterative {
 		iterate(atoms, 0);
 		buildAlignment();
 
-		//Run a final optimization of the alignment
-		//Not yet possible TODO 
+		//Run a final optimization once all subunits are known
+		SymmOptimizer optimizer = new SymmOptimizer(msa, null, 0);
+		msa = optimizer.optimize();
 
 		return msa;
 	}
@@ -209,14 +215,14 @@ public class CeSymmIterative {
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "4hhb";
+		String name = "4gcr";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));
 
 		CESymmParameters params = new CESymmParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
-		params.setOptimization(false);
+		params.setOptimization(true);
 
 		CeSymmIterative aligner = new CeSymmIterative(params);
 		MultipleAlignment msa = aligner.execute(atoms);

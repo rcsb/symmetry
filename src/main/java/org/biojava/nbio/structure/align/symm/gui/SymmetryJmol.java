@@ -297,7 +297,6 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 			RotationAxis rot = new RotationAxis(axis);
 			String script = rot.getJmolScript(atoms, id);
 			evalString(script);
-			System.out.println(script);
 			id++;
 		}
 	}

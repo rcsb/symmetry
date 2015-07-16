@@ -54,7 +54,7 @@ import org.biojava.nbio.structure.jama.Matrix;
 public class SymmOptimizer implements Callable<MultipleAlignment> {
 
 	//if debug: save history and print info (slower)
-	private static final boolean debug = true;
+	private static final boolean debug = false;
 	private Random rnd;
 
 	//Optimization parameters

@@ -25,7 +25,6 @@ import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsembleImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.jama.Matrix;
-import org.biojava.nbio.structure.symmetry.utils.Graph;
 
 /**
  * Utility methods for the internal symmetry identification and manipulation.
@@ -407,26 +406,28 @@ public class SymmetryTools {
 	 * where each vertex is a residue and each edge means the connection
 	 * between the two residues in one of the alignments.
 	 * 
-	 * @param allAFPs List of AFPChain
+	 * @param afps List of AFPChains
 	 * @param atoms Atom array of the symmetric structure
+	 * @param undirected if true, the graph is undirected
 	 * 
-	 * @return Graph of aligned residues
+	 * @return adjacency List of aligned residues
 	 */
-	public static Graph<Integer> buildSymmetryGraph(
-			List<AFPChain> allAFPs, Atom[] atoms) {
+	public static List<List<Integer>> buildSymmetryGraph(
+			List<AFPChain> afps, Atom[] atoms, boolean undirected) {
 
-		Graph<Integer> graph = new DirectedGraph<Integer>();
-
+		List<List<Integer>> graph = new ArrayList<List<Integer>>();
+		
 		for (int n=0; n<atoms.length; n++){
-			graph.addVertex(n);
+			graph.add(new ArrayList<Integer>());
 		}
 
-		for (int k=0; k < allAFPs.size(); k++){
-			for (int i=0; i<allAFPs.get(k).getOptAln().length; i++){
-				for (int j=0; j<allAFPs.get(k).getOptAln()[i][0].length; j++){
-					Integer res1 = allAFPs.get(k).getOptAln()[i][0][j];
-					Integer res2 = allAFPs.get(k).getOptAln()[i][1][j];
-					graph.addEdge(res1, res2);
+		for (int k=0; k < afps.size(); k++){
+			for (int i=0; i<afps.get(k).getOptAln().length; i++){
+				for (int j=0; j<afps.get(k).getOptAln()[i][0].length; j++){
+					Integer res1 = afps.get(k).getOptAln()[i][0][j];
+					Integer res2 = afps.get(k).getOptAln()[i][1][j];
+					graph.get(res1).add(res2);
+					if (undirected) graph.get(res2).add(res1);
 				}
 			}
 		}

@@ -18,8 +18,6 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.symmetry.utils.DirectedGraph;
-import org.biojava.nbio.structure.symmetry.utils.Graph;
 
 /**
  * Iterative version of CeSymm that aims at identifying all symmetry axis 
@@ -44,7 +42,7 @@ public class CeSymmIterative {
 	private Atom[] allAtoms;
 	private String name;
 	private SymmetryAxes axes;
-	private Graph<Integer> alignment;
+	private List<List<Integer>> graph;
 
 	/**
 	 * For the iterative algorithm to work properly the refinement and 
@@ -66,7 +64,7 @@ public class CeSymmIterative {
 		Block b = new BlockImpl(bs);
 		b.setAlignRes(new ArrayList<List<Integer>>());
 
-		alignment = new DirectedGraph<Integer>();
+		graph = new ArrayList<List<Integer>>();
 		axes = new SymmetryAxes();
 		name = null;
 	}
@@ -84,28 +82,15 @@ public class CeSymmIterative {
 
 		allAtoms = atoms;
 		for (Integer res=0; res<allAtoms.length; res++){
-			alignment.addVertex(res);
+			graph.add(new ArrayList<Integer>());
 		}
 
 		iterate(atoms, 0);
 		buildAlignment();
 
 		//Run a final optimization of the alignment
-		/*
-		MultipleMcParameters params = new MultipleMcParameters();
-		params.setMinAlignedStructures(2);
-		params.setMinBlockLen(15);
-		MultipleMcOptimizer optimizer = 
-				new MultipleMcOptimizer(msa, params, 0);
-
 		//Not yet possible TODO 
-		msa = optimizer.call();
 
-		//Reset the atom Arrays for consistency with the symmetry format
-		msa.getEnsemble().setAtomArrays(new ArrayList<Atom[]>());
-		for (int su=0; su<msa.size(); su++){
-			msa.getEnsemble().getAtomArrays().add(allAtoms);
-		}*/
 		return msa;
 	}
 
@@ -142,7 +127,7 @@ public class CeSymmIterative {
 				Integer pos2 = b.getAlignRes().get(su+1).get(pos);
 				//Add edge from lower to higher positions
 				if (pos1 != null && pos2 != null){
-					alignment.addEdge(pos1, pos2);
+					graph.get(pos1).add(pos2);
 				}
 			}
 		}
@@ -172,7 +157,7 @@ public class CeSymmIterative {
 		int size = 0;
 
 		//Calculate the connected groups of the alignment graph
-		for (int i=0; i<alignment.size(); i++){
+		for (int i=0; i<graph.size(); i++){
 			if (!alreadySeen.contains(i)){
 				List<Integer> group = new ArrayList<Integer>();
 				List<Integer> residues = new ArrayList<Integer>();
@@ -184,7 +169,7 @@ public class CeSymmIterative {
 						group.add(residue);
 						alreadySeen.add(residue);
 						List<Integer> children = 
-								alignment.getChildren(residue);
+								graph.get(residue);
 						newResidues.addAll(children);
 					}
 					residues = newResidues;
@@ -224,14 +209,14 @@ public class CeSymmIterative {
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "1g6s";
+		String name = "4hhb";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));
 
 		CESymmParameters params = new CESymmParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
-		params.setOptimization(true);
+		params.setOptimization(false);
 
 		CeSymmIterative aligner = new CeSymmIterative(params);
 		MultipleAlignment msa = aligner.execute(atoms);

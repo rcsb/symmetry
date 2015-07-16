@@ -16,7 +16,6 @@ import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.symmetry.utils.Graph;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
@@ -52,8 +51,8 @@ public class OpenRefiner implements Refiner {
 			int order) throws RefinerFailedException, StructureException {
 
 		//The two vertices of the graph mean (previous, next)
-		Graph<Integer> graph = 
-				SymmetryTools.buildSymmetryGraph(afpAlignments, atoms);
+		List<List<Integer>> graph = 
+				SymmetryTools.buildSymmetryGraph(afpAlignments, atoms, true);
 		
 		AFPChain afpChain = afpAlignments.get(afpAlignments.size()-1);
 		List<Integer> alreadySeen = new ArrayList<Integer>();
@@ -67,7 +66,7 @@ public class OpenRefiner implements Refiner {
 				
 				while (residue != -1 && !alreadySeen.contains(residue)){
 					group.add(residue);
-					List<Integer> neigh = graph.getNeighborIndices(residue);
+					List<Integer> neigh = graph.get(residue);
 					//Go to the next residue in sequence
 					if (neigh.size() > 1) {
 						if (neigh.get(1) > residue) {
@@ -191,7 +190,7 @@ public class OpenRefiner implements Refiner {
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
 		params.setSymmetryType(SymmetryType.OPEN);
-		params.setOptimization(true);
+		params.setOptimization(false);
 		//params.setSeed(10);
 
 		MultipleAlignment symmetry = ceSymm.align(atoms);

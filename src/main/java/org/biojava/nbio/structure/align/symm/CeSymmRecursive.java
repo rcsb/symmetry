@@ -17,8 +17,6 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.symmetry.utils.DirectedGraph;
-import org.biojava.nbio.structure.symmetry.utils.Graph;
 
 /**
  * Recursive version of CeSymm that aims at identifying all symmetry axis 
@@ -31,6 +29,7 @@ import org.biojava.nbio.structure.symmetry.utils.Graph;
  * <li>Repeat the last two steps until no more significant results are found.
  * <li>Run a final optimization of all symmetric units correctly superimposed.
  * </ul></li>
+ * TODO waiting for jgrapht dependency to implement this
  * 
  * @author Aleix Lafita
  *
@@ -42,7 +41,7 @@ public class CeSymmRecursive {
 	private int subunitLen;
 	private Atom[] allAtoms;
 	private SymmetryAxes axes;
-	private Graph<MultipleAlignment> graph;
+	//private Graph<MultipleAlignment> graph; TODO
 
 	/**
 	 * For the recursive algorithm to work properly the refinement and 
@@ -64,8 +63,8 @@ public class CeSymmRecursive {
 		Block b = new BlockImpl(bs);
 		b.setAlignRes(new ArrayList<List<Integer>>());
 
-		graph = new DirectedGraph<MultipleAlignment>();
-		graph.addVertex(null); //root vertex
+		/*graph = new DirectedGraph<MultipleAlignment>();
+		graph.addVertex(null); //root vertex*/
 
 		axes = new SymmetryAxes();
 		subunitLen = 0;
@@ -89,23 +88,6 @@ public class CeSymmRecursive {
 		recurse(atoms, null);
 
 		buildAlignment();
-
-		//Run a final optimization of the alignment
-		/*
-		MultipleMcParameters params = new MultipleMcParameters();
-		params.setMinAlignedStructures(2);
-		params.setMinBlockLen(15);
-		MultipleMcOptimizer optimizer = 
-				new MultipleMcOptimizer(msa, params, 0);
-
-		//Not yet possible TODO 
-		msa = optimizer.call();
-
-		//Reset the atom Arrays for consistency with the symmetry format
-		msa.getEnsemble().setAtomArrays(new ArrayList<Atom[]>());
-		for (int su=0; su<msa.size(); su++){
-			msa.getEnsemble().getAtomArrays().add(allAtoms);
-		}*/
 		return msa;
 	}
 
@@ -129,7 +111,7 @@ public class CeSymmRecursive {
 		MultipleAlignment align = aligner.align(array, params);
 
 		//Base case of the recursion, when the alignment is asymmetric
-		if (align == null) return 1;
+		/*if (align == null) return 1;
 		else if (align.getScore(MultipleAlignmentScorer.AVGTM_SCORE) < 
 				CeSymm.symmetryThreshold || align.length() < 20) {
 			return 1;
@@ -162,13 +144,14 @@ public class CeSymmRecursive {
 			children = recurse(atomsR, align);
 		}
 
-		return children*align.size();
+		return children*align.size();*/
+		return 1;
 	}
 
 	private void buildAlignment() throws StructureException {
 
 		//Find the depth in the graph that has equal levels of recursion
-		int depth = 0;
+		/*int depth = 0;
 		boolean stop = false;
 		List<Integer> childNr = new ArrayList<Integer>();
 		List<Integer> children = new ArrayList<Integer>();
@@ -249,7 +232,7 @@ public class CeSymmRecursive {
 					}
 				}
 			}
-		}
+		}*/
 	}
 
 	/**

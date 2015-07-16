@@ -9,14 +9,16 @@ import java.util.Stack;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
-import org.biojava.nbio.structure.symmetry.utils.Graph;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
@@ -112,16 +114,19 @@ public class MultipleRefiner implements Refiner {
 	/**
 	 * Calculates from a set of AFP alignments the groups of residues 
 	 * (the group size is the order of symmetry) that align together 
-	 * and are consistent, equivalent for each subunit).<p>
+	 * and are consistent, equivalent for each subunit).
+	 * <p>
 	 * As a result a modified AFPChain with  <order of symmetry> 
-	 * consistent groups is returned.<p>
+	 * consistent groups is returned.
+	 * <p>
 	 * It uses a DFS into the symmetry graph to find clusters of
 	 * consistently aligned residues.
 	 */
 	private static AFPChain cycleRefine(List<AFPChain> allAlignments, 
 			Atom[] atoms, int order) throws StructureException {
 		
-		Graph<Integer> graph = 
+		//TODO implement again when jgrapht added as dependency
+		/*Graph<Integer> graph = 
 				SymmetryTools.buildSymmetryGraph(allAlignments, atoms);
 		List<List<Integer>> groups = new ArrayList<List<Integer>>();
 		
@@ -256,7 +261,8 @@ public class MultipleRefiner implements Refiner {
 		}
 		
 		return AlignmentTools.replaceOptAln(
-				optAlgn, allAlignments.get(order-2), atoms, atoms);
+				optAlgn, allAlignments.get(order-2), atoms, atoms);*/
+		return null;
 	}
 	
 	/**
@@ -333,32 +339,24 @@ public class MultipleRefiner implements Refiner {
 			
 			//Set the name of the protein structure to analyze
 			System.out.println("Analyzing protein "+names[i]);
-			AtomCache cache = new AtomCache();
-			cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
-			String name = names[i];
+			String name = "1n0r.A";
+			List<Atom[]> atoms = new ArrayList<Atom[]>();
 
-			//Parse atoms of the protein into two DS
-			Atom[] ca1 = cache.getAtoms(name);
-			Atom[] ca2 = cache.getAtoms(name);
-			
-			System.out.println("Protein length: "+ca1.length);
-			
-			//Initialize a new CeSymm class and its parameters and a new alignment class
+			AtomCache cache = new AtomCache();
+			atoms.add(cache.getAtoms(name));
+			System.out.println("Protein length: "+atoms.get(0).length);
+
 			CeSymm ceSymm = new CeSymm();
+
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 			params.setRefineMethod(RefineMethod.MULTIPLE);
-			params.setOptimization(true);
-			AFPChain afpChain = new AFPChain();
-			
-			//Perform the alignment and store
-			afpChain = ceSymm.align(ca1, ca2);
-			
-			afpChain.setName1(name);
-			afpChain.setName2(name);
-				
-			//Display the AFP alignment of the subunits
-			//SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
-			//jmol.setTitle(name);
+			params.setSymmetryType(SymmetryType.AUTO);
+			params.setOptimization(false);
+			//params.setSeed(10);
+
+			MultipleAlignment symmetry = ceSymm.align(atoms);
+
+			new SymmetryJmol(symmetry);
 		}
 	}
 }

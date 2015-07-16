@@ -7,7 +7,6 @@ import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymmIterative;
-import org.biojava.nbio.structure.align.symm.CeSymmRecursive;
 import org.biojava.nbio.structure.align.symm.ChainSorter;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
@@ -86,7 +85,6 @@ public class InternalSymmetryAxes {
 		params.setRefineMethod(RefineMethod.SINGLE);
 		params.setOptimization(true);
 
-		//CeSymmRecursive recurser = new CeSymmRecursive(params);
 		CeSymmIterative recurser = new CeSymmIterative(params);
 		MultipleAlignment msa = recurser.execute(atoms);
 

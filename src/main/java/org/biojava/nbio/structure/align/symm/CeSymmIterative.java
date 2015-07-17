@@ -18,7 +18,7 @@ import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.align.symm.refine.RefinerFailedException;
 import org.biojava.nbio.structure.align.symm.refine.SymmOptimizer;
 import org.biojava.nbio.structure.align.util.AtomCache;
@@ -274,6 +274,6 @@ public class CeSymmIterative {
 		CeSymmIterative aligner = new CeSymmIterative(params);
 		MultipleAlignment msa = aligner.execute(atoms);
 
-		new SymmetryJmol(msa, aligner.getSymmetryAxes());
+		SymmetryDisplay.display(msa, aligner.getSymmetryAxes());
 	}
 }

@@ -15,7 +15,7 @@ import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.align.util.AtomCache;
 
 /**
@@ -262,6 +262,6 @@ public class CeSymmRecursive {
 		CeSymmRecursive recurser = new CeSymmRecursive(params);
 		MultipleAlignment msa = recurser.execute(atoms);
 
-		new SymmetryJmol(msa, recurser.getSymmetryAxes());
+		SymmetryDisplay.display(msa);
 	}
 }

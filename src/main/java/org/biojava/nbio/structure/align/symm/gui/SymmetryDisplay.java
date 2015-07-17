@@ -1,33 +1,32 @@
 package org.biojava.nbio.structure.align.symm.gui;
 
-import org.biojava.nbio.structure.align.util.RotationAxis;
+import java.awt.event.KeyEvent;
+import java.util.List;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.vecmath.Matrix4d;
+
 import org.biojava.nbio.structure.*;
 import org.biojava.nbio.structure.align.gui.MultipleAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.MultipleAlignmentJmol;
-import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.multiple.Block;
-import org.biojava.nbio.structure.align.multiple.BlockImpl;
-import org.biojava.nbio.structure.align.multiple.BlockSet;
-import org.biojava.nbio.structure.align.multiple.BlockSetImpl;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
-import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
-import org.biojava.nbio.structure.gui.ScaleableMatrixPanel;
-import org.biojava.nbio.structure.jama.Matrix;
+import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
+import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.symmetry.analysis.CalcBioAssemblySymmetry;
+import org.biojava.nbio.structure.symmetry.core.AxisAligner;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
+import org.biojava.nbio.structure.symmetry.jmolScript.JmolSymmetryScriptGenerator;
+import org.biojava.nbio.structure.symmetry.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.swing.JFrame;
-import javax.vecmath.Matrix4d;
-
 /**
- * Class that provides the visualizations options for the 
- * Symmetry analysis: multiple sequence alignments,
- * multiple structural alignments, alignment panel, etc.
+ * Class that provides visualizations methods for symmetry
+ * alignments. Call the display() method for the default 
+ * visualization of symmetry.
  * 
  * @author Aleix Lafita
  * 
@@ -35,131 +34,16 @@ import javax.vecmath.Matrix4d;
 public class SymmetryDisplay {
 
 	/**
-	 * Method that displays all superimposed subunits as a multiple alignment in jmol.
-	 * @param afpChain AFP alignment with subunits segmented as blocks
-	 * @param ca1
-	 * @throws StructureException 
-	 * @throws IOException 
-	 */
-	@Deprecated
-	public static void displaySuperimposedSubunits(AFPChain afpChain, Atom[] ca1) throws StructureException, IOException{
-
-		//Create new structure containing the atom arrays corresponding to separate subunits
-		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
-		for (int i=0; i<afpChain.getBlockNum(); i++){
-			Structure newStr = new StructureImpl();
-			Chain newCh = new ChainImpl();
-			newStr.addChain(newCh);
-			Atom[] subunit = Arrays.copyOfRange(ca1, afpChain.getOptAln()[i][0][0], afpChain.getOptAln()[i][0][afpChain.getOptAln()[i][0].length-1]+1);
-			for (int k=0; k<subunit.length; k++)newCh.addGroup((Group) subunit[k].getGroup().clone());
-			atomArrays.add(StructureTools.getAtomCAArray(newCh));
-		}
-
-		//Initialize a new MultipleAlignment to store the aligned subunits, each one inside a BlockSet
-		MultipleAlignment multAln = new MultipleAlignmentImpl();
-		multAln.getEnsemble().setAtomArrays(atomArrays);
-		multAln.getEnsemble().setAlgorithmName(afpChain.getAlgorithmName());
-		List<String> structureNames = new ArrayList<String>();
-		for(int i=0; i<afpChain.getBlockNum(); i++) structureNames.add(afpChain.getName1());
-		multAln.getEnsemble().setStructureNames(structureNames);
-
-		//All the residues are aligned in one block only
-		BlockSet blockSet = new BlockSetImpl(multAln);
-		Block block = new BlockImpl(blockSet);
-		block.setAlignRes(new ArrayList<List<Integer>>());
-
-		for (int bk=0; bk<afpChain.getBlockNum(); bk++){
-
-			//Normalize the residues of the subunits, to be in the range of subunit
-			int start = afpChain.getOptAln()[bk][0][0];
-			List<Integer> chain = new ArrayList<Integer>();
-
-			for (int i=0; i<afpChain.getOptAln()[bk][0].length; i++)
-				chain.add(afpChain.getOptAln()[bk][0][i] - start);
-
-			block.getAlignRes().add(chain);
-		}
-
-		//Set the transformations
-		List<Matrix4d> transforms = new ArrayList<Matrix4d>();
-		Matrix4d original = Calc.getTransformation(afpChain.getBlockRotationMatrix()[0], afpChain.getBlockShiftVector()[0]);
-		for (int str=0; str<multAln.size(); str++){
-			Matrix4d transform = (Matrix4d) original.clone();
-			for (int st=0; st<str; st++) transform.mul(original);
-			transforms.add(transform);
-		}
-		multAln.setTransformations(transforms);
-		MultipleAlignmentScorer.calculateScores(multAln);
-
-		//Display the alignment of the subunits
-		MultipleAlignmentDisplay.display(multAln).evalString(new RotationAxis(afpChain).getJmolScript(ca1));
-
-	}
-
-	/**
-	 * Method that displays the multiple structure alignment of all symmetry rotations in jmol.
-	 * @param afpChain AFP alignment with subunits segmented as blocks
-	 * @param ca1
-	 * @throws StructureException 
-	 * @throws IOException 
-	 */
-	@Deprecated
-	public static void displayMultipleAlignment(AFPChain afpChain, Atom[] ca1) throws StructureException, IOException{
-
-		//Create a list with multiple references to the atom array of the structure
-		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
-		for (int i=0; i<afpChain.getBlockNum(); i++) atomArrays.add(ca1);
-
-		//Initialize a new MultipleAlignment to store the aligned subunits, each one inside a BlockSet
-		MultipleAlignment multAln = new MultipleAlignmentImpl();
-		multAln.getEnsemble().setAtomArrays(atomArrays);
-		multAln.getEnsemble().setAlgorithmName(afpChain.getAlgorithmName());
-		List<String> structureNames = new ArrayList<String>();
-		for(int i=0; i<afpChain.getBlockNum(); i++) structureNames.add(afpChain.getName1());
-		multAln.getEnsemble().setStructureNames(structureNames);
-		int order = afpChain.getBlockNum();
-
-		for (int bk=0; bk<order; bk++){
-
-			//Every subunit has a new BlockSet
-			BlockSet blockSet = new BlockSetImpl(multAln);
-			Block block = new BlockImpl(blockSet);
-			block.setAlignRes(new ArrayList<List<Integer>>());
-
-			for (int k=0; k<order; k++){
-				List<Integer> chain = new ArrayList<Integer>();
-
-				for (int i=0; i<afpChain.getOptAln()[0][0].length; i++)
-					chain.add(afpChain.getOptAln()[(bk+k)%order][0][i]);
-
-				block.getAlignRes().add(chain);
-			}
-		}
-		//Set the transformations
-		List<Matrix4d> transforms = new ArrayList<Matrix4d>();
-		Matrix4d original = Calc.getTransformation(afpChain.getBlockRotationMatrix()[0], afpChain.getBlockShiftVector()[0]);
-		for (int str=0; str<multAln.size(); str++){
-			Matrix4d transform = (Matrix4d) original.clone();
-			for (int st=0; st<str; st++) transform.mul(original);
-			transforms.add(transform);
-		}
-		multAln.setTransformations(transforms);
-
-		//Display the multiple alignment of the rotations
-		MultipleAlignmentDisplay.display(multAln).evalString(new RotationAxis(afpChain).getJmolScript(ca1));
-	}
-
-	/**
 	 * Displays a multiple alignment of the symmetry subunits.
 	 * 
 	 * @param msa the symmetry multiple alignment obtained from CeSymm
 	 * @throws StructureException
 	 */
-	public static void subunitDisplay(MultipleAlignment msa) 
+	public static MultipleAlignmentJmol displaySubunits(MultipleAlignment msa) 
 			throws StructureException {
 
 		MultipleAlignment subunits = SymmetryTools.toSubunitAlignment(msa);
-		MultipleAlignmentDisplay.display(subunits);
+		return MultipleAlignmentDisplay.display(subunits);
 	}
 
 	/**
@@ -169,35 +53,147 @@ public class SymmetryDisplay {
 	 * @param msa the symmetry multiple alignment obtained from CeSymm
 	 * @throws StructureException
 	 */
-	public static void fullDisplay(MultipleAlignment msa) 
+	public static MultipleAlignmentJmol displayFull(MultipleAlignment msa) 
 			throws StructureException {
 
 		MultipleAlignment full = SymmetryTools.toFullAlignment(msa);
 
 		MultipleAlignmentJmol jmol = MultipleAlignmentDisplay.display(full);
 		jmol.setColorByBlocks(true);
+		
+		return jmol;
 	}
-
+	
 	/**
-	 * Show a Matrix in a new JFrame.
-	 * Is this method used antwhere? If so, it should use the biojava
-	 * code to display matrices. - Aleix
+	 * Displays a single structure in a cartoon representation with each
+	 * symmetric subunit colored differently.
 	 * 
-	 * @param m Matrix to display
-	 * @param string title of the frame
+	 * @param msa the symmetry multiple alignment obtained from CeSymm
+	 * @param axes symmetry axes
+	 * @throws StructureException
 	 */
-	@Deprecated
-	public static void showMatrix(Matrix m, String string) {
-		ScaleableMatrixPanel smp = new ScaleableMatrixPanel();
-		JFrame frame = new JFrame();
-
-		smp.setMatrix((Matrix)m.clone());
-		//smp.getMatrixPanel().setScale(0.8f);
-
-		frame.setTitle(string);
-		frame.getContentPane().add(smp);
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.pack();
-		frame.setVisible(true);
+	public static MultipleAlignmentJmol display(MultipleAlignment msa,
+			SymmetryAxes axes) throws StructureException {
+		
+		MultipleAlignmentJmol jmol = SymmetryDisplay.displayFull(msa);
+		
+		//Send some commands for a nicer view
+		jmol.evalString("select *; backbone off; cartoon on; model 1;");
+		addSymmetryMenu(jmol, axes);
+		
+		//Show all the axes in the initial view
+		if (axes!=null) jmol.evalString(printSymmetryAxes(msa, axes));
+		jmol.evalString(printPointGroupAxes(msa));
+		
+		return jmol;
 	}
+	
+	/**
+	 * Displays a single structure in a cartoon representation with each
+	 * symmetric subunit colored differently.
+	 * 
+	 * @param msa the symmetry multiple alignment obtained from CeSymm
+	 * @throws StructureException
+	 */
+	public static MultipleAlignmentJmol display(MultipleAlignment msa)
+			throws StructureException {
+		return display(msa);
+	}
+	
+	/**
+	 * Adds a Symmetry menu to the Jmol display, so that further symmetry
+	 * analysis can be triggered.
+	 * 
+	 * @param jmol parent jmol
+	 * @param axes symmetry axes
+	 */
+	private static void addSymmetryMenu(MultipleAlignmentJmol jmol, 
+			SymmetryAxes axes){
+		
+		JMenuBar menubar = jmol.getFrame().getJMenuBar();
+		
+		JMenu symm = new JMenu("Symmetry");
+		symm.setMnemonic(KeyEvent.VK_S);
+		
+		SymmetryListener li = new SymmetryListener(jmol, axes);
+		
+		JMenuItem subunits = new JMenuItem("Subunit Superposition");
+		subunits.addActionListener(li);
+		symm.add(subunits);
+		
+		JMenuItem multiple = new JMenuItem("Multiple Structure Alignment");
+		multiple.addActionListener(li);
+		symm.add(multiple);
+		
+		JMenuItem pg = new JMenuItem("Point Group Symmetry");
+		pg.addActionListener(li);
+		symm.add(pg);
+		
+		JMenuItem ax = new JMenuItem("Show Symmetry Axes");
+		ax.addActionListener(li);
+		symm.add(ax);
+		
+		JMenuItem news = new JMenuItem("New Symmetry Analysis");
+		news.addActionListener(li);
+		symm.add(news);
+
+		menubar.add(symm, 3);
+		jmol.getFrame().pack();
+	}
+	
+	public static String printSymmetryAxes(MultipleAlignment msa, 
+			SymmetryAxes axes) {
+
+		int id = 0;
+		String script = "draw axes* off; draw poly* off;";
+		Atom[] atoms = msa.getEnsemble().getAtomArrays().get(0);
+		
+		for (Matrix4d axis : axes.getAxes()) {
+			RotationAxis rot = new RotationAxis(axis);
+			script += rot.getJmolScript(atoms, id);
+			id++;
+		}
+		return script;
+	}
+
+	public static String printPointGroupAxes(MultipleAlignment symm){
+
+		//Split the symmetric units into different chains
+		Structure subunits = SymmetryTools.toQuaternary(symm);
+
+		//Quaternary Symmetry Detection
+		QuatSymmetryParameters param = new QuatSymmetryParameters();
+		/*param.setSequencePseudoSymmetryThreshold(0.0);
+		param.setMinimumSequenceLengthFraction(0.0);
+		param.setAlignmentFractionThreshold(0.0);
+		param.setAbsoluteMinimumSequenceLength(10);
+		param.setAngleThreshold(10.0);
+		param.setRmsdThreshold(20.0);
+		param.setMinimumSequenceLength(10);*/
+
+		CalcBioAssemblySymmetry calc = 
+				new CalcBioAssemblySymmetry(subunits, param);
+
+		QuatSymmetryDetector detector = calc.orient();
+		List<QuatSymmetryResults> globalResults = detector.getGlobalSymmetry();
+
+		AxisAligner aligner = AxisAligner.getInstance(globalResults.get(0));
+
+		//Draw the axis as in the quaternary symmetry
+		JmolSymmetryScriptGenerator scriptGenerator = 
+				JmolSymmetryScriptGeneratorPointGroup.getInstance(aligner, "g");
+
+		String script = "set defaultStructureDSSP true; "
+				+ "set measurementUnits ANGSTROMS;  select all;  "
+				+ "spacefill off; wireframe off;"
+				+ "set antialiasDisplay true; autobond=false; ";
+
+		script += scriptGenerator.getOrientationWithZoom(0);
+		script += scriptGenerator.drawPolyhedron();
+		script += scriptGenerator.drawAxes();
+		script += "draw axes* on; draw poly* on; ";
+
+		return script;
+	}
+
 }

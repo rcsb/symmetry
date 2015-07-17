@@ -7,10 +7,11 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
-import org.biojava.nbio.structure.align.MultipleStructureAligner;
 import org.biojava.nbio.structure.align.gui.AlignmentCalculationRunnable;
+import org.biojava.nbio.structure.align.gui.jmol.MultipleAlignmentJmol;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
+import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,7 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 	public void run() {
 
 		//The structure has been downloaded, now calculate the alignment ...
-		MultipleStructureAligner algorithm = parent.getStructureAlignment();
+		CeSymm algorithm = parent.getSymmetryAlgorithm();
 		CESymmParameters params = (CESymmParameters) algorithm.getParameters();
 		
 		try {
@@ -55,11 +56,12 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 
 			List<String> names = new ArrayList<String>();
 			for (int su=0; su<msa.size(); su++){
-				names.add(name+"_"+(su+1));
+				names.add(name);
 			}
 			msa.getEnsemble().setStructureNames(names);
 
-			SymmetryJmol jmol = new SymmetryJmol(msa);
+			MultipleAlignmentJmol jmol = 
+					SymmetryDisplay.display(msa, algorithm.getSymmetryAxes());
 			String title = jmol.getTitle();
 			
 			if (params != null) 
@@ -88,7 +90,5 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 	}
 	
 	@Override
-	public void setNrCPUs(int useNrCPUs) {
-		// TODO Auto-generated method stub
-	}
+	public void setNrCPUs(int useNrCPUs) {}
 }

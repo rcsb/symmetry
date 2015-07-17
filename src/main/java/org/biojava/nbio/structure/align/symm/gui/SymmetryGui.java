@@ -2,10 +2,10 @@ package org.biojava.nbio.structure.align.symm.gui;
 
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.MultipleStructureAligner;
 import org.biojava.nbio.structure.align.ce.AbstractUserArgumentProcessor;
 import org.biojava.nbio.structure.align.ce.ConfigStrucAligParams;
 import org.biojava.nbio.structure.align.gui.AlignmentCalculationRunnable;
+import org.biojava.nbio.structure.align.gui.MenuCreator;
 import org.biojava.nbio.structure.align.gui.ParameterGUI;
 import org.biojava.nbio.structure.align.gui.SelectPDBPanel;
 import org.biojava.nbio.structure.align.symm.CeSymm;
@@ -32,7 +32,7 @@ public class SymmetryGui extends JFrame {
 
 	private final static long serialVersionUID = 0l;
 
-	private MultipleStructureAligner algorithm;
+	private CeSymm ceSymm;
 
 	private JButton abortB;
 
@@ -59,9 +59,9 @@ public class SymmetryGui extends JFrame {
 	private static final SymmetryGui me = new SymmetryGui();
 
 	public static SymmetryGui getInstance(){
-				
+
 		AbstractUserArgumentProcessor.printAboutMe();
-		
+
 		AligUIManager.setLookAndFeel();
 
 		if (!  me.isVisible())
@@ -70,7 +70,6 @@ public class SymmetryGui extends JFrame {
 		if ( ! me.isActive())
 			me.requestFocus();
 
-
 		return me;
 	}
 
@@ -78,18 +77,15 @@ public class SymmetryGui extends JFrame {
 		return me;
 	}
 
-
 	private SymmetryGui() {
 		super();
 
 		thread = null;
 
-		JMenuBar menu = SymmetryMenu.initAlignmentGUIMenu(this);
-
+		JMenuBar menu = MenuCreator.initAlignmentGUIMenu(this);
 		this.setJMenuBar(menu);
 
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
 		this.setTitle(MAIN_TITLE);
 
 		tab1 = new SelectPDBPanel(false);
@@ -100,57 +96,31 @@ public class SymmetryGui extends JFrame {
 		tabPane = new JTabbedPane();
 
 		tabPane.addTab("Select PDB ID", null, tab1, "Select PDB ID to analyze");
-
 		tabPane.addTab("Domain",null, tab3,"Select domain to analyze.");
-		
 		tabPane.addTab("Custom file",null, tab2,"Analyze your own file.");
 
-		
-
 		Box hBoxAlgo = setupAlgorithm();
-
 		Box vBox = Box.createVerticalBox();
-
-
-		//vBox.add(hBoxAlgo);
 
 		vBox.add(tabPane);
 		vBox.add(Box.createGlue());
-
-		//vBox.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-
+		
 		masterPane = new JTabbedPane();
-
 		masterPane.addTab("Symmetry Analysis", vBox);
-
-		//JPanel dir = tab1.getPDBDirPanel(pdbDir);
 
 		Box vBoxMain = Box.createVerticalBox();
 		vBoxMain.add(hBoxAlgo);
 
-		// pairwise or db search
-
 		vBoxMain.add(masterPane);
-
-		// algorithm selection
-
-		// PDB install config
-		//vBoxMain.add(dir);
-		// buttons
 		vBoxMain.add(initButtons());
 
 		this.getContentPane().add(vBoxMain);
-
-		//SwingUtilities.updateComponentTreeUI( me);
-
 		this.pack();
 		this.setVisible(true);
-
-
 	}
 
-	private Box setupAlgorithm()
-	{
+	private Box setupAlgorithm() {
+		
 		String[] algorithms = {"JCE-symmetry"};
 		updateAlgorithm();
 
@@ -167,7 +137,6 @@ public class SymmetryGui extends JFrame {
 				JComboBox cb = (JComboBox)evt.getSource();
 				String algorithmName = (String) cb.getSelectedItem();
 				// Perform action...
-				//System.out.println("calc structure alignment");
 				updateAlgorithm();
 			}
 		};
@@ -180,7 +149,6 @@ public class SymmetryGui extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent evt) {
 				// Perform action...
-				//System.out.println("calc structure alignment");
 				configureParameters();
 			}
 		};
@@ -199,16 +167,11 @@ public class SymmetryGui extends JFrame {
 
 	private Box initButtons(){
 
-		//        Box hBox42 = Box.createHorizontalBox();
 		progress =new JProgressBar();
 		progress.setIndeterminate(false);
 		progress.setMaximumSize(new Dimension(10,100));
 		progress.setVisible(false);
 
-		//        hBox42.add(Box.createGlue());
-		//        hBox42.add(progress);
-		//        hBox42.add(Box.createGlue());
-		//        vBox.add(hBox42);
 		Action action1 = new AbstractAction("Analyze") {
 			public static final long serialVersionUID = 0l;
 			// This method is called when the button is pressed
@@ -252,7 +215,7 @@ public class SymmetryGui extends JFrame {
 				System.exit(0);
 			}
 		};
-		
+
 		JButton closeB = new JButton(action2);
 		Box hBox = Box.createHorizontalBox();
 		hBox.add(closeB);
@@ -266,8 +229,9 @@ public class SymmetryGui extends JFrame {
 	}
 
 	protected void configureParameters() {
-		MultipleStructureAligner algorithm = getStructureAlignment();
-		System.out.println("configure parameters for " + algorithm.getAlgorithmName());
+		CeSymm algorithm = getSymmetryAlgorithm();
+		System.out.println("configure parameters for " + 
+				algorithm.getAlgorithmName());
 
 		// show a new config GUI
 		ConfigStrucAligParams params = algorithm.getParameters();
@@ -312,7 +276,7 @@ public class SymmetryGui extends JFrame {
 			} else {
 				name = s.getName();
 			}
-			
+
 			System.out.println("Analyzing: " + name);
 
 
@@ -346,13 +310,13 @@ public class SymmetryGui extends JFrame {
 	}
 
 
-	public MultipleStructureAligner getStructureAlignment() {
-		return algorithm;
+	public CeSymm getSymmetryAlgorithm() {
+		return ceSymm;
 	}
 
 	private void updateAlgorithm() {
 		//There is only one algorithm for symmetry
-		algorithm = new CeSymm();
+		ceSymm = new CeSymm();
 	}
 
 }

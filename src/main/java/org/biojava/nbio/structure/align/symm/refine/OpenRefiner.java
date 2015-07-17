@@ -14,7 +14,7 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
+import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
@@ -195,6 +195,6 @@ public class OpenRefiner implements Refiner {
 
 		MultipleAlignment symmetry = ceSymm.align(atoms);
 
-		new SymmetryJmol(symmetry);
+		SymmetryDisplay.display(symmetry, ceSymm.getSymmetryAxes());
 	}
 }

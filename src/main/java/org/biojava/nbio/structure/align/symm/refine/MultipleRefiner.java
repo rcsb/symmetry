@@ -9,9 +9,11 @@ import java.util.Stack;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
@@ -20,21 +22,21 @@ import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
- * Creates a refined alignment with the multiple self-alignments obtained from blacking out previous alignments.
- * Still in development. Right now uses the single refiner in all of them and takes the best result as final.
+ * Creates a refined alignment with the multiple self-alignments 
+ * obtained from blacking out previous alignments.
+ * Still in development, because the clustering is not robust enough.
  * 
  * @author Aleix Lafita
  * 
  */
-
 public class MultipleRefiner implements Refiner {
 	
-	private static final boolean debug = false;
 	private OrderDetector orderDetector;
 
 	/**
-	 * The class needs an orderDetector because the order might differ among the alignments.
-	 * It will calculate the order for all of them and run the single refiner
+	 * The class needs an orderDetector because the order might differ 
+	 * among the different alignments.
+	 * 
 	 * @param orderDetector
 	 */
 	public MultipleRefiner(OrderDetector orderDetector) {
@@ -110,117 +112,98 @@ public class MultipleRefiner implements Refiner {
 	}
 
 	/**
-	 * Calculates from a set of AFP alignments the groups of residues (the group size is the order of symmetry)
-	 * that align together and are consistent, equivalent for each subunit). As a result a modified AFPChain with 
-	 * <order of symmetry> consistent groups is produced.
-	 * 
-	 * INPUT: a list of AFP alignments and the Atom[] array of the protein.
-	 * OUTPUT: an AFP alignment with subunit groups consistent between each other.
-	 * ALGORITHM: cycle detection for each residue checking each time that the distance between residues is sufficient
-	 * RUNNING TIME: DFS of depth order, polynomial in length of the protein. No bottleneck.
+	 * Calculates from a set of AFP alignments the groups of residues 
+	 * (the group size is the order of symmetry) that align together 
+	 * and are consistent, equivalent for each subunit).
+	 * <p>
+	 * As a result a modified AFPChain with  <order of symmetry> 
+	 * consistent groups is returned.
+	 * <p>
+	 * It uses a DFS into the symmetry graph to find clusters of
+	 * consistently aligned residues.
 	 */
-	private static AFPChain cycleRefine(List<AFPChain> allAlignments, Atom[] ca1, Atom[] ca2, int order) throws StructureException {
+	private static AFPChain cycleRefine(List<AFPChain> allAlignments, 
+			Atom[] atoms, int order) throws StructureException {
 		
-		//Create the undirected alignment graph and initialize a variable to store the symmetry groups
-		List<List<Integer>> graph = SymmetryTools.buildAFPgraph(allAlignments, ca1, true);
+		//TODO implement again when jgrapht added as dependency
+		/*Graph<Integer> graph = 
+				SymmetryTools.buildSymmetryGraph(allAlignments, atoms);
 		List<List<Integer>> groups = new ArrayList<List<Integer>>();
-		//Count the number of aligned residues to exclude the intersubunit loops from the interresidue distances
-		int aligned_res = 0;
-		for (List<Integer> v:graph){
-			//Count residues with order-1 edges (connected consistently in all the alignments)
-			if (v.size()>0){
-				aligned_res++;
-			}
-		}
 		
-		//Variable to store the residues already present in one of the selected groups
+		//Variable to store the residues already present in one of the groups
 		List<Integer> alreadySeen = new ArrayList<Integer>();
 		
-		//Loop through all the residues in the graph (only consider the first residues, because cycles must include them to be consistent).
-		for (int i=0; i<graph.size()/(order-order/2); i++){
+		for (int i=0; i<graph.size(); i++){
 			if (!alreadySeen.contains(i)){
-			if (debug) System.out.println("Cycle for residue "+i);
 			
 			//Initialize the variables for the DFS of this residue iteration
-			Stack<Integer> path = new Stack<Integer>(); //stack that stores the current path nodes
-			Stack<List<Integer>> stack = new Stack<List<Integer>>(); //stack that stores the nodes to be visited next: [vertex,level]
-			List<Integer> source = new ArrayList<Integer>(); //source information: level 0
+			Stack<Integer> path = new Stack<Integer>();
+			Stack<List<Integer>> stack = new Stack<List<Integer>>();
+			List<Integer> source = new ArrayList<Integer>();
 			source.add(i);
 			source.add(0);
 			stack.push(source);
 			
-			boolean foundGroup = false; //Do not loop more if you already found a group of connected nodes
+			boolean foundGroup = false;
 			
 			while (!stack.isEmpty() && !foundGroup){
 				
-				if (debug){
-				//Print path and stack at each iteration
-				System.out.println("Stack: ");
-				for (List<Integer> s:stack) System.out.println(s);
-				System.out.println("Path: ");
-				for (Integer p:path) System.out.println(p);
-				}
-				
 				List<Integer> vertex = stack.pop();
 				
-				//If the vertex level is lower than the path size remove the last element of the path
 				while (vertex.get(1)<=path.size()-1){
-					if (debug) System.out.println("Popped from the path: "+path.peek());
 					path.pop();
 				}
 				
-				//If the vertex has level lower than the order consider its neighbors
+				//consider its neighbors
 				if (vertex.get(1)<order && !path.contains(vertex.get(0))){
 					//First add the node to the path
 					path.push(vertex.get(0));
-					if (debug) System.out.println("Pushed to the path: "+path.peek());
+					List<Integer> neighbors = 
+							graph.getNeighborIndices(vertex.get(0));
 					
-					for (int k=graph.get(vertex.get(0)).size()-1; k>=0; k--){
-						//Extract the next node to be considered (neighbor k of the vertex)
+					for (int k=neighbors.size()-1; k>=0; k--){
+						//Extract the next node to be considered
 						List<Integer> node = new ArrayList<Integer>();
-						node.add(graph.get(vertex.get(0)).get(k));
+						node.add(neighbors.get(k));
 						node.add(path.size());
-						//Only add to the stack the nodes not included in the current path with level less than the order
-						if (!path.contains(node.get(0)) && node.get(1)<order && !alreadySeen.contains(node.get(0))){
+						if (!path.contains(node.get(0)) 
+								&& node.get(1) < order 
+								&& !alreadySeen.contains(node.get(0))){
 							stack.push(node);
-						}
-						//If the level=order and the node is equal to the source a cycle of size order has been found
+						}//cycle of size order has been found
 						else if (node.get(0)==i && node.get(1)==order){
 							//Initialize the group of residues
 							List<Integer> group = new ArrayList<Integer>();
 							int n = path.size();
-							//Store the nodes in the path in the group and sort them
+							//Store the nodes in the path in the group
 							for (int x=0; x<n; x++){
 								int p = path.get(x);
 								group.add(p);
 							}
 							Collections.sort(group);
 							
-							//Check that the residues have consistent interresidue distance (number of aligned residues in between) between the same group
 							boolean consistent = true;
-							
 							for (int g=0; g<order; g++){
 								for (int h=0; h<order; h++){
-									int residueDist = Math.abs(group.get(g)-group.get(h));
-									//Special case when comparing the first and last groups, because the length of the protein has to be considered
-									if ((g==0 && h==order-1) || (h==0 && g==order-1)){
-										residueDist = ca1.length - Math.abs(group.get(g)-group.get(h));
+									int d = Math.abs(group.get(g)
+											-group.get(h));
+									if ((g==0 && h==order-1) 
+											|| (h==0 && g==order-1)){
+										d = atoms.length - 
+												Math.abs(group.get(g)-
+														group.get(h));
 									}
-									//If the distance between the two residues in number is lower they are too close in sequence and not consistent.
-									if (residueDist<(aligned_res/(order+2)) && h!=g){
+									if (d<(atoms.length/(order+2)) && h!=g){
 										consistent = false;
-										if (debug) System.out.println("Not consistent group: difference of "+residueDist+" with maximum "+aligned_res/(order+2)+"...");
 										break;
 									}
 								}
 							}
 							
-							//Check that the group is consistent with the previous one, all the residues should be greater than the last group
 							int len = groups.size();
 							if (len!=0){
 								for (int d=0; d<order; d++){
 									if (groups.get(len-1).get(d)>group.get(d)){
-										if (debug) System.out.println("Inconsistent group: not increasing residues");
 										consistent=false;
 										break;
 									}
@@ -230,14 +213,11 @@ public class MultipleRefiner implements Refiner {
 							
 							//If the conditions are fulfilled add the group
 							groups.add(group);
-							if (debug) System.out.println("Group added, size: "+group.size());
 							for (int e:group){
 								alreadySeen.add(e);
-								if (debug) System.out.println(e);
 							}
 							foundGroup = true;
 							path.clear();
-							if (debug) System.out.println("Path cleared...");
 							break;
 						}
 					}
@@ -247,7 +227,8 @@ public class MultipleRefiner implements Refiner {
 		} //end of all the residue analysis
 		
 		//Initialize the optAln variable
-		List<List<List<Integer>>> optAln = new ArrayList<List<List<Integer>>>();
+		List<List<List<Integer>>> optAln = 
+				new ArrayList<List<List<Integer>>>();
 		for (int k=0; k<order; k++){
 			List<List<Integer>> chains = new ArrayList<List<Integer>>();
 			for (int j=0; j<2; j++){
@@ -257,7 +238,7 @@ public class MultipleRefiner implements Refiner {
 			optAln.add(chains);
 		}
 		
-		//Convert the groups of residues into the optimal alignment (suppose the groups are already sorted by their first residue)
+		//Convert the groups of residues into the optimal alignment
 		for (List<Integer> group:groups){
 			//System.out.println("Group: ");
 			for (int k=0; k<group.size(); k++){
@@ -279,7 +260,9 @@ public class MultipleRefiner implements Refiner {
 			}
 		}
 		
-		return AlignmentTools.replaceOptAln(optAlgn, allAlignments.get(order-2), ca1, ca2);
+		return AlignmentTools.replaceOptAln(
+				optAlgn, allAlignments.get(order-2), atoms, atoms);*/
+		return null;
 	}
 	
 	/**
@@ -356,32 +339,24 @@ public class MultipleRefiner implements Refiner {
 			
 			//Set the name of the protein structure to analyze
 			System.out.println("Analyzing protein "+names[i]);
-			AtomCache cache = new AtomCache();
-			cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
-			String name = names[i];
+			String name = "1n0r.A";
+			List<Atom[]> atoms = new ArrayList<Atom[]>();
 
-			//Parse atoms of the protein into two DS
-			Atom[] ca1 = cache.getAtoms(name);
-			Atom[] ca2 = cache.getAtoms(name);
-			
-			System.out.println("Protein length: "+ca1.length);
-			
-			//Initialize a new CeSymm class and its parameters and a new alignment class
+			AtomCache cache = new AtomCache();
+			atoms.add(cache.getAtoms(name));
+			System.out.println("Protein length: "+atoms.get(0).length);
+
 			CeSymm ceSymm = new CeSymm();
+
 			CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 			params.setRefineMethod(RefineMethod.MULTIPLE);
-			params.setOptimization(true);
-			AFPChain afpChain = new AFPChain();
-			
-			//Perform the alignment and store
-			afpChain = ceSymm.align(ca1, ca2);
-			
-			afpChain.setName1(name);
-			afpChain.setName2(name);
-				
-			//Display the AFP alignment of the subunits
-			//SymmetryJmol jmol = new SymmetryJmol(afpChain, ca1);
-			//jmol.setTitle(name);
+			params.setSymmetryType(SymmetryType.AUTO);
+			params.setOptimization(false);
+			//params.setSeed(10);
+
+			MultipleAlignment symmetry = ceSymm.align(atoms);
+
+			new SymmetryJmol(symmetry);
 		}
 	}
 }

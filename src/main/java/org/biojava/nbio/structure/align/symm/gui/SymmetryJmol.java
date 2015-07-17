@@ -35,7 +35,8 @@ import org.biojava.nbio.structure.align.gui.jmol.MyJmolStatusListener;
 import org.biojava.nbio.structure.align.gui.jmol.RasmolCommandListener;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentWriter;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
+import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.webstart.AligUIManager;
 import org.biojava.nbio.structure.jama.Matrix;
@@ -53,7 +54,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 
 	private Color[] subunitColors;
 	private MultipleAlignment msa;
-	private Atom[] ca;
+	private Atom[] atoms;
 
 	/**
 	 * Empty Constructor.
@@ -64,7 +65,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	}
 
 	/**
-	 * Constructor with a MultipleAlignment of the subunits. Default axis.
+	 * Constructor with a MultipleAlignment of the subunits
 	 * The atoms in the have to be the complete structure for all subunits,
 	 * but the alignment should only contain one Block with every
 	 * subunit as a new row.
@@ -75,14 +76,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	 */
 	public SymmetryJmol(MultipleAlignment alignment) throws StructureException{
 
-		this(alignment, new ArrayList<RotationAxis>());
-
-		//Get the DEFAULT rotation axis if the user does not input it
-		if (alignment.getTransformations() != null){
-			Matrix4d transform = alignment.getTransformations().get(1);
-			RotationAxis axis = new RotationAxis(transform);
-			evalString(axis.getJmolScript(ca));
-		}
+		this(alignment, null);
 	}
 
 	/**
@@ -92,11 +86,12 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	 * subunit as a new row.
 	 * 
 	 * @param MultipleAlignment subunit multiple alignment 
-	 * (generated from optimization)
-	 * @param axis set of rotation axis that describe the symmetry of the structure
+	 * 			(generated from refinement or optimization)
+	 * @param axis set of symmetry axes to display
 	 * @throws StructureException
 	 */
-	public SymmetryJmol(MultipleAlignment alignment, List<RotationAxis> axis) throws StructureException {
+	public SymmetryJmol(MultipleAlignment alignment, SymmetryAxes axes) 
+			throws StructureException {
 
 		AligUIManager.setLookAndFeel();
 
@@ -107,7 +102,7 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 		frame.setJMenuBar(menu);
 
 		this.msa = alignment;
-		this.ca = msa.getEnsemble().getAtomArrays().get(0);
+		this.atoms = msa.getEnsemble().getAtomArrays().get(0);
 		this.subunitColors = ColorBrewer.Spectral.getColorPalette(alignment.size());
 
 		frame.addWindowListener(new WindowAdapter()
@@ -211,7 +206,9 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 					subunitColors = ColorBrewer.Greens.getColorPalette(msa.size());
 					colorPalette = ColorBrewer.Greens;
 				}
-				evalString(getJmolString(msa, ca, subunitColors)+"; restore selection;");
+				evalString(getJmolString(msa, atoms, subunitColors)
+						+ "select *; backbone off; cartoon on; "
+						+ "restore selection;");
 			}
 		});
 
@@ -289,15 +286,18 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 
 		// init coordinates
 		initCoords();
-		printSymmetryAxis(axis);
+		if (axes!=null) printSymmetryAxis(axes);
 		resetDisplay();
 	}
 
-	private void printSymmetryAxis(List<RotationAxis> symmetryAxis){
+	private void printSymmetryAxis(SymmetryAxes axes){
 
-		for (int a=0; a<symmetryAxis.size(); a++){
-			String script = symmetryAxis.get(a).getJmolScript(ca, a);
+		int id = 0;
+		for (Matrix4d axis : axes.getAxes()) {
+			RotationAxis rot = new RotationAxis(axis);
+			String script = rot.getJmolScript(atoms, id);
 			evalString(script);
+			id++;
 		}
 	}
 
@@ -399,10 +399,10 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 
 	@Override
 	protected void initCoords() {
-		if (ca == null ){
+		if (atoms == null ){
 			if (structure != null) setStructure(structure);
 		} else {
-			structure = ca[0].getGroup().getChain().getParent();
+			structure = atoms[0].getGroup().getChain().getParent();
 		}
 		jmolPanel.setStructure(structure);
 	}
@@ -410,10 +410,11 @@ public class SymmetryJmol extends AbstractAlignmentJmol {
 	@Override
 	public void resetDisplay() {
 
-		if (msa != null && ca != null) {
-			String script = getJmolString(msa, ca, subunitColors);
+		if (msa != null && atoms != null) {
+			String script = getJmolString(msa, atoms, subunitColors);
 			//System.out.println(script);
-			script += "select ligand; color CPK;";
+			script += "select *; backbone off; cartoon on; "
+					+ "select ligand; color CPK;";
 			evalString(script);
 			jmolPanel.evalString("save STATE state_1");
 		}

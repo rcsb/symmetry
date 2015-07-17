@@ -9,7 +9,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import javax.vecmath.Matrix4d;
+
 import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.AbstractStructureAlignment;
@@ -22,9 +25,10 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsemble;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsembleImpl;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentScorer;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
+import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
 import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
@@ -45,9 +49,17 @@ import org.slf4j.LoggerFactory;
 /**
  * Identify the symmetries in a structure by running an alignment of 
  * the structure against itself disabling the diagonal of the identity 
- * alignment. Iterating recursively over all results and disabling the 
- * diagonal of each previous result can also be done with the current 
- * implementation.
+ * alignment.
+ * <p>
+ * Iterating recursively over all results and disabling the diagonal 
+ * of each previous result can also be done with this implementation,
+ * which will generate a set of self-alignments.
+ * <p>
+ * The alignment is then refined to obtain a consistent alignment among
+ * all residues of the structure and organized into different parts,
+ * called symmetric subunits. Optionally, after refinement of the initial
+ * alignment, an optimization step can be used to improve the overall
+ * score of the subunit alignment (multiple alignment).
  * 
  * @author Andreas Prlic
  * @author Spencer Bliven
@@ -58,9 +70,16 @@ public class CeSymm extends AbstractStructureAlignment
 implements MatrixListener, MultipleStructureAligner {
 
 	private static final boolean debug = false;
-	
+
+	/**
+	 * Version History:<p>
+	 * <li>1.0 - initial implementation of CeSymm.
+	 * <li>1.1 - enable multiple CeSymm runs to calculate all self-alignments.
+	 * <li>2.0 - refine the alignment for consistency of subunit definition.
+	 * <li>2.1 - optimize the alignment to improve the score.
+	 */
+	public static final String version = "2.0";
 	public static final String algorithmName = "jCE-symmetry";
-	public static final String version = "1.0";
 	private static final Logger logger = LoggerFactory.getLogger(CeSymm.class);
 	public static final double symmetryThreshold = 0.4;
 
@@ -68,6 +87,7 @@ implements MatrixListener, MultipleStructureAligner {
 	private MultipleAlignment msa;
 	private List<AFPChain> afpAlignments;
 	private SymmetryType type;
+	private SymmetryAxes axes;
 	private boolean refined;
 
 	private Atom[] ca1;
@@ -275,7 +295,7 @@ implements MatrixListener, MultipleStructureAligner {
 		boolean multiple = (params.getRefineMethod() == RefineMethod.MULTIPLE);
 		Matrix lastMatrix = null;
 
-		//STEP 1: perform the raw symmetry alignment
+		//STEP 1: perform the self-alignments of the structure with CECP
 		int i = 0;
 		do {
 
@@ -379,9 +399,47 @@ implements MatrixListener, MultipleStructureAligner {
 				refined = true;
 			}
 		} catch (RefinerFailedException e) {
-			e.printStackTrace();
+			logger.warn("Could not refine structure!");
+			return afpChain;
 		}
-		
+
+		//STEP4: determine the symmetry axis and its subunit dependencies
+		axes = new SymmetryAxes();
+		Matrix rot = afpChain.getBlockRotationMatrix()[0];
+		Atom shift = afpChain.getBlockShiftVector()[0];
+		Matrix4d axis = Calc.getTransformation(rot, shift);
+
+		List<List<Integer>> superposition = new ArrayList<List<Integer>>();
+		List<Integer> chain1 = new ArrayList<Integer>();
+		List<Integer> chain2 = new ArrayList<Integer>();
+		superposition.add(chain1);
+		superposition.add(chain2);
+		List<Integer> subunitTrans = new ArrayList<Integer>();
+
+		switch(type){
+		case CLOSED:
+
+			for (int bk=0; bk<afpChain.getBlockNum(); bk++){
+				chain1.add(bk);
+				chain2.add((bk+1)%afpChain.getBlockNum());
+				subunitTrans.add(bk);
+			}
+			axes.addAxis(axis, superposition, subunitTrans);
+			break;
+
+		default: //case OPEN:
+
+			subunitTrans.add(0);
+			for (int bk=0; bk<afpChain.getBlockNum()-1; bk++){
+				chain1.add(bk);
+				chain2.add(bk+1);
+				subunitTrans.add(bk+1);
+			}
+			axes.addAxis(axis, superposition, subunitTrans);
+
+			break;
+		}
+
 		return afpChain;
 	}
 
@@ -446,8 +504,7 @@ implements MatrixListener, MultipleStructureAligner {
 	 * If available, get the list of subalignments.<p>
 	 * Should be length one unless {@link CESymmParameters#getMaxSymmOrder()}
 	 * was set.
-	 * 
-	 * @return the afpAlignments
+	 * @return List of AFP alignments
 	 */
 	public List<AFPChain> getAfpAlignments() {
 		return afpAlignments;
@@ -470,49 +527,58 @@ implements MatrixListener, MultipleStructureAligner {
 					"For symmetry analysis only one Structure is needed, "+
 							atomArrays.size()+" given.");
 		}
+		
 		AFPChain afp = align(atomArrays.get(0), atomArrays.get(0), params);
 
-		//STEP 4: symmetry alignment optimization
-		if (this.params.getOptimization() && refined){
-			//Perform several optimizations in different threads
-			try {
-				ExecutorService executor = Executors.newCachedThreadPool();
-				List<Future<MultipleAlignment>> future = 
-						new ArrayList<Future<MultipleAlignment>>();
-				int seed = this.params.getSeed();
+		if (refined){
+			msa = SymmetryTools.fromAFP(afp, ca1);
 
-				//Repeat the optimization in parallel
-				for (int rep=0; rep<2; rep++){
-					Callable<MultipleAlignment> worker = 
-							new SymmOptimizer(afp, ca1, type, seed+rep);
-					Future<MultipleAlignment> submit = executor.submit(worker);
-					future.add(submit);
-				}
+			//STEP 5: symmetry alignment optimization
+			if (this.params.getOptimization()){
+				
+				//Perform several optimizations in different threads
+				try {
+					ExecutorService executor = Executors.newCachedThreadPool();
+					List<Future<MultipleAlignment>> future = 
+							new ArrayList<Future<MultipleAlignment>>();
+					int seed = this.params.getSeed();
 
-				//When finished take the one with the best MC-score
-				double maxScore = Double.NEGATIVE_INFINITY;
-				for (int rep=0; rep<future.size(); rep++){
-					double score = future.get(rep).get().
-							getScore(MultipleAlignmentScorer.MC_SCORE);
-					if (score > maxScore){
-						msa = future.get(rep).get();
-						maxScore = score;
+					//Repeat the optimization in parallel
+					for (int rep=0; rep<2; rep++){
+						Callable<MultipleAlignment> worker = 
+								new SymmOptimizer(msa, axes, seed+rep);
+						Future<MultipleAlignment> submit = executor.submit(worker);
+						future.add(submit);
 					}
-				}
-				executor.shutdown();
 
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			} catch (RefinerFailedException e) {
-				e.printStackTrace();
+					//When finished take the one with the best MC-score
+					double maxScore = Double.NEGATIVE_INFINITY;
+					for (int rep=0; rep<future.size(); rep++){
+						double score = future.get(rep).get().
+								getScore(MultipleAlignmentScorer.MC_SCORE);
+						if (score > maxScore){
+							msa = future.get(rep).get();
+							maxScore = score;
+						}
+					}
+					executor.shutdown();
+
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (ExecutionException e) {
+					e.printStackTrace();
+				}
 			}
 		} else {
 			MultipleAlignmentEnsemble e = 
 					new MultipleAlignmentEnsembleImpl(afp, ca1, ca1, false);
 			msa = e.getMultipleAlignments().get(0);
 		}
+		
 		return msa;
+	}
+
+	public SymmetryAxes getSymmetryAxes() {
+		return axes;
 	}
 }

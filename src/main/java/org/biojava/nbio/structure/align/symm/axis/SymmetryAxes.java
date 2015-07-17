@@ -26,7 +26,7 @@ import javax.vecmath.Matrix4d;
 public class SymmetryAxes {
 
 	private List<Matrix4d> axes;
-	
+
 	/**
 	 * Matrix of size [subunits][axes]. The first index of the matrix 
 	 * indicates which subunit is considered, and the second index
@@ -35,7 +35,7 @@ public class SymmetryAxes {
 	 * of 0 means that this subunit is not affected by the axis.
 	 */
 	private List<List<Integer>> subunitTransforms;
-	
+
 	/**
 	 * The list of integers defines which subunits are involved in this axis
 	 * and how the axis transformation is computed. The list has size 2 for 
@@ -80,7 +80,7 @@ public class SymmetryAxes {
 					"Wrong superposition format: not equal List sizes.");
 		}
 		axes.add(axis);
-		
+
 		//Extend the double List by the necessary rows
 		while (subunitTransforms.size() < subunits.size()){
 			List<Integer> list = new ArrayList<Integer>();
@@ -96,7 +96,7 @@ public class SymmetryAxes {
 			}
 			subunitTransforms.get(su).add(nTimes);
 		}
-		
+
 		//Check that the subunit indices match
 		for (int c=0; c<2; c++){
 			for (int p=0; p<superposition.get(c).size(); p++){
@@ -109,7 +109,7 @@ public class SymmetryAxes {
 		}
 		mapAxisSubunits.put(axes.size()-1, superposition);
 	}
-	
+
 	/**
 	 * Updates an axis of symmetry, after the superposition changed.
 	 * @param index old axis index
@@ -142,27 +142,34 @@ public class SymmetryAxes {
 
 
 	/**
-	 * Return a List of all the transformations that need to be applied
-	 * to a determinate subunit in order to superimpose it to all the
-	 * others. 
-	 * The returned List of transformations can contain repeated matrices,
-	 * because it can be that the same axis have to be applied multiple
-	 * times to a single subunit.
+	 * Return the transformation that needs to be applied to a determinate 
+	 * subunit so that all get superimposed to the same point. 
 	 * 
 	 * @param subunit the subunit index
-	 * @return List of transformation matrices. It can be empty
+	 * @return transformation matrix for the subunit
 	 */
-	public List<Matrix4d> getSubunitTransforms(int subunit){
+	public Matrix4d getSubunitTransform(int subunit){
 
 		List<Matrix4d> allTransforms = new ArrayList<Matrix4d>();
+		Matrix4d transform = new Matrix4d();
+		transform.setIdentity();
 
-		for (int a=0; a<subunitTransforms.get(subunit).size(); a++){
-			Matrix4d t = axes.get(a);
-			for (int i=0; i<subunitTransforms.get(subunit).get(a); i++){
-				allTransforms.add(t);
+		for (int a=0; a<axes.size(); a++){
+			Matrix4d t = (Matrix4d) axes.get(a).clone();
+			Matrix4d clone = (Matrix4d) t.clone();
+			//Pack the Matrices when they are equal
+			for (int i=1; i<subunitTransforms.get(subunit).get(a); i++){
+				t.mul(clone);
 			}
+			if (subunitTransforms.get(subunit).get(a)>0) allTransforms.add(t);
 		}
-		return allTransforms;
+		//Multiply the matrices in the inverse order as they have to be applied
+		//for (int t=0; t<allTransforms.size(); t++){
+		for (int t=allTransforms.size()-1; t>=0; t--){
+			transform.mul(allTransforms.get(t));
+		}
+
+		return transform;
 	}
 
 }

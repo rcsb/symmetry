@@ -303,16 +303,10 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		updateTransformation();
 		if (axes == null) return;
 
-		//Create transformations from the SymmetryAxes info
+		//Get the transformations from the SymmetryAxes
 		List<Matrix4d> transformations = new ArrayList<Matrix4d>();
 		for (int su=0; su<order; su++){
-			List<Matrix4d> subunitTrans = axes.getSubunitTransforms(su);
-			Matrix4d totalTransform = new Matrix4d();
-			totalTransform.setIdentity();
-			for (Matrix4d t : subunitTrans){
-				totalTransform.mul(t);
-			}
-			transformations.add(totalTransform);
+			transformations.add(axes.getSubunitTransform(su));
 		}
 		msa.setTransformations(transformations);
 	}

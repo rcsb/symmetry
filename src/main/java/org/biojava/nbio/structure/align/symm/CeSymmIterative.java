@@ -213,7 +213,7 @@ public class CeSymmIterative {
 
 		for (int m=0; m<levels.size(); m++){
 
-			MultipleAlignment align = levels.get(levels.size()-m-1);
+			MultipleAlignment align = levels.get(m);
 			Matrix4d axis = align.getTransformations().get(1);
 
 			int subsize = align.size();
@@ -262,7 +262,7 @@ public class CeSymmIterative {
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "1YOX_A:,B:,C:";
+		String name = "4gcr";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));

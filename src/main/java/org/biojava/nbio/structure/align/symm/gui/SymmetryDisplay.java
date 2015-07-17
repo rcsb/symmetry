@@ -97,7 +97,7 @@ public class SymmetryDisplay {
 	 */
 	public static MultipleAlignmentJmol display(MultipleAlignment msa)
 			throws StructureException {
-		return display(msa);
+		return display(msa, null);
 	}
 	
 	/**
@@ -163,13 +163,6 @@ public class SymmetryDisplay {
 
 		//Quaternary Symmetry Detection
 		QuatSymmetryParameters param = new QuatSymmetryParameters();
-		/*param.setSequencePseudoSymmetryThreshold(0.0);
-		param.setMinimumSequenceLengthFraction(0.0);
-		param.setAlignmentFractionThreshold(0.0);
-		param.setAbsoluteMinimumSequenceLength(10);
-		param.setAngleThreshold(10.0);
-		param.setRmsdThreshold(20.0);
-		param.setMinimumSequenceLength(10);*/
 
 		CalcBioAssemblySymmetry calc = 
 				new CalcBioAssemblySymmetry(subunits, param);
@@ -177,11 +170,11 @@ public class SymmetryDisplay {
 		QuatSymmetryDetector detector = calc.orient();
 		List<QuatSymmetryResults> globalResults = detector.getGlobalSymmetry();
 
-		AxisAligner aligner = AxisAligner.getInstance(globalResults.get(0));
+		AxisAligner axes = AxisAligner.getInstance(globalResults.get(0));
 
 		//Draw the axis as in the quaternary symmetry
 		JmolSymmetryScriptGenerator scriptGenerator = 
-				JmolSymmetryScriptGeneratorPointGroup.getInstance(aligner, "g");
+				JmolSymmetryScriptGeneratorPointGroup.getInstance(axes, "g");
 
 		String script = "set defaultStructureDSSP true; "
 				+ "set measurementUnits ANGSTROMS;  select all;  "

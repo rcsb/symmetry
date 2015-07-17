@@ -21,13 +21,7 @@ import org.biojava.nbio.structure.align.multiple.util.CoreSuperimposer;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentTools;
 import org.biojava.nbio.structure.align.multiple.util.MultipleSuperimposer;
-import org.biojava.nbio.structure.align.symm.CESymmParameters;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
-import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.jama.Matrix;
 
 /**
@@ -844,35 +838,5 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		writer.flush();
 		writer.close();
 	}
-
-	public static void main(String[] args) throws Exception{
-
-		//Easy TIM: "d1i4na_"
-		//Crystallins: 4GCR, d4gcra1, d4gcra2
-		//Aspartic proteinases: 
-		//Difficult TIMs: "d1hl2a_", "d2fiqa1", "d1eexa_"
-		String[] names = {"4gcr"};
-		AtomCache cache = new AtomCache();
-
-		for (String name:names){
-
-			System.out.println(name);
-			List<Atom[]> atoms = new ArrayList<Atom[]>();
-			atoms.add(cache.getAtoms(name));
-
-			CeSymm ceSymm = new CeSymm();
-
-			CESymmParameters params = 
-					(CESymmParameters) ceSymm.getParameters();
-
-			params.setRefineMethod(RefineMethod.SINGLE);
-			params.setSymmetryType(SymmetryType.AUTO);
-			params.setOptimization(true);
-			//params.setSeed(10);
-
-			MultipleAlignment symmetry = ceSymm.align(atoms);
-			
-			SymmetryDisplay.display(symmetry, ceSymm.getSymmetryAxes());
-		}
-	}
+	
 }

@@ -1,6 +1,5 @@
 package org.biojava.nbio.structure.align.symm.refine;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,13 +8,6 @@ import org.biojava.nbio.structure.align.util.AlignmentTools;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.symm.CESymmParameters;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
-import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
-import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.utils.SymmetryTools;
 
 /**
@@ -157,44 +149,5 @@ public class OpenRefiner implements Refiner {
 		afpChain = AlignmentTools.replaceOptAln(optAln, afpChain, atoms, atoms);
 		return afpChain;
 	}
-
-	public static void main(String[] args) 
-			throws StructureException, IOException{
-
-		//Ankyrin: 1N0R.A, 3EU9.A, 1AWC.B, 3EHQ.A, 1NFI.E
-		//Helical: 1EZG.A, 1D0B.A
-		//LRR: 2bnh.A, 1dfj.I
-		//HEAT: 1B3U.A
-		//TPR: 2FO7
-		//Ig-repeats: 2rik.A, 1fnf.A
-		//hevein: 1k7u.A
-		//Rossman fold: d1heta2
-		//benchmark H: d1af0a1, d1dcec3, d1kx9a_, d1l0sa_
-		//benchmark NIH: d1v0fd2, d2b1ea_
-		//benchmark SH: d1qtea1, d2ajab1
-		//benchmark R: d1blxb_, d1rmga_, d3bsda_
-		//benchmark C6: d1wp5a_
-		//TIM barrel duplication and twist: 1pii
-		//beta-hairpin: d2biba1
-		//duplication: 1vym.A, 1ppr.O
-		//clear repeats-turn-repeats example: 1S70.B
-
-		String name = "1n0r.A";
-		List<Atom[]> atoms = new ArrayList<Atom[]>();
-
-		AtomCache cache = new AtomCache();
-		atoms.add(cache.getAtoms(name));
-
-		CeSymm ceSymm = new CeSymm();
-
-		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
-		params.setRefineMethod(RefineMethod.SINGLE);
-		params.setSymmetryType(SymmetryType.OPEN);
-		params.setOptimization(false);
-		//params.setSeed(10);
-
-		MultipleAlignment symmetry = ceSymm.align(atoms);
-
-		SymmetryDisplay.display(symmetry, ceSymm.getSymmetryAxes());
-	}
+	
 }

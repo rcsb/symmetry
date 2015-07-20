@@ -37,7 +37,9 @@ public class SymmetryListener implements ActionListener{
 				return;
 			}
 			try {
-				SymmetryDisplay.displaySubunits(msa);
+				MultipleAlignmentJmol j = SymmetryDisplay.displaySubunits(msa);
+				String s = SymmetryDisplay.printSymmetryAxes(msa, axes, true);
+				j.evalString(s);
 			} catch (StructureException e) {
 				e.printStackTrace();
 			}
@@ -48,7 +50,9 @@ public class SymmetryListener implements ActionListener{
 				return;
 			}
 			try {
-				SymmetryDisplay.displayFull(msa);
+				MultipleAlignmentJmol j = SymmetryDisplay.displayFull(msa);
+				String s = SymmetryDisplay.printSymmetryAxes(msa, axes, false);
+				j.evalString(s);
 			} catch (StructureException e) {
 				e.printStackTrace();
 			}
@@ -62,8 +66,8 @@ public class SymmetryListener implements ActionListener{
 			
 		} else if (cmd.equals("Show Symmetry Axes")){
 			if (axes != null) {
-				String script = SymmetryDisplay.printSymmetryAxes(msa, axes);
-				jmol.evalString(script);
+				String s = SymmetryDisplay.printSymmetryAxes(msa, axes, false);
+				jmol.evalString(s);
 				return;
 			} else System.err.println("No axes for this symmetry");
 			

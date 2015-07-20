@@ -30,8 +30,8 @@ import org.biojava.nbio.structure.jama.Matrix;
  * Utility methods for the internal symmetry identification and manipulation.
  * <p>
  * Methods include: blank out regions of DP Matrix, build symmetry graphs,
- * get rotation symmetry angles, split subunits in chains, convert between
- * symmetry formats.
+ * get rotation symmetry angles, split subunits in quaternary structure 
+ * chains, convert between symmetry formats (full, subunits, rotations).
  * 
  * @author Spencer Bliven
  * @author Aleix Lafita
@@ -39,7 +39,6 @@ import org.biojava.nbio.structure.jama.Matrix;
  */
 public class SymmetryTools {
 
-	//there won't be an instance of this
 	private SymmetryTools(){}
 
 	/**

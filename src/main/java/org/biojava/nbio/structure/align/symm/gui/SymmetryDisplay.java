@@ -75,14 +75,14 @@ public class SymmetryDisplay {
 	public static MultipleAlignmentJmol display(MultipleAlignment msa,
 			SymmetryAxes axes) throws StructureException {
 		
-		MultipleAlignmentJmol jmol = SymmetryDisplay.displayFull(msa);
+		List<Atom[]> atoms = msa.getEnsemble().getAtomArrays();
 		
-		//Send some commands for a nicer view
-		jmol.evalString("select *; backbone off; cartoon on; model 1;");
+		MultipleAlignmentJmol jmol = new MultipleAlignmentJmol(msa, atoms);
+		
 		addSymmetryMenu(jmol, axes);
 		
 		//Show all the axes in the initial view
-		if (axes!=null) jmol.evalString(printSymmetryAxes(msa, axes));
+		if (axes!=null) jmol.evalString(printSymmetryAxes(msa, axes, false));
 		jmol.evalString(printPointGroupAxes(msa));
 		
 		return jmol;
@@ -141,14 +141,29 @@ public class SymmetryDisplay {
 		jmol.getFrame().pack();
 	}
 	
+	/**
+	 * Generates a String that displays the symmetry axes of a structure.
+	 * 
+	 * @param msa
+	 * @param axes
+	 * @param elementary only print elementary axes if true
+	 * @return
+	 */
 	public static String printSymmetryAxes(MultipleAlignment msa, 
-			SymmetryAxes axes) {
+			SymmetryAxes axes, boolean elementary) {
 
 		int id = 0;
-		String script = "draw axes* off; draw poly* off;";
+		String script = "";
 		Atom[] atoms = msa.getEnsemble().getAtomArrays().get(0);
 		
-		for (Matrix4d axis : axes.getAxes()) {
+		List<Matrix4d> symmAxes = null;
+		if (elementary){
+			symmAxes = axes.getElementaryAxes();
+		} else {
+			symmAxes = axes.getSymmetryAxes();
+		}
+		
+		for (Matrix4d axis : symmAxes) {
 			RotationAxis rot = new RotationAxis(axis);
 			script += rot.getJmolScript(atoms, id);
 			id++;
@@ -156,6 +171,14 @@ public class SymmetryDisplay {
 		return script;
 	}
 
+	/**
+	 * Given a symmetry alignment, it draws the point group symmetry axes
+	 * and the polyhedron box around the structure. It uses the quaternary
+	 * symmetry detection code.
+	 * 
+	 * @param symm
+	 * @return
+	 */
 	public static String printPointGroupAxes(MultipleAlignment symm){
 
 		//Split the symmetric units into different chains
@@ -163,6 +186,8 @@ public class SymmetryDisplay {
 
 		//Quaternary Symmetry Detection
 		QuatSymmetryParameters param = new QuatSymmetryParameters();
+		param.setRmsdThreshold(symm.size() * 1.5);
+		param.setSequenceIdentityThresholds(new double[] {0.1});
 
 		CalcBioAssemblySymmetry calc = 
 				new CalcBioAssemblySymmetry(subunits, param);
@@ -176,12 +201,13 @@ public class SymmetryDisplay {
 		JmolSymmetryScriptGenerator scriptGenerator = 
 				JmolSymmetryScriptGeneratorPointGroup.getInstance(axes, "g");
 
-		String script = "set defaultStructureDSSP true; "
+		String script = "save selection; set defaultStructureDSSP true; "
 				+ "set measurementUnits ANGSTROMS;  select all;  "
 				+ "spacefill off; wireframe off;"
 				+ "set antialiasDisplay true; autobond=false; ";
 
 		script += scriptGenerator.getOrientationWithZoom(0);
+		script += "restore selection; ";
 		script += scriptGenerator.drawPolyhedron();
 		script += scriptGenerator.drawAxes();
 		script += "draw axes* on; draw poly* on; ";

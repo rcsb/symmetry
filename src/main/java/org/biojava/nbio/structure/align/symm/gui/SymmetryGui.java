@@ -21,9 +21,10 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 
 /** 
- *  A JFrame that allows to trigger a symmetry analysis, either from files
- *  in a directory or after manual upload
- * 	Adapted from the AlignmentGui class in biojava.
+ * A JFrame that allows to trigger a symmetry analysis, either from files
+ * in a directory or after manual upload
+ * Adapted from the AlignmentGui class in biojava.
+ * Only one structure is inputted and only the CeSymm algorihm can be chosen.
  *
  * @author Aleix Lafita
  *
@@ -33,7 +34,6 @@ public class SymmetryGui extends JFrame {
 	private final static long serialVersionUID = 0l;
 
 	private CeSymm ceSymm;
-
 	private JButton abortB;
 
 	private SelectPDBPanel  tab1 ;
@@ -64,11 +64,8 @@ public class SymmetryGui extends JFrame {
 
 		AligUIManager.setLookAndFeel();
 
-		if (!  me.isVisible())
-			me.setVisible(true);
-
-		if ( ! me.isActive())
-			me.requestFocus();
+		if (!me.isVisible()) me.setVisible(true);
+		if (! me.isActive()) me.requestFocus();
 
 		return me;
 	}
@@ -104,7 +101,7 @@ public class SymmetryGui extends JFrame {
 
 		vBox.add(tabPane);
 		vBox.add(Box.createGlue());
-		
+
 		masterPane = new JTabbedPane();
 		masterPane.addTab("Symmetry Analysis", vBox);
 
@@ -120,7 +117,7 @@ public class SymmetryGui extends JFrame {
 	}
 
 	private Box setupAlgorithm() {
-		
+
 		String[] algorithms = {"JCE-symmetry"};
 		updateAlgorithm();
 
@@ -290,7 +287,8 @@ public class SymmetryGui extends JFrame {
 			ProgressThreadDrawer drawer = new ProgressThreadDrawer(progress);
 			drawer.start();
 		} catch (StructureException e){
-			JOptionPane.showMessageDialog(null,"Could not align structures. Exception: " + e.getMessage());
+			JOptionPane.showMessageDialog(null,
+					"Could not align structures. Exception: " + e.getMessage());
 		}
 		updateAlgorithm();
 	}

@@ -25,7 +25,20 @@ import javax.vecmath.Matrix4d;
  */
 public class SymmetryAxes {
 
+	/**
+	 * List of all symmetry axis. They are sorted from higher to lower 
+	 * in the symmetry hierarchy, where higher means that they apply 
+	 * more globally and lower means that they apply to a local region 
+	 * of the higher axis division.
+	 */
 	private List<Matrix4d> axes;
+
+	/**
+	 * Tree of the symmetry axes hierarchy of a structure. Every index
+	 * is the axis index and the integer stored means the number of parts
+	 * this axis divides the structure in.
+	 */
+	private List<Integer> tree;
 
 	/**
 	 * Matrix of size [subunits][axes]. The first index of the matrix 
@@ -53,6 +66,7 @@ public class SymmetryAxes {
 		axes = new ArrayList<Matrix4d>();
 		mapAxisSubunits = new HashMap<Integer, List<List<Integer>>>();
 		subunitTransforms = new ArrayList<List<Integer>>();
+		tree = new ArrayList<Integer>();
 	}
 
 	/**
@@ -64,12 +78,13 @@ public class SymmetryAxes {
 	 * @param superposition subunits participating and superposition relation
 	 * @param subunits number of times the transformation is applied to every
 	 * 			subunit. index1=subunit, index2=times.
+	 * @param division number of parts that this axis divides the structure in
 	 * 
 	 * @throws IllegalArgumentException if the subunit relation is in the
 	 * 			wrong format: should be double List of equal sizes.
 	 */
 	public void addAxis(Matrix4d axis, List<List<Integer>> superposition, 
-			List<Integer> subunits) {
+			List<Integer> subunits, Integer division) {
 
 		//Check correct format of subunit relations
 		if (superposition.size() != 2){
@@ -79,7 +94,11 @@ public class SymmetryAxes {
 			throw new IllegalArgumentException(
 					"Wrong superposition format: not equal List sizes.");
 		}
+		if (division < 2) throw new IllegalArgumentException(
+				"A symmetry axis should divide a structure in > 2 parts");
+
 		axes.add(axis);
+		tree.add(division);
 
 		//Extend the double List by the necessary rows
 		while (subunitTransforms.size() < subunits.size()){
@@ -112,6 +131,7 @@ public class SymmetryAxes {
 
 	/**
 	 * Updates an axis of symmetry, after the superposition changed.
+	 * 
 	 * @param index old axis index
 	 * @param newAxis
 	 */
@@ -120,10 +140,13 @@ public class SymmetryAxes {
 	}
 
 	/**
-	 * Return all axes of symmetry of the structure.
-	 * @return axes of symmetry.
+	 * Return all elementary axes of symmetry of the structure, that is,
+	 * the axes stored in the List as unique and from which all the symmetry
+	 * axes are constructed.
+	 * 
+	 * @return axes elementary axes of symmetry.
 	 */
-	public List<Matrix4d> getAxes(){
+	public List<Matrix4d> getElementaryAxes(){
 		return axes;
 	}
 
@@ -159,9 +182,9 @@ public class SymmetryAxes {
 			Matrix4d clone = (Matrix4d) t.clone();
 			//Pack the Matrices when they are equal
 			for (int i=1; i<subunitTransforms.get(subunit).get(a); i++){
-				t.mul(clone);
+				clone.mul(t);
 			}
-			if (subunitTransforms.get(subunit).get(a)>0) allTransforms.add(t);
+			if (subunitTransforms.get(subunit).get(a)>0) allTransforms.add(clone);
 		}
 		//Multiply the matrices in the inverse order as they have to be applied
 		//for (int t=0; t<allTransforms.size(); t++){
@@ -172,4 +195,47 @@ public class SymmetryAxes {
 		return transform;
 	}
 
+	/**
+	 * Return all symmetry axes of of the structure, the set of axes that
+	 * describe all parts of the structure. This combines the elementary
+	 * axes using the symmetry hierarchy tree and returns a bigger set.
+	 * Use this method to display the axes.
+	 * 
+	 * @return axes all symmetry axes of the structure.
+	 */
+	public List<Matrix4d> getSymmetryAxes(){
+
+		/*List<Matrix4d> symmAxes = new ArrayList<Matrix4d>();
+		TODO
+		//For every elementary axis do
+		for (int t=1; t<axes.size(); t++){
+			symmAxes.add((Matrix4d) axes.get(t).clone());
+			
+			//Consider all its parent axes combinations
+			for (int i=0; i<t; i++){
+
+				//Means how many parents to consider
+				for (int n=i; n<t; n++){
+					Matrix4d axis = (Matrix4d) axes.get(t).clone();
+					Matrix4d parent = axes.get(n);
+					
+					for (int k=0; k<tree.get(i); k++){
+						Matrix4d clone = new Matrix4d();
+						clone.setIdentity();
+
+						for (int j=0; j<k; j++){
+							clone.mul(parent);
+						}
+						Matrix4d invert = (Matrix4d) clone.clone();
+						invert.invert();
+						clone.mul(axis);
+						clone.mul(invert);
+						axis = clone;
+					}
+				}
+			}
+		}
+		return symmAxes;*/
+		return getElementaryAxes();
+	}
 }

@@ -16,18 +16,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** 
- * Extension from the Biojava class that works with one 
- * structure only, using the Symmetry specific GUI.
+ * Calculates a symmetry analysis and displays the results.
+ * Linked to the SymmetryGUI.
+ * Does not generalize, uses CeSymm class directly to allow
+ * for the symmetry axis recovery.
  *  
  * @author Aleix Lafita
+ * 
  */
-
 public class SymmetryCalc implements AlignmentCalculationRunnable {
 	
 	private static final Logger logger = 
 			LoggerFactory.getLogger(SymmetryCalc.class);
 	
-	private boolean interrupted = false;
+	boolean interrupted = false;
 	
 	private String name;
 	private Structure structure;
@@ -52,6 +54,7 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 
 			List<Atom[]> atoms = new ArrayList<Atom[]>();
 			atoms.add(StructureTools.getRepresentativeAtomArray(structure));
+			
 			MultipleAlignment msa = algorithm.align(atoms);
 
 			List<String> names = new ArrayList<String>();
@@ -70,7 +73,6 @@ public class SymmetryCalc implements AlignmentCalculationRunnable {
 			jmol.setTitle(title);
 
 		} catch (StructureException e){
-			e.printStackTrace();
 			logger.warn(e.getMessage());
 		}
 		parent.notifyCalcFinished();

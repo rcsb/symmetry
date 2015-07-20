@@ -52,7 +52,7 @@ public class DemoCeSymm {
 		 */
 
 		//Set the name of the protein structure to analyze
-		String name = "1u6d";
+		String name = "4i4q";
 		List<Atom[]> atoms = new ArrayList<Atom[]>();
 
 		//Download the atoms and sort them sequentially by chains
@@ -72,6 +72,6 @@ public class DemoCeSymm {
 		MultipleAlignment symmetry = ceSymm.align(atoms);
 
 		//Display the results in jmol
-		SymmetryDisplay.display(symmetry);
+		SymmetryDisplay.display(symmetry, ceSymm.getSymmetryAxes());
 	}
 }

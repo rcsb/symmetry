@@ -404,6 +404,7 @@ implements MatrixListener, MultipleStructureAligner {
 		}
 
 		//STEP4: determine the symmetry axis and its subunit dependencies
+		order = afpChain.getBlockNum();
 		axes = new SymmetryAxes();
 		Matrix rot = afpChain.getBlockRotationMatrix()[0];
 		Atom shift = afpChain.getBlockShiftVector()[0];
@@ -419,23 +420,23 @@ implements MatrixListener, MultipleStructureAligner {
 		switch(type){
 		case CLOSED:
 
-			for (int bk=0; bk<afpChain.getBlockNum(); bk++){
+			for (int bk=0; bk<order; bk++){
 				chain1.add(bk);
-				chain2.add((bk+1)%afpChain.getBlockNum());
+				chain2.add((bk+1)%order);
 				subunitTrans.add(bk);
 			}
-			axes.addAxis(axis, superposition, subunitTrans);
+			axes.addAxis(axis, superposition, subunitTrans, order);
 			break;
 
 		default: //case OPEN:
 
 			subunitTrans.add(0);
-			for (int bk=0; bk<afpChain.getBlockNum()-1; bk++){
+			for (int bk=0; bk<order-1; bk++){
 				chain1.add(bk);
 				chain2.add(bk+1);
 				subunitTrans.add(bk+1);
 			}
-			axes.addAxis(axis, superposition, subunitTrans);
+			axes.addAxis(axis, superposition, subunitTrans, order);
 
 			break;
 		}

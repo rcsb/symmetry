@@ -768,9 +768,9 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 	private void updateTransformation() throws StructureException {
 
 		if (axes != null){
-			for (int t=0; t<axes.getAxes().size(); t++){
+			for (int t=0; t<axes.getElementaryAxes().size(); t++){
 				
-				Matrix4d axis = axes.getAxes().get(t);
+				Matrix4d axis = axes.getElementaryAxes().get(t);
 				List<Integer> chain1 = axes.getSubunitRelation(t).get(0);
 				List<Integer> chain2 = axes.getSubunitRelation(t).get(1);
 				

@@ -38,7 +38,6 @@ import org.biojava.nbio.structure.AtomPositionMap;
 import org.biojava.nbio.structure.Group;
 import org.biojava.nbio.structure.ResidueNumber;
 import org.biojava.nbio.structure.ResidueRangeAndLength;
-import org.biojava.nbio.structure.ResidueRangeAndLength;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;

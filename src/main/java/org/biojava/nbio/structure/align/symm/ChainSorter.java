@@ -17,8 +17,10 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.jama.Matrix;
 
 /**
- * This class provides methods for sorting the chains of a structure in the symmetry order,
- * so that the CeSymm algorithm can deal with quaternary symmetry.
+ * This class provides methods for sorting the chains 
+ * of a structure in their symmetric order, so that 
+ * the CeSymm algorithm (and other sequence-dependent 
+ * algorithms) can deal with multiple chains.
  * 
  * @author Aleix Lafita
  *
@@ -134,7 +136,8 @@ public class ChainSorter {
 			//Add the chain atoms to the sorted array
 			for (Atom a:chains.get(nextIndex)) sortedAtoms.add(a);
 			remainingChains.remove((Integer) nextIndex);
-			if (debug) System.out.println(chains.get(nextIndex)[0].getGroup().getChainId());
+			if (debug) 
+				System.out.println(chains.get(nextIndex)[0].getGroup().getChainId());
 			lastIndex = nextIndex;
 		}
 		
@@ -144,31 +147,14 @@ public class ChainSorter {
 	
 	/**
 	 * Application: any quaternary symmetry supported.<p>
-	 * Assumes that the input Structure contains the chains in the biological assembly, 
-	 * otherwise the asymmetric unit symmetry will also be detected.
+	 * Assumes that the input Structure contains the chains 
+	 * in the biological assembly, otherwise the asymmetric 
+	 * unit symmetry will also be detected.
 	 * 
 	 * @param structure Structure containing the Chains
 	 * @return
 	 */
 	public static Atom[] quaternaryAxisSorter(Structure structure){
-		
-		//TODO
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		
 		return null;
 	}
@@ -178,7 +164,8 @@ public class ChainSorter {
 	 * <ul><li>4PJO: C7 Hetero-heptamer, chain order B,A,G,E,F,D,C
 	 * <li>3CW1: C7 Hetero-heptamer, chain order C,F,E,G,D,A,B
 	 * <li>1KQ1: C6 Homo-hexamer, chain order A,B,M,K,I,H
-	 * <li>
+	 * <li>2WBH: A180 Icosahedral
+	 * <li>1AEW: A24 octahedral
 	 * </ul>
 	 */
 	public static void main(String[] args) throws Exception {
@@ -186,8 +173,9 @@ public class ChainSorter {
 		//String name  = "3CW1";
 		//String name = "4PJO";
 		String name  = "1KQ1";
+		//String name = "1AEW";
 		
-		//Make sure that the biological assembly of the protein is loaded if available
+		//Load the biological assembly of the protein
 		Structure structure = null;
 		try {
 			structure = StructureIO.getBiologicalAssembly(name, 1);
@@ -196,13 +184,12 @@ public class ChainSorter {
 		}
 		
 		Atom[] ca1 = cyclicSorter(structure);
-		//Atom[] ca1 = StructureTools.getRepresentativeAtomArray(structure);
 		Atom[] ca2 = StructureTools.cloneAtomArray(ca1);
 		
 		CeSymm cesymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) cesymm.getParameters();
-		//params.setRefineMethod(RefineMethod.SINGLE);
-		//params.setOptimization(true);
+		params.setRefineMethod(RefineMethod.SINGLE);
+		params.setOptimization(true);
 		
 		AFPChain afp = cesymm.align(ca1, ca2);
 		

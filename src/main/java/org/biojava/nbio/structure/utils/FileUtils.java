@@ -1,4 +1,4 @@
-/**
+/*
  *                    BioJava development code
  *
  * This code may be freely distributed and modified under the
@@ -36,9 +36,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
+/**
+ * Utility methods to read, write and copy files.
+ * This class is mainly used by the census code.
+ * <p>
+ * Some of the methods in here are duplicated in
+ * biojava, so a check should be made to see which
+ * ones are necessary and which ones are not - Aleix
+ */
 public class FileUtils {
+
 	public static String readFileAsString(String filePath)
-	throws java.io.IOException{
+			throws IOException{
+		
 		StringBuffer fileData = new StringBuffer(1000);
 		BufferedReader reader = new BufferedReader(
 				new FileReader(filePath));
@@ -52,7 +62,7 @@ public class FileUtils {
 		reader.close();
 		return fileData.toString();
 	}
-	
+
 	public static void writeStringToFile(String content, String filePath){
 		BufferedWriter writer = null;
 		try {
@@ -62,7 +72,7 @@ public class FileUtils {
 		catch ( IOException e)
 		{
 			e.printStackTrace();
-			
+
 		}
 		finally
 		{
@@ -75,10 +85,8 @@ public class FileUtils {
 			{
 			}
 		}
-
-		
 	}
-	
+
 	public static void copy(File src, File dst) throws IOException {
 
 		InputStream in = new FileInputStream(src);
@@ -95,41 +103,25 @@ public class FileUtils {
 	}
 
 	/**
-	 * Saves a graph into a csv file in the format of tuples (vertex,edge) for every edge in the graph.
-	 * The graph has to be in the form of an adjacency list.
+	 * Saves a graph into a csv file in the format of tuples 
+	 * (vertex,edge) for every edge in the graph.
+	 * The graph has to be in the form of an adjacency List.
 	 */
-	 public static void saveGraph(List<List<Integer>> graph, String sFileName) throws IOException {
-		
-	    FileWriter writer = new FileWriter(sFileName);
-	    writer.append("Vertex,Edge\n");
-	    for (Integer i=0; i<graph.size(); i++){
-	    	for (int j=0; j<graph.get(i).size(); j++){
-	    		
-	    		writer.append(i.toString());
-	    		writer.append(',');
-	    		writer.append(graph.get(i).get(j).toString());
-	    		writer.append('\n');
-	    	}
-	    }
-	    
-	    writer.flush();
-	    writer.close();
-	 }
-	 
-	/**
-	 *  Save a multiple sequence alignment result as a fasta file.
-	 */
-	public static void saveSeqAln(String[] alnSequences, String filePath) throws IOException {
-		
-		FileWriter writer = new FileWriter(filePath);
-		
-		for (int su=0; su<alnSequences.length; su++){
-			writer.append(">Subunit_"+(su+1)+"\n");
-			writer.append(alnSequences[su]+"\n");
-		}
-		
-		writer.flush();
-	    writer.close();
-	}
+	public static void saveGraph(List<List<Integer>> graph, String sFileName)
+			throws IOException {
 
+		FileWriter writer = new FileWriter(sFileName);
+		writer.append("Vertex,Edge\n");
+		for (Integer i=0; i<graph.size(); i++){
+			for (int j=0; j<graph.get(i).size(); j++){
+
+				writer.append(i.toString());
+				writer.append(',');
+				writer.append(graph.get(i).get(j).toString());
+				writer.append('\n');
+			}
+		}
+		writer.flush();
+		writer.close();
+	}
 }

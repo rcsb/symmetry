@@ -12,6 +12,7 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.ResidueNumber;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.util.AlignmentTools;
 
 /**
@@ -74,6 +75,7 @@ public class CensusAlignment implements Serializable {
 	 */
 	public AFPChain buildAfpChain(Atom[] ca1, Atom[] ca2) throws StructureException {
 		AFPChain afpChain = AlignmentTools.createAFPChain(ca1, ca2, new ResidueNumber[] {}, new ResidueNumber[] {});
+		afpChain.setAlgorithmName(CeSymm.algorithmName);
 		afpChain = AlignmentTools.replaceOptAln(afpChain, ca1, ca2, getSimpleFunction());
 		return afpChain;
 	}

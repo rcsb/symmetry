@@ -39,10 +39,10 @@ public class SingleRefiner implements Refiner {
 	public SingleRefiner() {}
 	
 	@Override
-	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] ca1, Atom[] ca2, int order)
-			throws RefinerFailedException,StructureException {
+	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] atoms, int order)
+			throws RefinerFailedException, StructureException {
 		
-		return refineSymmetry(afpAlignments.get(0), ca1, ca2, order);
+		return refineSymmetry(afpAlignments.get(0), atoms, atoms, order);
 	}
 	
 	/**

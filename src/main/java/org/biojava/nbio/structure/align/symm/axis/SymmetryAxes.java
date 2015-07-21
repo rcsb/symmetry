@@ -196,46 +196,46 @@ public class SymmetryAxes {
 	}
 
 	/**
-	 * Return all symmetry axes of of the structure, the set of axes that
+	 * Return all symmetry axes of of the structure: the set of axes that
 	 * describe all parts of the structure. This combines the elementary
-	 * axes using the symmetry hierarchy tree and returns a bigger set.
+	 * axes to generate all possible axes.
 	 * Use this method to display the axes.
 	 * 
 	 * @return axes all symmetry axes of the structure.
 	 */
 	public List<Matrix4d> getSymmetryAxes(){
 
-		/*List<Matrix4d> symmAxes = new ArrayList<Matrix4d>();
-		TODO
-		//For every elementary axis do
-		for (int t=1; t<axes.size(); t++){
-			symmAxes.add((Matrix4d) axes.get(t).clone());
-			
-			//Consider all its parent axes combinations
-			for (int i=0; i<t; i++){
+		List<Matrix4d> symmAxes = new ArrayList<Matrix4d>();
 
-				//Means how many parents to consider
-				for (int n=i; n<t; n++){
-					Matrix4d axis = (Matrix4d) axes.get(t).clone();
-					Matrix4d parent = axes.get(n);
-					
-					for (int k=0; k<tree.get(i); k++){
-						Matrix4d clone = new Matrix4d();
-						clone.setIdentity();
+		//For every subunit do
+		for (int su=0; su<subunitTransforms.size(); su++){
+			Matrix4d axis = new Matrix4d();
+			axis.setIdentity();
+			boolean ident = true;
 
-						for (int j=0; j<k; j++){
-							clone.mul(parent);
-						}
-						Matrix4d invert = (Matrix4d) clone.clone();
-						invert.invert();
-						clone.mul(axis);
-						clone.mul(invert);
+			//Consider all the axes, in the inverse order
+			for (int t=subunitTransforms.get(su).size()-1; t>=0; t--){
+				int repeats = subunitTransforms.get(su).get(t);
+				Matrix4d clone = (Matrix4d) axes.get(t).clone();
+				Matrix4d invert = (Matrix4d) clone.clone();
+				invert.invert();
+
+				//Do for every repeat
+				for (int n=0; n<repeats; n++){
+					if (ident) {
 						axis = clone;
+						clone = (Matrix4d) axes.get(t).clone();
+						ident = false;
+					} else {
+						clone.mul(axis);
+						axis = clone;
+						clone = (Matrix4d) axes.get(t).clone();
+						axis.mul(invert);
 					}
 				}
 			}
+			if (!ident) symmAxes.add(axis);
 		}
-		return symmAxes;*/
-		return getElementaryAxes();
+		return symmAxes;
 	}
 }

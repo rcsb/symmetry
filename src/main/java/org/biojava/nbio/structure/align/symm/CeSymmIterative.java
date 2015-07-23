@@ -126,13 +126,13 @@ public class CeSymmIterative {
 		//End iterations if non symmetric
 		if (align == null) return;
 		else if (align.getScore(MultipleAlignmentScorer.AVGTM_SCORE) < 
-				CeSymm.symmetryThreshold || align.length() < 20) {
+				CeSymm.symmetryThreshold || align.length() < 15) {
 			return;
 		}
 
 		levels.add(align);
 		//If symmetric store the residue dependencies in graph
-		Block b = align.getBlocks().get(0);
+		Block b = align.getBlock(0);
 		for (int pos=0; pos<b.length(); pos++){
 			for (int su=0; su<b.size()-1; su++){
 				Integer pos1 = b.getAlignRes().get(su).get(pos);
@@ -192,7 +192,7 @@ public class CeSymmIterative {
 			}
 		}
 
-		Block b = msa.getBlocks().get(0);
+		Block b = msa.getBlock(0);
 		//Construct the MultipleAlignment
 		for (int su=0; su<size; su++) {
 			msa.getEnsemble().getStructureNames().add(name);
@@ -214,7 +214,7 @@ public class CeSymmIterative {
 		for (int m=0; m<levels.size(); m++){
 
 			MultipleAlignment align = levels.get(m);
-			Matrix4d axis = align.getTransformations().get(1);
+			Matrix4d axis = align.getBlockSet(0).getTransformations().get(1);
 
 			int subsize = align.size();
 			parents *= subsize;
@@ -262,7 +262,7 @@ public class CeSymmIterative {
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi, 1f7p
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "1g6s_A:20-427,A:1-20";
+		String name = "4hhb";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));

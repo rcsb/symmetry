@@ -80,7 +80,7 @@ public class SymmetryDisplay {
 	public static MultipleAlignmentJmol display(MultipleAlignment msa,
 			SymmetryAxes axes) throws StructureException {
 
-		List<Atom[]> atoms = msa.getEnsemble().getAtomArrays();
+		List<Atom[]> atoms = msa.getAtomArrays();
 
 		MultipleAlignmentJmol jmol = new MultipleAlignmentJmol(msa, atoms);
 
@@ -159,7 +159,7 @@ public class SymmetryDisplay {
 
 		int id = 0;
 		String script = "";
-		Atom[] atoms = msa.getEnsemble().getAtomArrays().get(0);
+		Atom[] atoms = msa.getAtomArrays().get(0);
 
 		List<Matrix4d> symmAxes = null;
 		if (elementary){
@@ -233,9 +233,9 @@ public class SymmetryDisplay {
 
 		//Obtain the clusters of aligned Atoms and subunit variables
 		MultipleAlignment subunits = SymmetryTools.toSubunitAlignment(symm);
-		List<Atom[]> alignedCA = subunits.getEnsemble().getAtomArrays();
+		List<Atom[]> alignedCA = subunits.getAtomArrays();
 		List<Integer> corePos = MultipleAlignmentTools.getCorePositions(
-				subunits.getBlocks().get(0));
+				subunits.getBlock(0));
 
 		List<Point3d[]> caCoords = new ArrayList<Point3d[]>();
 		List<Integer> folds = new ArrayList<Integer>();
@@ -252,7 +252,7 @@ public class SymmetryDisplay {
 			Atom[] array = alignedCA.get(str);
 			List<Point3d> points = new ArrayList<Point3d>();
 			List<Integer> alignedRes = 
-					subunits.getBlocks().get(0).getAlignRes().get(str);
+					subunits.getBlock(0).getAlignRes().get(str);
 			for (int pos=0; pos<alignedRes.size(); pos++){
 				Integer residue = alignedRes.get(pos);
 				if (residue == null) continue;

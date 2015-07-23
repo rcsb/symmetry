@@ -97,9 +97,9 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		this.rnd = new Random(seed);
 		
 		MultipleAlignmentEnsemble e = mul.getEnsemble().clone();
-		this.msa = e.getMultipleAlignments().get(0);
+		this.msa = e.getMultipleAlignment(0);
 		
-		this.atoms = msa.getEnsemble().getAtomArrays().get(0);
+		this.atoms = msa.getAtomArrays().get(0);
 		this.order = msa.size();
 		this.subunitCore = msa.getCoreLength();
 	}
@@ -120,7 +120,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		C = 20*order;
 
 		//Initialize alignment variables
-		block = msa.getBlocks().get(0).getAlignRes();
+		block = msa.getBlock(0).getAlignRes();
 		freePool = new ArrayList<Integer>();
 		length = block.get(0).size();
 
@@ -290,7 +290,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		msa.clear();
 
 		//Override the alignment with the new information
-		Block b = msa.getBlocks().get(0);
+		Block b = msa.getBlock(0);
 		b.setAlignRes(block);
 		subunitCore = b.getCoreLength();
 		
@@ -302,7 +302,7 @@ public class SymmOptimizer implements Callable<MultipleAlignment> {
 		for (int su=0; su<order; su++){
 			transformations.add(axes.getSubunitTransform(su));
 		}
-		msa.setTransformations(transformations);
+		msa.getBlockSet(0).setTransformations(transformations);
 	}
 
 	/**

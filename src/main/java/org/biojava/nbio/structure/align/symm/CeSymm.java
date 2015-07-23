@@ -573,7 +573,7 @@ implements MatrixListener, MultipleStructureAligner {
 		} else {
 			MultipleAlignmentEnsemble e = 
 					new MultipleAlignmentEnsembleImpl(afp, ca1, ca1, false);
-			msa = e.getMultipleAlignments().get(0);
+			msa = e.getMultipleAlignment(0);
 		}
 		
 		return msa;

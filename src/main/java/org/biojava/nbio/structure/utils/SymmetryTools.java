@@ -456,7 +456,7 @@ public class SymmetryTools {
 					"The input alignment is not a symmetry alignment.");
 		}
 
-		Atom[] atoms = symmetry.getEnsemble().getAtomArrays().get(0);
+		Atom[] atoms = symmetry.getAtomArrays().get(0);
 		Structure cloned = atoms[0].getGroup().getChain().getParent().clone();
 		atoms = StructureTools.getRepresentativeAtomArray(cloned);
 
@@ -471,7 +471,7 @@ public class SymmetryTools {
 			chainID++;
 
 			symm.addChain(newCh);
-			Block align = symmetry.getBlocks().get(0);
+			Block align = symmetry.getBlock(0);
 
 			//Determine start and end of the subunit
 			int count = 0;
@@ -516,10 +516,10 @@ public class SymmetryTools {
 
 		for (int str=1; str<full.size(); str++){
 			//Create a new Block with swapped AlignRes (move first to last)
-			Block b = full.getBlocks().get(full.getBlocks().size()-1).clone();
+			Block b = full.getBlock(full.getBlocks().size()-1).clone();
 			b.getAlignRes().add(b.getAlignRes().get(0));
 			b.getAlignRes().remove(0);
-			full.getBlockSets().get(0).getBlocks().add(b);
+			full.getBlockSet(0).getBlocks().add(b);
 		}
 		return full;
 	}
@@ -558,8 +558,8 @@ public class SymmetryTools {
 		MultipleAlignmentEnsemble newEnsemble = symm.getEnsemble().clone();
 		newEnsemble.setAtomArrays(atomArrays);
 
-		MultipleAlignment subunits = newEnsemble.getMultipleAlignments().get(0);
-		Block block = subunits.getBlocks().get(0);
+		MultipleAlignment subunits = newEnsemble.getMultipleAlignment(0);
+		Block block = subunits.getBlock(0);
 
 		for (int su=0; su<block.size(); su++){
 
@@ -612,8 +612,8 @@ public class SymmetryTools {
 		
 		int order = symm.getBlockNum();
 		for (int su=0; su<order; su++){
-			List<Integer> residues = e.getMultipleAlignments().get(0).
-					getBlocks().get(su).getAlignRes().get(0);
+			List<Integer> residues = e.getMultipleAlignment(0).
+					getBlock(su).getAlignRes().get(0);
 			b.getAlignRes().add(residues);
 			e.getStructureNames().add(name);
 			e.getAtomArrays().add(atoms);

@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.vecmath.Matrix4d;
 
+import org.biojava.nbio.structure.utils.SymmetryTools;
+
 /**
  * Data Structure that stores all the symmetry axis that describe 
  * the symmetry of a structure. Generalizes to all types of symmetry, 
@@ -235,6 +237,18 @@ public class SymmetryAxes {
 				}
 			}
 			if (!ident) symmAxes.add(axis);
+		}
+		
+		//Ensure the axis are not equivalent
+		for (int a=0; a<symmAxes.size(); a++){
+			for (int b=a+1; b<symmAxes.size(); b++){
+				Matrix4d ax = symmAxes.get(a);
+				Matrix4d bx = symmAxes.get(b);
+				boolean eq = SymmetryTools.equivalentAxes(ax, bx, 0.1);
+				if (eq){
+					symmAxes.set(a, bx);
+				}
+			}
 		}
 		return symmAxes;
 	}

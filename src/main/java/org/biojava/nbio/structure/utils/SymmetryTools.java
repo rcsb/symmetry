@@ -2,7 +2,11 @@ package org.biojava.nbio.structure.utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+
+import javax.vecmath.AxisAngle4d;
+import javax.vecmath.Matrix4d;
 
 import org.biojava.nbio.structure.StructureImpl;
 import org.biojava.nbio.structure.Atom;
@@ -31,7 +35,8 @@ import org.biojava.nbio.structure.jama.Matrix;
  * <p>
  * Methods include: blank out regions of DP Matrix, build symmetry graphs,
  * get rotation symmetry angles, split subunits in quaternary structure 
- * chains, convert between symmetry formats (full, subunits, rotations).
+ * chains, convert between symmetry formats (full, subunits, rotations),
+ * determine if two symmetry axes are equivalent.
  * 
  * @author Spencer Bliven
  * @author Aleix Lafita
@@ -620,6 +625,43 @@ public class SymmetryTools {
 		result.putScore(MultipleAlignmentScorer.AVGTM_SCORE, tmScore);
 		
 		return result;
+	}
+	
+	/**
+	 * Determines if two symmetry axis are equivalent inside the error
+	 * threshold. It only takes into account the direction of the vector
+	 * where the rotation is made: the angle and translation are not 
+	 * taken into account.
+	 * 
+	 * @param axis1
+	 * @param axis2
+	 * @param epsilon error allowed in the axis comparison
+	 * @return true if equivalent, false otherwise
+	 */
+	public static boolean equivalentAxes(Matrix4d axis1, Matrix4d axis2,
+			double epsilon){
+		
+		AxisAngle4d rot1 = new AxisAngle4d();
+		rot1.set(axis1);
+		AxisAngle4d rot2 = new AxisAngle4d();
+		rot2.set(axis2);
+		
+		//rot1.epsilonEquals(rot2, error); //that also compares angle
+		//L-infinite distance without comparing the angle (epsilonEquals)
+		List<Double> sameDir = new ArrayList<Double>();
+		sameDir.add(Math.abs(rot1.x-rot2.x));
+		sameDir.add(Math.abs(rot1.y-rot2.y));
+		sameDir.add(Math.abs(rot1.z-rot2.z));
+		
+		List<Double> otherDir = new ArrayList<Double>();
+		otherDir.add(Math.abs(rot1.x+rot2.x));
+		otherDir.add(Math.abs(rot1.y+rot2.y));
+		otherDir.add(Math.abs(rot1.z+rot2.z));
+		
+		Double error = Math.min(Collections.max(sameDir), 
+				Collections.max(otherDir));
+		
+		return error < epsilon;
 	}
 	
 }

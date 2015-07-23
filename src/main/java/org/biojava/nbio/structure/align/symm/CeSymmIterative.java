@@ -259,7 +259,7 @@ public class CeSymmIterative {
 
 		//More than one symmetry axis: 4gcr, 1ppr.O, 1vym.A, 1yox.A
 		//Domain swapping: 1g6s
-		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi
+		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi, 1f7p
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
 		String name = "1vym";

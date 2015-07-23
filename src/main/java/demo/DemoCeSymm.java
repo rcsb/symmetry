@@ -52,7 +52,7 @@ public class DemoCeSymm {
 		 */
 
 		//Set the name of the protein structure to analyze
-		String name = "4i4q";
+		String name = "1ppr.O";
 		List<Atom[]> atoms = new ArrayList<Atom[]>();
 
 		//Download the atoms and sort them sequentially by chains

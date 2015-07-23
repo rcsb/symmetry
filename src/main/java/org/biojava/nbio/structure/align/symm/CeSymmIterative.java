@@ -258,11 +258,11 @@ public class CeSymmIterative {
 	public static void main(String[] args) throws Exception {
 
 		//More than one symmetry axis: 4gcr, 1ppr.O, 1vym.A, 1yox.A
-		//Domain swapping: 1g6s
+		//Domain swapping: 1g6s, 1g6s_A:20-427,A:1-20
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi, 1f7p
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "4hhb";
+		String name = "1g6s_A:20-427,A:1-20";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));

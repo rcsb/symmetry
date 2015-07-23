@@ -232,7 +232,11 @@ public class SymmetryDisplay {
 	public static String printPointGroupAxes(MultipleAlignment symm){
 
 		//Obtain the clusters of aligned Atoms and subunit variables
-		List<Atom[]> alignedCA = MultipleAlignmentTools.transformAtoms(symm);
+		MultipleAlignment subunits = SymmetryTools.toSubunitAlignment(symm);
+		List<Atom[]> alignedCA = subunits.getEnsemble().getAtomArrays();
+		List<Integer> corePos = MultipleAlignmentTools.getCorePositions(
+				subunits.getBlocks().get(0));
+
 		List<Point3d[]> caCoords = new ArrayList<Point3d[]>();
 		List<Integer> folds = new ArrayList<Integer>();
 		List<Boolean> pseudo = new ArrayList<Boolean>();
@@ -243,21 +247,18 @@ public class SymmetryDisplay {
 		List<Integer> clusterIDs = new ArrayList<Integer>();
 		int fold = 1;
 		Character chain = 'A';
-		
+
 		for (int str=0; str<alignedCA.size(); str++){
 			Atom[] array = alignedCA.get(str);
 			List<Point3d> points = new ArrayList<Point3d>();
-			for (int pos=0; pos<array.length; pos++){
-				Atom a = array[pos];
-				//Check if it is core position
-				boolean core = true;
-				for (int i=0; i<alignedCA.size(); i++){
-					if (alignedCA.get(i)[pos]==null){
-						core = false;
-						break;
-					}
-				}
-				if (core) points.add(new Point3d(a.getCoords()));
+			List<Integer> alignedRes = 
+					subunits.getBlocks().get(0).getAlignRes().get(str);
+			for (int pos=0; pos<alignedRes.size(); pos++){
+				Integer residue = alignedRes.get(pos);
+				if (residue == null) continue;
+				else if (!corePos.contains(pos)) continue;
+				Atom a = array[residue];
+				points.add(new Point3d(a.getCoords()));
 			}
 			caCoords.add(points.toArray(new Point3d[points.size()]));
 			if (alignedCA.size() % fold == 0){
@@ -281,8 +282,7 @@ public class SymmetryDisplay {
 		//Quaternary Symmetry Detection
 		QuatSymmetryParameters param = new QuatSymmetryParameters();
 		param.setRmsdThreshold(symm.size() * 1.5);
-		param.setVerbose(true);
-				
+
 		QuatSymmetryResults gSymmetry = 
 				QuatSymmetryDetector.calcQuatSymmetry(globalSubunits, param);
 

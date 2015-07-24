@@ -57,7 +57,9 @@ public class CeSymmIterative {
 	 * @param params CeSymm parameters
 	 */
 	public CeSymmIterative(CESymmParameters params) {
+		//Disable the iteration mode, because otherwise we get infinite calls
 		this.params = params;
+		params.setMultipleAxes(false);
 
 		msa = new MultipleAlignmentImpl();
 		msa.getEnsemble().setAtomArrays(new ArrayList<Atom[]>());
@@ -265,17 +267,20 @@ public class CeSymmIterative {
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi, 1f7p
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "1f9z";
+		String name = "4i4q";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));
+		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
+		atomArrays.add(atoms);
 
 		CESymmParameters params = new CESymmParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
 		params.setOptimization(true);
+		params.setMultipleAxes(true);
 
-		CeSymmIterative aligner = new CeSymmIterative(params);
-		MultipleAlignment msa = aligner.execute(atoms);
+		CeSymm aligner = new CeSymm();
+		MultipleAlignment msa = aligner.align(atomArrays, params);
 
 		SymmetryDisplay.display(msa, aligner.getSymmetryAxes());
 	}

@@ -78,10 +78,9 @@ implements MatrixListener, MultipleStructureAligner {
 	 * <li>2.0 - refine the alignment for consistency of subunit definition.
 	 * <li>2.1 - optimize the alignment to improve the score.
 	 */
-	public static final String version = "2.0";
+	public static final String version = "2.1";
 	public static final String algorithmName = "jCE-symmetry";
 	private static final Logger logger = LoggerFactory.getLogger(CeSymm.class);
-	public static final double symmetryThreshold = 0.4;
 
 	private AFPChain afpChain;
 	private MultipleAlignment msa;
@@ -157,7 +156,7 @@ implements MatrixListener, MultipleStructureAligner {
 			int counter) throws StructureException {
 
 		int fragmentLength = params.getWinSize();
-		Atom[] ca2clone = SymmetryTools.cloneAtoms(ca2);
+		Atom[] ca2clone = StructureTools.cloneAtomArray(ca2);
 
 		int rows = ca1.length;
 		int cols = ca2.length;
@@ -319,7 +318,7 @@ implements MatrixListener, MultipleStructureAligner {
 			if (debug) 
 				logger.info("Alignment "+(i+1)+" score: "+newAFP.getTMScore());
 			//Determine if the alignment is significant, stop if true
-			if (tmScore3 < symmetryThreshold){
+			if (tmScore3 < params.getSymmetryThreshold()){
 				if(debug) logger.info("Not symmetric alignment with TM score: "
 						+ newAFP.getTMScore());
 				//If it is the first alignment save it anyway
@@ -355,7 +354,7 @@ implements MatrixListener, MultipleStructureAligner {
 		type = params.getSymmetryType();
 		if (type == SymmetryType.AUTO){
 			if (afpChain.getBlockNum() == 1) type = SymmetryType.OPEN;
-			else type = SymmetryType.CLOSED;
+			else type = SymmetryType.CLOSE;
 		}
 
 		//STEP 2: calculate the order of symmetry for CLOSED symmetry
@@ -377,12 +376,12 @@ implements MatrixListener, MultipleStructureAligner {
 		Refiner refiner = null;
 		switch (params.getRefineMethod()){
 		case MULTIPLE:
-			if (type == SymmetryType.CLOSED) {
-				refiner = new MultipleRefiner(orderDetector);
+			if (type == SymmetryType.CLOSE) {
+				refiner = new MultipleRefiner();
 			} else refiner = new OpenRefiner();
 			break;
 		case SINGLE:
-			if (type == SymmetryType.CLOSED) {
+			if (type == SymmetryType.CLOSE) {
 				refiner = new SingleRefiner();
 			} else refiner = new OpenRefiner();
 			break;
@@ -391,7 +390,7 @@ implements MatrixListener, MultipleStructureAligner {
 		}
 
 		try {
-			if (order == 1 && type == SymmetryType.CLOSED){
+			if (order == 1 && type == SymmetryType.CLOSE){
 				return afpChain;
 			}
 			else {
@@ -418,7 +417,7 @@ implements MatrixListener, MultipleStructureAligner {
 		List<Integer> subunitTrans = new ArrayList<Integer>();
 
 		switch(type){
-		case CLOSED:
+		case CLOSE:
 
 			for (int bk=0; bk<order; bk++){
 				chain1.add(bk);
@@ -469,8 +468,8 @@ implements MatrixListener, MultipleStructureAligner {
 		return version;
 	}
 
-	public static boolean isSignificant(AFPChain afpChain, Atom[] ca1) 
-			throws StructureException {
+	public static boolean isSignificant(AFPChain afpChain, Atom[] ca1, 
+			double symmetryThreshold) throws StructureException {
 
 		// TM-score cutoff
 		if (afpChain.getTMScore() < symmetryThreshold) return false;
@@ -498,7 +497,8 @@ implements MatrixListener, MultipleStructureAligner {
 	}
 
 	public boolean isSignificant() throws StructureException {
-		return isSignificant(this.afpChain,this.ca1);
+		double symmetryThreshold = this.params.getSymmetryThreshold();
+		return isSignificant(this.afpChain,this.ca1, symmetryThreshold);
 	}
 
 	/**

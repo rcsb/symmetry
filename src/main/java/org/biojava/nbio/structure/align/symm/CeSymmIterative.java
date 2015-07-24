@@ -126,7 +126,7 @@ public class CeSymmIterative {
 		//End iterations if non symmetric
 		if (align == null) return;
 		else if (align.getScore(MultipleAlignmentScorer.AVGTM_SCORE) < 
-				CeSymm.symmetryThreshold || align.length() < 15) {
+				params.getSymmetryThreshold() || align.getCoreLength() < 8) {
 			return;
 		}
 
@@ -262,7 +262,7 @@ public class CeSymmIterative {
 		//Internal+quaternary: 1VYM, 1f9z, 1YOX_A:,B:,C:, 1mmi, 1f7p
 		//Structures that have different symmetry thresholds: 1vzw
 		//Dihedral structures: 4hhb, 1iy9, 2ehz,
-		String name = "4i4q";
+		String name = "1f9z";
 
 		AtomCache cache = new AtomCache();
 		Atom[] atoms = ChainSorter.cyclicSorter(cache.getStructure(name));

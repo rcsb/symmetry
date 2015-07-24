@@ -5,7 +5,7 @@ import java.util.List;
 import org.biojava.nbio.structure.align.ce.CeParameters;
 
 /**
- * Provides parameters to {@link CeSymm}
+ * Provides parameters to {@link CeSymm}.
  * 
  * @author Spencer Bliven
  * @author Aleix Lafita
@@ -13,70 +13,74 @@ import org.biojava.nbio.structure.align.ce.CeParameters;
  */
 public class CESymmParameters extends CeParameters {
 
-	private int maxSymmOrder; //Renamed, old variable maxNrAlternatives (now means max nr. of iterations/order of symmetry)
+	private int maxSymmOrder;
 	private SymmetryType symmetryType;
 	private OrderDetectorMethod orderDetectorMethod;
 	private RefineMethod refineMethod;
-	private boolean optimization;  //true means that optimization is performed after refinement
-	private int seed;             //random number generator seed in the Monte Carlo optimization, for reproducibility of results
-	
+	private boolean optimization;
+	private int seed; //random seed
+	private boolean multipleAxes;
+	private double symmetryThreshold;
+
 	public static enum OrderDetectorMethod {
 		SEQUENCE_FUNCTION;
 		public static OrderDetectorMethod DEFAULT = SEQUENCE_FUNCTION;
 	}
-	
+
 	public static enum RefineMethod {
 		NOT_REFINED,
 		SINGLE,
 		MULTIPLE;
-		public static RefineMethod DEFAULT = NOT_REFINED;
+		public static final RefineMethod DEFAULT = SINGLE;
 	}
 	
+	public static final double DEFAULT_SYMMETRY_THRESHOLD = 0.4;
+
 	/**
 	 * The internal symmetry detection can be divided into two types: 
-	 * CLOSED: includes the circular and dihedral symmetries, and
-	 * NON_CLOSED: includes the helical and protein repeats symmetries.
-	 * All internal symmetry cases share one property: all the subunits have the same 3D transformation.
-	 * 
-	 * AUTO option automatically identifies the type. The criteria is that the closed symmetry generates
-	 * CeSymm alignments with circular permutations (2 blocks in AFPChain), whereas the non-closed symmetry
+	 * CLOSE: includes the circular and dihedral symmetries, and
+	 * OPEN: includes the helical and protein repeats symmetries.
+	 * <p>
+	 * All internal symmetry cases share one property: 
+	 * all the subunits have the same 3D transformation.
+	 * <p>
+	 * AUTO option automatically identifies the type. 
+	 * The criterion is that the CLOSE symmetry generates
+	 * CeSymm alignments with circular permutations 
+	 * (2 blocks in AFPChain), whereas the OPEN symmetry
 	 * generates alignments without a CP (only one block in AFPChain).
+	 * 
 	 */
 	public enum SymmetryType {
-		CLOSED,
+		CLOSE,
 		OPEN,
 		AUTO;
-		public static SymmetryType DEFAULT = AUTO;
+		public static final SymmetryType DEFAULT = AUTO;
 	}
-	
+
 	public CESymmParameters() {
-		super();
-		maxSymmOrder = 8;
-		symmetryType = SymmetryType.DEFAULT;
-		refineMethod = RefineMethod.DEFAULT;
-		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
-		optimization = false;
-		seed = 0;
+		reset();
 	}
 
 	@Override
 	public String toString() {
-		return "CESymmParameters [maxSymmOrder=" + maxSymmOrder + ", symmetryType="
-				+ symmetryType + ", orderDetectorMethod=" + orderDetectorMethod
-				+ ", refineMethod=" + refineMethod + ", optimization="
-				+ optimization + ", seed=" + seed + ", winSize=" + winSize
-				+ ", rmsdThr=" + rmsdThr + ", rmsdThrJoin=" + rmsdThrJoin
-				+ ", maxOptRMSD=" + maxOptRMSD + ", scoringStrategy="
-				+ scoringStrategy + ", maxGapSize=" + maxGapSize
-				+ ", showAFPRanges=" + showAFPRanges
-				+ ", sideChainScoringType=" + sideChainScoringType
-				+ ", gapOpen=" + gapOpen + ", gapExtension=" + gapExtension
-				+ ", distanceIncrement=" + distanceIncrement + ", oRmsdThr="
-				+ oRmsdThr + ", maxNrIterationsForOptimization="
+		return "CESymmParameters [maxSymmOrder=" + maxSymmOrder
+				+ ", symmetryType=" + symmetryType + ", orderDetectorMethod="
+				+ orderDetectorMethod + ", refineMethod=" + refineMethod
+				+ ", optimization=" + optimization + ", seed=" + seed
+				+ ", multipleAxes=" + multipleAxes + ", symmetryThreshold="
+				+ symmetryThreshold + ", winSize=" + winSize + ", rmsdThr="
+				+ rmsdThr + ", rmsdThrJoin=" + rmsdThrJoin + ", maxOptRMSD="
+				+ maxOptRMSD + ", scoringStrategy=" + scoringStrategy
+				+ ", maxGapSize=" + maxGapSize + ", showAFPRanges="
+				+ showAFPRanges + ", sideChainScoringType="
+				+ sideChainScoringType + ", gapOpen=" + gapOpen
+				+ ", gapExtension=" + gapExtension + ", distanceIncrement="
+				+ distanceIncrement + ", oRmsdThr=" + oRmsdThr
+				+ ", maxNrIterationsForOptimization="
 				+ maxNrIterationsForOptimization + ", substitutionMatrix="
 				+ substitutionMatrix + ", seqWeight=" + seqWeight + "]";
 	}
-
 
 	@Override
 	public void reset(){
@@ -87,16 +91,17 @@ public class CESymmParameters extends CeParameters {
 		refineMethod = RefineMethod.DEFAULT;
 		optimization = true;
 		seed = 0;
+		multipleAxes = true;
+		symmetryThreshold = DEFAULT_SYMMETRY_THRESHOLD;
 	}
-
 
 	@Override
 	public List<String> getUserConfigHelp() {
 		List<String> params = super.getUserConfigHelp();
-		
+
 		//maxSymmOrder help explanation
 		params.add("Sets the maximum order of symmetry of the protein.");
-		
+
 		StringBuilder symmTypes = new StringBuilder("Type of Symmetry: ");
 		SymmetryType[] vals = SymmetryType.values();
 		if(vals.length == 1) {
@@ -110,7 +115,7 @@ public class CESymmParameters extends CeParameters {
 			symmTypes.append(vals[vals.length-1].name());
 		}
 		params.add(symmTypes.toString());
-		
+
 		StringBuilder orderTypes = new StringBuilder("Order Detection Method: ");
 		OrderDetectorMethod[] vals2 = OrderDetectorMethod.values();
 		if(vals2.length == 1) {
@@ -124,7 +129,7 @@ public class CESymmParameters extends CeParameters {
 			orderTypes.append(vals[vals.length-1].name());
 		}
 		params.add(orderTypes.toString());
-		
+
 		StringBuilder refineTypes = new StringBuilder("Refinement Method: ");
 		RefineMethod[] values = RefineMethod.values();
 		if(values.length == 1) {
@@ -138,13 +143,19 @@ public class CESymmParameters extends CeParameters {
 			refineTypes.append(values[values.length-1].name());
 		}
 		params.add(refineTypes.toString());
-		
+
 		//optimization help explanation
-		params.add("Optimize the refined alignment (true) or do not optimize (false).");
-		
+		params.add("Optimize the refined alignment if true.");
 		//seed help explanation
-		params.add("Random seed for the Monte Carlo optimization, for reproducibility of results.");
-		
+		params.add("Random seed for the Monte Carlo optimization, "
+				+ "for reproducibility of results.");
+		//multiple axes explanation
+		params.add("Perform multiple CeSymm iterations to find all "
+				+ "symmetry axes if true.");
+		//threshold
+		params.add("Symmetry threshold: TM-score values below the "
+				+ "threshold will be considered asymmetric.");
+
 		return params;
 	}
 
@@ -157,6 +168,8 @@ public class CESymmParameters extends CeParameters {
 		params.add("RefineMethod");
 		params.add("Optimization");
 		params.add("Seed");
+		params.add("MultipleAxes");
+		params.add("SymmetryThreshold");
 		return params;
 	}
 
@@ -169,6 +182,8 @@ public class CESymmParameters extends CeParameters {
 		params.add("Refinement Method");
 		params.add("Optimization");
 		params.add("Random Seed");
+		params.add("Multiple Axes");
+		params.add("Symmetry Threshold");
 		return params;
 	}
 
@@ -181,6 +196,8 @@ public class CESymmParameters extends CeParameters {
 		params.add(RefineMethod.class);
 		params.add(Boolean.class);
 		params.add(Integer.class);
+		params.add(Boolean.class);
+		params.add(Double.class);
 		return params;
 	}
 
@@ -191,7 +208,7 @@ public class CESymmParameters extends CeParameters {
 	public void setRefineMethod(RefineMethod refineMethod) {
 		this.refineMethod = refineMethod;
 	}
-	
+
 	@Deprecated
 	public void setRefineResult(boolean doRefine) {
 		if (!doRefine){
@@ -209,7 +226,7 @@ public class CESymmParameters extends CeParameters {
 	public void setOrderDetectorMethod(OrderDetectorMethod orderDetectorMethod) {
 		this.orderDetectorMethod = orderDetectorMethod;
 	}
-	
+
 	public void setMaxSymmOrder(Integer maxSymmOrder) {
 		this.maxSymmOrder = maxSymmOrder;
 	}
@@ -241,5 +258,21 @@ public class CESymmParameters extends CeParameters {
 	public void setSeed(Integer seed) {
 		this.seed = seed;
 	}
-	
+
+	public boolean isMultipleAxes() {
+		return multipleAxes;
+	}
+
+	public void setMultipleAxes(Boolean multipleAxes) {
+		this.multipleAxes = multipleAxes;
+	}
+
+	public double getSymmetryThreshold() {
+		return symmetryThreshold;
+	}
+
+	public void setSymmetryThreshold(Double symmetryThreshold) {
+		this.symmetryThreshold = symmetryThreshold;
+	}
+
 }

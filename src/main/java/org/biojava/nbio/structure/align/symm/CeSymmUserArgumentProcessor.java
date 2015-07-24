@@ -9,15 +9,17 @@ import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 
 public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 	
-	protected static class CeSymmStartupParams extends CeUserArgumentProcessor.CeStartupParams {
+	protected static class CeSymmStartupParams 
+	extends CeUserArgumentProcessor.CeStartupParams {
 		
 		protected int maxSymmOrder;
 		private SymmetryType symmetryType;
 		protected OrderDetectorMethod orderDetectorMethod;
 		protected RefineMethod refineMethod;
 		private boolean optimization;
-		private int seed; 
-		
+		private int seed;
+		private boolean multipleAxes;
+		private double symmetryThreshold;
 
 		public CeSymmStartupParams() {
 			super();
@@ -27,6 +29,8 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 			refineMethod = RefineMethod.DEFAULT;
 			optimization = true;
 			seed = 0;
+			multipleAxes = true;
+			symmetryThreshold = CESymmParameters.DEFAULT_SYMMETRY_THRESHOLD;
 		}
 
 		public OrderDetectorMethod getOrderDetectorMethod() {
@@ -57,8 +61,8 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 			this.seed = seed;
 		}
 
-		public void setOrderDetectorMethod(OrderDetectorMethod orderDetectorMethod) {
-			this.orderDetectorMethod = orderDetectorMethod;
+		public void setOrderDetectorMethod(OrderDetectorMethod method) {
+			this.orderDetectorMethod = method;
 		}
 		
 		public RefineMethod getRefineMethod() {
@@ -77,36 +81,34 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 			this.maxSymmOrder = maxSymmOrder;
 		}
 
+		public boolean isMultipleAxes() {
+			return multipleAxes;
+		}
+
+		public void setMultipleAxes(boolean multipleAxes) {
+			this.multipleAxes = multipleAxes;
+		}
+
+		public double getSymmetryThreshold() {
+			return symmetryThreshold;
+		}
+
+		public void setSymmetryThreshold(double symmetryThreshold) {
+			this.symmetryThreshold = symmetryThreshold;
+		}
+
 		@Override
 		public String toString() {
 			return "CeSymmStartupParams [maxSymmOrder=" + maxSymmOrder
 					+ ", symmetryType=" + symmetryType
 					+ ", orderDetectorMethod=" + orderDetectorMethod
 					+ ", refineMethod=" + refineMethod + ", optimization="
-					+ optimization + ", seed=" + seed + ", getWinSize()="
-					+ getWinSize() + ", getScoringStrategy()="
-					+ getScoringStrategy() + ", getGapOpen()=" + getGapOpen()
-					+ ", getGapExtension()=" + getGapExtension()
-					+ ", getMaxGapSize()=" + getMaxGapSize()
-					+ ", isShowAFPRanges()=" + isShowAFPRanges()
-					+ ", getMaxOptRMSD()=" + getMaxOptRMSD() + ", toString()="
-					+ super.toString() + ", getSearchFile()=" + getSearchFile()
-					+ ", getAlignPairs()=" + getAlignPairs()
-					+ ", getSaveOutputDir()=" + getSaveOutputDir()
-					+ ", isShowMenu()=" + isShowMenu() + ", isPrintCE()="
-					+ isPrintCE() + ", getPdb1()=" + getPdb1() + ", getPdb2()="
-					+ getPdb2() + ", isPdbDirSplit()=" + isPdbDirSplit()
-					+ ", isPrintXML()=" + isPrintXML() + ", isPrintFatCat()="
-					+ isPrintFatCat() + ", getPdbFilePath()="
-					+ getPdbFilePath() + ", getCacheFilePath()="
-					+ getCacheFilePath() + ", isShow3d()=" + isShow3d()
-					+ ", getOutFile()=" + getOutFile() + ", isAutoFetch()="
-					+ isAutoFetch() + ", getShowDBresult()="
-					+ getShowDBresult() + ", getNrCPU()=" + getNrCPU()
-					+ ", getFile1()=" + getFile1() + ", getFile2()="
-					+ getFile2() + ", isOutputPDB()=" + isOutputPDB()
-					+ ", isDomainSplit()=" + isDomainSplit() + ", getClass()="
-					+ getClass() + ", hashCode()=" + hashCode() + "]";
+					+ optimization + ", seed=" + seed + ", multipleAxes="
+					+ multipleAxes + ", symmetryThreshold=" + symmetryThreshold
+					+ ", maxGapSize=" + maxGapSize + ", winSize=" + winSize
+					+ ", scoringStrategy=" + scoringStrategy + ", maxOptRMSD="
+					+ maxOptRMSD + ", gapOpen=" + gapOpen + ", gapExtension="
+					+ gapExtension + ", showAFPRanges=" + showAFPRanges + "]";
 		}
 
 	}
@@ -127,7 +129,8 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		
 		StructureAlignment alignment = getAlgorithm();
 		
-		CESymmParameters aligParams = (CESymmParameters) alignment.getParameters();
+		CESymmParameters aligParams = 
+				(CESymmParameters) alignment.getParameters();
 		CeSymmStartupParams startParams = (CeSymmStartupParams) params;
 		
 		if ( aligParams == null)
@@ -147,17 +150,20 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		aligParams.setSymmetryType(startParams.getSymmetryType());
 		aligParams.setOptimization(startParams.getOptimization());
 		aligParams.setSeed(startParams.getSeed());
+		aligParams.setMultipleAxes(startParams.isMultipleAxes());
+		aligParams.setSymmetryThreshold(startParams.getSymmetryThreshold());
 		
 		return aligParams;
 	}
-	
 
 	@Override
 	public String getDbSearchLegend(){
-		//String legend = "# name1\tname2\tscore\tz-score\trmsd\tlen1\tlen2\tsim1\tsim2\t " ;
-		//return legend;
+		/*String legend = "# name1\tname2\tscore\tz-score\trmsd\tlen1\tlen2"
+				+ "\tsim1\tsim2\t " ;
+		return legend;*/
 		
-		return "# name1\tname2\tscore\tz-score\trmsd\tlen1\tlen2\tcov1\tcov2\t%ID\tDescription\t " ;
+		return "# name1\tname2\tscore\tz-score\trmsd\tlen1\tlen2"
+				+ "\tcov1\tcov2\t%ID\tDescription\t ";
 		
 	}
 }

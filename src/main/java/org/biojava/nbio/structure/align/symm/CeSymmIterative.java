@@ -83,11 +83,10 @@ public class CeSymmIterative {
 	 * @param atoms atoms 
 	 * @return MultipleAlignment of the subunits
 	 * 
-	 * @throws StructureException 
-	 * @throws RefinerFailedException 
+	 * @throws StructureException  
 	 */
 	public MultipleAlignment execute(Atom[] atoms) 
-			throws StructureException, RefinerFailedException {
+			throws StructureException {
 
 		allAtoms = atoms;
 		for (Integer res=0; res<allAtoms.length; res++){
@@ -99,8 +98,12 @@ public class CeSymmIterative {
 		recoverAxes();
 
 		//Run a final optimization once all subunits are known
-		SymmOptimizer optimizer = new SymmOptimizer(msa, axes, 0);
-		msa = optimizer.optimize();
+		try {
+			SymmOptimizer optimizer = new SymmOptimizer(msa, axes, 0);
+			msa = optimizer.optimize();
+		} catch (RefinerFailedException e) {
+			e.printStackTrace();
+		}
 
 		return msa;
 	}

@@ -267,9 +267,9 @@ implements MatrixListener, MultipleStructureAligner {
 			throws StructureException {
 
 		//STEP 0: prepare all the information for the symmetry alignment
-		if (!(param instanceof CESymmParameters))
-			throw new IllegalArgumentException("CE algorithm needs an object"
-					+ " of call CESymmParameters as argument.");
+		if (!(params instanceof CESymmParameters))
+			throw new IllegalArgumentException("CE-Symm algorithm needs an "
+					+ "object of call CESymmParameters as argument.");
 
 		this.params = (CESymmParameters) param;
 
@@ -520,15 +520,28 @@ implements MatrixListener, MultipleStructureAligner {
 	}
 
 	@Override
-	public MultipleAlignment align(List<Atom[]> atomArrays, Object params) 
+	public MultipleAlignment align(List<Atom[]> atomArrays, Object param) 
 			throws StructureException {
 
 		if (atomArrays.size() != 1) {
 			throw new IllegalArgumentException(
 					"For symmetry analysis only one Structure is needed, "+
-							atomArrays.size()+" given.");
+							atomArrays.size()+" Structures given.");
+		}
+		if (!(params instanceof CESymmParameters))
+			throw new IllegalArgumentException("CE-Symm algorithm needs an "
+					+ "object of call CESymmParameters as argument.");
+		this.params = (CESymmParameters) param;
+		
+		//If the multiple axes is called, run iterative version
+		if (params.isMultipleAxes()){
+			CeSymmIterative iterative = new CeSymmIterative(params);
+			MultipleAlignment result = iterative.execute(atomArrays.get(0));
+			axes = iterative.getSymmetryAxes();
+			return result;
 		}
 		
+		//Otherwise perform only one CeSymm alignment
 		AFPChain afp = align(atomArrays.get(0), atomArrays.get(0), params);
 
 		if (refined){

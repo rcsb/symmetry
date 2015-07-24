@@ -2,7 +2,6 @@ package org.biojava.nbio.structure.align.symm.gui;
 
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JMenu;
@@ -18,7 +17,6 @@ import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentTools;
 import org.biojava.nbio.structure.align.symm.axis.SymmetryAxes;
 import org.biojava.nbio.structure.align.util.RotationAxis;
-import org.biojava.nbio.structure.symmetry.analysis.CalcBioAssemblySymmetry;
 import org.biojava.nbio.structure.symmetry.core.AxisAligner;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
@@ -178,53 +176,9 @@ public class SymmetryDisplay {
 
 	/**
 	 * Given a symmetry alignment, it draws the point group symmetry axes
-	 * and the polyhedron box around the structure. It uses the quaternary
-	 * symmetry detection code.
-	 * 
-	 * @param symm
-	 * @return
-	 */
-	public static String printPointGroupAxes2(MultipleAlignment symm){
-
-		//Split the symmetric units into different chains
-		Structure subunits = SymmetryTools.toQuaternary(symm);
-
-		//Quaternary Symmetry Detection
-		QuatSymmetryParameters param = new QuatSymmetryParameters();
-		param.setRmsdThreshold(symm.size() * 1.5);
-		param.setSequenceIdentityThresholds(new double[] {0.0});
-
-		CalcBioAssemblySymmetry calc = 
-				new CalcBioAssemblySymmetry(subunits, param);
-
-		QuatSymmetryDetector detector = calc.orient();
-		List<QuatSymmetryResults> globalResults = detector.getGlobalSymmetry();
-
-		AxisAligner axes = AxisAligner.getInstance(globalResults.get(0));
-
-		//Draw the axis as in the quaternary symmetry
-		JmolSymmetryScriptGenerator scriptGenerator = 
-				JmolSymmetryScriptGeneratorPointGroup.getInstance(axes, "g");
-
-		String script = "save selection; set defaultStructureDSSP true; "
-				+ "set measurementUnits ANGSTROMS;  select all;  "
-				+ "spacefill off; wireframe off;"
-				+ "set antialiasDisplay true; autobond=false; ";
-
-		script += scriptGenerator.getOrientationWithZoom(0);
-		script += "restore selection; ";
-		script += scriptGenerator.drawPolyhedron();
-		script += scriptGenerator.drawAxes();
-		script += "draw axes* on; draw poly* on; ";
-
-		return script;
-	}
-
-	/**
-	 * Given a symmetry alignment, it draws the point group symmetry axes
 	 * and the polyhedron box around the structure. 
 	 * It uses the quaternary symmetry detection code, but tries to factor
-	 * out the different processes.
+	 * out the alignment and detection steps.
 	 * 
 	 * @param symm
 	 * @return

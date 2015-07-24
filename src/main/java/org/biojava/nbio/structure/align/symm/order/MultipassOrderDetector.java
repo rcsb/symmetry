@@ -31,7 +31,7 @@ public class MultipassOrderDetector implements OrderDetector {
 		CESymmParameters params = (CESymmParameters) ce.getParameters();
 		params.setMaxSymmOrder(maxOrder);
 		params.setRefineMethod(RefineMethod.MULTIPLE);
-		params.setSymmetryType(SymmetryType.CLOSED);
+		params.setSymmetryType(SymmetryType.CLOSE);
 		params.setOptimization(false);
 		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 		try {
@@ -47,10 +47,12 @@ public class MultipassOrderDetector implements OrderDetector {
 			return alignments.size() + 1;
 		}
 		// For C1/C2, look at refined TM
-		if( alignments.get(0).getTMScore() >= CeSymm.symmetryThreshold )
+		if(alignments.get(0).getTMScore() >= 
+				CESymmParameters.DEFAULT_SYMMETRY_THRESHOLD){
 			return 2;
-		else
+		} else {
 			return 1;
+		}
 	}
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()

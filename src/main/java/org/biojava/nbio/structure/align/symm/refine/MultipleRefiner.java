@@ -4,8 +4,6 @@ import java.util.List;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 
 /**
  * Creates a refined alignment with the multiple self-alignments 
@@ -17,84 +15,12 @@ import org.biojava.nbio.structure.align.symm.order.OrderDetector;
  */
 public class MultipleRefiner implements Refiner {
 
-	private OrderDetector orderDetector;
-
-	/**
-	 * The class needs an orderDetector because the order might differ 
-	 * among the different alignments.
-	 * 
-	 * @param orderDetector
-	 */
-	public MultipleRefiner(OrderDetector orderDetector) {
-		this.orderDetector = orderDetector;
-	}
-
 	@Override
 	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] atoms, 
-			int order) throws RefinerFailedException,StructureException {
-
-		//Use the help of the SINGLE refiner to increase the consistency of the alignments
-		for (int i=0; i<afpAlignments.size(); i++){
-			try {
-				order = orderDetector.calculateOrder(afpAlignments.get(i), atoms);
-				afpAlignments.set(i,SingleRefiner.refineSymmetry(afpAlignments.get(i), atoms, atoms, order));
-			} //It means that one of the refined alignments has length 0, so continue without refining
-			catch (Exception ignore){
-				//afpAlignments[i] = null;
-				continue;
-			}
-		}
-		//return cycleRefine(afpAlignments, ca1, ca2, order);
-		return maxOrder(afpAlignments);
-	}
-
-	/**
-	 *  Returns the alignment with the maximum length of the set of afpAlignments.
-	 */
-	private AFPChain maxLength(List<AFPChain> afpAlignments) {
-
-		AFPChain maxAFP = null;
-		for (int i=0; i<afpAlignments.size(); i++){
-			if (afpAlignments.get(i)!=null){
-				if (maxAFP==null) maxAFP = afpAlignments.get(i);
-				else if (maxAFP.getOptLength()<afpAlignments.get(i).getOptLength()) maxAFP = afpAlignments.get(i);
-			}
-		}
-		return maxAFP;
-	}
-
-	/**
-	 *  Returns the alignment with the maximum TM score of the set of afpAlignments.
-	 */
-	private AFPChain maxScore(List<AFPChain> afpAlignments) {
-
-		AFPChain maxAFP = null;
-		for (int i=0; i<afpAlignments.size(); i++){
-			if (afpAlignments.get(i)!=null){
-				if (maxAFP==null) maxAFP = afpAlignments.get(i);
-				else if (maxAFP.getTMScore()<afpAlignments.get(i).getTMScore()) maxAFP = afpAlignments.get(i);
-			}
-		}
-		return maxAFP;
-	}
-
-	/**
-	 *  Returns the signifcant alignment with the maximum order of the set of afpAlignments (and maximum TM score
-	 *  if there are more than one with the same order).
-	 */
-	private AFPChain maxOrder(List<AFPChain> afpAlignments) {
-
-		AFPChain maxAFP = null;
-		for (int i=0; i<afpAlignments.size(); i++){
-			if (afpAlignments.get(i)!=null){
-				if (maxAFP==null) maxAFP = afpAlignments.get(i);
-				else if (maxAFP.getBlockNum()<afpAlignments.get(i).getBlockNum() && afpAlignments.get(i).getTMScore() > CeSymm.symmetryThreshold-0.1)
-					maxAFP = afpAlignments.get(i);
-				else if (maxAFP.getBlockNum()==afpAlignments.get(i).getBlockNum())
-					if (maxAFP.getTMScore()<afpAlignments.get(i).getTMScore()) maxAFP = afpAlignments.get(i);
-			}
-		}
-		return maxAFP;
+			int order) throws StructureException, RefinerFailedException {
+		
+		//return cycleRefine(afpAlignments, atoms, order);
+		throw new RefinerFailedException("Multiple Refiner not yet implemented!");
 	}
 
 	/**

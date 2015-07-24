@@ -292,25 +292,6 @@ public class SymmetryTools {
 				blankWindowSize, new double[] {Integer.MIN_VALUE}, 0.0);
 	}
 
-	@Deprecated
-	public static Atom[] cloneAtoms(Atom[] ca2) throws StructureException{
-		// we don't want to rotate input atoms, do we?
-		/*Atom[] ca2clone = new Atom[ca2.length];
-
-		int pos = 0;
-		for (Atom a : ca2){
-			Group g = (Group) a.getGroup().clone(); 
-			// works because each group has only a CA atom
-
-			ca2clone[pos] = g.getAtom(a.getName());
-
-			pos++;
-		}
-
-		return ca2clone;*/
-		return StructureTools.cloneAtomArray(ca2);
-	}
-
 	public static Matrix getDkMatrix(Atom[] ca1, Atom[] ca2, int k, 
 			int fragmentLength) {
 

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:CensusResults xmlns:ns2="http://source.rcsb.org">
+    <data>
+    	<knownInfo>
+			<group>D4</group>
+			<order>4</order>
+		</knownInfo>
+		<result>
+			<alignment>
+				<alignLength>110</alignLength>
+				<alignScore>243.16748</alignScore>
+				<block1Length>46</block1Length>
+				<block2Length>49</block2Length>
+				<gapLength>15</gapLength>
+				<identity>0.07368421</identity>
+				<rmsd>3.170038</rmsd>
+				<similarity>0.23157895</similarity>
+				<tmScore>0.54405534</tmScore>
+				<zScore>4.74</zScore>
+			</alignment>
+			<axis>
+				<orthogonal>26.058798</orthogonal>
+				<screw>0.64949524</screw>
+				<theta>3.097332</theta>
+				<x>-0.7131011</x>
+				<y>0.68799204</y>
+				<z>-0.13473609</z>
+			</axis>
+			<classification>a.60.10</classification>
+			<description>Enzyme I of the PEP:sugar phosphotransferase system HPr-binding (sub)domain</description>
+			<isSignificant>true</isSignificant>
+			<order>2</order>
+			<protodomain>1ezd.A_40-62,A_68-144</protodomain>
+			<rank>0</rank>
+			<scopId>d1ezda1</scopId>
+			<sunId>18119</sunId>
+        </result>
+    </data>
+    <timestamp>2013-02-23 15:52:00</timestamp>
+</ns2:CensusResults>

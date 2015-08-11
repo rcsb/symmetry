@@ -231,6 +231,17 @@ into BioJava as they mature.</description>
 					<version>2.5</version>
 				</plugin>
 
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-shade-plugin</artifactId>
+					<version>2.3</version>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.4</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
@@ -297,6 +308,7 @@ into BioJava as they mature.</description>
 
 	<modules>
 		<module>symmetry-core</module>
+		<module>symmetry-tools</module>
 	</modules>
 
 </project>

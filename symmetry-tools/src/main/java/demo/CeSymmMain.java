@@ -37,6 +37,8 @@ import org.biojava.nbio.structure.align.StructureAlignment;
 import org.biojava.nbio.structure.align.StructureAlignmentFactory;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
 import org.biojava.nbio.structure.align.gui.DisplayAFP;
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.model.AfpChainWriter;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
@@ -50,8 +52,6 @@ import org.biojava.nbio.structure.align.symm.census3.MapScoreList;
 import org.biojava.nbio.structure.align.symm.census3.run.Census;
 import org.biojava.nbio.structure.align.symm.census3.run.Census.AlgorithmGiver;
 import org.biojava.nbio.structure.align.symm.census3.run.CensusJob;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryJmol;
 import org.biojava.nbio.structure.align.symm.order.OrderDetector;
 import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.util.AtomCache;
@@ -447,7 +447,9 @@ public class CeSymmMain {
 
 				// Display alignment
 				if( displayAlignment ) {
-					SymmetryJmol jmol = SymmetryDisplay.display(alignment, ca1, ca2);
+					RotationAxis axis = result.getAxis().toRotationAxis();
+					StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(alignment, ca1, ca2);
+					jmol.evalString(axis.getJmolScript(ca1));
 				}
 
 				// Output alignments
@@ -1138,7 +1140,7 @@ public class CeSymmMain {
 			boolean significant = false;
 			if( detector != null ) {
 				try {
-					significant = CeSymm.isSignificant(alignment, detector, ca1);
+					significant = CeSymm.isSignificant(alignment, ca1, 0.4);
 				} catch (StructureException e) {
 					e.printStackTrace();
 				}

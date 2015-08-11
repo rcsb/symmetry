@@ -11,11 +11,6 @@
 	<artifactId>symmetry-core</artifactId>
 	<version>1.1.1-SNAPSHOT</version>
 	<name>RCSB Symmetry Core</name>
-	<url>https://github.com/rcsb/symmetry</url>
-	<organization>
-		<name>RCSB</name>
-		<url>http://www.rcsb.org</url>
-	</organization>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

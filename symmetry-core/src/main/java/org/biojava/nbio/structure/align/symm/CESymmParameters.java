@@ -28,7 +28,7 @@ public class CESymmParameters extends CeParameters {
 		NOT_REFINED,
 		SINGLE,
 		MULTIPLE;
-		public static final RefineMethod DEFAULT = SINGLE;
+		public static final RefineMethod DEFAULT = NOT_REFINED;
 	}
 	
 	public static final double DEFAULT_SYMMETRY_THRESHOLD = 0.4;

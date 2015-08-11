@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="ERROR">
+	<Properties>
+		<Property name="filename">cesymm.log</Property>
+	</Properties>
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%r [%t] %-5p %c - %m%n" />
+		</Console>
+		<!-- <File name="File" fileName="${filename}"> <PatternLayout pattern="%r 
+			[%t] %-5p %c - %m%n" /> </File> -->
+	</Appenders>
+	<Loggers>
+		<Root level="error">
+			<AppenderRef ref="Console" />
+			<!-- <AppenderRef ref="File" /> -->
+		</Root>
+	</Loggers>
+</Configuration>

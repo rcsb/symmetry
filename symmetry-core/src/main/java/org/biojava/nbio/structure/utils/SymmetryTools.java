@@ -1,33 +1,16 @@
 package org.biojava.nbio.structure.utils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import javax.vecmath.AxisAngle4d;
 import javax.vecmath.Matrix4d;
 
-import org.biojava.nbio.structure.StructureImpl;
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.Chain;
-import org.biojava.nbio.structure.ChainImpl;
-import org.biojava.nbio.structure.Group;
-import org.biojava.nbio.structure.Structure;
-import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.ce.CECalculator;
 import org.biojava.nbio.structure.align.helper.AlignTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.multiple.Block;
-import org.biojava.nbio.structure.align.multiple.BlockImpl;
-import org.biojava.nbio.structure.align.multiple.BlockSet;
-import org.biojava.nbio.structure.align.multiple.BlockSetImpl;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsemble;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentEnsembleImpl;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignmentImpl;
-import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.jama.Matrix;
 
 /**
@@ -419,195 +402,6 @@ public class SymmetryTools {
 		return graph;
 	}
 
-	/**
-	 * Method that converts the symmetric units of a structure into different
-	 * chains, so that internal symmetry can be translated into quaternary.
-	 * <p>
-	 * Application: obtain the internal symmetry axis with the quaternary 
-	 * symmetry code in biojava or calculate independent subunit properties.
-	 * 
-	 * @param symmetry MultipleAlignment of the subunits only
-	 * 
-	 * @return Structure with different chains for every symmetric unit
-	 */
-	public static Structure toQuaternary(MultipleAlignment symmetry) {
-
-		if (!symmetry.getEnsemble().getAlgorithmName().contains("symm")){
-			throw new IllegalArgumentException(
-					"The input alignment is not a symmetry alignment.");
-		}
-
-		Atom[] atoms = symmetry.getAtomArrays().get(0);
-		Structure cloned = atoms[0].getGroup().getChain().getParent().clone();
-		atoms = StructureTools.getRepresentativeAtomArray(cloned);
-
-		Structure symm = new StructureImpl();
-		symm.setChains(new ArrayList<Chain>());
-		char chainID = 'A';
-
-		//Create new structure containing the subunit atoms
-		for (int i=0; i<symmetry.size(); i++){
-			Chain newCh = new ChainImpl();
-			newCh.setChainID(chainID + "");
-			chainID++;
-
-			symm.addChain(newCh);
-			Block align = symmetry.getBlock(0);
-
-			//Determine start and end of the subunit
-			int count = 0;
-			Integer start = null;
-			while (start == null && count<align.length()){
-				start = align.getAlignRes().get(i).get(0+count);
-				count++;
-			}
-			count = 1;
-			Integer end = null;
-			while (end == null && count<align.length()){
-				end = align.getAlignRes().get(i).get(align.length()-count);
-				count++;
-			}
-			end++;
-
-			Atom[] subunit = Arrays.copyOfRange(atoms, start,end);
-
-			for (int k=0; k<subunit.length; k++)
-				newCh.addGroup((Group) subunit[k].getGroup().clone());
-		}
-		return symm;
-	}
-
-	/**
-	 * Method that converts a subunit symmetric alignment into an alignment
-	 * of whole structures.<p>
-	 * Example: if the structure has subunits A,B and C, the original alignment
-	 * is A-B-C, and the returned alignment is ABC-BCA-CAB.
-	 * 
-	 * @param symmetry MultipleAlignment of the subunits only
-	 * @return MultipleAlignment of the full structure superpositions
-	 */
-	public static MultipleAlignment toFullAlignment(MultipleAlignment symm) {
-
-		if (!symm.getEnsemble().getAlgorithmName().contains("symm")){
-			throw new IllegalArgumentException(
-					"The input alignment is not a symmetry alignment.");
-		}
-
-		MultipleAlignment full = symm.clone();
-
-		for (int str=1; str<full.size(); str++){
-			//Create a new Block with swapped AlignRes (move first to last)
-			Block b = full.getBlock(full.getBlocks().size()-1).clone();
-			b.getAlignRes().add(b.getAlignRes().get(0));
-			b.getAlignRes().remove(0);
-			full.getBlockSet(0).getBlocks().add(b);
-		}
-		return full;
-	}
-
-	/**
-	 * Method that converts a symmetry alignment into an alignment
-	 * of the subunits only, as new independent structures.
-	 * <p>
-	 * This method changes the structure identifiers, the Atom arrays
-	 * and re-scles the aligned residues in the Blocks corresponding
-	 * to those changes.
-	 * <p>
-	 * Application: display superimposed subunits in Jmol.
-	 * 
-	 * @param symmetry MultipleAlignment of the symmetry
-	 * @return MultipleAlignment of the subunits
-	 */
-	public static MultipleAlignment toSubunitAlignment(MultipleAlignment symm){
-
-		if (!symm.getEnsemble().getAlgorithmName().contains("symm")){
-			throw new IllegalArgumentException(
-					"The input alignment is not a symmetry alignment.");
-		}
-
-		//Modify atom arrays to include the subunit atoms only
-		List<Atom[]> atomArrays = new ArrayList<Atom[]>();
-		Structure divided = SymmetryTools.toQuaternary(symm);
-		for (int i=0; i<symm.size(); i++){
-			Structure newStr = new StructureImpl();
-			Chain newCh = divided.getChain(i);
-			newStr.addChain(newCh);
-			Atom[] subunit = StructureTools.getRepresentativeAtomArray(newCh);
-			atomArrays.add(subunit);
-		}
-
-		MultipleAlignmentEnsemble newEnsemble = symm.getEnsemble().clone();
-		newEnsemble.setAtomArrays(atomArrays);
-
-		MultipleAlignment subunits = newEnsemble.getMultipleAlignment(0);
-		Block block = subunits.getBlock(0);
-
-		for (int su=0; su<block.size(); su++){
-
-			//Determine start of the subunit
-			int count = 0;
-			Integer start = null;
-			while (start == null && count<block.length()){
-				start = block.getAlignRes().get(su).get(0+count);
-				count++;
-			}
-			
-			//Normalize aligned residues
-			for (int res=0; res<block.length(); res++) {
-				Integer residue = block.getAlignRes().get(su).get(res);
-				if (residue!=null) residue -= start;
-				block.getAlignRes().get(su).set(res, residue);
-			}
-		}
-
-		return subunits;
-	}
-	
-	/**
-	 * Converts a refined symmetry AFPChain alignment into the standard
-	 * representation of symmetry in a MultipleAlignment, that contains
-	 * the entire Atom array of the strcuture and the symmetric subunits 
-	 * are orgaized in different rows in a single Block.
-	 * 
-	 * @param symm AFPChain created with a symmetry algorithm and refined
-	 * @param atoms Atom array of the entire structure
-	 * @return MultipleAlignment format of the symmetry
-	 */
-	public static MultipleAlignment fromAFP(AFPChain symm, Atom[] atoms){
-		
-		if (!symm.getAlgorithmName().contains("symm")){
-			throw new IllegalArgumentException(
-					"The input alignment is not a symmetry alignment.");
-		}
-		
-		MultipleAlignmentEnsemble e = 
-				new MultipleAlignmentEnsembleImpl(symm, atoms, atoms, false);
-		e.setAtomArrays(new ArrayList<Atom[]>());
-		String name = e.getStructureNames().get(0);
-		e.setStructureNames(new ArrayList<String>());
-		
-		MultipleAlignment result = new MultipleAlignmentImpl();
-		BlockSet bs = new BlockSetImpl(result);
-		Block b = new BlockImpl(bs);
-		b.setAlignRes(new ArrayList<List<Integer>>());
-		
-		int order = symm.getBlockNum();
-		for (int su=0; su<order; su++){
-			List<Integer> residues = e.getMultipleAlignment(0).
-					getBlock(su).getAlignRes().get(0);
-			b.getAlignRes().add(residues);
-			e.getStructureNames().add(name);
-			e.getAtomArrays().add(atoms);
-		}
-		e.getMultipleAlignments().set(0, result);
-		result.setEnsemble(e);
-		
-		double tmScore = symm.getTMScore();
-		result.putScore(MultipleAlignmentScorer.AVGTM_SCORE, tmScore);
-		
-		return result;
-	}
-	
 	/**
 	 * Determines if two symmetry axis are equivalent inside the error
 	 * threshold. It only takes into account the direction of the vector

@@ -17,9 +17,6 @@ public class CESymmParameters extends CeParameters {
 	private SymmetryType symmetryType;
 	private OrderDetectorMethod orderDetectorMethod;
 	private RefineMethod refineMethod;
-	private boolean optimization;
-	private int seed; //random seed
-	private boolean multipleAxes;
 	private double symmetryThreshold;
 
 	public static enum OrderDetectorMethod {
@@ -67,17 +64,15 @@ public class CESymmParameters extends CeParameters {
 		return "CESymmParameters [maxSymmOrder=" + maxSymmOrder
 				+ ", symmetryType=" + symmetryType + ", orderDetectorMethod="
 				+ orderDetectorMethod + ", refineMethod=" + refineMethod
-				+ ", optimization=" + optimization + ", seed=" + seed
-				+ ", multipleAxes=" + multipleAxes + ", symmetryThreshold="
-				+ symmetryThreshold + ", winSize=" + winSize + ", rmsdThr="
-				+ rmsdThr + ", rmsdThrJoin=" + rmsdThrJoin + ", maxOptRMSD="
-				+ maxOptRMSD + ", scoringStrategy=" + scoringStrategy
-				+ ", maxGapSize=" + maxGapSize + ", showAFPRanges="
-				+ showAFPRanges + ", sideChainScoringType="
-				+ sideChainScoringType + ", gapOpen=" + gapOpen
-				+ ", gapExtension=" + gapExtension + ", distanceIncrement="
-				+ distanceIncrement + ", oRmsdThr=" + oRmsdThr
-				+ ", maxNrIterationsForOptimization="
+				+ ", symmetryThreshold=" + symmetryThreshold + ", winSize="
+				+ winSize + ", rmsdThr=" + rmsdThr + ", rmsdThrJoin="
+				+ rmsdThrJoin + ", maxOptRMSD=" + maxOptRMSD
+				+ ", scoringStrategy=" + scoringStrategy + ", maxGapSize="
+				+ maxGapSize + ", showAFPRanges=" + showAFPRanges
+				+ ", sideChainScoringType=" + sideChainScoringType
+				+ ", gapOpen=" + gapOpen + ", gapExtension=" + gapExtension
+				+ ", distanceIncrement=" + distanceIncrement + ", oRmsdThr="
+				+ oRmsdThr + ", maxNrIterationsForOptimization="
 				+ maxNrIterationsForOptimization + ", substitutionMatrix="
 				+ substitutionMatrix + ", seqWeight=" + seqWeight + "]";
 	}
@@ -89,9 +84,6 @@ public class CESymmParameters extends CeParameters {
 		symmetryType = SymmetryType.DEFAULT;
 		orderDetectorMethod = OrderDetectorMethod.DEFAULT;
 		refineMethod = RefineMethod.DEFAULT;
-		optimization = true;
-		seed = 0;
-		multipleAxes = true;
 		symmetryThreshold = DEFAULT_SYMMETRY_THRESHOLD;
 	}
 
@@ -144,14 +136,6 @@ public class CESymmParameters extends CeParameters {
 		}
 		params.add(refineTypes.toString());
 
-		//optimization help explanation
-		params.add("Optimize the refined alignment if true.");
-		//seed help explanation
-		params.add("Random seed for the Monte Carlo optimization, "
-				+ "for reproducibility of results.");
-		//multiple axes explanation
-		params.add("Perform multiple CeSymm iterations to find all "
-				+ "symmetry axes if true.");
 		//threshold
 		params.add("Symmetry threshold: TM-score values below the "
 				+ "threshold will be considered asymmetric.");
@@ -166,9 +150,6 @@ public class CESymmParameters extends CeParameters {
 		params.add("SymmetryType");
 		params.add("OrderDetectorMethod");
 		params.add("RefineMethod");
-		params.add("Optimization");
-		params.add("Seed");
-		params.add("MultipleAxes");
 		params.add("SymmetryThreshold");
 		return params;
 	}
@@ -180,9 +161,6 @@ public class CESymmParameters extends CeParameters {
 		params.add("Type of Symmetry");
 		params.add("Order Detection Method");
 		params.add("Refinement Method");
-		params.add("Optimization");
-		params.add("Random Seed");
-		params.add("Multiple Axes");
 		params.add("Symmetry Threshold");
 		return params;
 	}
@@ -194,9 +172,6 @@ public class CESymmParameters extends CeParameters {
 		params.add(SymmetryType.class);
 		params.add(OrderDetectorMethod.class);
 		params.add(RefineMethod.class);
-		params.add(Boolean.class);
-		params.add(Integer.class);
-		params.add(Boolean.class);
 		params.add(Double.class);
 		return params;
 	}
@@ -241,30 +216,6 @@ public class CESymmParameters extends CeParameters {
 
 	public void setSymmetryType(SymmetryType type) {
 		this.symmetryType = type;
-	}
-
-	public boolean getOptimization() {
-		return optimization;
-	}
-
-	public void setOptimization(Boolean optimization) {
-		this.optimization = optimization;
-	}
-
-	public int getSeed() {
-		return seed;
-	}
-
-	public void setSeed(Integer seed) {
-		this.seed = seed;
-	}
-
-	public boolean isMultipleAxes() {
-		return multipleAxes;
-	}
-
-	public void setMultipleAxes(Boolean multipleAxes) {
-		this.multipleAxes = multipleAxes;
 	}
 
 	public double getSymmetryThreshold() {

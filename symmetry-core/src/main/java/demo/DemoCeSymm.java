@@ -1,18 +1,16 @@
 package demo;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
+import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
+import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
-import org.biojava.nbio.structure.align.symm.ChainSorter;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.align.util.AtomCache;
 
 /**
@@ -44,21 +42,16 @@ public class DemoCeSymm {
 		 * leucine repeats: 2bnh.A
 		 * helical: 1d0b.A
 		 * 
-		 * MULTIPLE AXES
-		 * dihedral: 4hhb, 1vym
-		 * hierarchical: 4gcr, 1ppr.O, 1hiv
-		 * 
 		 * - For more examples see the symmetry benchmark
 		 */
 
 		//Set the name of the protein structure to analyze
 		String name = "1ppr.O";
-		List<Atom[]> atoms = new ArrayList<Atom[]>();
 
 		//Download the atoms and sort them sequentially by chains
 		AtomCache cache = new AtomCache();
-		Atom[] ca = ChainSorter.cyclicSorter(cache.getStructure(name));
-		atoms.add(ca);
+		Structure s = cache.getStructure(name);
+		Atom[] atoms = StructureTools.getRepresentativeAtomArray(s);
 
 		CeSymm ceSymm = new CeSymm();
 
@@ -66,12 +59,11 @@ public class DemoCeSymm {
 		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
 		params.setSymmetryType(SymmetryType.AUTO);
-		params.setOptimization(true);
 
 		//Run the alignment
-		MultipleAlignment symmetry = ceSymm.align(atoms);
+		AFPChain symmetry = ceSymm.align(atoms, atoms);
 
 		//Display the results in jmol
-		SymmetryDisplay.display(symmetry, ceSymm.getSymmetryAxes());
+		StructureAlignmentDisplay.display(symmetry, atoms, atoms);
 	}
 }

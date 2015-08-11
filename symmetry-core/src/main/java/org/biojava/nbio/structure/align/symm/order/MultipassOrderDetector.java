@@ -32,7 +32,6 @@ public class MultipassOrderDetector implements OrderDetector {
 		params.setMaxSymmOrder(maxOrder);
 		params.setRefineMethod(RefineMethod.MULTIPLE);
 		params.setSymmetryType(SymmetryType.CLOSE);
-		params.setOptimization(false);
 		Atom[] ca2 = StructureTools.cloneAtomArray(ca);
 		try {
 			AFPChain best = ce.align(ca, ca2);

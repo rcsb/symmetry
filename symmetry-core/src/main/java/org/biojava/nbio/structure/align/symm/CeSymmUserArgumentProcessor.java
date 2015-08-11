@@ -16,9 +16,6 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		private SymmetryType symmetryType;
 		protected OrderDetectorMethod orderDetectorMethod;
 		protected RefineMethod refineMethod;
-		private boolean optimization;
-		private int seed;
-		private boolean multipleAxes;
 		private double symmetryThreshold;
 
 		public CeSymmStartupParams() {
@@ -27,9 +24,6 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 			symmetryType = SymmetryType.DEFAULT;
 			orderDetectorMethod = OrderDetectorMethod.DEFAULT;
 			refineMethod = RefineMethod.DEFAULT;
-			optimization = true;
-			seed = 0;
-			multipleAxes = true;
 			symmetryThreshold = CESymmParameters.DEFAULT_SYMMETRY_THRESHOLD;
 		}
 
@@ -43,22 +37,6 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 
 		public void setSymmetryType(SymmetryType symmetryType) {
 			this.symmetryType = symmetryType;
-		}
-
-		public boolean getOptimization() {
-			return optimization;
-		}
-
-		public void setOptimization(boolean optimization) {
-			this.optimization = optimization;
-		}
-
-		public int getSeed() {
-			return seed;
-		}
-
-		public void setSeed(int seed) {
-			this.seed = seed;
 		}
 
 		public void setOrderDetectorMethod(OrderDetectorMethod method) {
@@ -81,14 +59,6 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 			this.maxSymmOrder = maxSymmOrder;
 		}
 
-		public boolean isMultipleAxes() {
-			return multipleAxes;
-		}
-
-		public void setMultipleAxes(boolean multipleAxes) {
-			this.multipleAxes = multipleAxes;
-		}
-
 		public double getSymmetryThreshold() {
 			return symmetryThreshold;
 		}
@@ -102,9 +72,8 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 			return "CeSymmStartupParams [maxSymmOrder=" + maxSymmOrder
 					+ ", symmetryType=" + symmetryType
 					+ ", orderDetectorMethod=" + orderDetectorMethod
-					+ ", refineMethod=" + refineMethod + ", optimization="
-					+ optimization + ", seed=" + seed + ", multipleAxes="
-					+ multipleAxes + ", symmetryThreshold=" + symmetryThreshold
+					+ ", refineMethod=" + refineMethod
+					+ ", symmetryThreshold=" + symmetryThreshold
 					+ ", maxGapSize=" + maxGapSize + ", winSize=" + winSize
 					+ ", scoringStrategy=" + scoringStrategy + ", maxOptRMSD="
 					+ maxOptRMSD + ", gapOpen=" + gapOpen + ", gapExtension="
@@ -148,9 +117,6 @@ public class CeSymmUserArgumentProcessor extends CeUserArgumentProcessor{
 		aligParams.setOrderDetectorMethod(startParams.getOrderDetectorMethod());
 		aligParams.setRefineMethod(startParams.getRefineMethod());
 		aligParams.setSymmetryType(startParams.getSymmetryType());
-		aligParams.setOptimization(startParams.getOptimization());
-		aligParams.setSeed(startParams.getSeed());
-		aligParams.setMultipleAxes(startParams.isMultipleAxes());
 		aligParams.setSymmetryThreshold(startParams.getSymmetryThreshold());
 		
 		return aligParams;

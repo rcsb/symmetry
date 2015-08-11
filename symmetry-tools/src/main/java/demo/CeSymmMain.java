@@ -43,6 +43,7 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.model.AfpChainWriter;
 import org.biojava.nbio.structure.align.symm.CESymmParameters;
 import org.biojava.nbio.structure.align.symm.CESymmParameters.OrderDetectorMethod;
+import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.align.symm.CeSymm;
 import org.biojava.nbio.structure.align.symm.census3.AdditionalScoreList;
 import org.biojava.nbio.structure.align.symm.census3.CensusResult;
@@ -379,9 +380,9 @@ public class CeSymmMain {
 					}
 				}
 				if(cli.hasOption("refineresult")) {
-					params.setRefineResult(true);
+					params.setRefineMethod(RefineMethod.SINGLE);
 				} else if(cli.hasOption("norefineresult")) {
-					params.setRefineResult(false);
+					params.setRefineMethod(RefineMethod.NOT_REFINED);
 				}
 
 				return ceSymm;

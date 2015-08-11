@@ -46,12 +46,13 @@ public class DemoCeSymm {
 		 */
 
 		//Set the name of the protein structure to analyze
-		String name = "1ppr.O";
+		String name = "1hiv.A";
 
 		//Download the atoms and sort them sequentially by chains
 		AtomCache cache = new AtomCache();
 		Structure s = cache.getStructure(name);
-		Atom[] atoms = StructureTools.getRepresentativeAtomArray(s);
+		Atom[] ca1 = StructureTools.getRepresentativeAtomArray(s);
+		Atom[] ca2 = StructureTools.getRepresentativeAtomArray(s.clone());
 
 		CeSymm ceSymm = new CeSymm();
 
@@ -61,9 +62,9 @@ public class DemoCeSymm {
 		params.setSymmetryType(SymmetryType.AUTO);
 
 		//Run the alignment
-		AFPChain symmetry = ceSymm.align(atoms, atoms);
+		AFPChain symmetry = ceSymm.align(ca1, ca2);
 
 		//Display the results in jmol
-		StructureAlignmentDisplay.display(symmetry, atoms, atoms);
+		StructureAlignmentDisplay.display(symmetry, ca1, ca2);
 	}
 }

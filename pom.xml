@@ -106,7 +106,7 @@ into BioJava as they mature.</description>
 				<artifactId>vecmath</artifactId>
 				<version>1.3.1</version>
 			</dependency>
-	
+
 			<dependency>
 				<groupId>org.biojava</groupId>
 				<artifactId>biojava-structure</artifactId>
@@ -122,7 +122,7 @@ into BioJava as they mature.</description>
 				<artifactId>biojava-ws</artifactId>
 				<version>${biojava.version}</version>
 			</dependency>
-	
+
 			<dependency>
 				<groupId>mysql</groupId>
 				<artifactId>mysql-connector-java</artifactId>
@@ -139,13 +139,25 @@ into BioJava as they mature.</description>
 				<version>4.11</version>
 				<scope>test</scope>
 			</dependency>
-	
+
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-all</artifactId>
 				<version>1.9.5</version>
 			</dependency>
-	
+
+			<dependency>
+				<groupId>commons-cli</groupId>
+				<artifactId>commons-cli</artifactId>
+				<version>1.2</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-math3</artifactId>
+				<version>3.2</version>
+			</dependency>
+
 			<!-- SLF4J API, for compiling -->
 			<dependency>
 				<groupId>org.slf4j</groupId>
@@ -309,6 +321,7 @@ into BioJava as they mature.</description>
 	<modules>
 		<module>symmetry-core</module>
 		<module>symmetry-tools</module>
+		<module>symmetry-benchmark</module>
 	</modules>
 
 </project>

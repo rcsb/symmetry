@@ -44,6 +44,7 @@ import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.OrderDetectorMethod;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -159,8 +160,6 @@ public class CeSymmMain {
 		// SCOP version
 		if( cli.hasOption("scopversion")) {
 			String scopVersion = cli.getOptionValue("scopversion");
-
-			//TODO add validation to version 
 			ScopFactory.setScopDatabase(scopVersion);
 		}
 
@@ -288,7 +287,6 @@ public class CeSymmMain {
 				System.err.println("Invalid gapextension: "+strVal);
 				System.exit(1);
 			}
-
 		}
 		if(cli.hasOption("ordermethod")) {
 			String strVal = cli.getOptionValue("ordermethod");
@@ -316,7 +314,109 @@ public class CeSymmMain {
 				System.exit(1);
 			}
 		}
-		//TODO add new parameter options
+		if(cli.hasOption("symmtype")) {
+			String strVal = cli.getOptionValue("symmtype");
+			SymmetryType val;
+			try {
+				val = SymmetryType.valueOf(strVal.toUpperCase());
+				params.setSymmetryType(val);
+			} catch (IllegalArgumentException e) {
+				//give up
+				System.err.println("Illegal symmtype. Requires on of "+
+						CliTools.getEnumValuesAsString(RefineMethod.class));
+				System.exit(1);
+			}
+		}
+		if(cli.hasOption("maxorder")) {
+			String strVal = cli.getOptionValue("maxorder");
+			try {
+				int val = Integer.parseInt(strVal);
+				if(val < 0) {
+					System.err.println("Invalid maxorder: "+strVal);
+					System.exit(1);
+				}
+				params.setMaxSymmOrder(val);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid maxorder: "+strVal);
+				System.exit(1);
+			}
+		}
+		if(cli.hasOption("rndseed")) {
+			String strVal = cli.getOptionValue("rndseed");
+			try {
+				int val = Integer.parseInt(strVal);
+				if(val < 0) {
+					System.err.println("Invalid rndseed: "+strVal);
+					System.exit(1);
+				}
+				params.setSeed(val);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid rndseed: "+strVal);
+				System.exit(1);
+			}
+		}
+		if(cli.hasOption("opt")) {
+			String strVal = cli.getOptionValue("opt");
+			try {
+				boolean val = Boolean.parseBoolean(strVal);
+				params.setOptimization(val);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid opt: "+strVal);
+				System.exit(1);
+			}
+		}
+		if(cli.hasOption("multaxes")) {
+			String strVal = cli.getOptionValue("multaxes");
+			try {
+				boolean val = Boolean.parseBoolean(strVal);
+				params.setMultipleAxes(val);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid multaxes: "+strVal);
+				System.exit(1);
+			}
+		}
+		if(cli.hasOption("threshold")) {
+			String strVal = cli.getOptionValue("threshold");
+			try {
+				double val = Double.parseDouble(strVal);
+				if(val < 0) {
+					System.err.println("Invalid threshold: "+strVal);
+					System.exit(1);
+				}
+				params.setSymmetryThreshold(val);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid threshold: "+strVal);
+				System.exit(1);
+			}
+		}
+		if(cli.hasOption("dcutoff")) {
+			String strVal = cli.getOptionValue("dcutoff");
+			try {
+				double val = Double.parseDouble(strVal);
+				if(val < 0) {
+					System.err.println("Invalid dcutoff: "+strVal);
+					System.exit(1);
+				}
+				params.setDistanceCutoff(val);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid dcutoff: "+strVal);
+				System.exit(1);
+			}
+		}
+		if(cli.hasOption("minlen")) {
+			String strVal = cli.getOptionValue("minlen");
+			try {
+				int val = Integer.parseInt(strVal);
+				if(val < 0) {
+					System.err.println("Invalid minlen: "+strVal);
+					System.exit(1);
+				}
+				params.setMinSubunitLength(val);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid minlen: "+strVal);
+				System.exit(1);
+			}
+		}
 
 		// Done parsing arguments
 
@@ -373,8 +473,9 @@ public class CeSymmMain {
 			logger.warn("Job failed: "+e.getMessage());
 		}
 		
-		long totalTimeTaken = System.nanoTime() - initialTime;
-		long meanSecondsTaken = (long) (totalTimeTaken / (float) names.size() / 1000000.0f);
+		long totalSecondsTaken = (System.nanoTime() - initialTime) / 1000000;
+		long meanSecondsTaken = (long) (totalSecondsTaken / (float) names.size() / 1000000.0f);
+		logger.info("Total runtime: "+totalSecondsTaken + ", mean runtime: "+meanSecondsTaken);
 
 		for (MultipleAlignment msa : results){
 			
@@ -517,6 +618,7 @@ public class CeSymmMain {
 						+ "[default SequenceFunctionOrderDetector]")
 						.create());
 		optionOrder.put("ordermethod", optionNum++);
+		
 		options.addOptionGroup(grp);
 		options.addOption( OptionBuilder.withLongOpt("refinemethod")
 				.hasArg(true)
@@ -527,6 +629,17 @@ public class CeSymmMain {
 						+ "[default Single]")
 						.create());
 		optionOrder.put("refinemethod", optionNum++);
+		
+		options.addOptionGroup(grp);
+		options.addOption( OptionBuilder.withLongOpt("symmtype")
+				.hasArg(true)
+				.withArgName("class")
+				.withDescription("Symmetry Type. Can be a "
+						+ "full class name or a short class name from the "
+						+ "org.biojava.nbio.structure.align.symmetry.internal package. "
+						+ "[default Auto]")
+						.create());
+		optionOrder.put("symmtype", optionNum++);
 
 		// PDB_DIR
 		options.addOption( OptionBuilder.withLongOpt("pdbfilepath")
@@ -561,6 +674,7 @@ public class CeSymmMain {
 				.create());
 		optionOrder.put("threads", optionNum++);
 
+		//Parameters
 		options.addOption( OptionBuilder.withLongOpt("maxgapsize")
 				.hasArg(true)
 				.withDescription("This parameter configures the maximum gap size "
@@ -606,6 +720,59 @@ public class CeSymmMain {
 				.create()
 				);
 		optionOrder.put("gapextension", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("multaxes")
+				.hasArg(true)
+				.withDescription("Run iteratively the algorithm to find multiple symmetry levels [default: true].\n")
+				.create()
+				);
+		optionOrder.put("multaxes", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("opt")
+				.hasArg(true)
+				.withDescription("Optimize the resulting symmetry alignment [default: true].\n")
+				.create()
+				);
+		optionOrder.put("opt", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("threshold")
+				.hasArg(true)
+				.withDescription("The symmetry threshold. TM-scores above this value"
+						+ "will be considered significant results [default: 0.5, interval [0.0,1.0]].\n")
+				.create()
+				);
+		optionOrder.put("threshold", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("maxorder")
+				.hasArg(true)
+				.withDescription("The maximum number of symmetric subunits [default: 8].\n")
+				.create()
+				);
+		optionOrder.put("maxorder", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("rndseed")
+				.hasArg(true)
+				.withDescription("The random seed used in optimization, for reproducibility"
+						+ "of the results [default: 0].\n")
+				.create()
+				);
+		optionOrder.put("rndseed", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("minlen")
+				.hasArg(true)
+				.withDescription("The minimum length, expressed in number of core "
+						+ "aligned residues, of a symmetric subunit [default: 15].\n")
+				.create()
+				);
+		optionOrder.put("minlen", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("dcutoff")
+				.hasArg(true)
+				.withDescription("The maximum distance, in A, allowed between any two aligned "
+						+ "residue positions [default: 7.0].\n")
+				.create()
+				);
+		optionOrder.put("dcutoff", optionNum++);
 
 		options.addOption( OptionBuilder.withLongOpt("scopversion")
 				.hasArg(true)

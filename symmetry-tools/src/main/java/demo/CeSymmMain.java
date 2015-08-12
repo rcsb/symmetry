@@ -6,17 +6,18 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Map;
-import java.util.MissingFormatArgumentException;
 import java.util.Scanner;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.swing.JOptionPane;
 
@@ -30,37 +31,36 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
-import org.biojava.nbio.structure.align.gui.DisplayAFP;
-import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.model.AfpChainWriter;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.util.UserConfiguration;
-import org.biojava.nbio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.nbio.structure.io.util.FileDownloadUtils;
 import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.OrderDetectorMethod;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
-import org.biojava.nbio.structure.symmetry.internal.OrderDetector;
-import org.biojava.nbio.structure.symmetry.internal.SequenceFunctionOrderDetector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Main executable for running CE-Symm
- * 
  * Run with -h for usage, or without arguments for interactive mode
- * @author spencer
+ * 
+ * @author Spencer Bliven
+ * @author Aleix Lafita
  *
  */
 public class CeSymmMain {
 
+	private static final Logger logger = LoggerFactory.getLogger(CeSymmMain.class);
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException, StructureException {
 		// Begin argument parsing
 		final String usage = "[OPTIONS] [structures...]";
 		final String header = "Determine the order for each structure, which may " +
@@ -149,19 +149,6 @@ public class CeSymmMain {
 			displayAlignment = true;
 		}
 
-		// Use order? [default true]
-		boolean useOrder = cli.hasOption("order") || !cli.hasOption("noorder");
-
-		// Order method
-		String orderMethod = null;
-		if(cli.hasOption("ordermethod") ) {
-			orderMethod = cli.getOptionValue("ordermethod");
-		}
-		OrderDetector detector = createOrderDetector(orderMethod);
-		if(detector == null) {
-			System.exit(1);
-		}
-
 		// AtomCache options
 		String pdbFilePath = null;
 		if( cli.hasOption("pdbfilepath") ) {
@@ -180,36 +167,11 @@ public class CeSymmMain {
 		// Output formats
 		List<CeSymmWriter> writers = new ArrayList<CeSymmWriter>();
 
-		if(cli.hasOption("stats")) {
-			String filename = cli.getOptionValue("stats");
-			try {
-				writers.add(new SimpleWriter(filename,useOrder?detector:null));
-			} catch (IOException e) {
-				System.err.println("Error: Ignoring file "+filename+".");
-				System.err.println(e.getMessage());
-			}
-		}
-		else if(!cli.hasOption("nostats")) {
-			try {
-				//default stdout output
-				writers.add(new SimpleWriter("-",useOrder?detector:null));
-			} catch (IOException e1) {}
-		}
-
 		if(cli.hasOption("xml")) {
 			String filename = cli.getOptionValue("xml");
 			try {
 				writers.add(new XMLWriter(filename));
 				//writers.add(new AltXMLWriter(filename));
-			} catch (IOException e) {
-				System.err.println("Error: Ignoring file "+filename+".");
-				System.err.println(e.getMessage());
-			}
-		}
-		if(cli.hasOption("html")) {
-			String filename = cli.getOptionValue("html");
-			try {
-				writers.add(new HTMLWriter(filename));
 			} catch (IOException e) {
 				System.err.println("Error: Ignoring file "+filename+".");
 				System.err.println(e.getMessage());
@@ -224,157 +186,137 @@ public class CeSymmMain {
 				System.err.println(e.getMessage());
 			}
 		}
-		if(cli.hasOption("ce")) {
-			String filename = cli.getOptionValue("ce");
+		if(cli.hasOption("fasta")) {
+			String filename = cli.getOptionValue("fasta");
 			try {
-				writers.add(new CeWriter(filename));
+				writers.add(new FastaWriter(filename));
 			} catch (IOException e) {
 				System.err.println("Error: Ignoring file "+filename+".");
 				System.err.println(e.getMessage());
 			}
 		}
 
-		if(cli.hasOption("tsv")) {
-			String filename = cli.getOptionValue("tsv");
-			try {
-				writers.add(new TSVWriter(filename));
-			} catch (IOException e) {
-				System.err.println("Error: Ignoring file "+filename+".");
-				System.err.println(e.getMessage());
-			}
-		} else if(cli.hasOption("verbose")) {
-			try {
-				writers.add(new TSVWriter("-"));
-			} catch (IOException e) {} //shouldn't happen
+		Integer threads = 1;
+		if(cli.hasOption("threads")) {
+			threads = new Integer(cli.getOptionValue("threads"));
 		}
 
-		if(cli.hasOption("pdb")) {
-			String filespec = cli.getOptionValue("pdb");
-			writers.add(new PDBWriter(filespec));
-		}
+		CESymmParameters params = new CESymmParameters();
 
-		// Misc Parameters
-		//TODO multithread
-		//		Integer threads = null;
-		//		if(cli.hasOption("threads")) {
-		//			threads = new Integer(cli.getOptionValue("threads"));
-		//		}
-		
-		AlgorithmGiver giver = new AlgorithmGiver() {
-			@Override
-			public StructureAlignment getAlgorithm() {
-				CeSymm ceSymm = new CeSymm();
-				CESymmParameters params = (CESymmParameters)ceSymm.getParameters();
-				
-				if(cli.hasOption("maxgapsize")) {
-					String gapStr = cli.getOptionValue("maxgapsize");
-					try {
-						int gap = Integer.parseInt(gapStr);
-						if(gap < 1) {
-							System.err.println("Invalid maxgapsize: "+gap);
-							System.exit(1); return null;
-						}
-						params.setMaxGapSize(gap);
-					} catch( NumberFormatException e) {
-						System.err.println("Invalid maxgapsize: "+gapStr);
-						System.exit(1); return null;
-					}
+		if(cli.hasOption("maxgapsize")) {
+			String gapStr = cli.getOptionValue("maxgapsize");
+			try {
+				int gap = Integer.parseInt(gapStr);
+				if(gap < 1) {
+					System.err.println("Invalid maxgapsize: "+gap);
+					System.exit(1);
 				}
-				if(cli.hasOption("scoringstrategy")) {
-					String stratStr = cli.getOptionValue("scoringstrategy");
-					ScoringStrategy strat;
-					try {
-						strat = ScoringStrategy.valueOf( stratStr.toUpperCase());
-						params.setScoringStrategy(strat);
-					} catch (IllegalArgumentException e) {
-						//give up
-						System.err.println("Illegal scoringstrategy. Requires on of "+
-								CliTools.getEnumValuesAsString(ScoringStrategy.class));
-						System.exit(1); return null;
-					}
-				}
-				if(cli.hasOption("winsize")) {
-					String winStr = cli.getOptionValue("winsize");
-					try {
-						int win = Integer.parseInt(winStr);
-						if(win < 1) {
-							System.err.println("Invalid winsize: "+winStr);
-							System.exit(1); return null;
-						}
-						params.setWinSize(win);
-					} catch( NumberFormatException e) {
-						System.err.println("Invalid winsize: "+winStr);
-						System.exit(1); return null;
-					}
-
-				}
-				if(cli.hasOption("maxrmsd")) {
-					String strVal = cli.getOptionValue("maxrmsd");
-					try {
-						double val = Double.parseDouble(strVal);
-						if(val < 0) {
-							System.err.println("Invalid maxrmsd: "+strVal);
-							System.exit(1); return null;
-						}
-						params.setMaxOptRMSD(val);
-					} catch( NumberFormatException e) {
-						System.err.println("Invalid maxrmsd: "+strVal);
-						System.exit(1); return null;
-					}
-
-				}
-				if(cli.hasOption("gapopen")) {
-					String strVal = cli.getOptionValue("gapopen");
-					try {
-						double val = Double.parseDouble(strVal);
-						if(val < 0) {
-							System.err.println("Invalid gapopen: "+strVal);
-							System.exit(1); return null;
-						}
-						params.setGapOpen(val);
-					} catch( NumberFormatException e) {
-						System.err.println("Invalid gapopen: "+strVal);
-						System.exit(1); return null;
-					}
-
-				}
-				if(cli.hasOption("gapextension")) {
-					String strVal = cli.getOptionValue("gapextension");
-					try {
-						double val = Double.parseDouble(strVal);
-						if(val < 0) {
-							System.err.println("Invalid gapextension: "+strVal);
-							System.exit(1); return null;
-						}
-						params.setGapExtension(val);
-					} catch( NumberFormatException e) {
-						System.err.println("Invalid gapextension: "+strVal);
-						System.exit(1); return null;
-					}
-
-				}
-				if(cli.hasOption("ordermethod")) {
-					String strVal = cli.getOptionValue("ordermethod");
-					OrderDetectorMethod val;
-					try {
-						val = OrderDetectorMethod.valueOf( strVal.toUpperCase());
-						params.setOrderDetectorMethod(val);
-					} catch (IllegalArgumentException e) {
-						//give up
-						System.err.println("Illegal ordermethod. Requires on of "+
-								CliTools.getEnumValuesAsString(OrderDetectorMethod.class));
-						System.exit(1); return null;
-					}
-				}
-				if(cli.hasOption("refineresult")) {
-					params.setRefineResult(true);
-				} else if(cli.hasOption("norefineresult")) {
-					params.setRefineResult(false);
-				}
-
-				return ceSymm;
+				params.setMaxGapSize(gap);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid maxgapsize: "+gapStr);
+				System.exit(1);
 			}
-		};
+		}
+		if(cli.hasOption("scoringstrategy")) {
+			String stratStr = cli.getOptionValue("scoringstrategy");
+			ScoringStrategy strat;
+			try {
+				strat = ScoringStrategy.valueOf( stratStr.toUpperCase());
+				params.setScoringStrategy(strat);
+			} catch (IllegalArgumentException e) {
+				//give up
+				System.err.println("Illegal scoringstrategy. Requires on of "+
+						CliTools.getEnumValuesAsString(ScoringStrategy.class));
+				System.exit(1);
+			}
+		}
+		if(cli.hasOption("winsize")) {
+			String winStr = cli.getOptionValue("winsize");
+			try {
+				int win = Integer.parseInt(winStr);
+				if(win < 1) {
+					System.err.println("Invalid winsize: "+winStr);
+					System.exit(1);
+				}
+				params.setWinSize(win);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid winsize: "+winStr);
+				System.exit(1);
+			}
+
+		}
+		if(cli.hasOption("maxrmsd")) {
+			String strVal = cli.getOptionValue("maxrmsd");
+			try {
+				double val = Double.parseDouble(strVal);
+				if(val < 0) {
+					System.err.println("Invalid maxrmsd: "+strVal);
+					System.exit(1);
+				}
+				params.setMaxOptRMSD(val);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid maxrmsd: "+strVal);
+				System.exit(1);
+			}
+
+		}
+		if(cli.hasOption("gapopen")) {
+			String strVal = cli.getOptionValue("gapopen");
+			try {
+				double val = Double.parseDouble(strVal);
+				if(val < 0) {
+					System.err.println("Invalid gapopen: "+strVal);
+					System.exit(1);
+				}
+				params.setGapOpen(val);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid gapopen: "+strVal);
+				System.exit(1);
+			}
+
+		}
+		if(cli.hasOption("gapextension")) {
+			String strVal = cli.getOptionValue("gapextension");
+			try {
+				double val = Double.parseDouble(strVal);
+				if(val < 0) {
+					System.err.println("Invalid gapextension: "+strVal);
+					System.exit(1);
+				}
+				params.setGapExtension(val);
+			} catch( NumberFormatException e) {
+				System.err.println("Invalid gapextension: "+strVal);
+				System.exit(1);
+			}
+
+		}
+		if(cli.hasOption("ordermethod")) {
+			String strVal = cli.getOptionValue("ordermethod");
+			OrderDetectorMethod val;
+			try {
+				val = OrderDetectorMethod.valueOf( strVal.toUpperCase());
+				params.setOrderDetectorMethod(val);
+			} catch (IllegalArgumentException e) {
+				//give up
+				System.err.println("Illegal ordermethod. Requires on of "+
+						CliTools.getEnumValuesAsString(OrderDetectorMethod.class));
+				System.exit(1);
+			}
+		}
+		if(cli.hasOption("refinemethod")) {
+			String strVal = cli.getOptionValue("refineresult");
+			RefineMethod val;
+			try {
+				val = RefineMethod.valueOf(strVal.toUpperCase());
+				params.setRefineMethod(val);
+			} catch (IllegalArgumentException e) {
+				//give up
+				System.err.println("Illegal refinemethod. Requires on of "+
+						CliTools.getEnumValuesAsString(RefineMethod.class));
+				System.exit(1);
+			}
+		}
+		//TODO add new parameter options
 
 		// Done parsing arguments
 
@@ -386,8 +328,6 @@ public class CeSymmMain {
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
 
-		CensusResultList results = new CensusResultList();
-
 		//print headers
 		for(CeSymmWriter writer: writers) {
 			try {
@@ -398,65 +338,58 @@ public class CeSymmMain {
 		}
 
 		// Run jobs
-		long totalTimeTaken = 0;
-		for(String name: names) {
-			try {
+		long initialTime = System.nanoTime();
+		List<MultipleAlignment> results = new ArrayList<MultipleAlignment>();
+		
+		try {
+			ExecutorService executor = Executors.newFixedThreadPool(threads);
+			List<Future<MultipleAlignment>> msaFuture = 
+					new ArrayList<Future<MultipleAlignment>>();
 
-				final CensusJob calc = CensusJob.setUpJob(name, 1, giver,
-						Census.getDefaultAfpChainCensusRestrictor(), cache);
-				calc.setRecordAlignmentMapping(true);
-				calc.setStoreAfpChain(true);
-				calc.setOrderDetector(detector);
+			//Run the jobs in parallel Threads
+			for(String name: names) {
 
-				CensusResult result = calc.call();
-				if (result == null) continue; 
-				totalTimeTaken += calc.getTimeTaken();
+				Atom[] atoms = cache.getAtoms(name);
 
-				results.add(result);
-				// Probably an abuse of this property, but I'm not sure how it
-				// was intended. Used by SimpleWriter
-				Map<String, Number> scoreMap = new HashMap<String, Number>();
-				scoreMap.put( "timeMillis",calc.getTimeTaken());
-				AdditionalScoreList moreScores = new MapScoreList( scoreMap );
-				result.getScoreList().setAdditionalScoreList(moreScores);
+				CeSymm ceSymm = new CeSymm();
+				ceSymm.setParameters(params);
 
-				results.setMeanSecondsTaken(totalTimeTaken / (float) names.size() / 1000.0f);
+				Callable<MultipleAlignment> worker = 
+						new CeSymmCallable(atoms, ceSymm);
 
-				// Perform alignment to determine axis
-				Structure struct = StructureTools.getStructure(result.getId(),null,cache);
-				Atom[] ca1 = StructureTools.getRepresentativeAtomArray(struct);
-				Atom[] ca2 = StructureTools.getRepresentativeAtomArray(struct.clone());
-				AFPChain alignment = calc.getAfpChain();
-				//alignment.setName1(name);
-				//alignment.setName2(name);
-
-				// Display alignment
-				if( displayAlignment ) {
-					SymmetryDisplay.display(alignment);
-					jmol.evalString(axis.getJmolScript(ca1));
-				}
-
-				// Output alignments
-				for(CeSymmWriter writer: writers) {
-					try {
-						writer.writeAlignment(alignment, result, ca1, ca2);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (StructureException e) {
-				e.printStackTrace();
+				Future<MultipleAlignment> submit = executor.submit(worker);
+				msaFuture.add(submit);
 			}
-		}
+			
+			for (Future<MultipleAlignment> msa : msaFuture){
+				results.add(msa.get());
+			}
+			
+			executor.shutdown();
 
-		// Output footers
-		for(CeSymmWriter writer: writers) {
-			try {
-				writer.writeFooter(results);
-			} catch (IOException e) {
-				e.printStackTrace();
+		} catch (InterruptedException e) {
+			logger.warn("Job failed: "+e.getMessage());
+		} catch (ExecutionException e) {
+			logger.warn("Job failed: "+e.getMessage());
+		}
+		
+		long totalTimeTaken = System.nanoTime() - initialTime;
+		long meanSecondsTaken = (long) (totalTimeTaken / (float) names.size() / 1000000.0f);
+
+		for (MultipleAlignment msa : results){
+			
+			// Display alignment
+			if( displayAlignment ) {
+				SymmetryDisplay.display(msa);
+			}
+	
+			// Output alignments
+			for(CeSymmWriter writer: writers) {
+				try {
+					writer.writeAlignment(msa);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		// close last, in case any writers share output streams
@@ -540,61 +473,18 @@ public class CeSymmMain {
 				.withDescription("Output alignment as XML (use --xml=- for standard out).")
 				.create("o"));
 		optionOrder.put("xml", optionNum++);
-		options.addOption( OptionBuilder.withLongOpt("html")
+		options.addOption( OptionBuilder.withLongOpt("fasta")
 				.hasArg(true)
 				.withArgName("file")
-				.withDescription("Output alignment as HTML output")
+				.withDescription("Output alignment as FASTA alignment output")
 				.create());
-		optionOrder.put("html", optionNum++);
-		options.addOption( OptionBuilder.withLongOpt("ce")
-				.hasArg(true)
-				.withArgName("file")
-				.withDescription("Output alignment as CE output")
-				.create());
-		optionOrder.put("ce", optionNum++);
+		optionOrder.put("fasta", optionNum++);
 		options.addOption( OptionBuilder.withLongOpt("fatcat")
 				.hasArg(true)
 				.withArgName("file")
 				.withDescription("Output alignment as FATCAT output")
 				.create());
 		optionOrder.put("fatcat", optionNum++);
-		options.addOption( OptionBuilder.withLongOpt("pdb")
-				.hasArg(true)
-				.withArgName("dir")
-				.withDescription("Output each alignment as a two-model PDB file. "
-						+ "The argument may be a directory or a formatting string, "
-						+ "where \"%s\" will be replaced with the structure name. "
-						+ "[default \"%s.cesymm.pdb\"]")
-						.create());
-		optionOrder.put("pdb", optionNum++);
-		options.addOption( OptionBuilder.withLongOpt("tsv")
-				.hasArg(true)
-				.withArgName("file")
-				.withDescription("Output alignment as tab-separated file")
-				.create());
-		optionOrder.put("tsv", optionNum++);
-		options.addOption( OptionBuilder.withLongOpt("stats")
-				.hasArg(true)
-				.withArgName("file")
-				.withDescription("Output tab-separated file giving alignment "
-						+ "statistics, one line per structure [defaults to stdout,"
-						+ " unless -q is given]")
-				.create());
-		optionOrder.put("stats", optionNum++);
-
-
-
-		options.addOption(OptionBuilder.withLongOpt("nostats")
-				.hasArg(false)
-				.withDescription("Do not output default statistics to standard "
-						+ "out  (equivalent to \"--stats=/dev/null\")")
-				.create('q'));
-		optionOrder.put("nostats", optionNum++);
-		options.addOption(OptionBuilder.withLongOpt("verbose")
-				.hasArg(false)
-				.withDescription("Print detailed output (equivalent to \"--tsv=-\")")
-				.create('v'));
-		optionOrder.put("verbose", optionNum++);
 
 		// jmol
 		grp = new OptionGroup();
@@ -617,33 +507,26 @@ public class CeSymmMain {
 		grp.addOption(opt);
 		options.addOptionGroup(grp);
 
-		// order
-		grp = new OptionGroup();
-		opt = OptionBuilder
-				.withLongOpt("order")
-				.hasArg(false)
-				.withDescription("Use TM-Score with order for deciding significance. [default]")
-				.create('t');
-		optionOrder.put(opt.getLongOpt(), optionNum++);
-		grp.addOption(opt);
-		//grp.setSelected(opt);
-		opt = OptionBuilder
-				.withLongOpt("noorder")
-				.hasArg(false)
-				.withDescription("Use TM-Score alone for deciding significance.")
-				.create('T');
-		optionOrder.put(opt.getLongOpt(), optionNum++);
-		grp.addOption(opt);
 		options.addOptionGroup(grp);
 		options.addOption( OptionBuilder.withLongOpt("ordermethod")
 				.hasArg(true)
 				.withArgName("class")
 				.withDescription("Order detection method. Can be a "
 						+ "full class name or a short class name from the "
-						+ "org.biojava3.structure.align.symm.order package. "
+						+ "org.biojava.nbio.structure.align.symmetry.internal package. "
 						+ "[default SequenceFunctionOrderDetector]")
 						.create());
 		optionOrder.put("ordermethod", optionNum++);
+		options.addOptionGroup(grp);
+		options.addOption( OptionBuilder.withLongOpt("refinemethod")
+				.hasArg(true)
+				.withArgName("class")
+				.withDescription("Refiner method. Can be a "
+						+ "full class name or a short class name from the "
+						+ "org.biojava.nbio.structure.align.symmetry.internal package. "
+						+ "[default Single]")
+						.create());
+		optionOrder.put("refinemethod", optionNum++);
 
 		// PDB_DIR
 		options.addOption( OptionBuilder.withLongOpt("pdbfilepath")
@@ -659,7 +542,7 @@ public class CeSymmMain {
 				.withLongOpt("pdbdirsplit")
 				.hasArg(false)
 				.withDescription("Ignored. For backwards compatibility only. [default]")
-						.create();
+				.create();
 		optionOrder.put(opt.getLongOpt(), optionNum++);
 		grp.addOption(opt);
 		//grp.setSelected(opt);
@@ -672,21 +555,19 @@ public class CeSymmMain {
 		grp.addOption(opt);
 		options.addOptionGroup(grp);
 
-		// misc parameters
-		//TODO multithread
-		//		options.addOption( OptionBuilder.withLongOpt("threads")
-		//				.hasArg(true)
-		//				.withDescription("Number of threads [default cores-1]")
-		//				.create());
-		//		optionOrder.put("threads", optionNum++);
-		
+		options.addOption( OptionBuilder.withLongOpt("threads")
+				.hasArg(true)
+				.withDescription("Number of threads [default cores-1]")
+				.create());
+		optionOrder.put("threads", optionNum++);
+
 		options.addOption( OptionBuilder.withLongOpt("maxgapsize")
 				.hasArg(true)
 				.withDescription("This parameter configures the maximum gap size "
 						+ "G, that is applied during the AFP extension. The "
 						+ "larger the value, the longer the calculation time "
 						+ "can become, Default value is 30. Set to 0 for no limit.")
-				.create()
+						.create()
 				);
 		optionOrder.put("maxgapsize", optionNum++);
 
@@ -696,19 +577,19 @@ public class CeSymmMain {
 				.create()
 				);
 		optionOrder.put("scoringstrategy", optionNum++);
-		
+
 		options.addOption( OptionBuilder.withLongOpt("winsize")
 				.hasArg(true)
 				.withDescription("This configures the fragment size m of Aligned Fragment Pairs (AFPs).")
 				.create()
 				);
 		optionOrder.put("winsize", optionNum++);
-		
+
 		options.addOption( OptionBuilder.withLongOpt("maxrmsd")
 				.hasArg(true)
 				.withDescription("The maximum RMSD at which to stop alignment "
 						+ "optimization. (default: unlimited=99)")
-				.create()
+						.create()
 				);
 		optionOrder.put("maxrmsd", optionNum++);
 
@@ -725,27 +606,6 @@ public class CeSymmMain {
 				.create()
 				);
 		optionOrder.put("gapextension", optionNum++);
-
-
-		options.addOption( OptionBuilder.withLongOpt("ordermethod")
-				.hasArg(true)
-				.withDescription("Order detection method (experimental): ")
-				.create()
-				);
-		optionOrder.put("ordermethod", optionNum++);
-
-		options.addOption( OptionBuilder.withLongOpt("refineresult")
-				.hasArg(false)
-				.withDescription("Refine the result to a multiple alignment (experimental)")
-				.create()
-				);
-		optionOrder.put("refineresult", optionNum++);
-		options.addOption( OptionBuilder.withLongOpt("norefineresult")
-				.hasArg(false)
-				.withDescription("Don't refine the result. Leave as a pairwise alignment. [default]")
-				.create()
-				);
-		optionOrder.put("norefineresult", optionNum++);
 
 		options.addOption( OptionBuilder.withLongOpt("scopversion")
 				.hasArg(true)
@@ -780,86 +640,12 @@ public class CeSymmMain {
 		return structures;
 	}
 
-
-	/**
-	 * Creates an OrderDetector from a class name.
-	 * 
-	 * <p>
-	 * Accepts the following inputs:<ol>
-	 *  <li>null or "" returns a SequenceFunctionOrderDetector
-	 *  <li>The full class path to a class implementing OrderDetector and containing a default constructor
-	 *  <li>The class name for any class in the org.biojava3.structure.align.symm.order package.
-	 * </ol>
-	 * 
-	 * @param method Name of the OrderDetector method
-	 * @return An OrderDetector instance, or null for invalid input
-	 */
-	private static OrderDetector createOrderDetector(String method) {	
-
-		if(method == null || method.isEmpty()) {
-			return new SequenceFunctionOrderDetector();
-		}
-
-		ClassLoader cl = CeSymmMain.class.getClassLoader();
-		Class<?> klass = null;
-		// try full class name
-		try {
-			klass = cl.loadClass(method);
-		} catch( ClassNotFoundException e) {
-			// ignore
-		}
-
-		// try order package
-		try {
-			String fullname = OrderDetector.class.getPackage().getName()+"."+method;
-			klass = cl.loadClass(fullname);
-		} catch( ClassNotFoundException e) {
-			//ignore
-		}
-
-		// Give up if that didn't work
-		if(klass == null) {
-			System.err.format("Error: Method '%s' not found.%n",method);
-			return null;
-		}
-
-		// Instantiate default constructor
-		OrderDetector detector = null;
-		try {
-			Constructor<?> constructor = klass.getConstructor();
-			detector = (OrderDetector) constructor.newInstance();
-		} catch (ClassCastException e) {
-			// Not an OrderDetector
-			System.err.println("Error: "+method+" is not an OrderDetector.");
-		} catch( NoSuchMethodException e) {
-			// No default constructor
-			System.err.println("Error: Unable to use "+method+" because it lacks a default constructor");
-		} catch (IllegalArgumentException e) {
-			// Shouldn't happen–bad argument types
-			System.err.println("Error: [Bug] Error with constructor arguments to "+method);
-		} catch (InstantiationException e) {
-			// Abstract class
-			System.err.println("Error: Can't instantiate abstract class "+method);
-		} catch (IllegalAccessException e) {
-			// constructor is private
-			System.err.println("Error: "+method+" lacks a public default constructor");
-		} catch (InvocationTargetException e) {
-			// Constructor threw an exception
-			System.err.println("Error: Exception while creating "+method);
-			e.getCause().printStackTrace();
-		}
-
-		return detector;
-	}
-
 	// Output formats
 
 	/**
 	 * Parent class for all output formats
 	 * All methods are empty stubs, which should be overridden to write
 	 * data to the writer.
-	 * @author blivens
-	 *
 	 */
 	private static abstract class CeSymmWriter {
 		protected PrintWriter writer;
@@ -870,14 +656,14 @@ public class CeSymmMain {
 			this(openOutputFile(filename));
 		}
 		public void writeHeader() throws IOException {}
-		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) throws IOException {}
-		public void writeFooter(CensusResultList results) throws IOException {}
+		public void writeAlignment(MultipleAlignment alignment) throws IOException {}
 		public void close() {
 			if(writer != null) {
 				writer.flush();
 				writer.close();
 			}
 		}
+		
 		/**
 		 * Opens 'filename' for writing.
 		 * @param filename Name of output file, or '-' for standard out
@@ -890,264 +676,56 @@ public class CeSymmMain {
 			return new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 		}
 	}
+	
 	private static class XMLWriter extends CeSymmWriter {
 		public XMLWriter(String filename) throws IOException {
 			super(filename);
 		}
 		@Override
-		public void writeFooter(CensusResultList results) throws IOException {
-			writer.write(results.toXML());
+		public void writeAlignment(MultipleAlignment msa) throws IOException {
+			writer.append(MultipleAlignmentWriter.toXML(msa.getEnsemble()));
 			writer.flush();
 		}
 	}
-	private static class AltXMLWriter extends CeSymmWriter {
-		public AltXMLWriter(String filename) throws IOException {
-			super(filename);
-		}
-		@Override
-		public void writeAlignment(AFPChain afpChain, CensusResult results,
-				Atom[] ca1, Atom[] ca2) throws IOException {
-			writer.append(AFPChainXMLConverter.toXML(afpChain, ca1, ca2));
-			writer.flush();
-		}
-	}
-	private static class HTMLWriter extends CeSymmWriter {
-		public HTMLWriter(String filename) throws IOException {
-			super(filename);
-		}
-		@Override
-		public void writeHeader() {
-			StringBuilder html = new StringBuilder();
-			html.append("<html>\n");
-			html.append("  <head>\n");
-			html.append("    <title>CeSymm</title>\n");
-			html.append("    <style type=\"text/css\">\n" +
-					".aligmentDisp span { color:#999999; }\n" + 
-					"span.m { color:#008800; }\n" + 
-					"span.dm, #alignment span.na { color: #A66A00; } \n" + 
-					"span.sm { color: #D460CF; }\n" + 
-					"span.qg, #alignment span.hg { color: #104BA9; }\n" + 
-					".aligmentDisp { border-style: solid; border-width: 1px; font-family: \"Courier New\", Courier, monospace; font-size: 1.1em; margin: 10px; overflow-x:auto; padding:10px; width:90%; white-space: nowrap; }\n" + 
-					"\n" + 
-					".alignmentBlock11 { background-color: rgb(255, 165, 0); }\n" + 
-					".alignmentBlock12 { background-color: rgb(255, 229, 0); }\n" + 
-					".alignmentBlock13 { background-color: rgb(217, 255, 0); }\n" + 
-					".alignmentBlock14 { background-color: rgb(154, 255, 0); }\n" + 
-					".alignmentBlock15 { background-color: rgb( 90, 255, 0); }\n" + 
-					"\n" + 
-					".alignmentBox11   { background-color: rgb(255, 165, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-					".alignmentBox12   { background-color: rgb(255, 229, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-					".alignmentBox13   { background-color: rgb(217, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-					".alignmentBox14   { background-color: rgb(154, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-					".alignmentBox15   { background-color: rgb( 90, 255, 0);  border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-					"\n" + 
-					".alignmentBlock21 { background-color: rgb(0, 255, 255); }\n" + 
-					".alignmentBlock22 { background-color: rgb(0, 178, 255); }\n" + 
-					".alignmentBlock23 { background-color: rgb(0, 102, 255); }\n" + 
-					".alignmentBlock24 { background-color: rgb(0,  25, 255); }\n" + 
-					".alignmentBlock25 { background-color: rgb(51, 0, 255);  } \n" + 
-					"\n" + 
-					".alignmentBox21   { background-color: rgb(0, 255, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-					".alignmentBox22   { background-color: rgb(0, 178, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-					".alignmentBox23   { background-color: rgb(0, 102, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-					".alignmentBox24   { background-color: rgb(0,  25, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-					".alignmentBox25   { background-color: rgb(51,  0, 255); border-color: black; border-style: solid; border-width: 1px; margin: 5px 10px 10px 0pt; height: 10px; width: 10px; }\n" + 
-					"    </style>\n");
-			html.append("  </head>\n");
-			html.append("  <body>\n");
-			html.append("    <div id=\"mainContent\">\n");
-			writer.append(html.toString());
-			writer.flush();
-		}
-		@Override
-		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) {
-			writer.write("<h3>"+alignment.getName1()+"</h3>\n");
-			writer.write("<pre>\n");
-			writer.write(AfpChainWriter.toWebSiteDisplay(alignment, ca1, ca2));
-			writer.write("</pre>\n");
-			writer.flush();
-		}
-		@Override
-		public void writeFooter(CensusResultList results) {
-			StringBuilder html = new StringBuilder();
-			html.append("    </div>");
-			html.append("  </body>\n");
-			html.append("</html>\n");
-			writer.append(html.toString());
-			writer.flush();
-		}
-
-	}
+	
 	private static class FatcatWriter extends CeSymmWriter {
 		public FatcatWriter(String filename) throws IOException {
 			super(filename);
 		}
 		@Override
-		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) {
-			writer.write(alignment.toFatcat(ca1,ca2));
+		public void writeAlignment(MultipleAlignment msa) {
+			writer.write(MultipleAlignmentWriter.toFatCat(msa));
 			writer.println("//");
 			writer.flush();
 		}
 	}
-	private static class CeWriter extends CeSymmWriter {
-		public CeWriter(String filename) throws IOException {
+	private static class FastaWriter extends CeSymmWriter {
+		public FastaWriter(String filename) throws IOException {
 			super(filename);
 		}
 		@Override
-		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) {
-			writer.write(alignment.toCE(ca1,ca2));
+		public void writeAlignment(MultipleAlignment msa) {
+			writer.write(MultipleAlignmentWriter.toFASTA(msa));
 			writer.println("//");
 			writer.flush();
 		}
 	}
-	private static class TSVWriter extends CeSymmWriter {
-		public TSVWriter(String filename) throws IOException {
-			super(filename);
+
+	public static class CeSymmCallable implements Callable<MultipleAlignment> {
+
+		private Atom[] atoms;
+		private CeSymm ceSymm;
+
+		public CeSymmCallable(Atom[] atoms, CeSymm ceSymm){
+			this.atoms = atoms;
+			this.ceSymm = ceSymm;
 		}
+
 		@Override
-		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) {
-			writer.write(AfpChainWriter.toAlignedPairs(alignment, ca1, ca2));
-			writer.println("//");
-			writer.flush();
+		public MultipleAlignment call() throws Exception {
+			return ceSymm.analyze(atoms);
 		}
+
 	}
-	private static class PDBWriter extends CeSymmWriter {
-		private String pdbFormat;
-		public PDBWriter(String format) {
-			super((PrintWriter)null);
-			pdbFormat = createPDBFilenameFormatString(format);
-		}
-		/**
-		 * @param pdbFormat
-		 * @param filespec
-		 * @return
-		 */
-		private static String createPDBFilenameFormatString( String filespec) {
-			String pdbFormat;
-			if(filespec.isEmpty()) {
-				filespec = ".";
-			}
-			File pdbOutDir = new File(filespec);
-			// 1) It is a directory. Use default filenames
-			if(pdbOutDir.isDirectory()) { //should also cover ""
-				pdbFormat = new File(pdbOutDir,"%s.cesymm.pdb").getPath();
-			} else {
-				// Split into file/directory & check for existence
-				String name = pdbOutDir.getName();
-				assert(!name.isEmpty());
 
-				String parent = pdbOutDir.getParent();
-				if(parent == null) parent = ".";
-				pdbOutDir = new File(parent);
-				if(!pdbOutDir.isDirectory() || !pdbOutDir.canWrite()) {
-					System.err.println("Error: unable to write to "+filespec);
-					System.exit(1);
-					return null;
-				}
-				try {
-					String.format(filespec); // throws exception if filespec has "%s"
-					// 2) Not a format string. Append structure name and extension
-					pdbFormat = filespec+".%s.pdb";
-				} catch(MissingFormatArgumentException e) {
-					// 3) The filename contains %s, making it a valid format string
-					try {
-						String.format(filespec,"");
-						pdbFormat = filespec;
-					} catch(IllegalFormatException f) {
-						System.err.println("Illegal pdb formating string (use a single %s): "+filespec);
-						System.exit(1);
-						return null;
-					}
-				}
-			}
-			return pdbFormat;
-		}
-		@Override
-		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2) throws IOException {
-			try {
-				Structure s = DisplayAFP.createArtificalStructure(alignment, ca1, ca2);
-				
-				// If the input was from a file then we need to remove the path
-				String escapedName = alignment.getName1();
-				File file = new File(FileDownloadUtils.expandUserHome(escapedName));
-				if(file.exists()) {
-					escapedName = file.getName();
-				}
-				escapedName = escapedName.replaceAll(File.separator, "_");
-				String filename = String.format(pdbFormat,escapedName);
-				PrintWriter pdbOut = openOutputFile(filename);
-
-				String pdb = s.toPDB();
-				pdbOut.write(pdb);
-				pdbOut.flush();
-				pdbOut.close();
-			} catch(StructureException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	private static class SimpleWriter extends CeSymmWriter {
-		OrderDetector detector;
-		/**
-		 * Significance calculations are currently hard-coded (TODO) to be
-		 * use a hard-coded TM-Score threshold if detector is null, or use
-		 * order plus the TM-Score otherwise.
-		 * @param detector Either an OrderDetector or null
-		 */
-		public SimpleWriter(String filename,OrderDetector detector) throws IOException {
-			super(filename);
-			this.detector = detector;
-		}
-		@Override
-		public void writeHeader() {
-			writer.println("Name\t" +
-					"Symm\t" +
-					"MinOrder\t" +
-					"TMscore\t" +
-					"ZScore\t" +
-					"CEScore\t" +
-					"PValue\t" +
-					"RMSD\t" +
-					"Length\t" +
-					"Coverage\t" +
-					"%ID\t" +
-					"%Sim\t" +
-					"time");
-			writer.flush();
-		}
-		@Override
-		public void writeAlignment(AFPChain alignment, CensusResult result, Atom[] ca1, Atom[] ca2)
-				throws IOException {
-			CensusScoreList scores = result.getScoreList();
-
-			//TODO Use a consistent method for significance, rather than hard coding in output(!) code
-			boolean significant = false;
-			if( detector != null ) {
-				try {
-					significant = CeSymm.isSignificant(alignment, ca1, 0.4);
-				} catch (StructureException e) {
-					e.printStackTrace();
-				}
-			} else {
-				significant = scores.getTmScore() >= 0.4;
-			}
-
-			Number timeMillis = scores.getAdditionalScoreList().getScore("timeMillis");
-			writer.format("%s\t%s\t%d\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%d\t%.1f\t%.1f\t%.4f%n",
-					alignment.getName1(),
-					significant?"Y":"N",
-					significant?result.getOrder():1,
-					scores.getTmScore(),
-					scores.getzScore(),
-					alignment.getAlignScore(),
-					alignment.getProbability(),
-					scores.getRmsd(),
-					scores.getAlignLength(),
-					scores.getIdentity()*100,
-					scores.getSimilarity()*100,
-					timeMillis.longValue()/1000.
-					);
-			writer.flush();
-		}
-	}
 }

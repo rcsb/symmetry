@@ -130,7 +130,7 @@
 							<finalName>${project.artifactId}-${project.version}</finalName>
 							<appendAssemblyId>false</appendAssemblyId>
 							<filters>
-								<filter>src/main/assembly/filter.properties</filter>
+								<filter>${basedir}/src/main/assembly/filter.properties</filter>
 							</filters>
 						</configuration>
 					</execution>

@@ -1,9 +1,12 @@
 package org.biojava.nbio.structure.align.symm.refine;
 
 import java.util.List;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.symmetry.internal.Refiner;
+import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
 
 /**
  * Creates a refined alignment with the multiple self-alignments 
@@ -16,9 +19,9 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 public class MultipleRefiner implements Refiner {
 
 	@Override
-	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] atoms, 
-			int order) throws StructureException, RefinerFailedException {
-		
+	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] atoms)
+			throws StructureException, RefinerFailedException {
+
 		//return cycleRefine(afpAlignments, atoms, order);
 		throw new RefinerFailedException("Multiple Refiner not yet implemented!");
 	}
@@ -176,5 +179,4 @@ public class MultipleRefiner implements Refiner {
 				optAlgn, allAlignments.get(order-2), atoms, atoms);*/
 		return null;
 	}
-
 }

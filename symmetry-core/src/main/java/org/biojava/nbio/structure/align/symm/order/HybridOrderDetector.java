@@ -12,6 +12,8 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.symmetry.internal.OrderDetector;
+import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +52,7 @@ public class HybridOrderDetector extends RotationOrderDetector implements OrderD
 	
 	@Override
 	public int calculateOrder(AFPChain afpChain, Atom[] ca)
-			throws OrderDetectionFailedException {
+			throws RefinerFailedException {
 
 		try {
 			RotationAxis axis = new RotationAxis(afpChain);
@@ -99,7 +101,7 @@ public class HybridOrderDetector extends RotationOrderDetector implements OrderD
 			return bestOrder;
 
 		} catch (StructureException e) {
-			throw new OrderDetectionFailedException(e);
+			throw new RefinerFailedException(e);
 		}
 	}
 	/**error
@@ -179,14 +181,14 @@ public class HybridOrderDetector extends RotationOrderDetector implements OrderD
 		}
 	}
 
-	private List<Integer> compatibleOrders(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+	private List<Integer> compatibleOrders(AFPChain afpChain, Atom[] ca) throws RefinerFailedException {
 		// order -> probability
 		List<Integer> compatible = new ArrayList<Integer>();
 		RotationAxis axis;
 		try {
 			axis = new RotationAxis(afpChain);
 		} catch (StructureException e) {
-			throw new OrderDetectionFailedException(e);
+			throw new RefinerFailedException(e);
 		}
 		double theta = axis.getAngle();
 

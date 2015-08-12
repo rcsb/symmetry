@@ -4,6 +4,9 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.symmetry.internal.OrderDetector;
+import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
+import org.biojava.nbio.structure.symmetry.internal.SequenceFunctionOrderDetector;
 
 /**
  * A more intelligent order-detection that uses angle, screw vector magnitude, and Spencer's method.
@@ -21,7 +24,7 @@ public class MultiMethodOrderDetector implements OrderDetector {
 	}
 
 	@Override
-	public int calculateOrder(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+	public int calculateOrder(AFPChain afpChain, Atom[] ca) throws RefinerFailedException {
 		try {
 			RotationAxis axis = new RotationAxis(afpChain);
 			OrderDetector method1 = new SequenceFunctionOrderDetector();
@@ -33,7 +36,7 @@ public class MultiMethodOrderDetector implements OrderDetector {
 			if (orderMethod2 != 1) return orderMethod2;
 			return orderMethod1;
 		} catch (Exception e) {
-			throw new OrderDetectionFailedException(e);
+			throw new RefinerFailedException(e);
 		}
 	}
 

@@ -11,10 +11,15 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.symm.CeSymm;
+
 import static org.biojava.nbio.structure.align.symm.order.RotationOrderDetector.RotationOrderMethod.*;
+
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.symmetry.internal.CeSymm;
+import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -23,7 +28,9 @@ import org.junit.Test;
  *
  */
 public class RotationOrderDetectorTest {
+	
 	private CeSymm ce;
+	private CESymmParameters params;
 
 	/**
 	 * @throws java.lang.Exception
@@ -31,8 +38,9 @@ public class RotationOrderDetectorTest {
 	@Before
 	public void setUp() throws Exception {
 
-
 		ce = new CeSymm();
+		params = new CESymmParameters();
+		params.setRefineMethod(RefineMethod.NOT_REFINED);
 
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
 	}
@@ -45,15 +53,16 @@ public class RotationOrderDetectorTest {
 
 
 		// Perform alignment to determine axis
-		Atom[] ca1, ca2;
+		Atom[] ca1;
 		AFPChain alignment;
 		RotationAxis axis;
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.tryAllOrders(ca1, axis,false);
@@ -66,11 +75,12 @@ public class RotationOrderDetectorTest {
 
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.tryAllOrders(ca1, axis,false);
@@ -83,20 +93,22 @@ public class RotationOrderDetectorTest {
 
 	}
 	@Test
-	public void testCalculateOrderByHarmonics() throws IOException, StructureException, OrderDetectionFailedException {
+	public void testCalculateOrderByHarmonics() 
+			throws IOException, StructureException, RefinerFailedException {
 		String name;
 		RotationOrderDetector detector = new RotationOrderDetector(8,HARMONICS);
 
 
 		// Perform alignment to determine axis
-		Atom[] ca1, ca2;
+		Atom[] ca1;
 		AFPChain alignment;
 		int order;
 
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 
 		order = detector.calculateOrder(alignment, ca1);
 
@@ -104,22 +116,24 @@ public class RotationOrderDetectorTest {
 
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 
 		order = detector.calculateOrder(alignment, ca1);
 
 		assertEquals(name,6,order);
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "1TIM.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 
 		order = detector.calculateOrder(alignment, ca1);
 
@@ -132,15 +146,16 @@ public class RotationOrderDetectorTest {
 
 
 		// Perform alignment to determine axis
-		Atom[] ca1, ca2;
+		Atom[] ca1;
 		AFPChain alignment;
 		RotationAxis axis;
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.tryAllOrders(ca1, axis,true);
@@ -153,11 +168,13 @@ public class RotationOrderDetectorTest {
 
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.tryAllOrders(ca1, axis,true);
@@ -169,11 +186,12 @@ public class RotationOrderDetectorTest {
 		assertArrayEquals(name,expectedHarmonics,coefs,1e-4);
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "1TIM.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.tryAllOrders(ca1, axis,true);
@@ -186,20 +204,22 @@ public class RotationOrderDetectorTest {
 
 	}
 	@Test
-	public void testCalculateOrderByHarmonicsFloating() throws IOException, StructureException, OrderDetectionFailedException {
+	public void testCalculateOrderByHarmonicsFloating() 
+			throws IOException, StructureException, RefinerFailedException {
 		String name;
 		RotationOrderDetector detector = new RotationOrderDetector(8,HARMONICS_FLOATING);
 
 
 		// Perform alignment to determine axis
-		Atom[] ca1, ca2;
+		Atom[] ca1;
 		AFPChain alignment;
 		int order;
 
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 
 		order = detector.calculateOrder(alignment, ca1);
 
@@ -207,22 +227,24 @@ public class RotationOrderDetectorTest {
 
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 
 		order = detector.calculateOrder(alignment, ca1);
 
 		assertEquals(name,6,order);
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "1TIM.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 
 		order = detector.calculateOrder(alignment, ca1);
 
@@ -238,15 +260,16 @@ public class RotationOrderDetectorTest {
 
 
 		// Perform alignment to determine axis
-		Atom[] ca1, ca2;
+		Atom[] ca1;
 		AFPChain alignment;
 		RotationAxis axis;
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -259,11 +282,12 @@ public class RotationOrderDetectorTest {
 
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -275,11 +299,12 @@ public class RotationOrderDetectorTest {
 		assertArrayEquals(name,expectedHarmonics,coefs,1e-4);
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "1TIM.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -298,15 +323,16 @@ public class RotationOrderDetectorTest {
 
 
 		// Perform alignment to determine axis
-		Atom[] ca1, ca2;
+		Atom[] ca1;
 		AFPChain alignment;
 		RotationAxis axis;
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersBySSE(ca1, axis);
@@ -327,15 +353,16 @@ public class RotationOrderDetectorTest {
 		RotationOrderDetector detector = new RotationOrderDetector(8,SINGLE_CUSP_AMP);
 
 		// Perform alignment to determine axis
-		Atom[] ca1, ca2;
+		Atom[] ca1;
 		AFPChain alignment;
 		RotationAxis axis;
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -348,11 +375,12 @@ public class RotationOrderDetectorTest {
 
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -364,11 +392,12 @@ public class RotationOrderDetectorTest {
 		assertArrayEquals(name,expectedHarmonics,coefs,1e-4);
 
 		ce = new CeSymm();// work around bug
+		ce.setParameters(params);
 
 		name = "1TIM.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -386,15 +415,16 @@ public class RotationOrderDetectorTest {
 		RotationOrderDetector detector = new RotationOrderDetector(8,SINGLE_CUSP_SSE);
 
 		// Perform alignment to determine axis
-		Atom[] ca1, ca2;
+		Atom[] ca1;
 		AFPChain alignment;
 		RotationAxis axis;
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneAtomArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersBySSE(ca1, axis);
@@ -413,15 +443,16 @@ public class RotationOrderDetectorTest {
 
 
 		// Perform alignment to determine axis
-		Atom[] ca1, ca2;
+		Atom[] ca1;
 		AFPChain alignment;
 		RotationAxis axis;
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
 		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -438,15 +469,16 @@ public class RotationOrderDetectorTest {
 		RotationOrderDetector detector = new RotationOrderDetector(8,SINGLE_CUSP_FIXED_SSE);
 
 		// Perform alignment to determine axis
-		Atom[] ca1, ca2;
+		Atom[] ca1;
 		AFPChain alignment;
 		RotationAxis axis;
 		double[] coefs,expectedHarmonics;
 
 		name = "1MER.A";
 		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ca2 = StructureTools.cloneCAArray(ca1);
-		alignment = ce.align(ca1, ca2);
+		ce.setParameters(params);
+		ce.analyze(ca1);
+		alignment = ce.getAfpAlignments().get(0);
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersBySSE(ca1, axis);

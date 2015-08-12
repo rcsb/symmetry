@@ -3,11 +3,10 @@ package org.biojava.nbio.structure.align.symm.order;
 import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
 import org.apache.commons.math3.util.Pair;
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.symm.census3.stats.CensusStatUtils;
 import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.symmetry.internal.OrderDetector;
+import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,7 @@ public class PeakCountingOrderDetector implements OrderDetector {
 	}
 
 	@Override
-	public int calculateOrder(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+	public int calculateOrder(AFPChain afpChain, Atom[] ca) throws RefinerFailedException {
 
 		try {
 
@@ -47,19 +46,6 @@ public class PeakCountingOrderDetector implements OrderDetector {
 			int nPeaks = countPeaks(smoothed, epsilon * Math.PI/180);
 			logger.info("Found {} peaks",nPeaks);
 			
-			String newline = System.getProperty("line.separator");
-			StringBuilder msg = new StringBuilder("Angle and Smoothed Distance:");
-			msg.append(newline);
-			for (double d : pair.getKey()) {
-				msg.append(CensusStatUtils.formatD(d) + "\t");
-			}
-			msg.append(newline);
-			
-			for (double d : smoothed) {
-				msg.append(CensusStatUtils.formatD(d) + "\t");
-			}
-			logger.info(msg.toString());
-			
 			/*
 			 *  TODO Currently this isn't likely to handle order=1 well,
 			 *  since C1 cases can easily have, say, exactly 5 peaks.
@@ -71,7 +57,7 @@ public class PeakCountingOrderDetector implements OrderDetector {
 //			return nPeaks>maxOrder? 1 : nPeaks;
 
 		} catch (Exception e) {
-			throw new OrderDetectionFailedException(e);
+			throw new RefinerFailedException(e);
 		}
 
 	}
@@ -137,26 +123,5 @@ public class PeakCountingOrderDetector implements OrderDetector {
 				+ ", bandwidth=" + bandwidth + ", robustnessIterations="
 				+ robustnessIterations + ", loessAccuracy=" + loessAccuracy
 				+ "]";
-	}
-
-	public static void main(String[] args) throws Exception {
-
-//		String name = "d1ijqa1"; // 6
-		String name = "1TIM.A"; // 8
-//		String name = "d1h70a_"; // 5
-
-		// Perform alignment to determine axis
-		Atom[] ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
-		Atom[] ca2 = StructureTools.cloneAtomArray(ca1);
-		CeSymm ce = new CeSymm();
-		AFPChain alignment = ce.align(ca1, ca2);
-
-		// Search for orders up to 9
-		PeakCountingOrderDetector detector = new PeakCountingOrderDetector(9);
-
-		// Calculate order
-		int order = detector.calculateOrder(alignment, ca1);
-		System.out.println("Order: " + order);
-
 	}
 }

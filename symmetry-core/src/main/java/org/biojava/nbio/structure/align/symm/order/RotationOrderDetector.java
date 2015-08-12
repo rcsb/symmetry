@@ -10,6 +10,8 @@ import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.jama.Matrix;
+import org.biojava.nbio.structure.symmetry.internal.OrderDetector;
+import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
 
 import static java.lang.Math.*;
 
@@ -134,7 +136,7 @@ public class RotationOrderDetector implements OrderDetector {
 	}
 
 	@Override
-	public int calculateOrder(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+	public int calculateOrder(AFPChain afpChain, Atom[] ca) throws RefinerFailedException {
 		//TODO only use aligned residues, rather than the whole ca
 		try {
 
@@ -180,7 +182,7 @@ public class RotationOrderDetector implements OrderDetector {
 			}
 
 		} catch (StructureException e) {
-			throw new OrderDetectionFailedException(e);
+			throw new RefinerFailedException(e);
 		}
 	}
 

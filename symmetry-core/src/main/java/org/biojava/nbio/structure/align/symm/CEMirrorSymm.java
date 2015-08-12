@@ -11,34 +11,37 @@ import org.biojava.nbio.structure.ChainImpl;
 import org.biojava.nbio.structure.Group;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
-import org.biojava.nbio.structure.align.ce.CeParameters;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.jama.Matrix;
+import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 
 /**
+ * Aligns the first protein against the second in reverse topological order.
+ * This allows the detection of mirror symmetries.
+ * 
  * @author Spencer Bliven
  *
  */
 public class CEMirrorSymm extends CeSymm {
-	static String algorithmName = "jCE-mirror-symmetry";
-	static String version = "0.1";
-	
-	
+
+	private static final String algorithmName = "jCE-mirror-symmetry";
+	private static final String version = "0.1";
+
 	private boolean mirrorCoordinates;
 	private boolean mirrorSequence;
-	
+
 	/**
 	 * Search for mirror symmetry
 	 */
 	public CEMirrorSymm() {
 		this(true,true);
 	}
-	
+
 	/**
 	 * Search for complex alignments.
 	 * If both parameters are true, search for structures with 
@@ -51,18 +54,10 @@ public class CEMirrorSymm extends CeSymm {
 		this.mirrorSequence = mirrorSequence;
 	}
 
-	/**
-	 * Aligns the first protein against the second in reverse topological order.
-	 * This allows the detection of mirror symmetries.
-	 * 
-	 * @param ca1 The first protein
-	 * @param ca2 The second protein, typically a clone of the first protein
-	 * @param param A {@link CeParameters} object
-	 * @see org.biojava.nbio.structure.align.symm.CeSymm#align(org.biojava.nbio.structure.Atom[], org.biojava.nbio.structure.Atom[], java.lang.Object)
-	 */
-	public AFPChain analyze(Atom[] ca1, Object param)
+	@Override
+	protected AFPChain align(Atom[] ca1, Atom[] ca2, Object param)
 			throws StructureException {
-		
+
 		// Optionally, mirror the coordinates
 		if(mirrorCoordinates) {
 			mirrorCoordinates(ca2);
@@ -76,14 +71,14 @@ public class CEMirrorSymm extends CeSymm {
 		}
 
 		AFPChain afpChain = super.align(ca1, ca2m, param);
-		
+
 		// try to set name2, which was lost in the clone
 		try {
 			afpChain.setName2(ca2[0].getGroup().getChain().getParent().getName());
 		} catch( Exception e) {}
-		
+
 		postProcessAlignment(afpChain);
-		
+
 		return afpChain;
 	}
 
@@ -94,37 +89,37 @@ public class CEMirrorSymm extends CeSymm {
 
 			// reverse the distance matrix
 			afpChain.setDistanceMatrix(reverseMatrixCols(afpChain.getDistanceMatrix()));
-			
+
 			// reverse the ca2 matrix
 			Matrix distMat2 = afpChain.getDisTable2();
 			distMat2 = reverseMatrixRows(distMat2);
 			distMat2 = reverseMatrixCols(distMat2);
 			afpChain.setDisTable2(distMat2);
 		}
-		
+
 	}
-	
+
 	private static void reverseOptAln(AFPChain afpChain) {
 		int ca2len = afpChain.getCa2Length();
-		
+
 		int[][][] optAln = afpChain.getOptAln();
 		int[] optLen = afpChain.getOptLen();
-		
+
 		for(int block = 0; block<afpChain.getBlockNum(); block++) {
 			for(int pos = 0; pos< optLen[block]; pos++) {
 				optAln[block][1][pos] = ca2len -1 - optAln[block][1][pos]; 
 			}
 		}
-		
+
 		afpChain.setOptAln(optAln);
 	}
-	
+
 	private static Matrix reverseMatrixRows(Matrix mat) {
 		int[] reversed = new int[mat.getRowDimension()];
 		for(int i=0;i<reversed.length;i++) {
 			reversed[i] = reversed.length-i-1;
 		}
-		
+
 		Matrix revMat = mat.getMatrix(reversed, 0, mat.getColumnDimension()-1);
 		return revMat;
 	}
@@ -134,25 +129,9 @@ public class CEMirrorSymm extends CeSymm {
 		for(int i=0;i<reversed.length;i++) {
 			reversed[i] = reversed.length-i-1;
 		}
-		
+
 		Matrix revMat = mat.getMatrix(0, mat.getRowDimension()-1, reversed);
 		return revMat;
-	}
-	
-	/**
-	 * @see org.biojava.nbio.structure.align.symm.CeSymm#getAlgorithmName()
-	 */
-	@Override
-	public String getAlgorithmName() {
-		return CEMirrorSymm.algorithmName;
-	}
-
-	/**
-	 * @see org.biojava.nbio.structure.align.symm.CeSymm#getVersion()
-	 */
-	@Override
-	public String getVersion() {
-		return CEMirrorSymm.version; 
 	}
 
 	/**
@@ -180,20 +159,20 @@ public class CEMirrorSymm extends CeSymm {
 		}
 
 
-//		// Duplicate ca2!
-//		for (Atom a : ca2){
-//			Group g = (Group)a.getGroup().clone();
-//			c.addGroup(g);
-//			ca2clone[pos] = g.getAtom(StructureTools.caAtomName);
-//
-//			pos--;
-//		}
+		//		// Duplicate ca2!
+		//		for (Atom a : ca2){
+		//			Group g = (Group)a.getGroup().clone();
+		//			c.addGroup(g);
+		//			ca2clone[pos] = g.getAtom(StructureTools.caAtomName);
+		//
+		//			pos--;
+		//		}
 
 		return ca2clone;
 
 
 	}
-	
+
 	/**
 	 * Creates a mirror image of a structure along the X axis.
 	 * 
@@ -208,7 +187,7 @@ public class CEMirrorSymm extends CeSymm {
 			}
 		}
 	}
-	
+
 	/**
 	 * @return the mirrorCoordinates
 	 */
@@ -241,8 +220,17 @@ public class CEMirrorSymm extends CeSymm {
 		this.mirrorSequence = mirrorSequence;
 	}
 
-	
-	public static void main(String[] args) {
+	@Override
+	public String getAlgorithmName() {
+		return algorithmName;
+	}
+
+	@Override
+	public String getVersion() {
+		return version;
+	}
+
+	public static void main(String[] args) throws IOException, StructureException {
 		String name;
 		boolean mirrorCoords, mirrorSeq;
 		name = "1qys"; mirrorSeq = true; mirrorCoords = true;
@@ -250,45 +238,34 @@ public class CEMirrorSymm extends CeSymm {
 		//name = "d2okua1"; mirrorSeq = true; mirrorCoords = false;
 		name = "2cb2.A";mirrorSeq = true; mirrorCoords = false;
 		//name = "d1in0a2"; mirrorSeq = true; mirrorCoords = true; //mirror topology, but poor rmsd
-		try {
-			
-			AtomCache cache = new AtomCache();
-			
-			Atom[] ca1 = cache.getAtoms(name);
-			Atom[] ca2 = cache.getAtoms(name);
-					
 
-//			PDBFileReader pdbreader = new PDBFileReader();
-//
-//			try{
-//				name = "1qys_mirror";
-//				mirrorCoords = true;
-//				mirrorSeq = false;
-//				
-//				Structure struc = pdbreader.getStructure("/Users/blivens/dev/bourne/1qys_mirror.pdb");
-//				ca1 = StructureTools.getAtomCAArray(struc);
-//				Structure struc2 = pdbreader.getStructure("/Users/blivens/dev/bourne/1qys_mirror.pdb");
-//				ca2 = StructureTools.getAtomCAArray(struc2);
-//			} catch (Exception e){
-//				e.printStackTrace();
-//				return;
-//			}
-			
-			CEMirrorSymm ce = new CEMirrorSymm(mirrorCoords, mirrorSeq);
-			
-			AFPChain afpChain = ce.align(ca1, ca2);
-			afpChain.setName1(name);
-			afpChain.setName2(name+(mirrorSeq?" reversed":"")+(mirrorCoords?" mirrored":""));
-			
-			StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(afpChain, ca1, ca2);
-			RotationAxis axis = new RotationAxis(afpChain);
-			jmol.evalString(axis.getJmolScript(ca1));
+		AtomCache cache = new AtomCache();
 
-		} catch (StructureException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		Atom[] ca1 = cache.getAtoms(name);
+
+		//			PDBFileReader pdbreader = new PDBFileReader();
+		//
+		//			try{
+		//				name = "1qys_mirror";
+		//				mirrorCoords = true;
+		//				mirrorSeq = false;
+		//				
+		//				Structure struc = pdbreader.getStructure("/Users/blivens/dev/bourne/1qys_mirror.pdb");
+		//				ca1 = StructureTools.getAtomCAArray(struc);
+		//				Structure struc2 = pdbreader.getStructure("/Users/blivens/dev/bourne/1qys_mirror.pdb");
+		//				ca2 = StructureTools.getAtomCAArray(struc2);
+		//			} catch (Exception e){
+		//				e.printStackTrace();
+		//				return;
+		//			}
+
+		CEMirrorSymm ce = new CEMirrorSymm(mirrorCoords, mirrorSeq);
+		CESymmParameters params = new CESymmParameters();
+		params.setMultipleAxes(false);
+		params.setRefineMethod(RefineMethod.NOT_REFINED);
+
+		MultipleAlignment msa = ce.analyze(ca1, params);
+		SymmetryDisplay.display(msa);
 	}
-	
+
 }

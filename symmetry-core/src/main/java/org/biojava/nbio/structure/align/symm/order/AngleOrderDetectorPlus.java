@@ -5,6 +5,8 @@ import static java.lang.Math.*;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.symmetry.internal.OrderDetector;
+import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
 
 /**
  * Guesses an order of rotational symmetry from the angle.
@@ -62,7 +64,7 @@ public class AngleOrderDetectorPlus implements OrderDetector {
 	}
 
 	@Override
-	public int calculateOrder(AFPChain afpChain, Atom[] ca) throws OrderDetectionFailedException {
+	public int calculateOrder(AFPChain afpChain, Atom[] ca) throws RefinerFailedException {
 		final double tol = 1e-6; // tolerance to floating point errors
 		try {
 			RotationAxis axis = new RotationAxis(afpChain);
@@ -84,7 +86,7 @@ public class AngleOrderDetectorPlus implements OrderDetector {
 			}
 			return bestOrder;
 		} catch (Exception e) {
-			throw new OrderDetectionFailedException(e);
+			throw new RefinerFailedException(e);
 		}
 	}
 

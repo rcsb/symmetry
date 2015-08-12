@@ -5,16 +5,18 @@ import java.util.List;
 
 import javax.vecmath.Point3d;
 
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.StructureTools;
-import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.jama.Matrix;
+import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 
 /**
  * This class provides methods for sorting the chains 
@@ -184,16 +186,13 @@ public class ChainSorter {
 		}
 		
 		Atom[] ca1 = cyclicSorter(structure);
-		Atom[] ca2 = StructureTools.cloneAtomArray(ca1);
 		
 		CeSymm cesymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) cesymm.getParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
 		params.setOptimization(true);
 		
-		AFPChain afp = cesymm.align(ca1, ca2);
-		
-		StructureAlignmentDisplay.display(afp, ca1, ca2);
-		
+		MultipleAlignment msa = cesymm.analyze(ca1);
+		SymmetryDisplay.display(msa);
 	}
 }

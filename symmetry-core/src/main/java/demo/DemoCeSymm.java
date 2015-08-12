@@ -1,23 +1,21 @@
 package demo;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.symm.CESymmParameters;
-import org.biojava.nbio.structure.align.symm.ChainSorter;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.SymmetryType;
-import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.symm.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
+import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 
 /**
  * Quick demo of how to call CE-Symm programmatically.
- * Some examples of different symmetry are proposed.
+ * Some examples of different symmetry types are proposed.
  *
  * @author Spencer Bliven
  * @author Aleix Lafita
@@ -41,24 +39,24 @@ public class DemoCeSymm {
 		 * 
 		 * OPEN
 		 * ankyrin: 1n0r.A, 3ehq.A
-		 * leucine repeats: 2bnh.A
+		 * leucine repeats: 2bnh.A, 3o6n
 		 * helical: 1d0b.A
 		 * 
 		 * MULTIPLE AXES
-		 * dihedral: 4hhb, 1vym
+		 * dihedral: 4hhb, 1vym, 1mmi, 1hiv
 		 * hierarchical: 4gcr, 1ppr.O, 1hiv
+		 * monoclonal Ab: 4NZU
 		 * 
 		 * - For more examples see the symmetry benchmark
 		 */
 
 		//Set the name of the protein structure to analyze
-		String name = "1ppr.O";
-		List<Atom[]> atoms = new ArrayList<Atom[]>();
+		String name = "1vym";
 
-		//Download the atoms and sort them sequentially by chains
+		//Download the atoms
 		AtomCache cache = new AtomCache();
-		Atom[] ca = ChainSorter.cyclicSorter(cache.getStructure(name));
-		atoms.add(ca);
+		Structure s = cache.getStructure(name);
+		Atom[] atoms = StructureTools.getRepresentativeAtomArray(s);
 
 		CeSymm ceSymm = new CeSymm();
 
@@ -67,11 +65,13 @@ public class DemoCeSymm {
 		params.setRefineMethod(RefineMethod.SINGLE);
 		params.setSymmetryType(SymmetryType.AUTO);
 		params.setOptimization(true);
+		params.setMultipleAxes(true);
 
 		//Run the alignment
-		MultipleAlignment symmetry = ceSymm.align(atoms);
+		MultipleAlignment symmetry = ceSymm.analyze(atoms, params);
 
 		//Display the results in jmol
 		SymmetryDisplay.display(symmetry, ceSymm.getSymmetryAxes());
 	}
+	
 }

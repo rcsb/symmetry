@@ -18,6 +18,7 @@ import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.jama.Matrix;
+import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 
 /**
  * @author Spencer Bliven
@@ -59,8 +60,7 @@ public class CEMirrorSymm extends CeSymm {
 	 * @param param A {@link CeParameters} object
 	 * @see org.biojava.nbio.structure.align.symm.CeSymm#align(org.biojava.nbio.structure.Atom[], org.biojava.nbio.structure.Atom[], java.lang.Object)
 	 */
-	@Override
-	public AFPChain align(Atom[] ca1, Atom[] ca2, Object param)
+	public AFPChain analyze(Atom[] ca1, Object param)
 			throws StructureException {
 		
 		// Optionally, mirror the coordinates

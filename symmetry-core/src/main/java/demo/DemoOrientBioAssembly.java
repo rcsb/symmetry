@@ -28,24 +28,22 @@ package demo;
 import java.io.IOException;
 import java.util.List;
 
-import javax.vecmath.Matrix4d;
-
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
-import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.symm.CeSymm;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.io.FileParsingParameters;
 import org.biojava.nbio.structure.symmetry.analysis.CalcBioAssemblySymmetry;
 import org.biojava.nbio.structure.symmetry.core.AxisAligner;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
+import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 import org.biojava.nbio.structure.symmetry.jmolScript.JmolSymmetryScriptGenerator;
 import org.biojava.nbio.structure.symmetry.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 
@@ -193,17 +191,11 @@ public class DemoOrientBioAssembly {
 
 			AxisAligner aligner = AxisAligner.getInstance(result);
 
-			double angleIncr = Math.toRadians(5);
-			Matrix4d mat = aligner.getGeometicCenterTransformation();
-			//mat.transpose();
-//			RotationAxis axis = new RotationAxis(mat);
 			CeSymm ce = new CeSymm();
 			Atom[] ca = StructureTools.getRepresentativeAtomArray(s);
-			RotationAxis axis = null;
+			MultipleAlignment msa = null;
 			try {
-				AFPChain afpChain = ce.align(ca, StructureTools.cloneAtomArray(ca));
-				axis = new RotationAxis(afpChain);
-				DetectOrder.printSuperpositionDistance(ca, axis, angleIncr, System.out);
+				msa = ce.analyze(ca);
 			} catch (StructureException e) {
 				e.printStackTrace();
 			}
@@ -234,7 +226,7 @@ public class DemoOrientBioAssembly {
 			jmol.setStructure(s);
 
 			jmol.setTitle(longTitle);
-			jmol.evalString(axis.getJmolScript(ca));
+			jmol.evalString(SymmetryDisplay.printSymmetryAxes(msa, ce.getSymmetryAxes(), false));
 			jmol.evalString(script);
 		}
 

@@ -21,12 +21,13 @@ import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
 import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.symm.order.OrderDetectionFailedException;
-import org.biojava.nbio.structure.align.symm.order.OrderDetector;
+import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector;
 import org.biojava.nbio.structure.align.symm.order.RotationOrderDetector.RotationOrderMethod;
 import org.biojava.nbio.structure.align.util.RotationAxis;
+import org.biojava.nbio.structure.symmetry.internal.CeSymm;
+import org.biojava.nbio.structure.symmetry.internal.OrderDetector;
+import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
 
 public class DetectOrder {
 
@@ -198,8 +199,7 @@ public class DetectOrder {
 			Atom[] ca1 = StructureTools.getRepresentativeAtomArray(StructureTools.getStructure(name));
 			Atom[] ca2 = StructureTools.cloneAtomArray(ca1);
 			CeSymm ce = new CeSymm();
-			AFPChain alignment = ce.align(ca1, ca2);
-			alignment.setName1(name);alignment.setName2(name);
+			MultipleAlignment alignment = ce.analyze(ca1);
 			RotationAxis axis = new RotationAxis(alignment);
 
 			// Output raw data
@@ -237,7 +237,7 @@ public class DetectOrder {
 			e.printStackTrace();
 		} catch (StructureException e) {
 			e.printStackTrace();
-		} catch (OrderDetectionFailedException e) {
+		} catch (RefinerFailedException e) {
 			e.printStackTrace();
 		}
 

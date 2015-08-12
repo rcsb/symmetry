@@ -33,27 +33,10 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
-import org.biojava.nbio.structure.align.StructureAlignment;
-import org.biojava.nbio.structure.align.StructureAlignmentFactory;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
 import org.biojava.nbio.structure.align.gui.DisplayAFP;
-import org.biojava.nbio.structure.align.gui.StructureAlignmentDisplay;
-import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.align.model.AfpChainWriter;
-import org.biojava.nbio.structure.align.symm.CESymmParameters;
-import org.biojava.nbio.structure.align.symm.CESymmParameters.OrderDetectorMethod;
-import org.biojava.nbio.structure.align.symm.CeSymm;
-import org.biojava.nbio.structure.align.symm.census3.AdditionalScoreList;
-import org.biojava.nbio.structure.align.symm.census3.CensusResult;
-import org.biojava.nbio.structure.align.symm.census3.CensusResultList;
-import org.biojava.nbio.structure.align.symm.census3.CensusScoreList;
-import org.biojava.nbio.structure.align.symm.census3.MapScoreList;
-import org.biojava.nbio.structure.align.symm.census3.run.Census;
-import org.biojava.nbio.structure.align.symm.census3.run.Census.AlgorithmGiver;
-import org.biojava.nbio.structure.align.symm.census3.run.CensusJob;
-import org.biojava.nbio.structure.align.symm.order.OrderDetector;
-import org.biojava.nbio.structure.align.symm.order.SequenceFunctionOrderDetector;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
 import org.biojava.nbio.structure.align.util.RotationAxis;
@@ -61,6 +44,11 @@ import org.biojava.nbio.structure.align.util.UserConfiguration;
 import org.biojava.nbio.structure.align.xml.AFPChainXMLConverter;
 import org.biojava.nbio.structure.io.util.FileDownloadUtils;
 import org.biojava.nbio.structure.scop.ScopFactory;
+import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.OrderDetectorMethod;
+import org.biojava.nbio.structure.symmetry.internal.CeSymm;
+import org.biojava.nbio.structure.symmetry.internal.OrderDetector;
+import org.biojava.nbio.structure.symmetry.internal.SequenceFunctionOrderDetector;
 
 /**
  * Main executable for running CE-Symm
@@ -398,9 +386,6 @@ public class CeSymmMain {
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
 
-		// Add as option to background alignment GUI
-		StructureAlignmentFactory.addAlgorithm(new CeSymm());
-
 		CensusResultList results = new CensusResultList();
 
 		//print headers
@@ -447,8 +432,7 @@ public class CeSymmMain {
 
 				// Display alignment
 				if( displayAlignment ) {
-					RotationAxis axis = result.getAxis().toRotationAxis();
-					StructureAlignmentJmol jmol = StructureAlignmentDisplay.display(alignment, ca1, ca2);
+					SymmetryDisplay.display(alignment);
 					jmol.evalString(axis.getJmolScript(ca1));
 				}
 

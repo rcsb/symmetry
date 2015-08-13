@@ -53,8 +53,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Main executable for running CE-Symm
- * Run with -h for usage, or without arguments for interactive mode
+ * Main executable for running CE-Symm.
+ * Run with -h for usage, or without arguments for interactive mode.
  * 
  * @author Spencer Bliven
  * @author Aleix Lafita
@@ -438,6 +438,12 @@ public class CeSymmMain {
 			cacheConfig.setCacheFilePath(pdbFilePath);
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
+		
+		for(CeSymmWriter writer: writers) {
+			try {
+				writer.writeHeader();
+			} catch (IOException e) {}
+		}
 
 		// Run jobs
 		long initialTime = System.nanoTime();
@@ -510,9 +516,7 @@ public class CeSymmMain {
 			for(CeSymmWriter writer: writers) {
 				try {
 					writer.writeAlignment(results.get(i));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				} catch (IOException e) {}
 			}
 		}
 		// close last, in case any writers share output streams
@@ -936,6 +940,7 @@ public class CeSymmMain {
 			
 			if (refined){
 				full = SymmetryTools.toFullAlignment(msa);
+				full.clear();
 				pg = SymmetryTools.getQuaternarySymmetry(msa).getSymmetry();
 				order = msa.size();
 				subunitLen = msa.length();

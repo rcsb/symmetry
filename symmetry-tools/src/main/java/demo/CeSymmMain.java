@@ -85,7 +85,7 @@ public class CeSymmMain {
 				return i1.compareTo(i2);
 			}
 		} );
-		
+
 		final CommandLine cli;
 		try {
 			cli = parser.parse(options,args,false);
@@ -209,6 +209,9 @@ public class CeSymmMain {
 		Integer threads = 1;
 		if(cli.hasOption("threads")) {
 			threads = new Integer(cli.getOptionValue("threads"));
+			if (threads < 1){
+				threads = 1;
+			}
 		}
 
 		CESymmParameters params = new CESymmParameters();
@@ -438,29 +441,34 @@ public class CeSymmMain {
 			cacheConfig.setCacheFilePath(pdbFilePath);
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
-		
+
 		for(CeSymmWriter writer: writers) {
 			try {
 				writer.writeHeader();
 			} catch (IOException e) {}
 		}
-
-		// Run jobs
 		long initialTime = System.nanoTime();
-		List<MultipleAlignment> results = new ArrayList<MultipleAlignment>();
-		List<SymmetryAxes> axes = new ArrayList<SymmetryAxes>();
-		
-		try {
+		int index = 0;
+
+		while (index < names.size()){
+
+			List<MultipleAlignment> results = new ArrayList<MultipleAlignment>();
+			List<SymmetryAxes> axes = new ArrayList<SymmetryAxes>();
+
 			ExecutorService executor = Executors.newFixedThreadPool(threads);
 			List<CeSymm> workers = new ArrayList<CeSymm>();
 			List<Future<MultipleAlignment>> msaFuture = 
 					new ArrayList<Future<MultipleAlignment>>();
+			
+			//This is needed to avoid memory crash by saving all alignments
+			while (index < names.size()){
+				if (workers.size() == threads) break;
 
-			//Run the jobs in parallel Threads
-			for(String name: names) {
+				String name = names.get(index);
+				index++;
 
 				Atom[] atoms = null;
-				
+
 				try {
 					atoms = cache.getAtoms(name);
 				} catch (IOException e){
@@ -481,48 +489,52 @@ public class CeSymmMain {
 				Future<MultipleAlignment> submit = executor.submit(worker);
 				msaFuture.add(submit);
 			}
-			
-			for (Future<MultipleAlignment> msa : msaFuture){
-				results.add(msa.get());
+
+			try {
+
+				for (Future<MultipleAlignment> msa : msaFuture){
+					results.add(msa.get());
+				}
+				for (CeSymm ce : workers){
+					axes.add(ce.getSymmetryAxes());
+				}
+
+			} catch (InterruptedException e) {
+				logger.warn("Job failed: "+e.getMessage());
+			} catch (ExecutionException e) {
+				logger.warn("Job failed: "+e.getMessage());
 			}
-			for (CeSymm ce : workers){
-				axes.add(ce.getSymmetryAxes());
-			}
-			
+
 			executor.shutdown();
 
-		} catch (InterruptedException e) {
-			logger.warn("Job failed: "+e.getMessage());
-		} catch (ExecutionException e) {
-			logger.warn("Job failed: "+e.getMessage());
-		}
-		
-		long totalSecondsTaken = (System.nanoTime() - initialTime) / 1000000;
-		long meanSecondsTaken = (long) (totalSecondsTaken / (float) names.size() / 1000000.0f);
-		logger.info("Total runtime: "+totalSecondsTaken + ", mean runtime: "+meanSecondsTaken);
+			for (int i=0; i<results.size(); i++){
 
-		for (int i=0; i<results.size(); i++){
-			
-			// Display alignment
-			if( displayAlignment ) {
-				try {
-					SymmetryDisplay.display(results.get(i), axes.get(i));
-				} catch (StructureException e) {
-					logger.warn("Error displaying symmetry for entry number "+i,e);
+				// Display alignment
+				if( displayAlignment ) {
+					try {
+						SymmetryDisplay.display(results.get(i), axes.get(i));
+					} catch (StructureException e) {
+						logger.warn("Error displaying symmetry for entry number "+i,e);
+					}
+				}
+
+				// Output alignments
+				for(CeSymmWriter writer: writers) {
+					try {
+						writer.writeAlignment(results.get(i));
+					} catch (IOException e) {}
 				}
 			}
-	
-			// Output alignments
-			for(CeSymmWriter writer: writers) {
-				try {
-					writer.writeAlignment(results.get(i));
-				} catch (IOException e) {}
-			}
 		}
+
 		// close last, in case any writers share output streams
 		for(CeSymmWriter writer: writers) {
 			writer.close();
 		}
+
+		long totalSecondsTaken = (System.nanoTime() - initialTime) / 1000000;
+		long meanSecondsTaken = (long) (totalSecondsTaken / (float) names.size());
+		logger.info("Total runtime: "+totalSecondsTaken + ", mean runtime: "+meanSecondsTaken);
 	}
 
 
@@ -650,7 +662,7 @@ public class CeSymmMain {
 						+ "[default SequenceFunctionOrderDetector]")
 						.create());
 		optionOrder.put("ordermethod", optionNum++);
-		
+
 		options.addOptionGroup(grp);
 		options.addOption( OptionBuilder.withLongOpt("refinemethod")
 				.hasArg(true)
@@ -661,7 +673,7 @@ public class CeSymmMain {
 						+ "[default Single]")
 						.create());
 		optionOrder.put("refinemethod", optionNum++);
-		
+
 		options.addOptionGroup(grp);
 		options.addOption( OptionBuilder.withLongOpt("symmtype")
 				.hasArg(true)
@@ -752,57 +764,57 @@ public class CeSymmMain {
 				.create()
 				);
 		optionOrder.put("gapextension", optionNum++);
-		
+
 		options.addOption( OptionBuilder.withLongOpt("multaxes")
 				.hasArg(true)
 				.withDescription("Run iteratively the algorithm to find multiple symmetry levels [default: true].\n")
 				.create()
 				);
 		optionOrder.put("multaxes", optionNum++);
-		
+
 		options.addOption( OptionBuilder.withLongOpt("opt")
 				.hasArg(true)
 				.withDescription("Optimize the resulting symmetry alignment [default: true].\n")
 				.create()
 				);
 		optionOrder.put("opt", optionNum++);
-		
+
 		options.addOption( OptionBuilder.withLongOpt("threshold")
 				.hasArg(true)
 				.withDescription("The symmetry threshold. TM-scores above this value"
 						+ "will be considered significant results [default: 0.5, interval [0.0,1.0]].\n")
-				.create()
+						.create()
 				);
 		optionOrder.put("threshold", optionNum++);
-		
+
 		options.addOption( OptionBuilder.withLongOpt("maxorder")
 				.hasArg(true)
 				.withDescription("The maximum number of symmetric subunits [default: 8].\n")
 				.create()
 				);
 		optionOrder.put("maxorder", optionNum++);
-		
+
 		options.addOption( OptionBuilder.withLongOpt("rndseed")
 				.hasArg(true)
 				.withDescription("The random seed used in optimization, for reproducibility"
 						+ "of the results [default: 0].\n")
-				.create()
+						.create()
 				);
 		optionOrder.put("rndseed", optionNum++);
-		
+
 		options.addOption( OptionBuilder.withLongOpt("minlen")
 				.hasArg(true)
 				.withDescription("The minimum length, expressed in number of core "
 						+ "aligned residues, of a symmetric subunit [default: 15].\n")
-				.create()
+						.create()
 				);
 		optionOrder.put("minlen", optionNum++);
-		
+
 		options.addOption( OptionBuilder.withLongOpt("dcutoff")
 				.hasArg(true)
 				.withDescription("The maximum distance, in A, allowed between any two aligned "
 						+ "residue positions [default: 7.0].\n")
-				.create()
+						.create()
 				);
 		optionOrder.put("dcutoff", optionNum++);
 
@@ -862,7 +874,7 @@ public class CeSymmMain {
 				writer.close();
 			}
 		}
-		
+
 		/**
 		 * Opens 'filename' for writing.
 		 * @param filename Name of output file, or '-' for standard out
@@ -875,7 +887,7 @@ public class CeSymmMain {
 			return new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 		}
 	}
-	
+
 	private static class XMLWriter extends CeSymmWriter {
 		public XMLWriter(String filename) throws IOException {
 			super(filename);
@@ -886,7 +898,7 @@ public class CeSymmMain {
 			writer.flush();
 		}
 	}
-	
+
 	private static class FatcatWriter extends CeSymmWriter {
 		public FatcatWriter(String filename) throws IOException {
 			super(filename);
@@ -910,7 +922,7 @@ public class CeSymmMain {
 		}
 	}
 	private static class StatsWriter extends CeSymmWriter {
-		
+
 		public StatsWriter(String filename) throws IOException {
 			super(filename);
 		}
@@ -931,13 +943,13 @@ public class CeSymmMain {
 		@Override
 		public void writeAlignment(MultipleAlignment msa)
 				throws IOException {
-			
+
 			String pg = null;
 			int order = 1;
 			MultipleAlignment full = msa;
 			int subunitLen = 0;
 			boolean refined = SymmetryTools.isRefined(msa);
-			
+
 			if (refined){
 				full = SymmetryTools.toFullAlignment(msa);
 				full.clear();
@@ -947,7 +959,7 @@ public class CeSymmMain {
 			}
 			double structureLen = msa.getEnsemble().getAtomArrays().get(0).length;
 			double coverage = full.length() / structureLen;
-			
+
 			writer.format("%s\t%d\t%s\t%b\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f\n",
 					msa.getEnsemble().getStructureNames().get(0),
 					order,

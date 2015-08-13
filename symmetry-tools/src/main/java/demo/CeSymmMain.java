@@ -64,7 +64,7 @@ public class CeSymmMain {
 
 	private static final Logger logger = LoggerFactory.getLogger(CeSymmMain.class);
 
-	public static void main(String[] args) throws IOException, StructureException {
+	public static void main(String[] args) {
 		// Begin argument parsing
 		final String usage = "[OPTIONS] [structures...]";
 		final String header = "Determine the order for each structure, which may " +
@@ -85,7 +85,7 @@ public class CeSymmMain {
 				return i1.compareTo(i2);
 			}
 		} );
-
+		
 		final CommandLine cli;
 		try {
 			cli = parser.parse(options,args,false);
@@ -439,15 +439,6 @@ public class CeSymmMain {
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
 
-		//print headers
-		for(CeSymmWriter writer: writers) {
-			try {
-				writer.writeHeader();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
 		// Run jobs
 		long initialTime = System.nanoTime();
 		List<MultipleAlignment> results = new ArrayList<MultipleAlignment>();
@@ -462,7 +453,17 @@ public class CeSymmMain {
 			//Run the jobs in parallel Threads
 			for(String name: names) {
 
-				Atom[] atoms = cache.getAtoms(name);
+				Atom[] atoms = null;
+				
+				try {
+					atoms = cache.getAtoms(name);
+				} catch (IOException e){
+					logger.warn("Could not load structure "+name,e);
+					continue;
+				} catch (StructureException e) {
+					logger.warn("Could not load structure "+name,e);
+					continue;
+				}
 
 				CeSymm ceSymm = new CeSymm();
 				ceSymm.setParameters(params);
@@ -498,7 +499,11 @@ public class CeSymmMain {
 			
 			// Display alignment
 			if( displayAlignment ) {
-				SymmetryDisplay.display(results.get(i), axes.get(i));
+				try {
+					SymmetryDisplay.display(results.get(i), axes.get(i));
+				} catch (StructureException e) {
+					logger.warn("Error displaying symmetry for entry number "+i,e);
+				}
 			}
 	
 			// Output alignments
@@ -910,8 +915,13 @@ public class CeSymmMain {
 			writer.println("Name\t" +
 					"Order\t" +
 					"PG\t" +
-					"TMscore\t" +
-					"RMSD\t");
+					"isRefined\t" +
+					"Avg-TMscore\t" +
+					"Avg-RMSD\t" +
+					"SubunitLength\t" +
+					"Length\t" +
+					"CoreLength\t" +
+					"Coverage\t");
 			writer.flush();
 		}
 		@Override
@@ -920,17 +930,30 @@ public class CeSymmMain {
 			
 			String pg = null;
 			int order = 1;
-			if (SymmetryTools.isRefined(msa)){
+			MultipleAlignment full = msa;
+			int subunitLen = 0;
+			boolean refined = SymmetryTools.isRefined(msa);
+			
+			if (refined){
+				full = SymmetryTools.toFullAlignment(msa);
 				pg = SymmetryTools.getQuaternarySymmetry(msa).getSymmetry();
 				order = msa.size();
+				subunitLen = msa.length();
 			}
+			double structureLen = msa.getEnsemble().getAtomArrays().get(0).length;
+			double coverage = full.length() / structureLen;
 			
-			writer.format("%s\t%d\t%s\t%.2f\t%.2f\t%.2f%\n",
+			writer.format("%s\t%d\t%s\t%b\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f\n",
 					msa.getEnsemble().getStructureNames().get(0),
 					order,
 					pg,
+					refined,
 					msa.getScore(MultipleAlignmentScorer.AVGTM_SCORE),
-					msa.getScore(MultipleAlignmentScorer.RMSD)
+					msa.getScore(MultipleAlignmentScorer.RMSD),
+					subunitLen,
+					full.length(),
+					full.getCoreLength(),
+					coverage
 					);
 			writer.flush();
 		}
@@ -950,7 +973,6 @@ public class CeSymmMain {
 		public MultipleAlignment call() throws Exception {
 			return ceSymm.analyze(atoms);
 		}
-
 	}
 
 }

@@ -953,7 +953,9 @@ public class CeSymmMain {
 			if (refined){
 				full = SymmetryTools.toFullAlignment(msa);
 				full.clear();
-				pg = SymmetryTools.getQuaternarySymmetry(msa).getSymmetry();
+				try {
+					pg = SymmetryTools.getQuaternarySymmetry(msa).getSymmetry();
+				} catch (Exception e){}
 				order = msa.size();
 				subunitLen = msa.length();
 			}

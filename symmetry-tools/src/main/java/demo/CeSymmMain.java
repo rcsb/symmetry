@@ -34,6 +34,7 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
@@ -47,6 +48,7 @@ import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMetho
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 import org.biojava.nbio.structure.symmetry.internal.SymmetryAxes;
+import org.biojava.nbio.structure.symmetry.utils.SymmetryTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,7 +173,15 @@ public class CeSymmMain {
 			String filename = cli.getOptionValue("xml");
 			try {
 				writers.add(new XMLWriter(filename));
-				//writers.add(new AltXMLWriter(filename));
+			} catch (IOException e) {
+				System.err.println("Error: Ignoring file "+filename+".");
+				System.err.println(e.getMessage());
+			}
+		}
+		if(cli.hasOption("stats")) {
+			String filename = cli.getOptionValue("stats");
+			try {
+				writers.add(new StatsWriter(filename));
 			} catch (IOException e) {
 				System.err.println("Error: Ignoring file "+filename+".");
 				System.err.println(e.getMessage());
@@ -581,6 +591,12 @@ public class CeSymmMain {
 				.withDescription("Output alignment as XML (use --xml=- for standard out).")
 				.create("o"));
 		optionOrder.put("xml", optionNum++);
+		options.addOption( OptionBuilder.withLongOpt("stats")
+				.hasArg(true)
+				.withArgName("file")
+				.withDescription("Output a tsv file with the main symmetry info.")
+				.create("o"));
+		optionOrder.put("stats", optionNum++);
 		options.addOption( OptionBuilder.withLongOpt("fasta")
 				.hasArg(true)
 				.withArgName("file")
@@ -881,6 +897,41 @@ public class CeSymmMain {
 		public void writeAlignment(MultipleAlignment msa) {
 			writer.write(MultipleAlignmentWriter.toFASTA(msa));
 			writer.println("//");
+			writer.flush();
+		}
+	}
+	private static class StatsWriter extends CeSymmWriter {
+		
+		public StatsWriter(String filename) throws IOException {
+			super(filename);
+		}
+		@Override
+		public void writeHeader() {
+			writer.println("Name\t" +
+					"Order\t" +
+					"PG\t" +
+					"TMscore\t" +
+					"RMSD\t");
+			writer.flush();
+		}
+		@Override
+		public void writeAlignment(MultipleAlignment msa)
+				throws IOException {
+			
+			String pg = null;
+			int order = 1;
+			if (SymmetryTools.isRefined(msa)){
+				pg = SymmetryTools.getQuaternarySymmetry(msa).getSymmetry();
+				order = msa.size();
+			}
+			
+			writer.format("%s\t%d\t%s\t%.2f\t%.2f\t%.2f%\n",
+					msa.getEnsemble().getStructureNames().get(0),
+					order,
+					pg,
+					msa.getScore(MultipleAlignmentScorer.AVGTM_SCORE),
+					msa.getScore(MultipleAlignmentScorer.RMSD)
+					);
 			writer.flush();
 		}
 	}

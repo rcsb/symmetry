@@ -46,6 +46,7 @@ import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.OrderDetect
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
+import org.biojava.nbio.structure.symmetry.internal.SymmetryAxes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -440,9 +441,11 @@ public class CeSymmMain {
 		// Run jobs
 		long initialTime = System.nanoTime();
 		List<MultipleAlignment> results = new ArrayList<MultipleAlignment>();
+		List<SymmetryAxes> axes = new ArrayList<SymmetryAxes>();
 		
 		try {
 			ExecutorService executor = Executors.newFixedThreadPool(threads);
+			List<CeSymm> workers = new ArrayList<CeSymm>();
 			List<Future<MultipleAlignment>> msaFuture = 
 					new ArrayList<Future<MultipleAlignment>>();
 
@@ -457,12 +460,16 @@ public class CeSymmMain {
 				Callable<MultipleAlignment> worker = 
 						new CeSymmCallable(atoms, ceSymm);
 
+				workers.add(ceSymm);
 				Future<MultipleAlignment> submit = executor.submit(worker);
 				msaFuture.add(submit);
 			}
 			
 			for (Future<MultipleAlignment> msa : msaFuture){
 				results.add(msa.get());
+			}
+			for (CeSymm ce : workers){
+				axes.add(ce.getSymmetryAxes());
 			}
 			
 			executor.shutdown();
@@ -477,17 +484,17 @@ public class CeSymmMain {
 		long meanSecondsTaken = (long) (totalSecondsTaken / (float) names.size() / 1000000.0f);
 		logger.info("Total runtime: "+totalSecondsTaken + ", mean runtime: "+meanSecondsTaken);
 
-		for (MultipleAlignment msa : results){
+		for (int i=0; i<results.size(); i++){
 			
 			// Display alignment
 			if( displayAlignment ) {
-				SymmetryDisplay.display(msa);
+				SymmetryDisplay.display(results.get(i), axes.get(i));
 			}
 	
 			// Output alignments
 			for(CeSymmWriter writer: writers) {
 				try {
-					writer.writeAlignment(msa);
+					writer.writeAlignment(results.get(i));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

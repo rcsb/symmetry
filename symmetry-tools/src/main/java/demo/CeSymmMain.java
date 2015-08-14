@@ -731,7 +731,7 @@ public class CeSymmMain {
 
 		options.addOption( OptionBuilder.withLongOpt("scoringstrategy")
 				.hasArg(true)
-				.withDescription("Which scoring function to use: ")
+				.withDescription("Which scoring function to use: "+CliTools.getEnumValuesAsString(ScoringStrategy.class))
 				.create()
 				);
 		optionOrder.put("scoringstrategy", optionNum++);
@@ -781,7 +781,7 @@ public class CeSymmMain {
 
 		options.addOption( OptionBuilder.withLongOpt("threshold")
 				.hasArg(true)
-				.withDescription("The symmetry threshold. TM-scores above this value"
+				.withDescription("The symmetry threshold. TM-scores above this value "
 						+ "will be considered significant results [default: 0.5, interval [0.0,1.0]].\n")
 						.create()
 				);
@@ -796,7 +796,7 @@ public class CeSymmMain {
 
 		options.addOption( OptionBuilder.withLongOpt("rndseed")
 				.hasArg(true)
-				.withDescription("The random seed used in optimization, for reproducibility"
+				.withDescription("The random seed used in optimization, for reproducibility "
 						+ "of the results [default: 0].\n")
 						.create()
 				);

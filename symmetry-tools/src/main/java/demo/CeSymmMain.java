@@ -459,7 +459,8 @@ public class CeSymmMain {
 			List<CeSymm> workers = new ArrayList<CeSymm>();
 			List<Future<MultipleAlignment>> msaFuture = 
 					new ArrayList<Future<MultipleAlignment>>();
-			
+			List<String> poolNames = new ArrayList<String>();
+
 			//This is needed to avoid memory crash by saving all alignments
 			while (index < names.size()){
 				if (workers.size() == threads) break;
@@ -471,6 +472,7 @@ public class CeSymmMain {
 
 				try {
 					atoms = cache.getAtoms(name);
+					poolNames.add(name);
 				} catch (IOException e){
 					logger.warn("Could not load structure "+name,e);
 					continue;
@@ -490,19 +492,15 @@ public class CeSymmMain {
 				msaFuture.add(submit);
 			}
 
-			try {
-
-				for (Future<MultipleAlignment> msa : msaFuture){
-					results.add(msa.get());
+			for (int job=0; job<msaFuture.size(); job++){
+				try {
+					results.add(msaFuture.get(job).get());
+					axes.add(workers.get(job).getSymmetryAxes());
+				} catch (InterruptedException e) {
+					logger.warn("Job failed for structure "+poolNames.get(job),e);
+				} catch (ExecutionException e) {
+					logger.warn("Job failed for structure "+poolNames.get(job),e);
 				}
-				for (CeSymm ce : workers){
-					axes.add(ce.getSymmetryAxes());
-				}
-
-			} catch (InterruptedException e) {
-				logger.warn("Job failed: "+e.getMessage());
-			} catch (ExecutionException e) {
-				logger.warn("Job failed: "+e.getMessage());
 			}
 
 			executor.shutdown();
@@ -522,7 +520,9 @@ public class CeSymmMain {
 				for(CeSymmWriter writer: writers) {
 					try {
 						writer.writeAlignment(results.get(i));
-					} catch (IOException e) {}
+					} catch (Exception e) {
+						logger.warn("Error saving symmetry for entry number "+i,e);
+					}
 				}
 			}
 		}
@@ -937,7 +937,7 @@ public class CeSymmMain {
 					"SubunitLength\t" +
 					"Length\t" +
 					"CoreLength\t" +
-					"Coverage\t");
+					"Coverage");
 			writer.flush();
 		}
 		@Override

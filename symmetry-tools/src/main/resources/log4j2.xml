@@ -11,7 +11,7 @@
 			[%t] %-5p %c - %m%n" /> </File> -->
 	</Appenders>
 	<Loggers>
-		<Root level="info">
+		<Root level="warn">
 			<AppenderRef ref="Console" />
 			<!-- <AppenderRef ref="File" /> -->
 		</Root>

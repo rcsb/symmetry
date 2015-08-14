@@ -33,18 +33,33 @@ Short Option | Long Option | Description
     | --fatcat=file     | Output alignment as FATCAT output
     | --pdb=file        | Output each alignment as a two-model PDB file. The argument may be a directory or a formatting string, where "%s" will be replaced with the structure name. [default "%s.cesymm.pdb"]
     | --tsv=file        | Output alignment as tab-separated file
-    | --stats=file      | Output tab-separated file giving alignment statistics, one line per structure [defaults to stdout, unless -q is given]
+-o  | --stats=file      | Output tab-separated file giving alignment statistics, one line per structure [defaults to stdout, unless -q is given]
 -q  | --nostats         | Do not output default statistics to standard out (equivalent to "--stats=/dev/null")
 -v  | --verbose         | Print detailed output (equivalent to "--tsv=-")
 -j  | --show3d          | Force jMol display for each structure [default for <10 structures when specified on command line]
 -J  | --noshow3d        | Disable jMol display [default with --input or for >=10 structures]
 -t  | --order           | Use TM-Score with order for deciding significance. [default]
 -T  | --noorder         | Use TM-Score alone for deciding significance.
-    | --ordermethod=Class   | Order detection method. Can be a full class name or a short class name from the org.biojava3.structure.align.symm.order package. [default SequenceFunctionOrderDetector]
+    | --ordermethod=Class   | Order detection method. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default SequenceFunctionOrderDetector]
+    | --refinemethod=Class  | Refiner method. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default Single]
+    | --symmtype=Class      | Symmetry Type. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default Auto]
     | --pdbfilepath=dir | Download directory for new structures [default temp folder]
     | --pdbdirsplit     | Indicates that --pdbfilepath is split into multiple subdirs, like the ftp site. [default]
     | --nopdbdirsplit   | Indicates that --pdbfilepath should be a single directory.
-    | --threads         | Number of threads
+    | --threads=int     | Number of threads
+    | --maxgapsize=float| This parameter configures the maximum gap size G, that is applied during the AFP extension. The larger the value, the longer the calculation time can become, Default value is 30. Set to 0 for no limit.
+    | --scoringstrategy=str |   Which scoring function to use: CA_SCORING, SIDE_CHAIN_SCORING, SIDE_CHAIN_ANGLE_SCORING, CA_AND_SIDE_CHAIN_ANGLE_SCORING, or SEQUENCE_CONSERVATION
+    | --winsize=int     | This configures the fragment size m of Aligned Fragment Pairs (AFPs).
+    | --maxrmsd=float   | The maximum RMSD at which to stop alignment optimization. (default: unlimited=99)
+    | --gapopen=float   | Gap opening penalty during alignment optimization [default: 5.0].
+    | --gapextension=float  | Gap extension penalty during alignment optimization [default: 0.5].
+    | --multaxes=bool   | Run iteratively the algorithm to find multiple symmetry levels [default: true].
+    | --opt=bool        | Optimize the resulting symmetry alignment [default: true].
+    | --threshold=float | The symmetry threshold. TM-scores above this value will be considered significant results [default: 0.5, interval [0.0,1.0]].
+    | --maxorder=int    | The maximum number of symmetric subunits [default: 8].
+    | --rndseed=int     | The random seed used in optimization, for reproducibility of the results [default: 0].
+    | --minlen=int      | The minimum length, expressed in number of core aligned residues, of a symmetric subunit [default: 15].
+    | --dcutoff=float   | The maximum distance, in A, allowed between any two aligned residue positions [default: 7.0].
     | --scopversion=version | Version of SCOP or SCOPe to use when resolving SCOP identifiers [defaults to latest SCOPe]
 
 Interactive mode

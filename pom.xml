@@ -1,19 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>symmetry</artifactId>
-	<version>1.1.0-SNAPSHOT</version>
+	<version>1.1.2-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	
 	<name>RCSB Symmetry</name>
+	<url>https://github.com/rcsb/symmetry</url>
+	<description>Tools to detect, analyze, and visualize protein symmetry.
 
+- Detect symmetry in biological assemblies
+- Detect internal pseudo-symmetry in protein chains
+- Visualize results in Jmol
+
+This project contains developmental features for CE-Symm, as well as accessory
+functions such as benchmarking. The core algorithms are gradually incorporated
+into BioJava as they mature.</description>
+	<organization>
+		<name>RCSB</name>
+		<url>http://www.rcsb.org</url>
+	</organization>
+	
 	<properties>
 		<jdk.version>1.6</jdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.targetEncoding>UTF-8</project.build.targetEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
 		<timestamp>${maven.build.timestamp}</timestamp>
-		<slf4j.version>1.7.7</slf4j.version>
-		<log4j.version>2.1</log4j.version>
+		<slf4j.version>1.7.12</slf4j.version>
+		<log4j.version>2.2</log4j.version>
 		<biojava.version>4.1.1-SNAPSHOT</biojava.version>
 	</properties>
 
@@ -82,186 +99,169 @@
 		</snapshotRepository>
 	</distributionManagement>
 
-	<dependencies>
-		<dependency>
-			<groupId>java3d</groupId>
-			<artifactId>vecmath</artifactId>
-			<version>1.3.1</version>
-		</dependency>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>java3d</groupId>
+				<artifactId>vecmath</artifactId>
+				<version>1.3.1</version>
+			</dependency>
 
-		<dependency>
-			<groupId>org.biojava</groupId>
-			<artifactId>biojava-structure</artifactId>
-			<version>${biojava.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.biojava</groupId>
-			<artifactId>biojava-structure-gui</artifactId>
-			<version>${biojava.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.biojava</groupId>
-			<artifactId>biojava-ws</artifactId>
-			<version>${biojava.version}</version>
-		</dependency>
+			<dependency>
+				<groupId>org.biojava</groupId>
+				<artifactId>biojava-structure</artifactId>
+				<version>${biojava.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.biojava</groupId>
+				<artifactId>biojava-structure-gui</artifactId>
+				<version>${biojava.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.biojava</groupId>
+				<artifactId>biojava-ws</artifactId>
+				<version>${biojava.version}</version>
+			</dependency>
 
-		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.15</version>
-		</dependency>
-		<dependency>
-			<groupId>jfree</groupId>
-			<artifactId>jfreechart</artifactId>
-			<version>1.0.12</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-			<scope>test</scope>
-		</dependency>
+			<dependency>
+				<groupId>mysql</groupId>
+				<artifactId>mysql-connector-java</artifactId>
+				<version>5.1.15</version>
+			</dependency>
+			<dependency>
+				<groupId>jfree</groupId>
+				<artifactId>jfreechart</artifactId>
+				<version>1.0.12</version>
+			</dependency>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.11</version>
+				<scope>test</scope>
+			</dependency>
 
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.9.5</version>
-		</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-all</artifactId>
+				<version>1.9.5</version>
+			</dependency>
 
-		<!-- SLF4J API, for compiling -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<!-- binding for log4j 2 at runtime-->
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
-			<version>${log4j.version}</version>
-			<!-- runtime scope includes the test scope as well -->
-			<scope>runtime</scope>
-		</dependency>
-		<!-- Log4j API and Core implementation required for binding -->
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-api</artifactId>
-			<version>${log4j.version}</version>
-			<!-- runtime scope includes the test scope as well -->
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
-			<version>${log4j.version}</version>
-			<!-- runtime scope includes the test scope as well -->
-			<scope>runtime</scope>
-		</dependency>
+			<dependency>
+				<groupId>commons-cli</groupId>
+				<artifactId>commons-cli</artifactId>
+				<version>1.2</version>
+			</dependency>
 
-		<dependency>
-			<groupId>xmlunit</groupId>
-			<artifactId>xmlunit</artifactId>
-			<version>1.4</version>
-		</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-math3</artifactId>
+				<version>3.2</version>
+			</dependency>
 
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-math3</artifactId>
-			<version>3.2</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.rcsb</groupId>
-			<artifactId>structurecodec</artifactId>
-			<version>0.3.0-SNAPSHOT</version>
-		</dependency>
-	</dependencies>
+			<!-- SLF4J API, for compiling -->
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<!-- binding for log4j 2 at runtime-->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-slf4j-impl</artifactId>
+				<version>${log4j.version}</version>
+				<!-- runtime scope includes the test scope as well -->
+				<scope>runtime</scope>
+			</dependency>
+			<!-- Log4j API and Core implementation required for binding -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-api</artifactId>
+				<version>${log4j.version}</version>
+				<!-- runtime scope includes the test scope as well -->
+				<scope>runtime</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-core</artifactId>
+				<version>${log4j.version}</version>
+				<!-- runtime scope includes the test scope as well -->
+				<scope>runtime</scope>
+			</dependency>
+	
+			<dependency>
+				<groupId>xmlunit</groupId>
+				<artifactId>xmlunit</artifactId>
+				<version>1.4</version>
+			</dependency>
+	
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-math3</artifactId>
+				<version>3.2</version>
+			</dependency>
+	
+		</dependencies>
+	</dependencyManagement>
+	
 	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<fork>true</fork>
-					<source>${jdk.version}</source>
-					<target>${jdk.version}</target>
-					<maxmem>2000m</maxmem>
-				</configuration>
-			</plugin>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.1</version>
+				</plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version>
-				<configuration>
-					<archive>
-						<manifest>
-							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>2.4</version>
+				</plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.6</version>
-			</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-resources-plugin</artifactId>
+					<version>2.6</version>
+				</plugin>
 
-			<plugin>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.17</version>
-				<configuration>
-					<argLine>-Xms256m -Xmx2000M</argLine>
-				</configuration>
-			</plugin>
+				<plugin>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.17</version>
+					<configuration>
+						<argLine>-Xms256m -Xmx2000M</argLine>
+					</configuration>
+				</plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.5</version>
-			</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<version>2.5</version>
+				</plugin>
 
-		</plugins>
-		<resources>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>true</filtering>
-				<includes>
-					<include>**/*.properties</include>
-				</includes>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<filtering>false</filtering>
-				<includes>
-					<!-- <include>**/*.cif.gz</include> <include>**/*.pdb</include> <include>**/*.mat</include> -->
-				</includes>
-			</resource>
-		</resources>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-shade-plugin</artifactId>
+					<version>2.3</version>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.4</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 
 
 		<extensions>
 			<extension>
 				<groupId>org.apache.maven.wagon</groupId>
 				<artifactId>wagon-ssh</artifactId>
-				<version>2.3</version>
+				<version>2.6</version>
 			</extension>
 		</extensions>
 
 	</build>
-	<url>https://github.com/rcsb/symmetry</url>
-	<description>Detect, analyze, and visualize protein symmetry
-
- - Detect symmetry in biological assemblies
- - Detect internal pseudo-symmetry in protein chains
- - Visualize results in Jmol</description>
-	<organization>
-		<name>RCSB</name>
-		<url>http://www.rcsb.org</url>
-	</organization>
 
 	<profiles>
 
@@ -313,5 +313,10 @@
 		</profile>
 	</profiles>
 
+	<modules>
+		<module>symmetry-core</module>
+		<module>symmetry-tools</module>
+		<module>symmetry-benchmark</module>
+	</modules>
 
 </project>

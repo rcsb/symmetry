@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 
 import javax.swing.JOptionPane;
 
@@ -452,11 +453,12 @@ public class CeSymmMain {
 
 		while (index < names.size()){
 
-			List<MultipleAlignment> results = new ArrayList<MultipleAlignment>();
+			List<MultipleAlignment> results = 
+					new ArrayList<MultipleAlignment>();
 			List<SymmetryAxes> axes = new ArrayList<SymmetryAxes>();
 
 			ExecutorService executor = Executors.newFixedThreadPool(threads);
-			List<CeSymm> workers = new ArrayList<CeSymm>();
+			List<CeSymmCallable> workers = new ArrayList<CeSymmCallable>();
 			List<Future<MultipleAlignment>> msaFuture = 
 					new ArrayList<Future<MultipleAlignment>>();
 			List<String> poolNames = new ArrayList<String>();
@@ -473,10 +475,7 @@ public class CeSymmMain {
 				try {
 					atoms = cache.getAtoms(name);
 					poolNames.add(name);
-				} catch (IOException e){
-					logger.warn("Could not load structure "+name,e);
-					continue;
-				} catch (StructureException e) {
+				} catch (Exception e){
 					logger.warn("Could not load structure "+name,e);
 					continue;
 				}
@@ -484,22 +483,35 @@ public class CeSymmMain {
 				CeSymm ceSymm = new CeSymm();
 				ceSymm.setParameters(params);
 
-				Callable<MultipleAlignment> worker = 
-						new CeSymmCallable(atoms, ceSymm);
+				CeSymmCallable worker = new CeSymmCallable(atoms, ceSymm);
 
-				workers.add(ceSymm);
+				workers.add(worker);
 				Future<MultipleAlignment> submit = executor.submit(worker);
 				msaFuture.add(submit);
 			}
+			
+			long startTime = System.nanoTime();
 
 			for (int job=0; job<msaFuture.size(); job++){
 				try {
+					while (!msaFuture.get(job).isDone()){
+						long elapsed = (System.nanoTime()-startTime);
+						if (elapsed/1000 > 600000000){ // 10 min
+							throw new TimeoutException("10 min exceeded.");
+						}
+						Thread.sleep(1000);
+					}
 					results.add(msaFuture.get(job).get());
-					axes.add(workers.get(job).getSymmetryAxes());
+					axes.add(workers.get(job).getAxes());
 				} catch (InterruptedException e) {
-					logger.warn("Job failed for structure "+poolNames.get(job),e);
+					logger.warn("Job interrupted for structure " 
+							+ poolNames.get(job),e);
 				} catch (ExecutionException e) {
-					logger.warn("Job failed for structure "+poolNames.get(job),e);
+					logger.warn("Job failed for structure "
+							+ poolNames.get(job),e);
+				} catch (TimeoutException e) {
+					logger.warn("Job timed out for structure "
+							+ poolNames.get(job),e);
 				}
 			}
 
@@ -959,7 +971,8 @@ public class CeSymmMain {
 				order = msa.size();
 				subunitLen = msa.length();
 			}
-			double structureLen = msa.getEnsemble().getAtomArrays().get(0).length;
+			double structureLen = 
+					msa.getEnsemble().getAtomArrays().get(0).length;
 			double coverage = full.length() / structureLen;
 
 			writer.format("%s\t%d\t%s\t%b\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f\n",
@@ -982,6 +995,7 @@ public class CeSymmMain {
 
 		private Atom[] atoms;
 		private CeSymm ceSymm;
+		private SymmetryAxes axes;
 
 		public CeSymmCallable(Atom[] atoms, CeSymm ceSymm){
 			this.atoms = atoms;
@@ -990,7 +1004,17 @@ public class CeSymmMain {
 
 		@Override
 		public MultipleAlignment call() throws Exception {
-			return ceSymm.analyze(atoms);
+			MultipleAlignment symm = ceSymm.analyze(atoms);
+			axes = ceSymm.getSymmetryAxes();
+			try {
+				//Only try to calculate the pg to check termination (timeout)
+				SymmetryTools.getQuaternarySymmetry(symm);
+			} catch (Exception e) {}
+			return symm;
+		}
+
+		public SymmetryAxes getAxes() {
+			return axes;
 		}
 	}
 

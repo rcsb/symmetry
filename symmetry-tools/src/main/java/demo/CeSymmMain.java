@@ -32,11 +32,15 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
+import org.biojava.nbio.structure.StructureIO;
+import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
+import org.biojava.nbio.structure.align.symm.ChainSorter;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
 import org.biojava.nbio.structure.align.util.UserConfiguration;
@@ -63,7 +67,8 @@ import org.slf4j.LoggerFactory;
  */
 public class CeSymmMain {
 
-	private static final Logger logger = LoggerFactory.getLogger(CeSymmMain.class);
+	private static final Logger logger = 
+			LoggerFactory.getLogger(CeSymmMain.class);
 
 	public static void main(String[] args) {
 		// Begin argument parsing
@@ -91,7 +96,7 @@ public class CeSymmMain {
 		try {
 			cli = parser.parse(options,args,false);
 		} catch (ParseException e) {
-			System.err.println("Error: "+e.getMessage());
+			logger.error("Error: "+e.getMessage());
 			help.printHelp(usage, header, options, "");
 			System.exit(1);
 			return;
@@ -123,7 +128,7 @@ public class CeSymmMain {
 			try {
 				names = parseInputStructures(cli.getOptionValue("input"));
 			} catch (FileNotFoundException e) {
-				System.err.println("Error: File not found: "+cli.getOptionValue("input"));
+				logger.error("Error: File not found: "+cli.getOptionValue("input"));
 				System.exit(1);
 				return;
 			}
@@ -175,8 +180,8 @@ public class CeSymmMain {
 			try {
 				writers.add(new XMLWriter(filename));
 			} catch (IOException e) {
-				System.err.println("Error: Ignoring file "+filename+".");
-				System.err.println(e.getMessage());
+				logger.error("Error: Ignoring file "+filename+".");
+				logger.error(e.getMessage());
 			}
 		}
 		if(cli.hasOption("stats")) {
@@ -184,8 +189,8 @@ public class CeSymmMain {
 			try {
 				writers.add(new StatsWriter(filename));
 			} catch (IOException e) {
-				System.err.println("Error: Ignoring file "+filename+".");
-				System.err.println(e.getMessage());
+				logger.error("Error: Ignoring file "+filename+".");
+				logger.error(e.getMessage());
 			}
 		}
 		if(cli.hasOption("fatcat")) {
@@ -193,8 +198,8 @@ public class CeSymmMain {
 			try {
 				writers.add(new FatcatWriter(filename));
 			} catch (IOException e) {
-				System.err.println("Error: Ignoring file "+filename+".");
-				System.err.println(e.getMessage());
+				logger.error("Error: Ignoring file "+filename+".");
+				logger.error(e.getMessage());
 			}
 		}
 		if(cli.hasOption("fasta")) {
@@ -202,8 +207,8 @@ public class CeSymmMain {
 			try {
 				writers.add(new FastaWriter(filename));
 			} catch (IOException e) {
-				System.err.println("Error: Ignoring file "+filename+".");
-				System.err.println(e.getMessage());
+				logger.error("Error: Ignoring file "+filename+".");
+				logger.error(e.getMessage());
 			}
 		}
 
@@ -222,12 +227,12 @@ public class CeSymmMain {
 			try {
 				int gap = Integer.parseInt(gapStr);
 				if(gap < 1) {
-					System.err.println("Invalid maxgapsize: "+gap);
+					logger.error("Invalid maxgapsize: "+gap);
 					System.exit(1);
 				}
 				params.setMaxGapSize(gap);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid maxgapsize: "+gapStr);
+				logger.error("Invalid maxgapsize: "+gapStr);
 				System.exit(1);
 			}
 		}
@@ -239,7 +244,7 @@ public class CeSymmMain {
 				params.setScoringStrategy(strat);
 			} catch (IllegalArgumentException e) {
 				//give up
-				System.err.println("Illegal scoringstrategy. Requires on of "+
+				logger.error("Illegal scoringstrategy. Requires on of "+
 						CliTools.getEnumValuesAsString(ScoringStrategy.class));
 				System.exit(1);
 			}
@@ -249,12 +254,12 @@ public class CeSymmMain {
 			try {
 				int win = Integer.parseInt(winStr);
 				if(win < 1) {
-					System.err.println("Invalid winsize: "+winStr);
+					logger.error("Invalid winsize: "+winStr);
 					System.exit(1);
 				}
 				params.setWinSize(win);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid winsize: "+winStr);
+				logger.error("Invalid winsize: "+winStr);
 				System.exit(1);
 			}
 
@@ -264,12 +269,12 @@ public class CeSymmMain {
 			try {
 				double val = Double.parseDouble(strVal);
 				if(val < 0) {
-					System.err.println("Invalid maxrmsd: "+strVal);
+					logger.error("Invalid maxrmsd: "+strVal);
 					System.exit(1);
 				}
 				params.setMaxOptRMSD(val);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid maxrmsd: "+strVal);
+				logger.error("Invalid maxrmsd: "+strVal);
 				System.exit(1);
 			}
 
@@ -279,12 +284,12 @@ public class CeSymmMain {
 			try {
 				double val = Double.parseDouble(strVal);
 				if(val < 0) {
-					System.err.println("Invalid gapopen: "+strVal);
+					logger.error("Invalid gapopen: "+strVal);
 					System.exit(1);
 				}
 				params.setGapOpen(val);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid gapopen: "+strVal);
+				logger.error("Invalid gapopen: "+strVal);
 				System.exit(1);
 			}
 
@@ -294,12 +299,12 @@ public class CeSymmMain {
 			try {
 				double val = Double.parseDouble(strVal);
 				if(val < 0) {
-					System.err.println("Invalid gapextension: "+strVal);
+					logger.error("Invalid gapextension: "+strVal);
 					System.exit(1);
 				}
 				params.setGapExtension(val);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid gapextension: "+strVal);
+				logger.error("Invalid gapextension: "+strVal);
 				System.exit(1);
 			}
 		}
@@ -311,7 +316,7 @@ public class CeSymmMain {
 				params.setOrderDetectorMethod(val);
 			} catch (IllegalArgumentException e) {
 				//give up
-				System.err.println("Illegal ordermethod. Requires on of "+
+				logger.error("Illegal ordermethod. Requires on of "+
 						CliTools.getEnumValuesAsString(OrderDetectorMethod.class));
 				System.exit(1);
 			}
@@ -324,7 +329,7 @@ public class CeSymmMain {
 				params.setRefineMethod(val);
 			} catch (IllegalArgumentException e) {
 				//give up
-				System.err.println("Illegal refinemethod. Requires on of "+
+				logger.error("Illegal refinemethod. Requires on of "+
 						CliTools.getEnumValuesAsString(RefineMethod.class));
 				System.exit(1);
 			}
@@ -337,7 +342,7 @@ public class CeSymmMain {
 				params.setSymmetryType(val);
 			} catch (IllegalArgumentException e) {
 				//give up
-				System.err.println("Illegal symmtype. Requires on of "+
+				logger.error("Illegal symmtype. Requires on of "+
 						CliTools.getEnumValuesAsString(RefineMethod.class));
 				System.exit(1);
 			}
@@ -347,12 +352,12 @@ public class CeSymmMain {
 			try {
 				int val = Integer.parseInt(strVal);
 				if(val < 0) {
-					System.err.println("Invalid maxorder: "+strVal);
+					logger.error("Invalid maxorder: "+strVal);
 					System.exit(1);
 				}
 				params.setMaxSymmOrder(val);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid maxorder: "+strVal);
+				logger.error("Invalid maxorder: "+strVal);
 				System.exit(1);
 			}
 		}
@@ -361,12 +366,12 @@ public class CeSymmMain {
 			try {
 				int val = Integer.parseInt(strVal);
 				if(val < 0) {
-					System.err.println("Invalid rndseed: "+strVal);
+					logger.error("Invalid rndseed: "+strVal);
 					System.exit(1);
 				}
 				params.setSeed(val);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid rndseed: "+strVal);
+				logger.error("Invalid rndseed: "+strVal);
 				System.exit(1);
 			}
 		}
@@ -376,7 +381,7 @@ public class CeSymmMain {
 				boolean val = Boolean.parseBoolean(strVal);
 				params.setOptimization(val);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid opt: "+strVal);
+				logger.error("Invalid opt: "+strVal);
 				System.exit(1);
 			}
 		}
@@ -386,7 +391,7 @@ public class CeSymmMain {
 				boolean val = Boolean.parseBoolean(strVal);
 				params.setMultipleAxes(val);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid multaxes: "+strVal);
+				logger.error("Invalid multaxes: "+strVal);
 				System.exit(1);
 			}
 		}
@@ -395,12 +400,12 @@ public class CeSymmMain {
 			try {
 				double val = Double.parseDouble(strVal);
 				if(val < 0) {
-					System.err.println("Invalid threshold: "+strVal);
+					logger.error("Invalid threshold: "+strVal);
 					System.exit(1);
 				}
 				params.setSymmetryThreshold(val);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid threshold: "+strVal);
+				logger.error("Invalid threshold: "+strVal);
 				System.exit(1);
 			}
 		}
@@ -409,12 +414,12 @@ public class CeSymmMain {
 			try {
 				double val = Double.parseDouble(strVal);
 				if(val < 0) {
-					System.err.println("Invalid dcutoff: "+strVal);
+					logger.error("Invalid dcutoff: "+strVal);
 					System.exit(1);
 				}
 				params.setDistanceCutoff(val);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid dcutoff: "+strVal);
+				logger.error("Invalid dcutoff: "+strVal);
 				System.exit(1);
 			}
 		}
@@ -423,12 +428,12 @@ public class CeSymmMain {
 			try {
 				int val = Integer.parseInt(strVal);
 				if(val < 0) {
-					System.err.println("Invalid minlen: "+strVal);
+					logger.error("Invalid minlen: "+strVal);
 					System.exit(1);
 				}
 				params.setMinSubunitLength(val);
 			} catch( NumberFormatException e) {
-				System.err.println("Invalid minlen: "+strVal);
+				logger.error("Invalid minlen: "+strVal);
 				System.exit(1);
 			}
 		}
@@ -452,6 +457,7 @@ public class CeSymmMain {
 		int index = 0;
 
 		while (index < names.size()){
+			logger.info("Starting new batch of threads from index: "+index);
 
 			List<MultipleAlignment> results = 
 					new ArrayList<MultipleAlignment>();
@@ -473,6 +479,14 @@ public class CeSymmMain {
 				Atom[] atoms = null;
 
 				try {
+					//Load the biological assembly of the protein
+					/*Structure s = null;
+					try {
+						s = StructureIO.getBiologicalAssembly(name, 1);
+					} catch (StructureException e) {
+						s = StructureIO.getBiologicalAssembly(name, 0);
+					}
+					atoms = ChainSorter.cyclicSort(s);*/
 					atoms = cache.getAtoms(name);
 					poolNames.add(name);
 				} catch (Exception e){

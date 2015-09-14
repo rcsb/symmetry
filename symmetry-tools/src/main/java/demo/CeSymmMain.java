@@ -47,6 +47,7 @@ import org.biojava.nbio.structure.align.util.UserConfiguration;
 import org.biojava.nbio.structure.io.util.FileDownloadUtils;
 import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
+import org.biojava.nbio.structure.symmetry.gui.SymmetryGui;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.OrderDetectorMethod;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
@@ -136,13 +137,9 @@ public class CeSymmMain {
 			names.addAll(Arrays.asList(args));
 		} else {
 			if(args.length == 0) {
-				// No structures given; prompt user
-				String name = promptUserForStructure();
-				if( name == null) {
-					//cancel
-					return;
-				}
-				names = Arrays.asList(name);
+				// No structures given; prompt user with GUI
+				SymmetryGui.getInstance();
+				return;
 			} else {
 				// take names from the command line arguments
 				names = Arrays.asList(args);
@@ -561,44 +558,6 @@ public class CeSymmMain {
 		long totalSecondsTaken = (System.nanoTime() - initialTime) / 1000000;
 		long meanSecondsTaken = (long) (totalSecondsTaken / (float) names.size());
 		logger.info("Total runtime: "+totalSecondsTaken + ", mean runtime: "+meanSecondsTaken);
-	}
-
-
-
-
-
-
-
-
-
-	/**
-	 * Prompts the user for an input structure using a dialog box
-	 * @return The input string, or null if the user cancelled
-	 */
-	private static String promptUserForStructure() {
-		String name;
-		// default name
-		name = "d1ijqa1";
-		//		name = "1G6S";
-		name = "1MER.A";
-		//		name = "1MER";
-		//		name = "1TIM.A";
-		//		name = "d1h70a_";
-		//name = "2YMS";
-		//name = "1HIV";
-
-		name = (String)JOptionPane.showInputDialog(
-				null,
-				"Structure ID (PDB, SCOP, etc):",
-				"Input Structure",
-				JOptionPane.PLAIN_MESSAGE,
-				null,
-				null,
-				name);
-		if( name != null ) {
-			name = name.trim();
-		}
-		return name;
 	}
 
 	/**

@@ -215,14 +215,16 @@ public class ChainSorter {
 	 * Test the chain ordering in some canonical examples:
 	 * <ul><li>1KQ1: C6 Homo-hexamer, chain order A,B,M,K,I,H
 	 * <li>4QVC: C6 Homo-hexamer, chain order A,B,C,D,E,F
-	 * <li>4P24: C7 Homo-hexamer, chain order A,B,C,D,E,F,G
+	 * <li>4P24: C7 Homo-heptamer, chain order A,B,C,D,E,F,G
+	 * <li>3X2R: C9 Homo, chain order A,B,C,D,E,F,G,H,I
 	 * </ul>
 	 */
 	public static void main(String[] args) throws Exception {
 		
 		//String name = "4QVC";
-		String name  = "1KQ1";
+		//String name  = "1KQ1";
 		//String name = "4P24";
+		String name = "3X2R";
 		
 		//Load the biological assembly of the protein
 		Structure structure = null;
@@ -232,7 +234,8 @@ public class ChainSorter {
 			structure = StructureIO.getBiologicalAssembly(name, 0);
 		}
 		
-		Atom[] ca1 = ChainSorter.cyclicSort(structure);
+		//Atom[] ca1 = ChainSorter.cyclicSort(structure);
+		Atom[] ca1 = ChainSorter.quatSort(structure);
 		//Atom[] ca1 = StructureTools.getRepresentativeAtomArray(structure);
 		
 		CeSymm cesymm = new CeSymm();

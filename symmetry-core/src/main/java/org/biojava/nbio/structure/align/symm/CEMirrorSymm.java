@@ -74,7 +74,7 @@ public class CEMirrorSymm extends CeSymm {
 
 		// try to set name2, which was lost in the clone
 		try {
-			afpChain.setName2(ca2[0].getGroup().getChain().getParent().getName());
+			afpChain.setName2(ca2[0].getGroup().getChain().getStructure().getName());
 		} catch( Exception e) {}
 
 		postProcessAlignment(afpChain);

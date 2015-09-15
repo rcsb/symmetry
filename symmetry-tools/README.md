@@ -1,7 +1,7 @@
-Symmetry-tools
+symmetry-tools
 ==============
 
-This project packages CE-Symm and related tools for easy deployment.
+This module packages CE-Symm and related tools for easy deployment.
 
 Tools can be run or downloaded from http://source.rcsb.org/jfatcatserver/symmetry.jsp.
 
@@ -9,7 +9,6 @@ Documentation
 -------------
 
 * [CE-Symm](docs/CeSymm.md)
-* CensusCLI
 
 License
 ------------

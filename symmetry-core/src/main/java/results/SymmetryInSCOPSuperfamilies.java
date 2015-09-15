@@ -1,32 +1,14 @@
 package results;
 
-import java.util.Locale;
-
-
 import org.jfree.chart.ChartFactory; 
-import org.jfree.chart.ChartFrame;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.general.DefaultPieDataset;
-import org.jfree.data.statistics.SimpleHistogramBin;
-import org.jfree.data.statistics.SimpleHistogramDataset;
-
-import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GradientPaint;
-import java.awt.Paint;
-
 import javax.swing.JFrame;
 
-import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.CategoryAxis;
-import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.BarPainter;
 import org.jfree.chart.renderer.category.BarRenderer;
 
 import org.jfree.data.category.CategoryDataset;
@@ -172,7 +154,7 @@ public class SymmetryInSCOPSuperfamilies    {
 	 * @param args  ignored.
 	 */
 	public static void main(String[] args) {
-		SymmetryInSCOPSuperfamilies demo = new SymmetryInSCOPSuperfamilies();
+		new SymmetryInSCOPSuperfamilies();
 				
 		
 	}

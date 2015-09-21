@@ -54,16 +54,22 @@ public class ChainSorter {
 	 * the edge of a circle. Thus, this property can be used to sort 
 	 * the chains in cyclic order.
 	 * 
-	 * @param structure Structure containing the Chains
+	 * @param structure Structure containing the Chains. If multiple
+	 * 			models are present and the structure is not NMR, the
+	 * 			Chains in all models will be considered.
 	 * @return Atom[] with the sorted order of Atoms, 
 	 * 			corresponding to the ordering of the chains.
 	 */
 	public static Atom[] cyclicSort(Structure structure){
 		
 		List<Atom[]> chainAtoms = new ArrayList<Atom[]>();
-		for (Chain c:structure.getChains()){
-			Atom[] atoms = StructureTools.getRepresentativeAtomArray(c);
-			if (atoms.length > 0) chainAtoms.add(atoms);
+		//Consider all models of the structure
+		for (int m=0; m < structure.nrModels(); m++){
+			for (Chain c:structure.getChains(m)){
+				Atom[] atoms = StructureTools.getRepresentativeAtomArray(c);
+				if (atoms.length > 0) chainAtoms.add(atoms);
+			}
+			if (structure.isNmr()) break; //Only consider first model
 		}
 		return cyclicSort(chainAtoms);
 	}
@@ -224,19 +230,18 @@ public class ChainSorter {
 		//String name = "4QVC";
 		//String name  = "1KQ1";
 		//String name = "4P24";
-		String name = "3X2R";
+		String name = "1uae";
 		
 		//Load the biological assembly of the protein
 		Structure structure = null;
 		try {
-			structure = StructureIO.getBiologicalAssembly(name, 1);
+			structure = StructureIO.getBiologicalAssembly(name);
 		} catch (StructureException e) {
 			structure = StructureIO.getBiologicalAssembly(name, 0);
 		}
 		
-		//Atom[] ca1 = ChainSorter.cyclicSort(structure);
-		Atom[] ca1 = ChainSorter.quatSort(structure);
-		//Atom[] ca1 = StructureTools.getRepresentativeAtomArray(structure);
+		Atom[] ca1 = ChainSorter.cyclicSort(structure);
+		//Atom[] ca1 = ChainSorter.quatSort(structure);
 		
 		CeSymm cesymm = new CeSymm();
 		CESymmParameters params = (CESymmParameters) cesymm.getParameters();
@@ -245,6 +250,6 @@ public class ChainSorter {
 		params.setMultipleAxes(true);
 		
 		MultipleAlignment msa = cesymm.analyze(ca1);
-		SymmetryDisplay.display(msa);
+		SymmetryDisplay.display(msa, cesymm.getSymmetryAxes());
 	}
 }

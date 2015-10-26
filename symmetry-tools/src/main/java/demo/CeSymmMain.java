@@ -921,12 +921,21 @@ public class CeSymmMain {
 	private static abstract class CeSymmWriter {
 		protected PrintWriter writer;
 
+		boolean shouldClose = true;
+
 		public CeSymmWriter(PrintWriter writer) {
 			this.writer = writer;
+			this.shouldClose = true;
 		}
 
 		public CeSymmWriter(String filename) throws IOException {
-			this(openOutputFile(filename));
+			if(filename.equals("-")) {
+				this.shouldClose = false;
+				writer = new PrintWriter(System.out,true);
+			} else {
+				this.shouldClose = true;
+				writer = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
+			}
 		}
 
 		abstract public void writeHeader() throws IOException;
@@ -937,7 +946,8 @@ public class CeSymmMain {
 		public void close() {
 			if (writer != null) {
 				writer.flush();
-				writer.close();
+				if(shouldClose)
+					writer.close();
 			}
 		}
 

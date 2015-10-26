@@ -15,5 +15,8 @@
 			<AppenderRef ref="Console" />
 			<!-- <AppenderRef ref="File" /> -->
 		</Root>
+		<Logger name="demo" level="info" additivity="false">
+			<AppenderRef ref="Console" />
+		</Logger>
 	</Loggers>
 </Configuration>

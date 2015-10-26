@@ -14,11 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -32,17 +30,14 @@ import org.apache.commons.cli.ParseException;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
-import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
-import org.biojava.nbio.structure.align.symm.ChainSorter;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
 import org.biojava.nbio.structure.align.util.UserConfiguration;
-import org.biojava.nbio.structure.io.FileParsingParameters;
 import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.biojava.nbio.structure.io.util.FileDownloadUtils;
 import org.biojava.nbio.structure.scop.ScopFactory;
@@ -60,7 +55,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Main executable for running CE-Symm.
- * Run with -h for usage, or without arguments for interactive mode.
+ * Run with -h for usage help, or without arguments for interactive mode
+ * using the {@link SymmetryGui}.
  * 
  * @author Spencer Bliven
  * @author Aleix Lafita
@@ -232,7 +228,7 @@ public class CeSymmMain {
 			}
 		}
 
-		Integer threads = 1;
+		Integer threads = Runtime.getRuntime().availableProcessors();
 		if(cli.hasOption("threads")) {
 			threads = new Integer(cli.getOptionValue("threads"));
 			if (threads < 1){
@@ -473,119 +469,40 @@ public class CeSymmMain {
 		cache.setFileParsingParams(p);
 		StructureIO.setAtomCache(cache);*/
 
+		//Write the headers of the files
 		for(CeSymmWriter writer: writers) {
 			try {
 				writer.writeHeader();
-			} catch (IOException e) {}
+			} catch (IOException e) {
+				logger.error("Could not write header to file.",e);
+			}
 		}
-		long initialTime = System.nanoTime();
-		int index = 0;
-
-		while (index < names.size()){
-			logger.info("Starting new batch of threads from index: "+index);
-
-			List<MultipleAlignment> results = 
-					new ArrayList<MultipleAlignment>();
-			List<SymmetryAxes> axes = new ArrayList<SymmetryAxes>();
-
-			ExecutorService executor = Executors.newFixedThreadPool(threads);
-			List<CeSymmCallable> workers = new ArrayList<CeSymmCallable>();
-			List<Future<MultipleAlignment>> msaFuture = 
-					new ArrayList<Future<MultipleAlignment>>();
-			List<String> poolNames = new ArrayList<String>();
-
-			//This is needed to avoid memory crash by saving all alignments
-			while (index < names.size()){
-				if (workers.size() == threads) break;
-
-				String name = names.get(index);
-				index++;
-
-				Atom[] atoms = null;
-
-				try {
-					//Load the biological assembly of the protein
-					/*Structure s = null;
-					try {
-						s = StructureIO.getBiologicalAssembly(name, 1);
-					} catch (StructureException e) {
-						s = StructureIO.getBiologicalAssembly(name, 0);
-					}
-					atoms = ChainSorter.cyclicSort(s);*/
-					atoms = cache.getAtoms(name);
-					poolNames.add(name);
-				} catch (Exception e){
-					logger.warn("Could not load structure "+name,e);
-					continue;
-				}
-
-				CeSymm ceSymm = new CeSymm();
-				ceSymm.setParameters(params);
-
-				CeSymmCallable worker = new CeSymmCallable(atoms, ceSymm);
-
-				workers.add(worker);
-				Future<MultipleAlignment> submit = executor.submit(worker);
-				msaFuture.add(submit);
-			}
-			
-			long startTime = System.nanoTime();
-
-			for (int job=0; job<msaFuture.size(); job++){
-				try {
-					while (!msaFuture.get(job).isDone()){
-						long elapsed = (System.nanoTime()-startTime);
-						if (elapsed/1000 > 600000000){ // 10 min
-							throw new TimeoutException("10 min exceeded.");
-						}
-						Thread.sleep(1000);
-					}
-					results.add(msaFuture.get(job).get());
-					axes.add(workers.get(job).getAxes());
-				} catch (InterruptedException e) {
-					logger.warn("Job interrupted for structure " 
-							+ poolNames.get(job),e);
-				} catch (ExecutionException e) {
-					logger.warn("Job failed for structure "
-							+ poolNames.get(job),e);
-				} catch (TimeoutException e) {
-					logger.warn("Job timed out for structure "
-							+ poolNames.get(job),e);
-				}
-			}
-
+		long startTime = System.nanoTime();
+		
+		//Start the workers in a fixed threaded pool
+		ExecutorService executor = Executors.newFixedThreadPool(threads);
+		List<Callable<Object>> workers = new ArrayList<Callable<Object>>();
+		for (String name : names){
+			Runnable worker = new CeSymmWorker(name, params, cache, writers, 
+					displayAlignment);
+			workers.add(Executors.callable(worker));
+		}
+		try {
+			executor.invokeAll(workers, 10, TimeUnit.MINUTES);
 			executor.shutdown();
-
-			for (int i=0; i<results.size(); i++){
-
-				// Display alignment
-				if( displayAlignment ) {
-					try {
-						SymmetryDisplay.display(results.get(i), axes.get(i));
-					} catch (StructureException e) {
-						logger.warn("Error displaying symmetry for entry number "+i,e);
-					}
-				}
-
-				// Output alignments
-				for(CeSymmWriter writer: writers) {
-					try {
-						writer.writeAlignment(results.get(i));
-					} catch (Exception e) {
-						logger.warn("Error saving symmetry for entry number "+i,e);
-					}
-				}
+			if (!executor.awaitTermination(72, TimeUnit.HOURS)){
+				logger.warn("Calculation timeout of 72 hours exceeded.");
 			}
+		} catch (InterruptedException e) {
+			logger.warn("Calculation interrupted.", e);
 		}
 
-		// close last, in case any writers share output streams
-		for(CeSymmWriter writer: writers) {
-			writer.close();
-		}
+		//Close any writers of output
+		for(CeSymmWriter writer: writers) writer.close();
 
-		long totalSecondsTaken = (System.nanoTime() - initialTime) / 1000000;
-		long meanSecondsTaken = (long) (totalSecondsTaken / (float) names.size());
-		logger.info("Total runtime: "+totalSecondsTaken + ", mean runtime: "+meanSecondsTaken);
+		long elapsed = (System.nanoTime() - startTime) / 1000000;
+		long meanRT = (long) (elapsed / (float) names.size());
+		logger.info("Total runtime: "+elapsed + ", mean runtime: "+meanRT);
 	}
 
 	/**
@@ -1030,36 +947,77 @@ public class CeSymmMain {
 				writer.append(" could be refined into symmetry order ");
 				writer.append(msa.size()+System.getProperty("line.separator"));
 			} else {
-				writer.append(" could not be refined. It is asymmetric.");
+				writer.append(" could not be refined (asymmetric).");
+				writer.append(System.getProperty("line.separator"));
 			}
 			writer.flush();
 		}
 	}
 
-	public static class CeSymmCallable implements Callable<MultipleAlignment> {
-
-		private Atom[] atoms;
+	/**
+	 * This Runnable implementation runs CeSymm on the input structure
+	 * and with the input parameters and writes the results to the 
+	 * output writers. If the 3D visualization is turned on, it creates
+	 * a new thread with the Jmol frame.
+	 * 
+	 * @author Aleix Lafita
+	 *
+	 */
+	public static class CeSymmWorker implements Runnable {
+		
+		private String id;
 		private CeSymm ceSymm;
-		private SymmetryAxes axes;
+		private AtomCache cache;
+		private List<CeSymmWriter> writers;
+		private boolean show3d;
 
-		public CeSymmCallable(Atom[] atoms, CeSymm ceSymm){
-			this.atoms = atoms;
-			this.ceSymm = ceSymm;
+		public CeSymmWorker(String structureID, CESymmParameters params, 
+				AtomCache cache, List<CeSymmWriter> writers, boolean show3d){
+			this.id = structureID;
+			this.cache = cache;
+			this.writers = writers;
+			this.show3d = show3d;
+			ceSymm = new CeSymm();
+			ceSymm.setParameters(params);
 		}
 
 		@Override
-		public MultipleAlignment call() throws Exception {
-			MultipleAlignment symm = ceSymm.analyze(atoms);
-			axes = ceSymm.getSymmetryAxes();
+		public void run() {
+			
 			try {
-				//Only try to calculate the pg to check termination (timeout)
-				SymmetryTools.getQuaternarySymmetry(symm);
-			} catch (Exception e) {}
-			return symm;
-		}
-
-		public SymmetryAxes getAxes() {
-			return axes;
+				//Obtain the structure representation
+				Structure s = cache.getStructure(id);
+				Atom[] atoms = StructureTools.getRepresentativeAtomArray(s);
+				
+				//Run the symmetry analysis
+				MultipleAlignment result = ceSymm.analyze(atoms);
+				SymmetryTools.getQuaternarySymmetry(result); //check only
+				
+				//Write into the output files
+				for(CeSymmWriter writer : writers) {
+					try {
+						synchronized (writer){
+							writer.writeAlignment(result);
+						}
+					} catch (Exception e) {
+						logger.warn("Could not save results for "+id,e);
+					}
+				}
+				
+				// Display alignment in 3D Jmol
+				if(show3d) {
+					SymmetryAxes axes = ceSymm.getSymmetryAxes();
+					try {
+						SymmetryDisplay.display(result, axes);
+					} catch (StructureException e) {
+						logger.warn("Could not display in Jmol "+id,e);
+					}
+				}
+			} catch (IOException e){
+				logger.error("Could not load structure "+id,e);
+			} catch (StructureException e) {
+				logger.error("Could not analyze structure "+id,e);
+			}
 		}
 	}
 

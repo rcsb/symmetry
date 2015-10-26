@@ -19,8 +19,8 @@ import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
 public class MultipleRefiner implements Refiner {
 
 	@Override
-	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] atoms)
-			throws StructureException, RefinerFailedException {
+	public AFPChain refine(List<AFPChain> afpAlignments, Atom[] atoms,
+			int order) throws StructureException, RefinerFailedException {
 
 		//return cycleRefine(afpAlignments, atoms, order);
 		throw new RefinerFailedException("Multiple Refiner not yet implemented!");

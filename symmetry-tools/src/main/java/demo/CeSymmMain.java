@@ -20,8 +20,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
-import javax.swing.JOptionPane;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -44,6 +42,8 @@ import org.biojava.nbio.structure.align.symm.ChainSorter;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
 import org.biojava.nbio.structure.align.util.UserConfiguration;
+import org.biojava.nbio.structure.io.FileParsingParameters;
+import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.biojava.nbio.structure.io.util.FileDownloadUtils;
 import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
@@ -181,6 +181,29 @@ public class CeSymmMain {
 				logger.error(e.getMessage());
 			}
 		}
+		
+		// Print summary to std out? verbose option
+		// Default to false with --input or with >=10 structures
+		boolean verbose = !cli.hasOption("input") && names.size() < 10;
+		if(cli.hasOption("noverbose")) {
+			verbose = false;
+		}
+		if(cli.hasOption("verbose")) {
+			String filename = cli.getOptionValue("verbose");
+			try {
+				writers.add(new VerboseWriter(filename));
+			} catch (IOException e) {
+				logger.error("Error: Ignoring file "+filename+".");
+				logger.error(e.getMessage());
+			}
+		} else if (verbose){
+			try {
+				writers.add(new VerboseWriter("-"));
+			} catch (IOException e) {
+				logger.error(e.getMessage());
+			}
+		}
+		
 		if(cli.hasOption("stats")) {
 			String filename = cli.getOptionValue("stats");
 			try {
@@ -444,6 +467,11 @@ public class CeSymmMain {
 			cacheConfig.setCacheFilePath(pdbFilePath);
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
+		cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
+		/*FileParsingParameters p = new FileParsingParameters();
+		p.setParseSecStruc(true);
+		cache.setFileParsingParams(p);
+		StructureIO.setAtomCache(cache);*/
 
 		for(CeSymmWriter writer: writers) {
 			try {
@@ -597,6 +625,12 @@ public class CeSymmMain {
 				.withDescription("Output alignment as XML (use --xml=- for standard out).")
 				.create("o"));
 		optionOrder.put("xml", optionNum++);
+		options.addOption( OptionBuilder.withLongOpt("verbose")
+				.hasArg(true)
+				.withArgName("file")
+				.withDescription("Output verbose summary of the job results.")
+				.create("o"));
+		optionOrder.put("xml", optionNum++);
 		options.addOption( OptionBuilder.withLongOpt("stats")
 				.hasArg(true)
 				.withArgName("file")
@@ -636,7 +670,18 @@ public class CeSymmMain {
 		optionOrder.put(opt.getLongOpt(), optionNum++);
 		grp.addOption(opt);
 		options.addOptionGroup(grp);
+		
+		//verbose ouput
+		opt = OptionBuilder
+				.withLongOpt("noverbose")
+				.hasArg(false)
+				.withDescription("Disable verbose summary to the std output."
+						+ "[default for >=10 structures when specified on command"
+						+ " line]")
+						.create();
+		grp.addOption(opt);
 
+		//enums
 		options.addOptionGroup(grp);
 		options.addOption( OptionBuilder.withLongOpt("ordermethod")
 				.hasArg(true)
@@ -960,6 +1005,33 @@ public class CeSymmMain {
 					full.getCoreLength(),
 					coverage
 					);
+			writer.flush();
+		}
+	}
+	
+	private static class VerboseWriter extends CeSymmWriter {
+
+		public VerboseWriter(String filename) throws IOException {
+			super(filename);
+		}
+		
+		@Override
+		public void writeHeader() {
+			writer.println("Summary of the job results:");
+			writer.flush();
+		}
+		@Override
+		public void writeAlignment(MultipleAlignment msa)
+				throws IOException {
+
+			writer.append(msa.getEnsemble().getStructureNames().get(0));
+			
+			if (SymmetryTools.isRefined(msa)){
+				writer.append(" could be refined into symmetry order ");
+				writer.append(msa.size()+System.getProperty("line.separator"));
+			} else {
+				writer.append(" could not be refined. It is asymmetric.");
+			}
 			writer.flush();
 		}
 	}

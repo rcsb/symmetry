@@ -13,6 +13,7 @@ import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
+import org.biojava.nbio.structure.io.FileParsingParameters;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
@@ -230,7 +231,8 @@ public class ChainSorter {
 		//String name = "4QVC";
 		//String name  = "1KQ1";
 		//String name = "4P24";
-		String name = "1uae";
+		//String name = "1uae";
+		String name = "2VQA";
 		
 		//Load the biological assembly of the protein
 		Structure structure = null;

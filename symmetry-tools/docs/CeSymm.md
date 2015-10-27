@@ -103,7 +103,7 @@ and the **thread overhead** will dominate with more than 8 threads. The scaling
 factor for 8 threads is between 2.5 (for large structures) and 1.5 (for small
 structures). See the efficiency plot below for graphical performance evaluation:
 
-![efficiency_plot](CeSymm_MT_efficiency.png)
+![efficiency_plot](CeSymm_MT.png)
 
 Output
 ------

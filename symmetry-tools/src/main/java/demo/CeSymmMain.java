@@ -497,12 +497,12 @@ public class CeSymmMain {
 			logger.warn("Calculation interrupted.", e);
 		}
 
-		//Close any writers of output
-		for(CeSymmWriter writer: writers) writer.close();
-
 		long elapsed = (System.nanoTime() - startTime) / 1000000;
 		long meanRT = (long) (elapsed / (float) names.size());
 		logger.info("Total runtime: "+elapsed + ", mean runtime: "+meanRT);
+		
+		//Close any writers of output
+		for(CeSymmWriter writer: writers) writer.close();
 	}
 
 	/**

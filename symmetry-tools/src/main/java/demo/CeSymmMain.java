@@ -944,8 +944,12 @@ public class CeSymmMain {
 			writer.append(msa.getEnsemble().getStructureNames().get(0));
 			
 			if (SymmetryTools.isRefined(msa)){
-				writer.append(" could be refined into symmetry order ");
-				writer.append(msa.size()+System.getProperty("line.separator"));
+				writer.append(" could be refined into "+
+						"symmetry order "+msa.size()+". The result is ");
+				if (msa.getScore(MultipleAlignmentScorer.AVGTM_SCORE) >= 0.4){
+					writer.append("significant (symmetric).");
+				} else writer.append("not significant (asymmetric).");
+				writer.append(System.getProperty("line.separator"));
 			} else {
 				writer.append(" could not be refined (asymmetric).");
 				writer.append(System.getProperty("line.separator"));

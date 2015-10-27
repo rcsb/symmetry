@@ -95,6 +95,15 @@ display by default. Use <tt>--jmol</tt> to override this behavior.
 ```bash
 runCESymm.sh --input=queries.txt --xml=output.xml
 ```
+An important feature in the batch mode is the multithreading implementation.
+By *default*, all the allowed CPUs are used to run the symmetry analyses in 
+parallel. The option `-threads N` can be used to set the number N of threads
+to use. Note that the scaling efficiency of the multithreading is not perfect,
+and the **thread overhead** will dominate with more than 8 threads. The scaling
+factor for 8 threads is between 2.5 (for large structures) and 1.5 (for small
+structures). See the efficiency plot below for graphical performance evaluation:
+
+![efficiency_plot](CeSymm_MT_efficiency.png)
 
 Output
 ------

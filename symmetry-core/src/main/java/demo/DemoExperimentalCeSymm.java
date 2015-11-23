@@ -1,27 +1,27 @@
 package demo;
 
 import java.io.IOException;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
+import org.biojava.nbio.structure.align.symm.FastCeSymm;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
-import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 
 /**
- * Quick demo of how to call CE-Symm programmatically.
- * Some examples of different symmetry types are proposed.
+ * Demo to use the experimental versions of CeSymm.
  *
  * @author Spencer Bliven
  * @author Aleix Lafita
  *
  */
-public class DemoCeSymm {
+public class DemoExperimentalCeSymm {
 
 	public static void main(String[] args) 
 			throws IOException, StructureException {
@@ -51,17 +51,17 @@ public class DemoCeSymm {
 		 */
 
 		//Set the name of the protein structure to analyze
-		String name = "1vym";
+		String name = "4i4q";
 
 		//Download the atoms
 		AtomCache cache = new AtomCache();
 		Structure s = cache.getStructure(name);
 		Atom[] atoms = StructureTools.getRepresentativeAtomArray(s);
 
-		CeSymm ceSymm = new CeSymm();
+		FastCeSymm ceSymm = new FastCeSymm();
 
 		//Choose some parameters
-		CESymmParameters params = (CESymmParameters) ceSymm.getParameters();
+		CESymmParameters params = ceSymm.getParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
 		params.setSymmetryType(SymmetryType.AUTO);
 		params.setOptimization(true);

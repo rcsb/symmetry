@@ -39,7 +39,7 @@ public class MultipassOrderDetector implements OrderDetector {
 		} catch (StructureException e) {
 			throw new RefinerFailedException(e);
 		}
-		List<AFPChain> alignments = ce.getAfpAlignments();
+		List<AFPChain> alignments = ce.getSelfAlignments();
 		// For high orders, take it from the number of alignments with unrefined TM above threshold
 		if(alignments.size() > 1) {
 			return alignments.size() + 1;

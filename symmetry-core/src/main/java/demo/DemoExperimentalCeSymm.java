@@ -51,7 +51,7 @@ public class DemoExperimentalCeSymm {
 		 */
 
 		//Set the name of the protein structure to analyze
-		String name = "4i4q";
+		String name = "1vym";
 
 		//Download the atoms
 		AtomCache cache = new AtomCache();
@@ -62,10 +62,10 @@ public class DemoExperimentalCeSymm {
 
 		//Choose some parameters
 		CESymmParameters params = ceSymm.getParameters();
-		params.setRefineMethod(RefineMethod.SINGLE);
+		params.setRefineMethod(RefineMethod.NOT_REFINED);
 		params.setSymmetryType(SymmetryType.AUTO);
-		params.setOptimization(true);
-		params.setMultipleAxes(true);
+		params.setOptimization(false);
+		params.setMultipleAxes(false);
 
 		//Run the alignment
 		MultipleAlignment symmetry = ceSymm.analyze(atoms, params);

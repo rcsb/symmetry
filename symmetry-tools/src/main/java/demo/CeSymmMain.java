@@ -411,17 +411,31 @@ public class CeSymmMain {
 				System.exit(1);
 			}
 		}
-		if(cli.hasOption("threshold")) {
-			String strVal = cli.getOptionValue("threshold");
+		if(cli.hasOption("scorethreshold")) {
+			String strVal = cli.getOptionValue("scorethreshold");
 			try {
 				double val = Double.parseDouble(strVal);
 				if(val < 0) {
-					logger.error("Invalid threshold: "+strVal);
+					logger.error("Invalid scorethreshold: "+strVal);
 					System.exit(1);
 				}
 				params.setScoreThreshold(val);
 			} catch( NumberFormatException e) {
-				logger.error("Invalid threshold: "+strVal);
+				logger.error("Invalid scorethreshold: "+strVal);
+				System.exit(1);
+			}
+		}
+		if(cli.hasOption("ssethreshold")) {
+			String strVal = cli.getOptionValue("ssethreshold");
+			try {
+				double val = Double.parseDouble(strVal);
+				if(val < 0) {
+					logger.error("Invalid ssethreshold: "+strVal);
+					System.exit(1);
+				}
+				params.setScoreThreshold(val);
+			} catch( NumberFormatException e) {
+				logger.error("Invalid ssethreshold: "+strVal);
 				System.exit(1);
 			}
 		}
@@ -728,13 +742,22 @@ public class CeSymmMain {
 				);
 		optionOrder.put("opt", optionNum++);
 
-		options.addOption( OptionBuilder.withLongOpt("threshold")
+		options.addOption( OptionBuilder.withLongOpt("scorethreshold")
 				.hasArg(true)
-				.withDescription("The symmetry threshold. TM-scores above this value "
-						+ "will be considered significant results [default: 0.5, interval [0.0,1.0]].\n")
-						.create()
+				.withDescription("The score threshold. TM-scores above this value "
+						+ "will be considered significant results "
+						+ "[default: 0.4, interval [0.0,1.0]].\n").create()
 				);
-		optionOrder.put("threshold", optionNum++);
+		optionOrder.put("scorethreshold", optionNum++);
+		
+		options.addOption( OptionBuilder.withLongOpt("ssethreshold")
+				.hasArg(true)
+				.withDescription("The SSE threshold. Number of secondary structure"
+						+ "elements for subunit below this value will be considered "
+						+ "asymmetric results. 0 means unbounded."
+						+ "[default: 2].\n").create()
+				);
+		optionOrder.put("ssethreshold", optionNum++);
 
 		options.addOption( OptionBuilder.withLongOpt("maxorder")
 				.hasArg(true)
@@ -969,7 +992,7 @@ public class CeSymmMain {
 	 * @author Aleix Lafita
 	 *
 	 */
-	public static class CeSymmWorker implements Runnable {
+	private static class CeSymmWorker implements Runnable {
 		
 		private String id;
 		private CeSymm ceSymm;

@@ -12,7 +12,6 @@ import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
-import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
 
 /**
  * Demo to use the experimental versions of CeSymm.
@@ -63,9 +62,8 @@ public class DemoExperimentalCeSymm {
 		//Choose some parameters
 		CESymmParameters params = ceSymm.getParameters();
 		params.setRefineMethod(RefineMethod.NOT_REFINED);
-		params.setSymmetryType(SymmetryType.AUTO);
 		params.setOptimization(false);
-		params.setMultipleAxes(false);
+		params.setSymmLevels(1);
 
 		//Run the alignment
 		MultipleAlignment symmetry = ceSymm.analyze(atoms, params);

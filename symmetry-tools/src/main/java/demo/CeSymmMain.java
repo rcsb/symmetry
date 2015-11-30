@@ -355,7 +355,7 @@ public class CeSymmMain {
 			SymmetryType val;
 			try {
 				val = SymmetryType.valueOf(strVal.toUpperCase());
-				params.setSymmetryType(val);
+				params.setSymmType(val);
 			} catch (IllegalArgumentException e) {
 				//give up
 				logger.error("Illegal symmtype. Requires on of "+
@@ -385,7 +385,7 @@ public class CeSymmMain {
 					logger.error("Invalid rndseed: "+strVal);
 					System.exit(1);
 				}
-				params.setSeed(val);
+				params.setRndSeed(val);
 			} catch( NumberFormatException e) {
 				logger.error("Invalid rndseed: "+strVal);
 				System.exit(1);
@@ -401,13 +401,13 @@ public class CeSymmMain {
 				System.exit(1);
 			}
 		}
-		if(cli.hasOption("multaxes")) {
-			String strVal = cli.getOptionValue("multaxes");
+		if(cli.hasOption("symmlevels")) {
+			String strVal = cli.getOptionValue("symmlevels");
 			try {
-				boolean val = Boolean.parseBoolean(strVal);
-				params.setMultipleAxes(val);
+				int val = Integer.parseInt(strVal);
+				params.setSymmLevels(val);
 			} catch( NumberFormatException e) {
-				logger.error("Invalid multaxes: "+strVal);
+				logger.error("Invalid symmlevels: "+strVal);
 				System.exit(1);
 			}
 		}
@@ -419,7 +419,7 @@ public class CeSymmMain {
 					logger.error("Invalid threshold: "+strVal);
 					System.exit(1);
 				}
-				params.setSymmetryThreshold(val);
+				params.setScoreThreshold(val);
 			} catch( NumberFormatException e) {
 				logger.error("Invalid threshold: "+strVal);
 				System.exit(1);
@@ -447,7 +447,7 @@ public class CeSymmMain {
 					logger.error("Invalid minlen: "+strVal);
 					System.exit(1);
 				}
-				params.setMinSubunitLength(val);
+				params.setMinCoreLength(val);
 			} catch( NumberFormatException e) {
 				logger.error("Invalid minlen: "+strVal);
 				System.exit(1);
@@ -712,12 +712,14 @@ public class CeSymmMain {
 				);
 		optionOrder.put("gapextension", optionNum++);
 
-		options.addOption( OptionBuilder.withLongOpt("multaxes")
+		options.addOption( OptionBuilder.withLongOpt("symmlevels")
 				.hasArg(true)
-				.withDescription("Run iteratively the algorithm to find multiple symmetry levels [default: true].\n")
+				.withDescription("Run iteratively the algorithm to find multiple symmetry levels. "
+						+ "This specifies the maximum number of symmetry levels. 0 means unbounded"
+						+ " [default: 0].\n")
 				.create()
 				);
-		optionOrder.put("multaxes", optionNum++);
+		optionOrder.put("symmlevels", optionNum++);
 
 		options.addOption( OptionBuilder.withLongOpt("opt")
 				.hasArg(true)

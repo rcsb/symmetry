@@ -249,7 +249,7 @@ public class ChainSorter {
 		CESymmParameters params = (CESymmParameters) cesymm.getParameters();
 		params.setRefineMethod(RefineMethod.SINGLE);
 		params.setOptimization(true);
-		params.setMultipleAxes(true);
+		params.setSymmLevels(0);
 		
 		MultipleAlignment msa = cesymm.analyze(ca1);
 		SymmetryDisplay.display(msa, cesymm.getSymmetryAxes());

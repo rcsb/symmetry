@@ -32,7 +32,7 @@ public class MultipassOrderDetector implements OrderDetector {
 		CESymmParameters params = (CESymmParameters) ce.getParameters();
 		params.setMaxSymmOrder(maxOrder);
 		params.setRefineMethod(RefineMethod.MULTIPLE);
-		params.setSymmetryType(SymmetryType.CLOSE);
+		params.setSymmType(SymmetryType.CLOSE);
 		params.setOptimization(false);
 		try {
 			ce.analyze(ca);

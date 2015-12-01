@@ -53,9 +53,10 @@ Short Option | Long Option | Description
     | --maxrmsd=float   | The maximum RMSD at which to stop alignment optimization. (default: unlimited=99)
     | --gapopen=float   | Gap opening penalty during alignment optimization [default: 5.0].
     | --gapextension=float  | Gap extension penalty during alignment optimization [default: 0.5].
-    | --multaxes=bool   | Run iteratively the algorithm to find multiple symmetry levels [default: true].
+    | --symmlevels=int   | Run iteratively the algorithm to find multiple symmetry levels. The parameter controls the maximum symmetry levels allowed. 0 means unbounded. [default: 0].
     | --opt=bool        | Optimize the resulting symmetry alignment [default: true].
-    | --threshold=float | The symmetry threshold. TM-scores above this value will be considered significant results [default: 0.5, interval [0.0,1.0]].
+    | --scorethreshold=float | The score threshold. TM-scores above this value will be considered significant results [default: 0.4, interval [0.0,1.0]].
+    | --ssethrehold=int | The minimum number of secondary structure elements (SSE) for each symmetric subunit, for the result to be singificant [default: 2].
     | --maxorder=int    | The maximum number of symmetric subunits [default: 8].
     | --rndseed=int     | The random seed used in optimization, for reproducibility of the results [default: 0].
     | --minlen=int      | The minimum length, expressed in number of core aligned residues, of a symmetric subunit [default: 15].

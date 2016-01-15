@@ -316,7 +316,7 @@ into BioJava as they mature.</description>
 	<modules>
 		<module>symmetry-core</module>
 		<module>symmetry-tools</module>
-		<module>symmetry-benchmark</module>
+		
 	</modules>
 
 </project>

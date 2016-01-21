@@ -8,16 +8,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -495,21 +493,12 @@ public class CeSymmMain {
 		
 		//Start the workers in a fixed threaded pool
 		ExecutorService executor = Executors.newFixedThreadPool(threads);
-		List<Callable<Object>> workers = new ArrayList<Callable<Object>>();
 		for (String name : names){
 			Runnable worker = new CeSymmWorker(name, params, cache, writers, 
 					displayAlignment);
-			workers.add(Executors.callable(worker));
+			executor.submit(worker);
 		}
-		try {
-			executor.invokeAll(workers, 10, TimeUnit.MINUTES);
-			executor.shutdown();
-			if (!executor.awaitTermination(72, TimeUnit.HOURS)){
-				logger.warn("Calculation timeout of 72 hours exceeded.");
-			}
-		} catch (InterruptedException e) {
-			logger.warn("Calculation interrupted.", e);
-		}
+		executor.shutdown();
 
 		long elapsed = (System.nanoTime() - startTime) / 1000000;
 		long meanRT = (long) (elapsed / (float) names.size());
@@ -755,7 +744,7 @@ public class CeSymmMain {
 				.withDescription("The SSE threshold. Number of secondary structure"
 						+ "elements for subunit below this value will be considered "
 						+ "asymmetric results. 0 means unbounded."
-						+ "[default: 2].\n").create()
+						+ "[default: 0].\n").create()
 				);
 		optionOrder.put("ssethreshold", optionNum++);
 
@@ -913,30 +902,33 @@ public class CeSymmMain {
 			writer.flush();
 		}
 		@Override
-		public void writeAlignment(MultipleAlignment msa)
-				throws IOException {
+		public void writeAlignment(MultipleAlignment msa) throws IOException {
 
 			String pg = null;
 			int order = 1;
 			MultipleAlignment full = msa;
+			String name = msa.getEnsemble().getStructureNames().get(0);
 			int subunitLen = 0;
 			boolean refined = SymmetryTools.isRefined(msa);
 
-			if (refined){
-				full = SymmetryTools.toFullAlignment(msa);
-				full.clear();
-				try {
-					pg = SymmetryTools.getQuaternarySymmetry(msa).getSymmetry();
-				} catch (Exception e){}
-				order = msa.size();
-				subunitLen = msa.length();
-			}
+			try {
+				if (refined && SymmetryTools.isSignificant(msa, 0.4)){
+					full = SymmetryTools.toFullAlignment(msa);
+					full.clear();
+					try {
+						pg = SymmetryTools.getQuaternarySymmetry(msa).getSymmetry();
+					} catch (Exception e){}
+					order = msa.size();
+					subunitLen = msa.length();
+				}
+			} catch (StructureException e) {}
+			
 			double structureLen = 
 					msa.getEnsemble().getAtomArrays().get(0).length;
 			double coverage = full.length() / structureLen;
 
 			writer.format("%s\t%d\t%s\t%b\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f\n",
-					msa.getEnsemble().getStructureNames().get(0),
+					name,
 					order,
 					pg,
 					refined,
@@ -1020,7 +1012,7 @@ public class CeSymmMain {
 				
 				//Run the symmetry analysis
 				MultipleAlignment result = ceSymm.analyze(atoms);
-				SymmetryTools.getQuaternarySymmetry(result); //check only
+				Collections.fill(result.getEnsemble().getStructureNames(), id);
 				
 				//Write into the output files
 				for(CeSymmWriter writer : writers) {

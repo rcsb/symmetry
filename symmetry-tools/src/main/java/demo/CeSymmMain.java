@@ -336,7 +336,7 @@ public class CeSymmMain {
 			}
 		}
 		if(cli.hasOption("refinemethod")) {
-			String strVal = cli.getOptionValue("refineresult");
+			String strVal = cli.getOptionValue("refinemethod");
 			RefineMethod val;
 			try {
 				val = RefineMethod.valueOf(strVal.toUpperCase());
@@ -491,20 +491,28 @@ public class CeSymmMain {
 		}
 		long startTime = System.nanoTime();
 		
-		//Start the workers in a fixed threaded pool
+		// Start the workers in a fixed threaded pool
 		ExecutorService executor = Executors.newFixedThreadPool(threads);
 		for (String name : names){
 			Runnable worker = new CeSymmWorker(name, params, cache, writers, 
 					displayAlignment);
-			executor.submit(worker);
+			executor.execute(worker);
 		}
 		executor.shutdown();
+		while (!executor.isTerminated()){
+			// sleep 60 seconds
+			try {
+				Thread.sleep(60000);
+			} catch (InterruptedException e) {
+				logger.warn("CeSymmMain was interrupted...", e);
+			}
+		}
 
 		long elapsed = (System.nanoTime() - startTime) / 1000000;
 		long meanRT = (long) (elapsed / (float) names.size());
 		logger.info("Total runtime: "+elapsed + ", mean runtime: "+meanRT);
 		
-		//Close any writers of output
+		// Close any writers of output
 		for(CeSymmWriter writer: writers) writer.close();
 	}
 
@@ -1035,10 +1043,11 @@ public class CeSymmMain {
 					}
 				}
 			} catch (IOException e){
-				logger.error("Could not load structure "+id,e);
-			} catch (StructureException e) {
-				logger.error("Could not analyze structure "+id,e);
+				logger.error("Could not load Structure "+id,e);
+			} catch (Exception e) {
+				logger.error("Could not complete job: "+id,e);
 			}
+			logger.info("Finished job: "+id);
 		}
 	}
 

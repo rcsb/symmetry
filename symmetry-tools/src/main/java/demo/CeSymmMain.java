@@ -764,7 +764,7 @@ public class CeSymmMain {
 				.hasArg(true)
 				.withDescription(
 						"The SSE threshold. Number of secondary structure"
-								+ "elements for subunit below this value will be considered "
+								+ "elements for repeat below this value will be considered "
 								+ "asymmetric results. 0 means unbounded."
 								+ "[default: 0].\n").create());
 		optionOrder.put("ssethreshold", optionNum++);
@@ -773,7 +773,7 @@ public class CeSymmMain {
 				.withLongOpt("maxorder")
 				.hasArg(true)
 				.withDescription(
-						"The maximum number of symmetric subunits [default: 8].\n")
+						"The maximum number of symmetric repeats [default: 8].\n")
 				.create());
 		optionOrder.put("maxorder", optionNum++);
 
@@ -790,7 +790,7 @@ public class CeSymmMain {
 				.hasArg(true)
 				.withDescription(
 						"The minimum length, expressed in number of core "
-								+ "aligned residues, of a symmetric subunit [default: 15].\n")
+								+ "aligned residues, of a symmetric repeat [default: 15].\n")
 				.create());
 		optionOrder.put("minlen", optionNum++);
 
@@ -952,7 +952,7 @@ public class CeSymmMain {
 		@Override
 		public void writeHeader() {
 			writer.println("Name\t" + "Order\t" + "SymmGroup\t" + "Refined\t"
-					+ "Avg-TMscore\t" + "RMSD\t" + "SubunitLength\t"
+					+ "Avg-TMscore\t" + "RMSD\t" + "RepeatLength\t"
 					+ "Length\t" + "CoreLength\t" + "Coverage");
 			writer.flush();
 		}
@@ -960,7 +960,7 @@ public class CeSymmMain {
 		@Override
 		public void writeResult(CeSymmResult result) throws IOException {
 
-			int subunitLen = 0;
+			int repeatLen = 0;
 			int totalLen = result.getSelfAlignment().getOptLength();
 			int coreLen = totalLen;
 			double coverage = result.getSelfAlignment().getCoverage1() / 100;
@@ -969,7 +969,7 @@ public class CeSymmMain {
 			// If there is multiple alignment get the info from there
 			if (result.isRefined()) {
 				MultipleAlignment full = SymmetryTools.toFullAlignment(result);
-				subunitLen = result.getMultipleAlignment().length();
+				repeatLen = result.getMultipleAlignment().length();
 				double structureLen = result.getAtoms().length;
 				totalLen = full.length();
 				coreLen = full.getCoreLength();
@@ -981,7 +981,7 @@ public class CeSymmMain {
 			writer.format("%s\t%d\t%s\t%b\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f\n",
 					result.getStructureId().getIdentifier(),
 					result.getSymmOrder(), group, result.isRefined(),
-					result.getTMScore(), result.getRMSD(), subunitLen,
+					result.getTMScore(), result.getRMSD(), repeatLen,
 					totalLen, coreLen, coverage);
 			writer.flush();
 		}

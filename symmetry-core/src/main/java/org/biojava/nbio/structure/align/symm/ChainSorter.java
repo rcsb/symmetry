@@ -12,16 +12,13 @@ import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.StructureTools;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.io.FileParsingParameters;
 import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
 import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
-import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
-import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
+import org.biojava.nbio.structure.symmetry.internal.CeSymmResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -245,13 +242,7 @@ public class ChainSorter {
 		Atom[] ca1 = ChainSorter.cyclicSort(structure);
 		//Atom[] ca1 = ChainSorter.quatSort(structure);
 		
-		CeSymm cesymm = new CeSymm();
-		CESymmParameters params = (CESymmParameters) cesymm.getParameters();
-		params.setRefineMethod(RefineMethod.SINGLE);
-		params.setOptimization(true);
-		params.setSymmLevels(0);
-		
-		MultipleAlignment msa = cesymm.analyze(ca1);
-		SymmetryDisplay.display(msa, cesymm.getSymmetryAxes());
+		CeSymmResult symm = CeSymm.analyze(ca1);
+		SymmetryDisplay.display(symm);
 	}
 }

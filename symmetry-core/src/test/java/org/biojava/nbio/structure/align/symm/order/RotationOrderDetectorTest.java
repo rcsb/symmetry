@@ -17,7 +17,6 @@ import static org.biojava.nbio.structure.align.symm.order.RotationOrderDetector.
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.scop.ScopFactory;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
-import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
 import org.junit.Before;
@@ -31,7 +30,6 @@ import org.junit.Test;
  */
 public class RotationOrderDetectorTest {
 
-	private CeSymm ce;
 	private CESymmParameters params;
 
 	/**
@@ -40,10 +38,7 @@ public class RotationOrderDetectorTest {
 	@Before
 	public void setUp() throws Exception {
 
-		ce = new CeSymm();
 		params = new CESymmParameters();
-		params.setRefineMethod(RefineMethod.NOT_REFINED);
-
 		ScopFactory.setScopDatabase(ScopFactory.VERSION_1_75A);
 	}
 
@@ -62,9 +57,7 @@ public class RotationOrderDetectorTest {
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.tryAllOrders(ca1, axis, false);
@@ -76,8 +69,7 @@ public class RotationOrderDetectorTest {
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.tryAllOrders(ca1, axis, false);
@@ -102,25 +94,21 @@ public class RotationOrderDetectorTest {
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		order = detector.calculateOrder(alignment, ca1);
 		assertEquals(name, 2, order);
 
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		order = detector.calculateOrder(alignment, ca1);
 		assertEquals(name, 6, order);
 
 		name = "1TIM.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		order = detector.calculateOrder(alignment, ca1);
 		assertEquals(name, 1, order);// tough case
 	}
@@ -141,9 +129,7 @@ public class RotationOrderDetectorTest {
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.tryAllOrders(ca1, axis, true);
@@ -157,9 +143,7 @@ public class RotationOrderDetectorTest {
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.tryAllOrders(ca1, axis, true);
@@ -173,8 +157,7 @@ public class RotationOrderDetectorTest {
 		name = "1TIM.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.tryAllOrders(ca1, axis, true);
@@ -202,25 +185,21 @@ public class RotationOrderDetectorTest {
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		order = detector.calculateOrder(alignment, ca1);
 		assertEquals(name, 2, order);
 
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		order = detector.calculateOrder(alignment, ca1);
 		assertEquals(name, 6, order);
 
 		name = "1TIM.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		order = detector.calculateOrder(alignment, ca1);
 		assertEquals(name, 6, order);// tough case
 
@@ -242,9 +221,7 @@ public class RotationOrderDetectorTest {
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -258,8 +235,7 @@ public class RotationOrderDetectorTest {
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -273,8 +249,7 @@ public class RotationOrderDetectorTest {
 		name = "1TIM.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -303,9 +278,7 @@ public class RotationOrderDetectorTest {
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersBySSE(ca1, axis);
@@ -333,9 +306,7 @@ public class RotationOrderDetectorTest {
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -349,8 +320,7 @@ public class RotationOrderDetectorTest {
 		name = "d1ijqa1";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -364,8 +334,7 @@ public class RotationOrderDetectorTest {
 		name = "1TIM.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -393,9 +362,7 @@ public class RotationOrderDetectorTest {
 		name = "1MER.A";
 		ca1 = StructureTools.getRepresentativeAtomArray(StructureTools
 				.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersBySSE(ca1, axis);
@@ -421,9 +388,7 @@ public class RotationOrderDetectorTest {
 
 		name = "1MER.A";
 		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersByAmp(ca1, axis);
@@ -448,9 +413,7 @@ public class RotationOrderDetectorTest {
 
 		name = "1MER.A";
 		ca1 = StructureTools.getAtomCAArray(StructureTools.getStructure(name));
-		ce.setParameters(params);
-		ce.analyzeLevel(ca1);
-		alignment = ce.getSelfAlignments().get(0);
+		alignment = CeSymm.analyze(ca1, params).getSelfAlignment();
 		axis = new RotationAxis(alignment);
 
 		coefs = detector.trySingleOrdersBySSE(ca1, axis);

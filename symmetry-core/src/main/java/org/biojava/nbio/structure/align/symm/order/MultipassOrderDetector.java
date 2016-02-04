@@ -1,17 +1,21 @@
 package org.biojava.nbio.structure.align.symm.order;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
-import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 import org.biojava.nbio.structure.symmetry.internal.OrderDetector;
 import org.biojava.nbio.structure.symmetry.internal.RefinerFailedException;
 
+/**
+ * NOT WORKING!!!
+ */
+@Deprecated
 public class MultipassOrderDetector implements OrderDetector {
 
 	private int maxOrder = 8;
@@ -28,18 +32,17 @@ public class MultipassOrderDetector implements OrderDetector {
 	@Override
 	public int calculateOrder(AFPChain afpChain, Atom[] ca)
 			throws RefinerFailedException {
-		CeSymm ce = new CeSymm();
-		CESymmParameters params = (CESymmParameters) ce.getParameters();
+		CESymmParameters params = new CESymmParameters();
 		params.setMaxSymmOrder(maxOrder);
-		params.setRefineMethod(RefineMethod.MULTIPLE);
-		params.setSymmType(SymmetryType.CLOSE);
+		//params.setRefineMethod(RefineMethod.MULTIPLE);
+		params.setSymmType(SymmetryType.CLOSED);
 		params.setOptimization(false);
 		try {
-			ce.analyze(ca);
+			CeSymm.analyze(ca, params);
 		} catch (StructureException e) {
 			throw new RefinerFailedException(e);
 		}
-		List<AFPChain> alignments = ce.getSelfAlignments();
+		List<AFPChain> alignments = new ArrayList<AFPChain>();
 		// For high orders, take it from the number of alignments with unrefined TM above threshold
 		if(alignments.size() > 1) {
 			return alignments.size() + 1;

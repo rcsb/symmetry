@@ -965,22 +965,22 @@ public class CeSymmMain {
 			int coreLen = totalLen;
 			double coverage = result.getSelfAlignment().getCoverage1() / 100;
 			String group = "C1";
+			int order = result.getSymmOrder();
 
-			// If there is multiple alignment get the info from there
-			if (result.isRefined()) {
-				MultipleAlignment full = SymmetryTools.toFullAlignment(result);
-				repeatLen = result.getMultipleAlignment().length();
+			// If the symmetry is significant
+			if (result.isSignificant()) {
+				MultipleAlignment msa = result.getMultipleAlignment();
+				repeatLen = msa.length();
 				double structureLen = result.getAtoms().length;
-				totalLen = full.length();
-				coreLen = full.getCoreLength();
+				totalLen = repeatLen * order;
+				coreLen = msa.getCoreLength() * order;
 				coverage = totalLen / structureLen;
-				if (result.isSignificant())
-					group = result.getSymmGroup().getSymmetry();
+				group = result.getSymmGroup().getSymmetry();
 			}
 
 			writer.format("%s\t%d\t%s\t%b\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f\n",
 					result.getStructureId().getIdentifier(),
-					result.getSymmOrder(), group, result.isRefined(),
+					order, group, result.isRefined(),
 					result.getTMScore(), result.getRMSD(), repeatLen,
 					totalLen, coreLen, coverage);
 			writer.flush();

@@ -33,7 +33,6 @@ import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
 import org.biojava.nbio.structure.align.client.StructureName;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
@@ -976,6 +975,8 @@ public class CeSymmMain {
 				coreLen = msa.getCoreLength() * order;
 				coverage = totalLen / structureLen;
 				group = result.getSymmGroup().getSymmetry();
+				if (group == "C1")
+					group = "R" + order;
 			}
 
 			writer.format("%s\t%d\t%s\t%b\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f\n",
@@ -1002,15 +1003,13 @@ public class CeSymmMain {
 		@Override
 		public void writeResult(CeSymmResult result) throws IOException {
 
-			writer.append(result.getMultipleAlignment().getEnsemble()
-					.getStructureIdentifiers().get(0).getIdentifier());
+			writer.append(result.getStructureId().getIdentifier());
 
 			if (SymmetryTools.isRefined(result.getMultipleAlignment())) {
-				writer.append(" could be refined into " + "symmetry order "
+				writer.append(" could be refined into symmetry order "
 						+ result.getMultipleAlignment().size()
 						+ ". The result is ");
-				if (result.getMultipleAlignment().getScore(
-						MultipleAlignmentScorer.AVGTM_SCORE) >= 0.4) {
+				if (result.isSignificant()) {
 					writer.append("significant (symmetric).");
 				} else
 					writer.append("not significant (asymmetric).");

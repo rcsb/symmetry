@@ -956,7 +956,7 @@ public class CeSymmMain {
 		public void writeHeader() {
 			writer.println("Name\t" + "Order\t" + "SymmGroup\t" + "Refined\t"
 					+ "Symm-Levels\t" + "Symm-Type\t" + "Rotation-Angle\t"
-					+ "Helical-Pitch\t" + "TMscore\t" + "RMSD\t"
+					+ "Screw-Translation\t" + "TMscore\t" + "RMSD\t"
 					+ "Symm-TMscore\t" + "Symm-RMSD\t" + "RepeatLength\t"
 					+ "Length\t" + "CoreLength\t" + "Coverage");
 			writer.flush();
@@ -978,7 +978,8 @@ public class CeSymmMain {
 					result.getSelfAlignment().getBlockRotationMatrix()[0], 
 					result.getSelfAlignment().getBlockShiftVector()[0]);
 			double rotation_angle = rot.getAngle() * 57.2957795;
-			double helical_pitch = new Vector3d(rot.getScrewTranslation().getCoords()).length();
+			double screw_translation = new Vector3d(
+					rot.getScrewTranslation().getCoords()).length();
 
 			// If there is refinement alignment
 			if (result.isRefined()) {
@@ -991,6 +992,11 @@ public class CeSymmMain {
 				totalLen = repeatLen * msa.size();
 				coreLen = msa.getCoreLength() * msa.size();
 				coverage = totalLen / structureLen;
+				
+				rot = new RotationAxis(result.getAxes().getElementaryAxes().get(0));
+				rotation_angle = rot.getAngle() * 57.2957795;
+				screw_translation = new Vector3d(
+						rot.getScrewTranslation().getCoords()).length();
 			}
 
 			writer.format(
@@ -998,7 +1004,7 @@ public class CeSymmMain {
 					+ "%.2f\t%d\t%d\t%d\t%.2f\n",
 					result.getStructureId().getIdentifier(), order, group,
 					result.isRefined(), result.getSymmLevels(), result
-							.getType(), rotation_angle, helical_pitch, result
+							.getType(), rotation_angle, screw_translation, result
 							.getSelfAlignment().getTMScore(), result
 							.getSelfAlignment().getTotalRmsdOpt(), symmscore,
 					symmrmsd, repeatLen, totalLen, coreLen, coverage);

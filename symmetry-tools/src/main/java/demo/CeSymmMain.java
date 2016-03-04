@@ -16,6 +16,8 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.vecmath.Vector3d;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -33,9 +35,11 @@ import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
 import org.biojava.nbio.structure.align.client.StructureName;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
+import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.util.UserConfiguration;
 import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.biojava.nbio.structure.io.util.FileDownloadUtils;
@@ -951,7 +955,9 @@ public class CeSymmMain {
 		@Override
 		public void writeHeader() {
 			writer.println("Name\t" + "Order\t" + "SymmGroup\t" + "Refined\t"
-					+ "Avg-TMscore\t" + "RMSD\t" + "RepeatLength\t"
+					+ "Symm-Levels\t" + "Symm-Type\t" + "Rotation-Angle\t"
+					+ "Helical-Pitch\t" + "TMscore\t" + "RMSD\t"
+					+ "Symm-TMscore\t" + "Symm-RMSD\t" + "RepeatLength\t"
 					+ "Length\t" + "CoreLength\t" + "Coverage");
 			writer.flush();
 		}
@@ -963,27 +969,40 @@ public class CeSymmMain {
 			int totalLen = result.getSelfAlignment().getOptLength();
 			int coreLen = totalLen;
 			double coverage = result.getSelfAlignment().getCoverage1() / 100;
-			String group = "C1";
+			String group = result.getSymmGroup();
 			int order = result.getSymmOrder();
+			double symmrmsd = 0.0;
+			double symmscore = 0.0;
+			
+			RotationAxis rot = new RotationAxis(
+					result.getSelfAlignment().getBlockRotationMatrix()[0], 
+					result.getSelfAlignment().getBlockShiftVector()[0]);
+			double rotation_angle = rot.getAngle() * 57.2957795;
+			double helical_pitch = new Vector3d(rot.getScrewTranslation().getCoords()).length();
 
-			// If the symmetry is significant
-			if (result.isSignificant()) {
+			// If there is refinement alignment
+			if (result.isRefined()) {
 				MultipleAlignment msa = result.getMultipleAlignment();
+				symmrmsd = msa.getScore(MultipleAlignmentScorer.RMSD);
+				symmscore = msa.getScore(MultipleAlignmentScorer.AVGTM_SCORE);
+
 				repeatLen = msa.length();
 				double structureLen = result.getAtoms().length;
-				totalLen = repeatLen * order;
-				coreLen = msa.getCoreLength() * order;
+				totalLen = repeatLen * msa.size();
+				coreLen = msa.getCoreLength() * msa.size();
 				coverage = totalLen / structureLen;
-				group = result.getSymmGroup().getSymmetry();
-				if (group == "C1")
-					group = "R" + order;
 			}
 
-			writer.format("%s\t%d\t%s\t%b\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f\n",
-					result.getStructureId().getIdentifier(),
-					order, group, result.isRefined(),
-					result.getTMScore(), result.getRMSD(), repeatLen,
-					totalLen, coreLen, coverage);
+			writer.format(
+					"%s\t%d\t%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t"
+					+ "%.2f\t%d\t%d\t%d\t%.2f\n",
+					result.getStructureId().getIdentifier(), order, group,
+					result.isRefined(), result.getSymmLevels(), result
+							.getType(), rotation_angle, helical_pitch, result
+							.getSelfAlignment().getTMScore(), result
+							.getSelfAlignment().getTotalRmsdOpt(), symmscore,
+					symmrmsd, repeatLen, totalLen, coreLen, coverage);
+
 			writer.flush();
 		}
 	}

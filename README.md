@@ -18,7 +18,7 @@ The stable code to analyze and visualize the internal symmetry of biomolecular s
 
 ## Dependencies
 
-This project requires Java 1.6. The library is configured to build using [Apache Maven](http://maven.apache.org/).
+This project requires Java 1.8. The library is configured to build using [Apache Maven](http://maven.apache.org/).
 
 The following dependencies should be automatically resolved by maven:
 

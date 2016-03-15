@@ -965,51 +965,71 @@ public class CeSymmMain {
 		@Override
 		public void writeResult(CeSymmResult result) throws IOException {
 
-			int repeatLen = 0;
-			int totalLen = result.getSelfAlignment().getOptLength();
-			int coreLen = totalLen;
-			double coverage = result.getSelfAlignment().getCoverage1() / 100;
-			String group = result.getSymmGroup();
-			int order = result.getSymmOrder();
-			double symmrmsd = 0.0;
-			double symmscore = 0.0;
-			
-			RotationAxis rot = new RotationAxis(
-					result.getSelfAlignment().getBlockRotationMatrix()[0], 
-					result.getSelfAlignment().getBlockShiftVector()[0]);
-			double rotation_angle = rot.getAngle() * 57.2957795;
-			double screw_translation = new Vector3d(
-					rot.getScrewTranslation().getCoords()).length();
+			String id = null;
 
-			// If there is refinement alignment
-			if (result.isRefined()) {
-				MultipleAlignment msa = result.getMultipleAlignment();
-				symmrmsd = msa.getScore(MultipleAlignmentScorer.RMSD);
-				symmscore = msa.getScore(MultipleAlignmentScorer.AVGTM_SCORE);
+			try {
+				id = result.getStructureId().getIdentifier();
+				int repeatLen = 0;
+				int totalLen = result.getSelfAlignment().getOptLength();
+				int coreLen = totalLen;
+				double coverage = result.getSelfAlignment().getCoverage1() / 100;
+				String group = result.getSymmGroup();
+				int order = result.getSymmOrder();
+				double symmrmsd = 0.0;
+				double symmscore = 0.0;
 
-				repeatLen = msa.length();
-				double structureLen = result.getAtoms().length;
-				totalLen = repeatLen * msa.size();
-				coreLen = msa.getCoreLength() * msa.size();
-				coverage = totalLen / structureLen;
-				
-				rot = new RotationAxis(result.getAxes().getElementaryAxes().get(0));
-				rotation_angle = rot.getAngle() * 57.2957795;
-				screw_translation = new Vector3d(
-						rot.getScrewTranslation().getCoords()).length();
+				RotationAxis rot = new RotationAxis(result.getSelfAlignment()
+						.getBlockRotationMatrix()[0], result.getSelfAlignment()
+						.getBlockShiftVector()[0]);
+				double rotation_angle = rot.getAngle() * 57.2957795;
+				double screw_translation = new Vector3d(rot
+						.getScrewTranslation().getCoords()).length();
+
+				// If there is refinement alignment
+				if (result.isRefined()) {
+					MultipleAlignment msa = result.getMultipleAlignment();
+					symmrmsd = msa.getScore(MultipleAlignmentScorer.RMSD);
+					symmscore = msa
+							.getScore(MultipleAlignmentScorer.AVGTM_SCORE);
+
+					repeatLen = msa.length();
+					double structureLen = result.getAtoms().length;
+					totalLen = repeatLen * msa.size();
+					coreLen = msa.getCoreLength() * msa.size();
+					coverage = totalLen / structureLen;
+
+					rot = new RotationAxis(result.getAxes().getElementaryAxes()
+							.get(0));
+					rotation_angle = rot.getAngle() * 57.2957795;
+					screw_translation = new Vector3d(rot.getScrewTranslation()
+							.getCoords()).length();
+				}
+
+				writer.format(
+						"%s\t%d\t%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t"
+								+ "%.2f\t%d\t%d\t%d\t%.2f\n", id, order, group,
+						result.isRefined(), result.getSymmLevels(), result
+								.getType(), rotation_angle, screw_translation,
+						result.getSelfAlignment().getTMScore(), result
+								.getSelfAlignment().getTotalRmsdOpt(),
+						symmscore, symmrmsd, repeatLen, totalLen, coreLen,
+						coverage);
+			} catch (Exception e) {
+				// If any exception occurs when writing the results store empty
+				// better
+				logger.warn("Could not write result... storing empty row.", e);
+				writeEmptyRow(writer, id);
 			}
 
+			writer.flush();
+		}
+
+		private void writeEmptyRow(PrintWriter writer, String id) {
 			writer.format(
 					"%s\t%d\t%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t"
-					+ "%.2f\t%d\t%d\t%d\t%.2f\n",
-					result.getStructureId().getIdentifier(), order, group,
-					result.isRefined(), result.getSymmLevels(), result
-							.getType(), rotation_angle, screw_translation, result
-							.getSelfAlignment().getTMScore(), result
-							.getSelfAlignment().getTotalRmsdOpt(), symmscore,
-					symmrmsd, repeatLen, totalLen, coreLen, coverage);
-
-			writer.flush();
+							+ "%.2f\t%d\t%d\t%d\t%.2f\n", id, 1, "C1", false,
+					0, SymmetryType.DEFAULT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,
+					0, 0, 0.0);
 		}
 	}
 

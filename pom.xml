@@ -24,14 +24,14 @@ into BioJava as they mature.</description>
 	</organization>
 	
 	<properties>
-		<jdk.version>1.7</jdk.version>
+		<jdk.version>1.8</jdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.targetEncoding>UTF-8</project.build.targetEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<slf4j.version>1.7.12</slf4j.version>
 		<log4j.version>2.2</log4j.version>
-		<biojava.version>4.1.1-SNAPSHOT</biojava.version>
+		<biojava.version>5.0.0-SNAPSHOT</biojava.version>
 	</properties>
 
 	<repositories>

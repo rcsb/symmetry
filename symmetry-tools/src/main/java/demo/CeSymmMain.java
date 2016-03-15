@@ -1033,14 +1033,15 @@ public class CeSymmMain {
 			if (SymmetryTools.isRefined(result.getMultipleAlignment())) {
 				writer.append(" could be refined into symmetry order "
 						+ result.getMultipleAlignment().size()
-						+ ". The result is ");
+						+ ". The structure is ");
 				if (result.isSignificant()) {
 					writer.append("significant (symmetric).");
 				} else
 					writer.append("not significant (asymmetric).");
 				writer.append(System.getProperty("line.separator"));
 			} else {
-				writer.append(" could not be refined (asymmetric).");
+				writer.append(" could not be refined. "
+						+ "The structure has no symmetry (asymmetric)");
 				writer.append(System.getProperty("line.separator"));
 			}
 			writer.flush();

@@ -1122,8 +1122,8 @@ public class CeSymmMain {
 				if (show3d) {
 					try {
 						SymmetryDisplay.display(result);
-					} catch (StructureException e) {
-						logger.error("Could not display in Jmol " + id, e);
+					} catch (Exception e) {
+						//TODO NullPointer when changing title fixed in biojava 5.0
 					}
 				}
 			} catch (IOException e) {

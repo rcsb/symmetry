@@ -20,7 +20,7 @@ import javax.vecmath.Vector3d;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
@@ -76,7 +76,7 @@ public class CeSymmMain {
 				+ "user will be prompted at startup.";
 		final Map<String, Integer> optionOrder = new HashMap<String, Integer>();
 		Options options = getOptions(optionOrder);
-		CommandLineParser parser = new GnuParser();
+		CommandLineParser parser = new DefaultParser();
 		HelpFormatter help = new HelpFormatter();
 		help.setOptionComparator(new Comparator<Option>() {
 			@Override
@@ -515,7 +515,7 @@ public class CeSymmMain {
 	 */
 	private static Options getOptions(Map<String, Integer> optionOrder) {
 
-		OptionGroup grp;
+		OptionGroup grp; // For mutually exclusive options
 		Option opt;
 		// Note: When adding an option, also add its long name to the
 		// optionOrder map

@@ -23,7 +23,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -396,16 +395,8 @@ public class CeSymmMain {
 				System.exit(1);
 			}
 		}
-		if (cli.hasOption("opt")) {
-			String strVal = cli.getOptionValue("opt");
-			try {
-				boolean val = Boolean.parseBoolean(strVal);
-				params.setOptimization(val);
-			} catch (NumberFormatException e) {
-				logger.error("Invalid opt: " + strVal);
-				System.exit(1);
-			}
-		}
+		boolean optimize = cli.hasOption("opt") || !cli.hasOption("noopt");
+		params.setOptimization(optimize);
 		if (cli.hasOption("symmlevels")) {
 			String strVal = cli.getOptionValue("symmlevels");
 			try {
@@ -522,7 +513,6 @@ public class CeSymmMain {
 	 *            An empty map, which will be filled in with the option order
 	 * @return all Options
 	 */
-	@SuppressWarnings("static-access")
 	private static Options getOptions(Map<String, Integer> optionOrder) {
 
 		OptionGroup grp;
@@ -534,286 +524,299 @@ public class CeSymmMain {
 		Options options = new Options();
 		options.addOption("h", "help", false, "Print usage information");
 		optionOrder.put("help", optionNum++);
-		options.addOption(OptionBuilder.withLongOpt("version").hasArg(false)
-				.withDescription("Print CE-Symm version").create());
+		options.addOption(Option.builder().longOpt("version").hasArg(false)
+				.desc("Print CE-Symm version").build());
 		optionOrder.put("version", optionNum++);
 
 		// Input file
-		options.addOption(OptionBuilder
-				.withLongOpt("input")
+		options.addOption(Option.builder("i")
+				.longOpt("input")
 				.hasArg(true)
-				.withArgName("file")
-				.withDescription(
+				.argName("file")
+				.desc(
 						"File listing whitespace-delimited query structures")
-				.create("i"));
+				.build());
 		optionOrder.put("input", optionNum++);
 		// Output formats
-		options.addOption(OptionBuilder
-				.withLongOpt("xml")
+		options.addOption(Option.builder()
+				.longOpt("xml")
 				.hasArg(true)
-				.withArgName("file")
-				.withDescription(
+				.argName("file")
+				.desc(
 						"Output alignment as XML (use --xml=- for standard out).")
-				.create("o"));
+				.build());
 		optionOrder.put("xml", optionNum++);
-		options.addOption(OptionBuilder.withLongOpt("verbose").hasArg(true)
-				.withArgName("file")
-				.withDescription("Output verbose summary of the job results.")
-				.create("o"));
-		optionOrder.put("xml", optionNum++);
-		options.addOption(OptionBuilder
-				.withLongOpt("stats")
+		options.addOption(Option.builder("v").longOpt("verbose").hasArg(true)
+				.argName("file")
+				.desc("Output verbose summary of the job results.")
+				.build());
+		optionOrder.put("verbose", optionNum++);
+		options.addOption(Option.builder("o")
+				.longOpt("stats")
 				.hasArg(true)
-				.withArgName("file")
-				.withDescription(
+				.argName("file")
+				.desc(
 						"Output a tsv file with the main symmetry info.")
-				.create("o"));
+				.build());
+		// verbose ouput
+		opt = Option.builder("q")
+				.longOpt("noverbose")
+				.hasArg(false)
+				.desc(
+						"Disable verbose summary to the std output."
+								+ "[default for >=10 structures when specified on command"
+								+ " line]").build();
+		optionOrder.put(opt.getLongOpt(), optionNum++);
+		//grp.addOption(opt);
+		options.addOption(opt);
 		optionOrder.put("stats", optionNum++);
-		options.addOption(OptionBuilder.withLongOpt("fasta").hasArg(true)
-				.withArgName("file")
-				.withDescription("Output alignment as FASTA alignment output")
-				.create());
+		options.addOption(Option.builder().longOpt("fasta").hasArg(true)
+				.argName("file")
+				.desc("Output alignment as FASTA alignment output")
+				.build());
 		optionOrder.put("fasta", optionNum++);
-		options.addOption(OptionBuilder.withLongOpt("fatcat").hasArg(true)
-				.withArgName("file")
-				.withDescription("Output alignment as FATCAT output").create());
+		options.addOption(Option.builder().longOpt("fatcat").hasArg(true)
+				.argName("file")
+				.desc("Output alignment as FATCAT output").build());
 		optionOrder.put("fatcat", optionNum++);
 
 		// jmol
 		grp = new OptionGroup();
-		opt = OptionBuilder
-				.withLongOpt("show3d")
+		opt = Option.builder("j")
+				.longOpt("show3d")
 				.hasArg(false)
-				.withDescription(
-						"Force jMol display for each structure "
-								+ "[default for <10 structures when specified on command"
-								+ " line]").create('j');
+				.desc( "Force jMol display for each structure "
+						+ "[default for <10 structures when specified on command"
+						+ " line]")
+				.build();
 		grp.addOption(opt);
 		optionOrder.put(opt.getLongOpt(), optionNum++);
-		opt = OptionBuilder
-				.withLongOpt("noshow3d")
+		opt = Option.builder("J")
+				.longOpt("noshow3d")
 				.hasArg(false)
-				.withDescription(
-						"Disable jMol display [default with --input "
-								+ "or for >=10 structures]").create('J');
+				.desc( "Disable jMol display [default with --input "
+						+ "or for >=10 structures]")
+				.build();
 		optionOrder.put(opt.getLongOpt(), optionNum++);
 		grp.addOption(opt);
 		options.addOptionGroup(grp);
-
-		// verbose ouput
-		opt = OptionBuilder
-				.withLongOpt("noverbose")
-				.hasArg(false)
-				.withDescription(
-						"Disable verbose summary to the std output."
-								+ "[default for >=10 structures when specified on command"
-								+ " line]").create();
-		grp.addOption(opt);
 
 		// enums
-		options.addOptionGroup(grp);
-		options.addOption(OptionBuilder
-				.withLongOpt("ordermethod")
+		options.addOption(Option.builder()
+				.longOpt("ordermethod")
 				.hasArg(true)
-				.withArgName("class")
-				.withDescription(
+				.argName("class")
+				.desc(
 						"Order detection method. Can be a "
 								+ "full class name or a short class name from the "
 								+ "org.biojava.nbio.structure.align.symmetry.internal package. "
 								+ "[default SequenceFunctionOrderDetector]")
-				.create());
+				.build());
 		optionOrder.put("ordermethod", optionNum++);
 
-		options.addOptionGroup(grp);
-		options.addOption(OptionBuilder
-				.withLongOpt("refinemethod")
+		options.addOption(Option.builder()
+				.longOpt("refinemethod")
 				.hasArg(true)
-				.withArgName("class")
-				.withDescription(
+				.argName("class")
+				.desc(
 						"Refiner method. Can be a "
 								+ "full class name or a short class name from the "
 								+ "org.biojava.nbio.structure.align.symmetry.internal package. "
-								+ "[default Single]").create());
+								+ "[default Single]").build());
 		optionOrder.put("refinemethod", optionNum++);
 
-		options.addOptionGroup(grp);
-		options.addOption(OptionBuilder
-				.withLongOpt("symmtype")
+		options.addOption(Option.builder()
+				.longOpt("symmtype")
 				.hasArg(true)
-				.withArgName("class")
-				.withDescription(
+				.argName("class")
+				.desc(
 						"Symmetry Type. Can be a "
 								+ "full class name or a short class name from the "
 								+ "org.biojava.nbio.structure.align.symmetry.internal package. "
-								+ "[default Auto]").create());
+								+ "[default Auto]").build());
 		optionOrder.put("symmtype", optionNum++);
 
 		// PDB_DIR
-		options.addOption(OptionBuilder
-				.withLongOpt("pdbfilepath")
+		options.addOption(Option.builder()
+				.longOpt("pdbfilepath")
 				.hasArg(true)
-				.withArgName("dir")
-				.withDescription(
+				.argName("dir")
+				.desc(
 						"Download directory for new "
 								+ "structures. Equivalent to passing -DPDB_DIR=dir to the VM. "
-								+ "[default temp folder]").create());
+								+ "[default temp folder]").build());
 		optionOrder.put("pdbfilepath", optionNum++);
+
+
 		grp = new OptionGroup();
-		opt = OptionBuilder
-				.withLongOpt("pdbdirsplit")
+		opt = Option.builder()
+				.longOpt("pdbdirsplit")
 				.hasArg(false)
-				.withDescription(
+				.desc(
 						"Ignored. For backwards compatibility only. [default]")
-				.create();
+				.build();
 		optionOrder.put(opt.getLongOpt(), optionNum++);
 		grp.addOption(opt);
 		// grp.setSelected(opt);
-		opt = OptionBuilder.withLongOpt("nopdbdirsplit").hasArg(false)
-				.withDescription("Ignored. For backwards compatibility only.")
-				.create();
+		opt = Option.builder().longOpt("nopdbdirsplit").hasArg(false)
+				.desc("Ignored. For backwards compatibility only.")
+				.build();
 		optionOrder.put(opt.getLongOpt(), optionNum++);
 		grp.addOption(opt);
 		options.addOptionGroup(grp);
 
-		options.addOption(OptionBuilder.withLongOpt("threads").hasArg(true)
-				.withDescription("Number of threads [default cores-1]")
-				.create());
+		options.addOption(Option.builder().longOpt("threads").hasArg(true)
+				.desc("Number of threads [default cores-1]")
+				.build());
 		optionOrder.put("threads", optionNum++);
 
 		// Parameters
-		options.addOption(OptionBuilder
-				.withLongOpt("maxgapsize")
+		options.addOption(Option.builder()
+				.longOpt("maxgapsize")
 				.hasArg(true)
-				.withDescription(
+				.argName("int")
+				.desc(
 						"This parameter configures the maximum gap size "
 								+ "G, that is applied during the AFP extension. The "
 								+ "larger the value, the longer the calculation time "
 								+ "can become, Default value is 30. Set to 0 for no limit.")
-				.create());
+				.build());
 		optionOrder.put("maxgapsize", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("scoringstrategy")
+		options.addOption(Option.builder()
+				.longOpt("scoringstrategy")
 				.hasArg(true)
-				.withDescription(
+				.argName("str")
+				.desc(
 						"Which scoring function to use: "
 								+ CliTools
 										.getEnumValuesAsString(ScoringStrategy.class))
-				.create());
+				.build());
 		optionOrder.put("scoringstrategy", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("winsize")
+		options.addOption(Option.builder()
+				.longOpt("winsize")
 				.hasArg(true)
-				.withDescription(
+				.argName("int")
+				.desc(
 						"This configures the fragment size m of Aligned Fragment Pairs (AFPs).")
-				.create());
+				.build());
 		optionOrder.put("winsize", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("maxrmsd")
+		options.addOption(Option.builder()
+				.longOpt("maxrmsd")
 				.hasArg(true)
-				.withDescription(
+				.argName("float")
+				.desc(
 						"The maximum RMSD at which to stop alignment "
 								+ "optimization. (default: unlimited=99)")
-				.create());
+				.build());
 		optionOrder.put("maxrmsd", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("gapopen")
+		options.addOption(Option.builder()
+				.longOpt("gapopen")
 				.hasArg(true)
-				.withDescription(
+				.argName("float")
+				.desc(
 						"Gap opening penalty during alignment optimization [default: 5.0].")
-				.create());
+				.build());
 		optionOrder.put("gapopen", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("gapextension")
+		options.addOption(Option.builder()
+				.longOpt("gapextension")
 				.hasArg(true)
-				.withDescription(
-						"Gap extension penalty during alignment optimization [default: 0.5].\n")
-				.create());
+				.argName("float")
+				.desc(
+						"Gap extension penalty during alignment optimization [default: 0.5].")
+				.build());
 		optionOrder.put("gapextension", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("symmlevels")
+		options.addOption(Option.builder()
+				.longOpt("symmlevels")
 				.hasArg(true)
-				.withDescription(
+				.argName("int")
+				.desc(
 						"Run iteratively the algorithm to find multiple symmetry levels. "
 								+ "This specifies the maximum number of symmetry levels. 0 means unbounded"
-								+ " [default: 0].\n").create());
+								+ " [default: 0].").build());
 		optionOrder.put("symmlevels", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("opt")
-				.hasArg(true)
-				.withDescription(
-						"Optimize the resulting symmetry alignment [default: true].\n")
-				.create());
-		optionOrder.put("opt", optionNum++);
+		options.addOption(Option.builder()
+				.longOpt("noopt")
+				.hasArg(false)
+				.desc(
+						"Disable optimization of the resulting symmetry alignment.")
+				.build());
+		optionOrder.put("noopt", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("scorethreshold")
+		options.addOption(Option.builder()
+				.longOpt("scorethreshold")
 				.hasArg(true)
-				.withDescription(
+				.argName("float")
+				.desc(
 						"The score threshold. TM-scores above this value "
 								+ "will be considered significant results "
-								+ "[default: 0.4, interval [0.0,1.0]].\n")
-				.create());
+								+ "[default: 0.4, interval [0.0,1.0]].")
+				.build());
 		optionOrder.put("scorethreshold", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("ssethreshold")
+		options.addOption(Option.builder()
+				.longOpt("ssethreshold")
 				.hasArg(true)
-				.withDescription(
+				.argName("int")
+				.desc(
 						"The SSE threshold. Number of secondary structure"
 								+ "elements for repeat below this value will be considered "
 								+ "asymmetric results. 0 means unbounded."
-								+ "[default: 0].\n").create());
+								+ "[default: 0].").build());
 		optionOrder.put("ssethreshold", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("maxorder")
+		options.addOption(Option.builder()
+				.longOpt("maxorder")
 				.hasArg(true)
-				.withDescription(
-						"The maximum number of symmetric repeats [default: 8].\n")
-				.create());
+				.argName("int")
+				.desc(
+						"The maximum number of symmetric repeats [default: 8].")
+				.build());
 		optionOrder.put("maxorder", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("rndseed")
+		options.addOption(Option.builder()
+				.longOpt("rndseed")
 				.hasArg(true)
-				.withDescription(
+				.argName("int")
+				.desc(
 						"The random seed used in optimization, for reproducibility "
-								+ "of the results [default: 0].\n").create());
+								+ "of the results [default: 0].").build());
 		optionOrder.put("rndseed", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("minlen")
+		options.addOption(Option.builder()
+				.longOpt("minlen")
 				.hasArg(true)
-				.withDescription(
+				.argName("int")
+				.desc(
 						"The minimum length, expressed in number of core "
-								+ "aligned residues, of a symmetric repeat [default: 15].\n")
-				.create());
+								+ "aligned residues, of a symmetric repeat [default: 15].")
+				.build());
 		optionOrder.put("minlen", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("dcutoff")
+		options.addOption(Option.builder()
+				.longOpt("dcutoff")
 				.hasArg(true)
-				.withDescription(
+				.argName("float")
+				.desc(
 						"The maximum distance, in A, allowed between any two aligned "
-								+ "residue positions [default: 7.0].\n")
-				.create());
+								+ "residue positions [default: 7.0].")
+				.build());
 		optionOrder.put("dcutoff", optionNum++);
 
-		options.addOption(OptionBuilder
-				.withLongOpt("scopversion")
+		options.addOption(Option.builder()
+				.longOpt("scopversion")
 				.hasArg(true)
-				.withArgName("version")
-				.withDescription(
+				.argName("str")
+				.desc(
 						"Version of SCOP or SCOPe to use "
 								+ "when resolving SCOP identifiers [defaults to latest SCOPe]")
-				.create());
+				.build());
 		optionOrder.put("scopversion", optionNum++);
 
 		return options;

@@ -1050,7 +1050,7 @@ public class CeSymmMain {
 
 			writer.append(result.getStructureId().getIdentifier());
 
-			if (SymmetryTools.isRefined(result.getMultipleAlignment())) {
+			if (result.isRefined()) {
 				writer.append(" could be refined into symmetry order "
 						+ result.getMultipleAlignment().size()
 						+ ". The structure is ");

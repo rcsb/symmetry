@@ -28,7 +28,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
-import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIdentifier;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
@@ -51,7 +50,6 @@ import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMetho
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 import org.biojava.nbio.structure.symmetry.internal.CeSymmResult;
-import org.biojava.nbio.structure.symmetry.utils.SymmetryTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -190,14 +188,14 @@ public class CeSymmMain {
 		if (cli.hasOption("verbose")) {
 			String filename = cli.getOptionValue("verbose");
 			try {
-				writers.add(new VerboseWriter(filename));
+				writers.add(new SimpleWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
 			}
 		} else if (verbose) {
 			try {
-				writers.add(new VerboseWriter("-"));
+				writers.add(new SimpleWriter("-"));
 			} catch (IOException e) {
 				logger.error(e.getMessage());
 			}
@@ -495,7 +493,7 @@ public class CeSymmMain {
 		}
 		executor.shutdown();
 		while (!executor.isTerminated())
-			Thread.sleep(60000); // sleep 60 seconds
+			Thread.sleep(100); // sleep .1 seconds
 
 		long elapsed = (System.nanoTime() - startTime) / 1000000;
 		long meanRT = (long) (elapsed / (float) names.size());
@@ -957,7 +955,7 @@ public class CeSymmMain {
 
 		@Override
 		public void writeHeader() {
-			writer.println("Name\t" + "Order\t" + "SymmGroup\t" + "Refined\t"
+			writer.println("Name\t" + "NumRepeats\t" + "SymmGroup\t" + "Refined\t"
 					+ "Symm-Levels\t" + "Symm-Type\t" + "Rotation-Angle\t"
 					+ "Screw-Translation\t" + "TMscore\t" + "RMSD\t"
 					+ "Symm-TMscore\t" + "Symm-RMSD\t" + "RepeatLength\t"
@@ -1036,38 +1034,70 @@ public class CeSymmMain {
 		}
 	}
 
-	private static class VerboseWriter extends CeSymmWriter {
+	private static class SimpleWriter extends CeSymmWriter {
 
-		public VerboseWriter(String filename) throws IOException {
+		public SimpleWriter(String filename) throws IOException {
 			super(filename);
 		}
 
 		@Override
 		public void writeHeader() {
-			writer.println("Summary of the job results:");
+			writer.println("Structure\tSymmGroup\tReason");
 			writer.flush();
 		}
 
 		@Override
 		public void writeResult(CeSymmResult result) throws IOException {
-
 			writer.append(result.getStructureId().getIdentifier());
-
-			if (result.isRefined()) {
-				writer.append(" could be refined into symmetry order "
-						+ result.getMultipleAlignment().size()
-						+ ". The structure is ");
-				if (result.isSignificant()) {
-					writer.append("significant (symmetric).");
-				} else
-					writer.append("not significant (asymmetric).");
-				writer.append(System.getProperty("line.separator"));
-			} else {
-				writer.append(" could not be refined. "
-						+ "The structure has no symmetry (asymmetric)");
-				writer.append(System.getProperty("line.separator"));
-			}
+			writer.append("\t");
+			writer.append(result.getSymmGroup());
+			writer.append("\t");
+			writer.append(getReason(result));
+			writer.println();
 			writer.flush();
+		}
+		// TODO Move to CeSymmResult
+		private static String getReason(CeSymmResult result) {
+			// Cases:
+			// 1. Asymmetric because insignificant self-alignment (1itb.A_1-100)
+			double tm = result.getSelfAlignment().getTMScore();
+			if (tm < result.getParams().getScoreThreshold() ) {
+				return String.format("Insignificant self-alignment (TM=%.2f)",tm);
+			}
+			// 2. Asymmetric because order detector returned 1
+			// TODO
+
+			// Check that the user requested refinement
+			if( result.getParams().getRefineMethod() != RefineMethod.NOT_REFINED) {
+				// 3. Asymmetric because refinement failed
+				if(! result.isRefined()) {
+					return "Refinement failed";
+				}
+				// 4. Asymmetric because refinement & optimization were not significant
+				if(! result.isSignificant()) {
+					return String.format("Refinement was not significant (TM=%.2f)",tm);
+				}
+			} else {
+				// 4. Not refined, but result was not significant
+				if(! result.isSignificant()) {
+					return String.format("Result was not significant (TM=%.2f)",tm);
+				}
+			}
+
+			String hierarchical = "";
+			if( result.getSymmLevels() > 1) {
+				hierarchical = String.format("; Contains %d levels of symmetry",
+						result.getSymmLevels());
+			}
+			// 5. Symmetric.
+			//   a. Open. Give # repeats (1n0r.A)
+			if( result.getType() == SymmetryType.OPEN) {
+				return String.format("Contains %d open repeats (TM=%.2f)%s",
+						result.getSymmOrder(),tm,hierarchical);
+			}
+			//   b. Closed, non-hierarchical (1itb.A)
+			//   c. Closed, heirarchical (4gcr)
+			return String.format("Significant (TM=%.2f)%s", tm, hierarchical);
 		}
 	}
 

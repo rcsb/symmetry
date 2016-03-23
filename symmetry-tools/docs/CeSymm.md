@@ -10,10 +10,12 @@ The easiest way to run CE-Symm is via the included wrapper script.
 usage:  runCESymm.sh [OPTIONS] [structures...]
 ```
 
-CE-Symm can also run through java. The main class is <tt>demo.CeSymmMain</tt>, and it requires classpath entries for BioJava and the RCSB symmetry package.
+CE-Symm can also run directly through java without using the wrapper script.
+On many systems, double clicking the JAR file should open the program in
+interactive mode. From the command line, it can be run as
 
 ```bash
-java -Xmx500M -cp "jars/*" demo.CeSymmMain [OPTIONS] [structures...]
+java -Xmx500M -jar cesymm-*.jar [OPTIONS] [structures...]
 ```
 
 Options
@@ -100,11 +102,7 @@ An important feature in the batch mode is the multithreading implementation.
 By *default*, all the allowed CPUs are used to run the symmetry analyses in 
 parallel. The option `-threads N` can be used to set the number N of threads
 to use. Note that the scaling efficiency of the multithreading is not perfect,
-and the **thread overhead** will dominate with more than 8 threads. The scaling
-factor for 8 threads is between 2.5 (for large structures) and 1.5 (for small
-structures). See the efficiency plot below for graphical performance evaluation:
-
-![efficiency_plot](CeSymm_MT.png)
+and the **thread overhead** becomes significant with more than 8 threads.
 
 Output
 ------

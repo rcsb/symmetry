@@ -53,4 +53,4 @@ function scriptdir {
 }
 DIR="$(scriptdir "$0" )"
 # send the arguments to the java app
-java -Xmx500M -jar "$DIR/${project.build.finalName}.jar" "$@"
+java -Xmx500M -jar "$DIR/cesymm-${version}.jar" "$@"

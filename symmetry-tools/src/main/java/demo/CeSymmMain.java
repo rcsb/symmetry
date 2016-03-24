@@ -1011,7 +1011,17 @@ public class CeSymmMain {
 
 					repeatLen = msa.length();
 					coreLen = msa.getCoreLength() * msa.size();
-					coverage = repeatLen * msa.size() / structureLen;
+					
+					// Calculate coverage
+					coverage = 0;
+					for (int s = 0; s < msa.size(); s++) {
+						List<Integer> sequence = msa.getBlock(0).getAlignRes().get(s);
+						for (int p = 0; p < sequence.size(); p++) {
+							if (sequence.get(p) != null)
+								coverage += 1;
+						}
+					}
+					coverage /= structureLen;
 
 					rot = new RotationAxis(result.getAxes().getElementaryAxes()
 							.get(0));

@@ -1099,7 +1099,7 @@ public class CeSymmMain {
 				return String.format("Insignificant self-alignment (TM=%.2f)",tm);
 			}
 			// 2. Asymmetric because order detector returned 1
-			// TODO
+			// indestinguishable from successful refinement C1
 
 			// Check that the user requested refinement
 			if( result.getParams().getRefineMethod() != RefineMethod.NOT_REFINED) {
@@ -1107,6 +1107,7 @@ public class CeSymmMain {
 				if(! result.isRefined()) {
 					return "Refinement failed";
 				}
+				tm = result.getMultipleAlignment().getScore(MultipleAlignmentScorer.AVGTM_SCORE);
 				// 4. Asymmetric because refinement & optimization were not significant
 				if(! result.isSignificant()) {
 					return String.format("Refinement was not significant (TM=%.2f)",tm);

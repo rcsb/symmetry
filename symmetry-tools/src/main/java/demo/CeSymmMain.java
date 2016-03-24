@@ -8,10 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -78,21 +75,10 @@ public class CeSymmMain {
 		final String header = "Determine the order for each structure, which may "
 				+ "be PDB IDs, SCOP domains, or file paths. If none are given, the "
 				+ "user will be prompted at startup.";
-		final Map<String, Integer> optionOrder = new HashMap<String, Integer>();
-		Options options = getOptions(optionOrder);
+		Options options = getOptions();
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter help = new HelpFormatter();
-		help.setOptionComparator(new Comparator<Option>() {
-			@Override
-			public int compare(Option o1, Option o2) {
-				Integer i1 = optionOrder.get(o1.getLongOpt());
-				Integer i2 = optionOrder.get(o2.getLongOpt());
-				// Check that we didn't miss any options setting up optionOrder
-				assert i1 != null : o1.getLongOpt();
-				assert i2 != null : o2.getLongOpt();
-				return i1.compareTo(i2);
-			}
-		});
+		help.setOptionComparator(null); // prevent option sorting
 
 		final CommandLine cli;
 		try {
@@ -553,20 +539,16 @@ public class CeSymmMain {
 	 *            An empty map, which will be filled in with the option order
 	 * @return all Options
 	 */
-	private static Options getOptions(Map<String, Integer> optionOrder) {
+	private static Options getOptions() {
 
 		OptionGroup grp; // For mutually exclusive options
 		Option opt;
 		// Note: When adding an option, also add its long name to the
-		// optionOrder map
-		int optionNum = 0;
 
 		Options options = new Options();
 		options.addOption("h", "help", false, "Print usage information");
-		optionOrder.put("help", optionNum++);
 		options.addOption(Option.builder().longOpt("version").hasArg(false)
 				.desc("Print CE-Symm version").build());
-		optionOrder.put("version", optionNum++);
 
 		// Input file
 		options.addOption(Option.builder("i")
@@ -576,7 +558,6 @@ public class CeSymmMain {
 				.desc(
 						"File listing whitespace-delimited query structures")
 				.build());
-		optionOrder.put("input", optionNum++);
 		
 		// Logger control
 		grp = new OptionGroup();
@@ -587,13 +568,11 @@ public class CeSymmMain {
 				.desc("Output verbose logging information.")
 				.build();
 		grp.addOption(opt);
-		optionOrder.put(opt.getLongOpt(), optionNum++);
 		opt = Option.builder("q")
 				.longOpt("noverbose")
 				.hasArg(false)
 				.desc("Disable verbose logging information, as well as the default (--simple) output.")
 				.build();
-		optionOrder.put(opt.getLongOpt(), optionNum++);
 		grp.addOption(opt);
 		options.addOptionGroup(grp);
 
@@ -605,7 +584,6 @@ public class CeSymmMain {
 				.argName("file")
 				.desc( "Output result in a simple format (default).")
 				.build());
-		optionOrder.put("simple", optionNum++);
 		options.addOption(Option.builder()
 				.longOpt("stats")
 				.hasArg()
@@ -613,7 +591,6 @@ public class CeSymmMain {
 				.argName("file")
 				.desc( "Output a tsv file with detailed symmetry info.")
 				.build());
-		optionOrder.put("stats", optionNum++);
 		options.addOption(Option.builder()
 				.longOpt("tsv")
 				.hasArg()
@@ -621,7 +598,6 @@ public class CeSymmMain {
 				.argName("file")
 				.desc( "Output alignment as a tsv-formated list of aligned residues.")
 				.build());
-		optionOrder.put("tsv", optionNum++);
 		options.addOption(Option.builder()
 				.longOpt("xml")
 				.hasArg()
@@ -629,7 +605,6 @@ public class CeSymmMain {
 				.argName("file")
 				.desc( "Output alignment as XML (use --xml=- for standard out).")
 				.build());
-		optionOrder.put("xml", optionNum++);
 		options.addOption(Option.builder()
 				.longOpt("fatcat")
 				.hasArg()
@@ -637,7 +612,6 @@ public class CeSymmMain {
 				.argName("file")
 				.desc("Output alignment as FATCAT output")
 				.build());
-		optionOrder.put("fatcat", optionNum++);
 		options.addOption(Option.builder()
 				.longOpt("fasta")
 				.hasArg()
@@ -645,7 +619,6 @@ public class CeSymmMain {
 				.argName("file")
 				.desc("Output alignment as FASTA alignment output")
 				.build());
-		optionOrder.put("fasta", optionNum++);
 
 		// jmol
 		grp = new OptionGroup();
@@ -657,14 +630,12 @@ public class CeSymmMain {
 						+ " line]")
 				.build();
 		grp.addOption(opt);
-		optionOrder.put(opt.getLongOpt(), optionNum++);
 		opt = Option.builder("J")
 				.longOpt("noshow3d")
 				.hasArg(false)
 				.desc( "Disable jMol display [default with --input "
 						+ "or for >=10 structures]")
 				.build();
-		optionOrder.put(opt.getLongOpt(), optionNum++);
 		grp.addOption(opt);
 		options.addOptionGroup(grp);
 
@@ -679,7 +650,6 @@ public class CeSymmMain {
 								+ "org.biojava.nbio.structure.align.symmetry.internal package. "
 								+ "[default SequenceFunctionOrderDetector]")
 				.build());
-		optionOrder.put("ordermethod", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("refinemethod")
@@ -690,7 +660,6 @@ public class CeSymmMain {
 								+ "full class name or a short class name from the "
 								+ "org.biojava.nbio.structure.align.symmetry.internal package. "
 								+ "[default Single]").build());
-		optionOrder.put("refinemethod", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("symmtype")
@@ -701,7 +670,6 @@ public class CeSymmMain {
 								+ "full class name or a short class name from the "
 								+ "org.biojava.nbio.structure.align.symmetry.internal package. "
 								+ "[default Auto]").build());
-		optionOrder.put("symmtype", optionNum++);
 
 		// PDB_DIR
 		options.addOption(Option.builder()
@@ -711,12 +679,10 @@ public class CeSymmMain {
 				.desc( "Download directory for new structures [default tmp folder]. "
 						+ "Can also be set with the PDB_DIR environmental variable.")
 				.build());
-		optionOrder.put("pdbfilepath", optionNum++);
 
 		options.addOption(Option.builder().longOpt("threads").hasArg(true)
 				.desc("Number of threads [default cores-1]")
 				.build());
-		optionOrder.put("threads", optionNum++);
 
 		// Parameters
 		options.addOption(Option.builder()
@@ -729,7 +695,6 @@ public class CeSymmMain {
 								+ "larger the value, the longer the calculation time "
 								+ "can become, Default value is 30. Set to 0 for no limit.")
 				.build());
-		optionOrder.put("maxgapsize", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("scoringstrategy")
@@ -740,7 +705,6 @@ public class CeSymmMain {
 								+ CliTools
 										.getEnumValuesAsString(ScoringStrategy.class))
 				.build());
-		optionOrder.put("scoringstrategy", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("winsize")
@@ -749,7 +713,6 @@ public class CeSymmMain {
 				.desc(
 						"This configures the fragment size m of Aligned Fragment Pairs (AFPs).")
 				.build());
-		optionOrder.put("winsize", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("maxrmsd")
@@ -759,7 +722,6 @@ public class CeSymmMain {
 						"The maximum RMSD at which to stop alignment "
 								+ "optimization. (default: unlimited=99)")
 				.build());
-		optionOrder.put("maxrmsd", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("gapopen")
@@ -768,7 +730,6 @@ public class CeSymmMain {
 				.desc(
 						"Gap opening penalty during alignment optimization [default: 5.0].")
 				.build());
-		optionOrder.put("gapopen", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("gapextension")
@@ -777,7 +738,6 @@ public class CeSymmMain {
 				.desc(
 						"Gap extension penalty during alignment optimization [default: 0.5].")
 				.build());
-		optionOrder.put("gapextension", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("symmlevels")
@@ -787,7 +747,6 @@ public class CeSymmMain {
 						"Run iteratively the algorithm to find multiple symmetry levels. "
 								+ "This specifies the maximum number of symmetry levels. 0 means unbounded"
 								+ " [default: 0].").build());
-		optionOrder.put("symmlevels", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("noopt")
@@ -795,7 +754,6 @@ public class CeSymmMain {
 				.desc(
 						"Disable optimization of the resulting symmetry alignment.")
 				.build());
-		optionOrder.put("noopt", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("scorethreshold")
@@ -806,7 +764,6 @@ public class CeSymmMain {
 								+ "will be considered significant results "
 								+ "[default: 0.4, interval [0.0,1.0]].")
 				.build());
-		optionOrder.put("scorethreshold", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("ssethreshold")
@@ -817,7 +774,6 @@ public class CeSymmMain {
 								+ "elements for repeat below this value will be considered "
 								+ "asymmetric results. 0 means unbounded."
 								+ "[default: 0].").build());
-		optionOrder.put("ssethreshold", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("maxorder")
@@ -826,7 +782,6 @@ public class CeSymmMain {
 				.desc(
 						"The maximum number of symmetric repeats [default: 8].")
 				.build());
-		optionOrder.put("maxorder", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("rndseed")
@@ -835,7 +790,6 @@ public class CeSymmMain {
 				.desc(
 						"The random seed used in optimization, for reproducibility "
 								+ "of the results [default: 0].").build());
-		optionOrder.put("rndseed", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("minlen")
@@ -845,7 +799,6 @@ public class CeSymmMain {
 						"The minimum length, expressed in number of core "
 								+ "aligned residues, of a symmetric repeat [default: 15].")
 				.build());
-		optionOrder.put("minlen", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("dcutoff")
@@ -855,7 +808,6 @@ public class CeSymmMain {
 						"The maximum distance, in A, allowed between any two aligned "
 								+ "residue positions [default: 7.0].")
 				.build());
-		optionOrder.put("dcutoff", optionNum++);
 
 		options.addOption(Option.builder()
 				.longOpt("scopversion")
@@ -865,7 +817,6 @@ public class CeSymmMain {
 						"Version of SCOP or SCOPe to use "
 								+ "when resolving SCOP identifiers [defaults to latest SCOPe]")
 				.build());
-		optionOrder.put("scopversion", optionNum++);
 
 		return options;
 	}

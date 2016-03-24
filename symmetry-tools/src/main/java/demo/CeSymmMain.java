@@ -324,6 +324,10 @@ public class CeSymmMain {
 			}
 
 		}
+
+		if (cli.hasOption("nointernalgaps")) {
+			params.setGaps(false);
+		}
 		if (cli.hasOption("gapopen")) {
 			String strVal = cli.getOptionValue("gapopen");
 			try {
@@ -673,7 +677,7 @@ public class CeSymmMain {
 		options.addOption(Option.builder()
 				.longOpt("ordermethod")
 				.hasArg(true)
-				.argName("class")
+				.argName("str")
 				.desc( "Order detection method: "+
 						CliTools.getEnumValuesAsString(OrderDetectorMethod.class))
 				.build());
@@ -687,7 +691,7 @@ public class CeSymmMain {
 		options.addOption(Option.builder()
 				.longOpt("refinemethod")
 				.hasArg(true)
-				.argName("class")
+				.argName("str")
 				.desc( "Refiner method: " +
 						CliTools.getEnumValuesAsString(RefineMethod.class) )
 				.build());
@@ -695,7 +699,7 @@ public class CeSymmMain {
 		options.addOption(Option.builder()
 				.longOpt("symmtype")
 				.hasArg(true)
-				.argName("class")
+				.argName("str")
 				.desc( "Symmetry Type: " +
 						CliTools.getEnumValuesAsString(SymmetryType.class))
 				.build());
@@ -750,6 +754,12 @@ public class CeSymmMain {
 				.desc(
 						"The maximum RMSD at which to stop alignment "
 								+ "optimization. (default: unlimited=99)")
+				.build());
+
+		options.addOption(Option.builder()
+				.longOpt("nointernalgaps")
+				.desc( "Force alignment to include a residue from all repeats. "
+						+ "(By default only 50% of repeats must be aligned in each column.)")
 				.build());
 
 		options.addOption(Option.builder()

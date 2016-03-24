@@ -39,15 +39,17 @@ Short Option | Long Option | Description
     | --fasta=file      | Output alignment as FASTA alignment output
 -j  | --show3d          | Force jMol display for each structure [default for <10 structures when specified on command line]
 -J  | --noshow3d        | Disable jMol display [default with --input or for >=10 structures]
-    | --ordermethod=Class   | Order detection method. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default SequenceFunctionOrderDetector]
-    | --refinemethod=Class  | Refiner method. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default Single]
-    | --symmtype=Class      | Symmetry Type. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default Auto]
+    | --ordermethod=Class   | Order detection method: SEQUENCE_FUNCTION (default), GRAPH_COMPONENT, ANGLE, or USER_INPUT
+    | --order <int>     | Force a particular order. If positive, implies --ordermethod=USER_INPUT.
+    | --refinemethod=Class  | Refiner method: SEQUENCE_FUNCTION (default), NOT_REFINED, or GRAPH_COMPONENT
+    | --symmtype=Class      | Restrict symmetry to: CLOSED, OPEN, or AUTO (default)
     | --pdbfilepath=dir | Download directory for new structures [default tmp folder]. Can also be set with the PDB_DIR environmental variable.
     | --threads=int     | Number of threads
     | --maxgapsize=float| This parameter configures the maximum gap size G, that is applied during the AFP extension. The larger the value, the longer the calculation time can become, Default value is 30. Set to 0 for no limit.
     | --scoringstrategy=str |   Which scoring function to use: CA_SCORING, SIDE_CHAIN_SCORING, SIDE_CHAIN_ANGLE_SCORING, CA_AND_SIDE_CHAIN_ANGLE_SCORING, or SEQUENCE_CONSERVATION
     | --winsize=int     | This configures the fragment size m of Aligned Fragment Pairs (AFPs).
     | --maxrmsd=float   | The maximum RMSD at which to stop alignment optimization. (default: unlimited=99)
+    | --nointernalgaps  | Force alignment to include a residue from all repeats. (By default only 50% of repeats must be aligned in each column.)
     | --gapopen=float   | Gap opening penalty during alignment optimization [default: 5.0].
     | --gapextension=float  | Gap extension penalty during alignment optimization [default: 0.5].
     | --symmlevels=int  | Run iteratively the algorithm to find multiple symmetry levels. The parameter controls the maximum symmetry levels allowed. 0 means unbounded. [default: 0].

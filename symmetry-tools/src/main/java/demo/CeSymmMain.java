@@ -361,10 +361,21 @@ public class CeSymmMain {
 				params.setOrderDetectorMethod(val);
 			} catch (IllegalArgumentException e) {
 				// give up
-				logger.error("Illegal ordermethod. Requires on of "
-						+ CliTools
-								.getEnumValuesAsString(OrderDetectorMethod.class));
+				logger.error("Illegal ordermethod. Requires on of {}",
+						CliTools.getEnumValuesAsString(OrderDetectorMethod.class));
 				System.exit(1);
+			}
+		}
+		if (cli.hasOption("order")) {
+			String strVal = cli.getOptionValue("order");
+			try {
+				int val = Integer.parseInt( strVal );
+				params.setUserOrder(val);
+				if(val>0) {
+					params.setOrderDetectorMethod(OrderDetectorMethod.USER_INPUT);
+				}
+			} catch( NumberFormatException e) {
+				logger.error("Invalid order: "+strVal);
 			}
 		}
 		if (cli.hasOption("refinemethod")) {
@@ -490,6 +501,8 @@ public class CeSymmMain {
 			}
 		}
 
+		verifyParams(params);
+
 		// Done parsing arguments
 
 		// Configure atomcache
@@ -530,6 +543,23 @@ public class CeSymmMain {
 		// Close any writers of output
 		for (CeSymmWriter writer : writers)
 			writer.close();
+	}
+
+	/**
+	 * Check dependencies between parameters
+	 * @param params
+	 */
+	private static void verifyParams(CESymmParameters params) {
+		int order = params.getUserOrder();
+		OrderDetectorMethod orderdetector = params.getOrderDetectorMethod();
+		if( order > 0 && orderdetector != OrderDetectorMethod.USER_INPUT) {
+			logger.info("--order={} is incompatible with --orderdetector={}",order,orderdetector);
+			System.exit(1);
+		}
+		if( order < 1 && orderdetector == OrderDetectorMethod.USER_INPUT) {
+			logger.info("USER_INPUT detector requires --order",orderdetector);
+			System.exit(1);
+		}
 	}
 
 	/**
@@ -644,32 +674,31 @@ public class CeSymmMain {
 				.longOpt("ordermethod")
 				.hasArg(true)
 				.argName("class")
-				.desc(
-						"Order detection method. Can be a "
-								+ "full class name or a short class name from the "
-								+ "org.biojava.nbio.structure.align.symmetry.internal package. "
-								+ "[default SequenceFunctionOrderDetector]")
+				.desc( "Order detection method: "+
+						CliTools.getEnumValuesAsString(OrderDetectorMethod.class))
+				.build());
+		options.addOption(Option.builder()
+				.longOpt("order")
+				.hasArg(true)
+				.argName("int")
+				.desc( "Force a particular order. If positive, implies --ordermethod=USER_INPUT.")
 				.build());
 
 		options.addOption(Option.builder()
 				.longOpt("refinemethod")
 				.hasArg(true)
 				.argName("class")
-				.desc(
-						"Refiner method. Can be a "
-								+ "full class name or a short class name from the "
-								+ "org.biojava.nbio.structure.align.symmetry.internal package. "
-								+ "[default Single]").build());
+				.desc( "Refiner method: " +
+						CliTools.getEnumValuesAsString(RefineMethod.class) )
+				.build());
 
 		options.addOption(Option.builder()
 				.longOpt("symmtype")
 				.hasArg(true)
 				.argName("class")
-				.desc(
-						"Symmetry Type. Can be a "
-								+ "full class name or a short class name from the "
-								+ "org.biojava.nbio.structure.align.symmetry.internal package. "
-								+ "[default Auto]").build());
+				.desc( "Symmetry Type: " +
+						CliTools.getEnumValuesAsString(SymmetryType.class))
+				.build());
 
 		// PDB_DIR
 		options.addOption(Option.builder()
@@ -1030,10 +1059,9 @@ public class CeSymmMain {
 							.getCoords()).length();
 				}
 
-				writer.format( "%s\t%d\t%s%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t"
+				writer.format( "%s\t%d\t%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t"
 						+ "%.2f\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f%n",
 						id, order, group,
-						(result.getSymmLevels() > 1 ? "+" : ""),
 						result.isRefined(), result.getSymmLevels(),
 						result.getType(), rotation_angle, screw_translation,
 						result.getSelfAlignment().getTMScore(),
@@ -1088,8 +1116,6 @@ public class CeSymmMain {
 				writer.append(Integer.toString(result.getSymmOrder()));
 				writer.append("\t");
 				writer.append(result.getSymmGroup());
-				if(result.getSymmLevels()>1)
-					writer.append('+');
 				writer.append("\t");
 				writer.append(getReason(result));
 				writer.println();

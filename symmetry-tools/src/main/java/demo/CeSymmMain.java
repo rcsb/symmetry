@@ -1135,7 +1135,7 @@ public class CeSymmMain {
 				return String.format("Insignificant self-alignment (TM=%.2f)",tm);
 			}
 			// 2. Asymmetric because order detector returned 1
-			// indestinguishable from successful refinement C1
+			// Indistinguishable from successful refinement C1
 
 			// Check that the user requested refinement
 			if( result.getParams().getRefineMethod() != RefineMethod.NOT_REFINED) {

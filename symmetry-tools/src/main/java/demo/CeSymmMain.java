@@ -708,10 +708,9 @@ public class CeSymmMain {
 				.longOpt("pdbfilepath")
 				.hasArg(true)
 				.argName("dir")
-				.desc(
-						"Download directory for new "
-								+ "structures. Equivalent to passing -DPDB_DIR=dir to the VM. "
-								+ "[default temp folder]").build());
+				.desc( "Download directory for new structures [default tmp folder]. "
+						+ "Can also be set with the PDB_DIR environmental variable.")
+				.build());
 		optionOrder.put("pdbfilepath", optionNum++);
 
 		options.addOption(Option.builder().longOpt("threads").hasArg(true)

@@ -29,23 +29,20 @@ Short Option | Long Option | Description
 -h  | --help            | Print usage information
     | --version         | Print CE-Symm version
 -i  | --input=file      | File listing whitespace-delimited query structures
--o  | --xml=file        | Output alignment as XML (use --xml=- for standard out)
-    | --html=file       | Output alignment as HTML output
-    | --ce=file         | Output alignment as CE output
+-v  | --verbose         | Output verbose logging information.
+-q  | --noverbose       | Disable verbose logging information, as well as the default (--simple) output.
+-o  | --simple=file     | Output result in a simple format (default)
+    | --stats=file      | Output a tsv file with detailed symmetry info.
+    | --tsv=file        | Output alignment as a tsv-formated list of aligned residues.
+    | --xml=file        | Output alignment as XML
     | --fatcat=file     | Output alignment as FATCAT output
-    | --pdb=file        | Output each alignment as a two-model PDB file. The argument may be a directory or a formatting string, where "%s" will be replaced with the structure name. [default "%s.cesymm.pdb"]
-    | --tsv=file        | Output alignment as tab-separated file
--o  | --stats=file      | Output tab-separated file giving alignment statistics, one line per structure [defaults to stdout, unless -q is given]
--q  | --nostats         | Do not output default statistics to standard out (equivalent to "--stats=/dev/null")
--v  | --verbose         | Print detailed output (equivalent to "--tsv=-")
+    | --fasta=file      | Output alignment as FASTA alignment output
 -j  | --show3d          | Force jMol display for each structure [default for <10 structures when specified on command line]
 -J  | --noshow3d        | Disable jMol display [default with --input or for >=10 structures]
--t  | --order           | Use TM-Score with order for deciding significance. [default]
--T  | --noorder         | Use TM-Score alone for deciding significance.
     | --ordermethod=Class   | Order detection method. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default SequenceFunctionOrderDetector]
     | --refinemethod=Class  | Refiner method. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default Single]
     | --symmtype=Class      | Symmetry Type. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default Auto]
-    | --pdbfilepath=dir | Download directory for new structures [default temp folder]
+    | --pdbfilepath=dir | Download directory for new structures [default tmp folder]. Can also be set with the PDB_DIR environmental variable.
     | --threads=int     | Number of threads
     | --maxgapsize=float| This parameter configures the maximum gap size G, that is applied during the AFP extension. The larger the value, the longer the calculation time can become, Default value is 30. Set to 0 for no limit.
     | --scoringstrategy=str |   Which scoring function to use: CA_SCORING, SIDE_CHAIN_SCORING, SIDE_CHAIN_ANGLE_SCORING, CA_AND_SIDE_CHAIN_ANGLE_SCORING, or SEQUENCE_CONSERVATION
@@ -53,8 +50,8 @@ Short Option | Long Option | Description
     | --maxrmsd=float   | The maximum RMSD at which to stop alignment optimization. (default: unlimited=99)
     | --gapopen=float   | Gap opening penalty during alignment optimization [default: 5.0].
     | --gapextension=float  | Gap extension penalty during alignment optimization [default: 0.5].
-    | --symmlevels=int   | Run iteratively the algorithm to find multiple symmetry levels. The parameter controls the maximum symmetry levels allowed. 0 means unbounded. [default: 0].
-    | --opt=bool        | Optimize the resulting symmetry alignment [default: true].
+    | --symmlevels=int  | Run iteratively the algorithm to find multiple symmetry levels. The parameter controls the maximum symmetry levels allowed. 0 means unbounded. [default: 0].
+    | --noopt           | Disable optimization of the resulting symmetry alignment.
     | --scorethreshold=float | The score threshold. TM-scores above this value will be considered significant results [default: 0.4, interval [0.0,1.0]].
     | --ssethrehold=int | The minimum number of secondary structure elements (SSE) for each symmetric subunit, for the result to be singificant [default: 2].
     | --maxorder=int    | The maximum number of symmetric subunits [default: 8].

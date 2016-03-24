@@ -46,8 +46,6 @@ Short Option | Long Option | Description
     | --refinemethod=Class  | Refiner method. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default Single]
     | --symmtype=Class      | Symmetry Type. Can be a full class name or a short class name from the org.biojava.nbio.structure.align.symmetry.internal package. [default Auto]
     | --pdbfilepath=dir | Download directory for new structures [default temp folder]
-    | --pdbdirsplit     | Indicates that --pdbfilepath is split into multiple subdirs, like the ftp site. [default]
-    | --nopdbdirsplit   | Indicates that --pdbfilepath should be a single directory.
     | --threads=int     | Number of threads
     | --maxgapsize=float| This parameter configures the maximum gap size G, that is applied during the AFP extension. The larger the value, the longer the calculation time can become, Default value is 30. Set to 0 for no limit.
     | --scoringstrategy=str |   Which scoring function to use: CA_SCORING, SIDE_CHAIN_SCORING, SIDE_CHAIN_ANGLE_SCORING, CA_AND_SIDE_CHAIN_ANGLE_SCORING, or SEQUENCE_CONSERVATION
@@ -107,43 +105,55 @@ and the **thread overhead** becomes significant with more than 8 threads.
 Output
 ------
 
-By default, the program will output some basic statistics about each alignment
-to standard out in a simple tab-delimited format. This is equivalent to specifying
-<tt>--stats=-</tt>, and can be repressed with the <tt>-q</tt> option.
+CE-Symm can output results in a number of formats. Format options may be followed
+by a filename (`--stats=out.txt`). If the filename is empty or '-', output will
+be sent to the terminal. To prevent structure names from being interpreted as
+filenames, it is recommended to use the hyphen explicitly (e.g. `--stats=-`,
+although `--stats` may work alone in some contexts).
 
-Additional information can be output in the following formats. Most formats
-represent the symmetry as an alignment from the structure to itself.
+If no format is specified, CE-Symm will default to printing the simple format to
+standard out, although this can be surpressed with the `-q` option.
 
-* __CE__: A single file containing all alignments in CE's traditional output format,
-  with a line containing only '//' to separate records.
-* __FATCAT__: A single file containing all alignments in FATCAT's traditional output
-   format, with a line containing only '//' to separate records.
+The following formats are supported. Most formats represent the symmetry as an
+alignment from the structure to itself.
+
+* __Simple__: Intended to be a simple human-readable summary of results. Lists
+  one line per query, giving the symmetry determination and information about
+  how that conclusion was reached.
+* __Stats__: Provides more detailed statistics about each result. See below
+  for a description of the fields.
 * __TSV__: A list of aligned residues for each structure,  with a line containing 
   only '//' to separate records.
-* __HTML__: A nicely colored display of the alignments.
-* __XML__: All the alignments in a custom XML format
-* __PDB__: A PDB file containing the input structure as one model, and a rotated
-  input structure as another model.
+* __FATCAT__: A single file containing all alignments in FATCAT's traditional output
+  format, with a line containing only '//' to separate records.
+* __XML__: All the alignments in a custom XML format suitable for machine parsing.
+
 
 ***Statistics Output***
 
-By default (without -q), the program outputs the following statistics about each
-alignment performed to standard out as a tab-delimited list:
+The `--stats` option outputs a tab-delimited file with the following columns:
 
 - __Name__ Name of the structure
-- __Symm__ Either Y or N depending on whether CE-Symm determined the protein to be symmetric
-- __MinOrder__ If this structure is symmetric, the minimum order of symmetry detected.
-- __TMscore__ TM-Score of the aligned portions
-- __ZScore__ CE Z-Score of the aligned portion relative to non-homologous alignments
-- __CEScore__ Raw CE score
-- __PValue__ P-value calculated from the z-score
-- __RMSD__ RMSD of the alignment
-- __Length__ Number of aligned residues
-- __Coverage__ Percentage of residues included in the alignment
-- __%ID__ Percent sequence identity between aligned portions
-- __%Sim__ Percent sequence similarity between aligned portions
-- __time__ Time required for the alignment itself (seconds)
-
+- __NumRepeats__ Total number of repeats detected by CE-Symm, including multiple
+  levels of symmetry if detected.
+- __SymmGroup__ Symmetry Group of the top level of symmetry. This includes
+  point group symmetry (Cn or Dn), helical symmetry (H), and translational
+  repeats (R).
+- __Refined__ 'true' or 'false', indicating whether refinement was successful
+- __SymmLevels__ Number of symmetry levels detected
+- __SymmType__ OPEN or CLOSED symmetry
+- __RotationAngle__ Angle of rotation at the principal axis (degrees). Closed
+  symmetry may deviate from ideal values due to the superposition procedure.
+- __ScrewTranslation__ Translation parallel the principal axis (Å)
+- __UnrefinedTMscore__ TM-Score of the self-alignment prior to refinement
+- __UnrefinedRMSD__ RMSD of the self-alignment prior to refinement
+- __SymmTMscore__ Average pairwise TM-Score of all repeats in the alignment
+  after refinement
+- __SymmRMSD__ Average RMSD of all repeats in the alignment after refinement
+- __RepeatLength__ Number of aligned residues in each repeat
+- __CoreLength__ Number of _ungapped_ columns in the alignment
+- __Length__ Total length of the protein
+- __Coverage__ Fraction of the protein aligned
 
 License & Availability
 ----------------------
@@ -181,7 +191,7 @@ runCESymm.sh ./myprotein.pdb
 runCESymm.sh --noshow3d 1GEN.A 1TL2.A 1RI6.A
 
 # Print detailed alignment information
-runCESymm.sh -v 1GEN.A
+runCESymm.sh --stats=- 1GEN.A
 
 # Output XML file with full alignments and detailed results
 runCESymm.sh --xml=output.xml -J 1GEN.A 1TL2.A 1RI6.A
@@ -191,12 +201,6 @@ runCESymm.sh --xml=output.xml -J 1GEN.A 1TL2.A 1RI6.A
 # Accepts PDB IDs ("4hhb"), SCOP identifiers ("d4hhba_"), or ranges ("4hhb.A","4hhb.A_1-141")
 # Lines beginning with '#' are ignored.
 runCESymm.sh --input=queries.txt --xml=output.xml
-
-# Alignments can be output as two-model PDB files.
-# The --pdb option can take a directory
-#runCESymm.sh --input=queries.txt --pdb=.
-# It can also take a format string, where "%s" gets substituted for the structure name.
-runCESymm.sh --input=queries.txt --pdb=%s.cesymm.pdb
 ```
 
 

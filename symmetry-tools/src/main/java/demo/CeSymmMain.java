@@ -26,8 +26,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIdentifier;
 import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
@@ -166,11 +172,60 @@ public class CeSymmMain {
 			ScopFactory.setScopDatabase(scopVersion);
 		}
 
+		// Logger control
+		if(cli.hasOption("verbose") ) {
+			// Note that this bypasses SLF4J abstractions
+			LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+			Configuration config = ctx.getConfiguration();
+			LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME); 
+			loggerConfig.setLevel(Level.INFO);
+			ctx.updateLoggers();  // This causes all Loggers to refetch information from their LoggerConfig.
+		}
+
 		// Output formats
 		List<CeSymmWriter> writers = new ArrayList<CeSymmWriter>();
 
+
+		if (cli.hasOption("simple")) {
+			String filename = cli.getOptionValue("simple");
+			if(filename == null || filename.isEmpty())
+				filename = "-"; // standard out
+			try {
+				writers.add(new SimpleWriter(filename));
+			} catch (IOException e) {
+				logger.error("Error: Ignoring file " + filename + ".");
+				logger.error(e.getMessage());
+			}
+		}
+
+		if (cli.hasOption("stats")) {
+			String filename = cli.getOptionValue("stats");
+			if(filename == null || filename.isEmpty())
+				filename = "-"; // standard out
+			try {
+				writers.add(new StatsWriter(filename));
+			} catch (IOException e) {
+				logger.error("Error: Ignoring file " + filename + ".");
+				logger.error(e.getMessage());
+			}
+		}
+
+		if (cli.hasOption("tsv")) {
+			String filename = cli.getOptionValue("tsv");
+			if(filename == null || filename.isEmpty())
+				filename = "-"; // standard out
+			try {
+				writers.add(new TSVWriter(filename));
+			} catch (IOException e) {
+				logger.error("Error: Ignoring file " + filename + ".");
+				logger.error(e.getMessage());
+			}
+		}
+
 		if (cli.hasOption("xml")) {
 			String filename = cli.getOptionValue("xml");
+			if(filename == null || filename.isEmpty())
+				filename = "-"; // standard out
 			try {
 				writers.add(new XMLWriter(filename));
 			} catch (IOException e) {
@@ -179,39 +234,11 @@ public class CeSymmMain {
 			}
 		}
 
-		// Print summary to std out? verbose option
-		// Default to false with --input or with >=10 structures
-		boolean verbose = !cli.hasOption("input") && names.size() < 10;
-		if (cli.hasOption("noverbose")) {
-			verbose = false;
-		}
-		if (cli.hasOption("verbose")) {
-			String filename = cli.getOptionValue("verbose");
-			try {
-				writers.add(new SimpleWriter(filename));
-			} catch (IOException e) {
-				logger.error("Error: Ignoring file " + filename + ".");
-				logger.error(e.getMessage());
-			}
-		} else if (verbose) {
-			try {
-				writers.add(new SimpleWriter("-"));
-			} catch (IOException e) {
-				logger.error(e.getMessage());
-			}
-		}
 
-		if (cli.hasOption("stats")) {
-			String filename = cli.getOptionValue("stats");
-			try {
-				writers.add(new StatsWriter(filename));
-			} catch (IOException e) {
-				logger.error("Error: Ignoring file " + filename + ".");
-				logger.error(e.getMessage());
-			}
-		}
 		if (cli.hasOption("fatcat")) {
 			String filename = cli.getOptionValue("fatcat");
+			if(filename == null || filename.isEmpty())
+				filename = "-"; // standard out
 			try {
 				writers.add(new FatcatWriter(filename));
 			} catch (IOException e) {
@@ -219,8 +246,11 @@ public class CeSymmMain {
 				logger.error(e.getMessage());
 			}
 		}
+
 		if (cli.hasOption("fasta")) {
 			String filename = cli.getOptionValue("fasta");
+			if(filename == null || filename.isEmpty())
+				filename = "-"; // standard out
 			try {
 				writers.add(new FastaWriter(filename));
 			} catch (IOException e) {
@@ -228,6 +258,18 @@ public class CeSymmMain {
 				logger.error(e.getMessage());
 			}
 		}
+
+		// Default to SimpleWriter
+		if( writers.isEmpty() && !cli.hasOption("noverbose") ) {
+			try {
+				writers.add(new SimpleWriter("-"));
+			} catch (IOException e) {
+				logger.error(e.getMessage());
+			}
+		}
+
+
+		// Multithreading
 
 		Integer threads = Runtime.getRuntime().availableProcessors();
 		if (cli.hasOption("threads")) {
@@ -535,48 +577,75 @@ public class CeSymmMain {
 						"File listing whitespace-delimited query structures")
 				.build());
 		optionOrder.put("input", optionNum++);
-		// Output formats
-		options.addOption(Option.builder()
-				.longOpt("xml")
-				.hasArg(true)
-				.argName("file")
-				.desc(
-						"Output alignment as XML (use --xml=- for standard out).")
-				.build());
-		optionOrder.put("xml", optionNum++);
-		options.addOption(Option.builder("v").longOpt("verbose").hasArg(true)
-				.argName("file")
-				.desc("Output verbose summary of the job results.")
-				.build());
-		optionOrder.put("verbose", optionNum++);
-		options.addOption(Option.builder("o")
-				.longOpt("stats")
-				.hasArg(true)
-				.argName("file")
-				.desc(
-						"Output a tsv file with the main symmetry info.")
-				.build());
-		// verbose ouput
+		
+		// Logger control
+		grp = new OptionGroup();
+		opt = Option.builder("v")
+				.longOpt("verbose")
+				//.hasArg(true)
+				//.argName("file")
+				.desc("Output verbose logging information.")
+				.build();
+		grp.addOption(opt);
+		optionOrder.put(opt.getLongOpt(), optionNum++);
 		opt = Option.builder("q")
 				.longOpt("noverbose")
 				.hasArg(false)
-				.desc(
-						"Disable verbose summary to the std output."
-								+ "[default for >=10 structures when specified on command"
-								+ " line]").build();
+				.desc("Disable verbose logging information, as well as the default (--simple) output.")
+				.build();
 		optionOrder.put(opt.getLongOpt(), optionNum++);
-		//grp.addOption(opt);
-		options.addOption(opt);
+		grp.addOption(opt);
+		options.addOptionGroup(grp);
+
+		// Output formats
+		options.addOption(Option.builder("o")
+				.longOpt("simple")
+				.hasArg()
+				.optionalArg(true)
+				.argName("file")
+				.desc( "Output result in a simple format (default).")
+				.build());
+		optionOrder.put("simple", optionNum++);
+		options.addOption(Option.builder()
+				.longOpt("stats")
+				.hasArg()
+				.optionalArg(true)
+				.argName("file")
+				.desc( "Output a tsv file with detailed symmetry info.")
+				.build());
 		optionOrder.put("stats", optionNum++);
-		options.addOption(Option.builder().longOpt("fasta").hasArg(true)
+		options.addOption(Option.builder()
+				.longOpt("tsv")
+				.hasArg()
+				.optionalArg(true)
+				.argName("file")
+				.desc( "Output alignment as a tsv-formated list of aligned residues.")
+				.build());
+		optionOrder.put("tsv", optionNum++);
+		options.addOption(Option.builder()
+				.longOpt("xml")
+				.hasArg()
+				.optionalArg(true)
+				.argName("file")
+				.desc( "Output alignment as XML (use --xml=- for standard out).")
+				.build());
+		optionOrder.put("xml", optionNum++);
+		options.addOption(Option.builder()
+				.longOpt("fatcat")
+				.hasArg()
+				.optionalArg(true)
+				.argName("file")
+				.desc("Output alignment as FATCAT output")
+				.build());
+		optionOrder.put("fatcat", optionNum++);
+		options.addOption(Option.builder()
+				.longOpt("fasta")
+				.hasArg()
+				.optionalArg(true)
 				.argName("file")
 				.desc("Output alignment as FASTA alignment output")
 				.build());
 		optionOrder.put("fasta", optionNum++);
-		options.addOption(Option.builder().longOpt("fatcat").hasArg(true)
-				.argName("file")
-				.desc("Output alignment as FATCAT output").build());
-		optionOrder.put("fatcat", optionNum++);
 
 		// jmol
 		grp = new OptionGroup();
@@ -644,24 +713,6 @@ public class CeSymmMain {
 								+ "structures. Equivalent to passing -DPDB_DIR=dir to the VM. "
 								+ "[default temp folder]").build());
 		optionOrder.put("pdbfilepath", optionNum++);
-
-
-		grp = new OptionGroup();
-		opt = Option.builder()
-				.longOpt("pdbdirsplit")
-				.hasArg(false)
-				.desc(
-						"Ignored. For backwards compatibility only. [default]")
-				.build();
-		optionOrder.put(opt.getLongOpt(), optionNum++);
-		grp.addOption(opt);
-		// grp.setSelected(opt);
-		opt = Option.builder().longOpt("nopdbdirsplit").hasArg(false)
-				.desc("Ignored. For backwards compatibility only.")
-				.build();
-		optionOrder.put(opt.getLongOpt(), optionNum++);
-		grp.addOption(opt);
-		options.addOptionGroup(grp);
 
 		options.addOption(Option.builder().longOpt("threads").hasArg(true)
 				.desc("Number of threads [default cores-1]")
@@ -896,7 +947,7 @@ public class CeSymmMain {
 
 		@Override
 		public void writeResult(CeSymmResult result) throws IOException {
-			if (result.getMultipleAlignment() != null) {
+			if (result != null && result.getMultipleAlignment() != null) {
 				writer.append(MultipleAlignmentWriter.toXML(result
 						.getMultipleAlignment().getEnsemble()));
 				writer.flush();
@@ -916,8 +967,15 @@ public class CeSymmMain {
 
 		@Override
 		public void writeResult(CeSymmResult result) {
-			writer.write(MultipleAlignmentWriter.toFatCat(result
-					.getMultipleAlignment()));
+			if (result != null ) {
+				MultipleAlignment alignment = result.getMultipleAlignment();
+				if(alignment != null) {
+					writer.write(MultipleAlignmentWriter.toFatCat(alignment));
+				} else {
+					writer.format("Structures:[%s]%n",result.getStructureId());
+					writer.format("Insignificant Alignment%n");
+				}
+			}
 			writer.println("//");
 			writer.flush();
 		}
@@ -935,8 +993,12 @@ public class CeSymmMain {
 
 		@Override
 		public void writeResult(CeSymmResult result) {
-			writer.write(MultipleAlignmentWriter.toFASTA(result
-					.getMultipleAlignment()));
+			if (result != null ) {
+				MultipleAlignment alignment = result.getMultipleAlignment();
+				if(alignment != null) {
+					writer.write(MultipleAlignmentWriter.toFASTA(alignment));
+				}
+			}
 			writer.println("//");
 			writer.flush();
 		}
@@ -956,23 +1018,25 @@ public class CeSymmMain {
 		@Override
 		public void writeHeader() {
 			writer.println("Name\t" + "NumRepeats\t" + "SymmGroup\t" + "Refined\t"
-					+ "Symm-Levels\t" + "Symm-Type\t" + "Rotation-Angle\t"
-					+ "Screw-Translation\t" + "TMscore\t" + "RMSD\t"
-					+ "Symm-TMscore\t" + "Symm-RMSD\t" + "RepeatLength\t"
-					+ "Length\t" + "CoreLength\t" + "Coverage");
+					+ "SymmLevels\t" + "SymmType\t" + "RotationAngle\t"
+					+ "ScrewTranslation\t" + "UnrefinedTMscore\t" + "UnrefinedRMSD\t"
+					+ "SymmTMscore\t" + "SymmRMSD\t" + "RepeatLength\t"
+					+ "CoreLength\t" + "Length\t" + "Coverage");
 			writer.flush();
 		}
 
 		@Override
 		public void writeResult(CeSymmResult result) throws IOException {
-
 			String id = null;
-
+			if( result == null) {
+				writeEmptyRow(id);
+				writer.flush();
+				return;
+			}
 			try {
 				id = result.getStructureId().getIdentifier();
 				int repeatLen = 0;
-				int totalLen = result.getSelfAlignment().getOptLength();
-				int coreLen = totalLen;
+				int coreLen = result.getSelfAlignment().getOptLength();
 				double coverage = result.getSelfAlignment().getCoverage1() / 100;
 				String group = result.getSymmGroup();
 				int order = result.getSymmOrder();
@@ -982,9 +1046,11 @@ public class CeSymmMain {
 				RotationAxis rot = new RotationAxis(result.getSelfAlignment()
 						.getBlockRotationMatrix()[0], result.getSelfAlignment()
 						.getBlockShiftVector()[0]);
-				double rotation_angle = rot.getAngle() * 57.2957795;
+				double rotation_angle = Math.toDegrees(rot.getAngle());
 				double screw_translation = new Vector3d(rot
 						.getScrewTranslation().getCoords()).length();
+
+				int structureLen = result.getAtoms().length;
 
 				// If there is refinement alignment
 				if (result.isRefined()) {
@@ -994,41 +1060,40 @@ public class CeSymmMain {
 							.getScore(MultipleAlignmentScorer.AVGTM_SCORE);
 
 					repeatLen = msa.length();
-					double structureLen = result.getAtoms().length;
-					totalLen = repeatLen * msa.size();
 					coreLen = msa.getCoreLength() * msa.size();
-					coverage = totalLen / structureLen;
+					coverage = repeatLen * msa.size() / structureLen;
 
 					rot = new RotationAxis(result.getAxes().getElementaryAxes()
 							.get(0));
-					rotation_angle = rot.getAngle() * 57.2957795;
+					rotation_angle = Math.toDegrees(rot.getAngle());
 					screw_translation = new Vector3d(rot.getScrewTranslation()
 							.getCoords()).length();
 				}
 
-				writer.format(
-						"%s\t%d\t%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t"
-								+ "%.2f\t%d\t%d\t%d\t%.2f\n", id, order, group,
-						result.isRefined(), result.getSymmLevels(), result
-								.getType(), rotation_angle, screw_translation,
-						result.getSelfAlignment().getTMScore(), result
-								.getSelfAlignment().getTotalRmsdOpt(),
-						symmscore, symmrmsd, repeatLen, totalLen, coreLen,
+				writer.format( "%s\t%d\t%s%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t"
+						+ "%.2f\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f%n",
+						id, order, group,
+						(result.getSymmLevels() > 1 ? "+" : ""),
+						result.isRefined(), result.getSymmLevels(),
+						result.getType(), rotation_angle, screw_translation,
+						result.getSelfAlignment().getTMScore(),
+						result.getSelfAlignment().getTotalRmsdOpt(),
+						symmscore, symmrmsd, repeatLen, coreLen, structureLen,
 						coverage);
 			} catch (Exception e) {
 				// If any exception occurs when writing the results store empty
 				// better
 				logger.warn("Could not write result... storing empty row.", e);
-				writeEmptyRow(writer, id);
+				writeEmptyRow(id);
 			}
 
 			writer.flush();
 		}
 
-		private void writeEmptyRow(PrintWriter writer, String id) {
+		private void writeEmptyRow(String id) {
 			writer.format(
 					"%s\t%d\t%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t"
-							+ "%.2f\t%d\t%d\t%d\t%.2f\n", id, 1, "C1", false,
+							+ "%.2f\t%d\t%d\t%d\t%.2f%n", id, 1, "C1", false,
 					0, SymmetryType.DEFAULT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,
 					0, 0, 0.0);
 		}
@@ -1042,18 +1107,37 @@ public class CeSymmMain {
 
 		@Override
 		public void writeHeader() {
-			writer.println("Structure\tSymmGroup\tReason");
+			writer.println("Structure\tNumRepeats\tSymmGroup\tReason");
 			writer.flush();
 		}
-
+		private void writeEmptyRow(String id) {
+			writer.format("%s\t%d\t%s\t%s%n", id, 1, "C1", "Error");
+		}
 		@Override
 		public void writeResult(CeSymmResult result) throws IOException {
-			writer.append(result.getStructureId().getIdentifier());
-			writer.append("\t");
-			writer.append(result.getSymmGroup());
-			writer.append("\t");
-			writer.append(getReason(result));
-			writer.println();
+			String id = null;
+			if( result == null) {
+				writeEmptyRow(id);
+				writer.flush();
+				return;
+			}
+			try {
+				id = result.getStructureId().getIdentifier();
+				writer.append(id);
+				writer.append("\t");
+				writer.append(Integer.toString(result.getSymmOrder()));
+				writer.append("\t");
+				writer.append(result.getSymmGroup());
+				if(result.getSymmLevels()>1)
+					writer.append('+');
+				writer.append("\t");
+				writer.append(getReason(result));
+				writer.println();
+				writer.flush();
+			} catch( Exception e ) {
+				logger.warn("Could not write result... storing empty row.", e);
+				writeEmptyRow(id);
+			}
 			writer.flush();
 		}
 		// TODO Move to CeSymmResult
@@ -1101,6 +1185,31 @@ public class CeSymmMain {
 		}
 	}
 
+	private static class TSVWriter extends CeSymmWriter {
+		public TSVWriter(String filename) throws IOException {
+			super(filename);
+		}
+		@Override
+		public void writeHeader() throws IOException {
+			// no header
+		}
+		@Override
+		public void writeResult(CeSymmResult result) throws IOException {
+			if( result != null) {
+				MultipleAlignment alignment = result.getMultipleAlignment();
+				if(alignment != null)
+					writer.write(MultipleAlignmentWriter.toAlignedResidues(alignment));
+				else {
+					// No alignment; just write header
+					writer.format("#Struct1:\t%s%n",result.getStructureId());
+					writer.format("#Insignificant Alignment%n");
+				}
+			}
+			writer.println("//");
+			writer.flush();
+		}
+	}
+
 	/**
 	 * This Runnable implementation runs CeSymm on the input structure and with
 	 * the input parameters and writes the results to the output writers. If the
@@ -1132,9 +1241,14 @@ public class CeSymmMain {
 
 			try {
 				// Obtain the structure representation
-				Structure s = cache.getStructure(id);
-				Atom[] atoms = StructureTools.getRepresentativeAtomArray(s);
-
+				Atom[] atoms;
+				try {
+					Structure s = cache.getStructure(id);
+					atoms = StructureTools.getRepresentativeAtomArray(s);
+				} catch (IOException | StructureException e) {
+					logger.error("Could not load Structure " + id.getIdentifier());
+					return;
+				}
 				// Run the symmetry analysis
 				CeSymmResult result = CeSymm.analyze(atoms, params);
 
@@ -1159,13 +1273,11 @@ public class CeSymmMain {
 						//TODO NullPointer when changing title fixed in biojava 5.0
 					}
 				}
-			} catch (IOException e) {
-				logger.error("Could not load Structure " + id.getIdentifier(),
-						e);
 			} catch (Exception e) {
 				logger.error("Could not complete job: " + id.getIdentifier(), e);
+			} finally {
+				logger.info("Finished job: " + id);
 			}
-			logger.info("Finished job: " + id);
 		}
 	}
 

@@ -158,7 +158,8 @@ License & Availability
 CE-Symm is licensed under LGPL 2.1 (see LICENSE, which should have come bundled
 with the executable).
 
-The source code is available at https://github.com/rcsb/symmetry-tools.
+The source code is available at https://github.com/rcsb/symmetry and as part
+of the [BioJava library](https://github.com/biojava/biojava).
 A webserver is also provided at http://source.rcsb.org/jfatcatserver/symmetry.jsp
 
 If you use CE-Symm in your research, please cite:

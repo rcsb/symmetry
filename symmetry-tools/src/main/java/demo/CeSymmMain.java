@@ -448,29 +448,43 @@ public class CeSymmMain {
 				System.exit(1);
 			}
 		}
-		if (cli.hasOption("scorethreshold")) {
-			String strVal = cli.getOptionValue("scorethreshold");
+		if (cli.hasOption("unrefinedscorethreshold")) {
+			String strVal = cli.getOptionValue("unrefinedscorethreshold");
 			try {
 				double val = Double.parseDouble(strVal);
 				if (val < 0) {
-					logger.error("Invalid scorethreshold: " + strVal);
+					logger.error("Invalid unrefinedscorethreshold: " + strVal);
 					System.exit(1);
 				}
-				params.setScoreThreshold(val);
+				params.setUnrefinedScoreThreshold(val);
 			} catch (NumberFormatException e) {
-				logger.error("Invalid scorethreshold: " + strVal);
+				logger.error("Invalid unrefinedscorethreshold: " + strVal);
+				System.exit(1);
+			}
+		}
+		if (cli.hasOption("refinedscorethreshold")) {
+			String strVal = cli.getOptionValue("refinedscorethreshold");
+			try {
+				double val = Double.parseDouble(strVal);
+				if (val < 0) {
+					logger.error("Invalid refinedscorethreshold: " + strVal);
+					System.exit(1);
+				}
+				params.setRefinedScoreThreshold(val);
+			} catch (NumberFormatException e) {
+				logger.error("Invalid refinedscorethreshold: " + strVal);
 				System.exit(1);
 			}
 		}
 		if (cli.hasOption("ssethreshold")) {
 			String strVal = cli.getOptionValue("ssethreshold");
 			try {
-				double val = Double.parseDouble(strVal);
+				int val = Integer.parseInt(strVal);
 				if (val < 0) {
 					logger.error("Invalid ssethreshold: " + strVal);
 					System.exit(1);
 				}
-				params.setScoreThreshold(val);
+				params.setSSEThreshold(val);
 			} catch (NumberFormatException e) {
 				logger.error("Invalid ssethreshold: " + strVal);
 				System.exit(1);
@@ -795,13 +809,27 @@ public class CeSymmMain {
 				.build());
 
 		options.addOption(Option.builder()
-				.longOpt("scorethreshold")
+				.longOpt("unrefinedscorethreshold")
 				.hasArg(true)
 				.argName("float")
 				.desc(
-						"The score threshold. TM-scores above this value "
+						"The unrefined score threshold. TM-scores above this "
+								+ "value in the optimal self-alignment of the "
+								+ "structure (before refinement) "
 								+ "will be considered significant results "
 								+ "[default: 0.4, interval [0.0,1.0]].")
+				.build());
+		
+		options.addOption(Option.builder()
+				.longOpt("refinedscorethreshold")
+				.hasArg(true)
+				.argName("float")
+				.desc(
+						"The refined score threshold. TM-scores above this "
+								+ "value in the refined multiple alignment "
+								+ "of repeats (after refinement) "
+								+ "will be considered significant results "
+								+ "[default: 0.36, interval [0.0,1.0]].")
 				.build());
 
 		options.addOption(Option.builder()
@@ -809,7 +837,7 @@ public class CeSymmMain {
 				.hasArg(true)
 				.argName("int")
 				.desc(
-						"The SSE threshold. Number of secondary structure"
+						"The SSE threshold. Number of secondary structure "
 								+ "elements for repeat below this value will be considered "
 								+ "asymmetric results. 0 means unbounded."
 								+ "[default: 0].").build());
@@ -1053,14 +1081,8 @@ public class CeSymmMain {
 					
 					// Calculate coverage
 					coverage = 0;
-					for (int s = 0; s < msa.size(); s++) {
-						List<Integer> sequence = msa.getBlock(0).getAlignRes().get(s);
-						for (int p = 0; p < sequence.size(); p++) {
-							if (sequence.get(p) != null)
-								coverage += 1;
-						}
-					}
-					coverage /= structureLen;
+					for (int s = 0; s < msa.size(); s++)
+						coverage += msa.getCoverages().get(s);
 
 					rot = new RotationAxis(result.getAxes().getElementaryAxes()
 							.get(0));
@@ -1127,7 +1149,7 @@ public class CeSymmMain {
 				writer.append("\t");
 				writer.append(result.getSymmGroup());
 				writer.append("\t");
-				writer.append(getReason(result));
+				writer.append(result.getReason());
 				writer.println();
 				writer.flush();
 			} catch( Exception e ) {
@@ -1135,50 +1157,6 @@ public class CeSymmMain {
 				writeEmptyRow(id);
 			}
 			writer.flush();
-		}
-		// TODO Move to CeSymmResult
-		private static String getReason(CeSymmResult result) {
-			// Cases:
-			// 1. Asymmetric because insignificant self-alignment (1itb.A_1-100)
-			double tm = result.getSelfAlignment().getTMScore();
-			if (tm < result.getParams().getScoreThreshold() ) {
-				return String.format("Insignificant self-alignment (TM=%.2f)",tm);
-			}
-			// 2. Asymmetric because order detector returned 1
-			// Indistinguishable from successful refinement C1
-
-			// Check that the user requested refinement
-			if( result.getParams().getRefineMethod() != RefineMethod.NOT_REFINED) {
-				// 3. Asymmetric because refinement failed
-				if(! result.isRefined()) {
-					return "Refinement failed";
-				}
-				tm = result.getMultipleAlignment().getScore(MultipleAlignmentScorer.AVGTM_SCORE);
-				// 4. Asymmetric because refinement & optimization were not significant
-				if(! result.isSignificant()) {
-					return String.format("Refinement was not significant (TM=%.2f)",tm);
-				}
-			} else {
-				// 4. Not refined, but result was not significant
-				if(! result.isSignificant()) {
-					return String.format("Result was not significant (TM=%.2f)",tm);
-				}
-			}
-
-			String hierarchical = "";
-			if( result.getSymmLevels() > 1) {
-				hierarchical = String.format("; Contains %d levels of symmetry",
-						result.getSymmLevels());
-			}
-			// 5. Symmetric.
-			//   a. Open. Give # repeats (1n0r.A)
-			if( result.getType() == SymmetryType.OPEN) {
-				return String.format("Contains %d open repeats (TM=%.2f)%s",
-						result.getSymmOrder(),tm,hierarchical);
-			}
-			//   b. Closed, non-hierarchical (1itb.A)
-			//   c. Closed, heirarchical (4gcr)
-			return String.format("Significant (TM=%.2f)%s", tm, hierarchical);
 		}
 	}
 
@@ -1264,11 +1242,7 @@ public class CeSymmMain {
 
 				// Display alignment in 3D Jmol
 				if (show3d) {
-					try {
-						SymmetryDisplay.display(result);
-					} catch (Exception e) {
-						//TODO NullPointer when changing title fixed in biojava 5.0
-					}
+					SymmetryDisplay.display(result);
 				}
 			} catch (Exception e) {
 				logger.error("Could not complete job: " + id.getIdentifier(), e);

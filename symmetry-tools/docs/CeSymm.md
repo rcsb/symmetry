@@ -54,7 +54,8 @@ Short Option | Long Option | Description
     | --gapextension=float  | Gap extension penalty during alignment optimization [default: 0.5].
     | --symmlevels=int  | Run iteratively the algorithm to find multiple symmetry levels. The parameter controls the maximum symmetry levels allowed. 0 means unbounded. [default: 0].
     | --noopt           | Disable optimization of the resulting symmetry alignment.
-    | --scorethreshold=float | The score threshold. TM-scores above this value will be considered significant results [default: 0.4, interval [0.0,1.0]].
+    | --unrefinedscorethreshold=float | The TM-score threshold before refinement of the self-alignment. TM-scores above this value will be considered significant results [default: 0.4, interval [0.0,1.0]].
+    | --refinedscorethreshold=float | The TM-score threshold of the multiple alignment of repeats after refinement. TM-scores above this value will be considered significant results [default: 0.36, interval [0.0,1.0]].
     | --ssethrehold=int | The minimum number of secondary structure elements (SSE) for each symmetric subunit, for the result to be singificant [default: 2].
     | --maxorder=int    | The maximum number of symmetric subunits [default: 8].
     | --rndseed=int     | The random seed used in optimization, for reproducibility of the results [default: 0].

@@ -29,7 +29,8 @@ public class CeSymmSimpleWriter extends CeSymmWriter {
 	}
 
 	@Override
-	public synchronized void writeResult(CeSymmResult result) throws IOException {
+	public synchronized void writeResult(CeSymmResult result)
+			throws IOException {
 		String id = null;
 		if (result == null) {
 			writeEmptyRow(id);

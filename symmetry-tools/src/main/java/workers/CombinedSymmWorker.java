@@ -11,12 +11,16 @@ import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.StructureIdentifier;
 import org.biojava.nbio.structure.StructureTools;
+import org.biojava.nbio.structure.align.gui.jmol.StructureAlignmentJmol;
+import org.biojava.nbio.structure.symmetry.core.AxisAligner;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 import org.biojava.nbio.structure.symmetry.internal.CeSymmResult;
+import org.biojava.nbio.structure.symmetry.jmolScript.JmolSymmetryScriptGenerator;
+import org.biojava.nbio.structure.symmetry.jmolScript.JmolSymmetryScriptGeneratorPointGroup;
 import org.biojava.nbio.structure.symmetry.utils.SymmetryTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +53,7 @@ public class CombinedSymmWorker implements Runnable {
 	private CESymmParameters iParams;
 	private QuatSymmetryParameters qParams;
 	private List<CombinedSymmWriter> writers;
+	private boolean show3d;
 
 	/**
 	 * 
@@ -56,13 +61,16 @@ public class CombinedSymmWorker implements Runnable {
 	 * @param iParams
 	 * @param qParams
 	 * @param writers
+	 * @param show3d
 	 */
 	public CombinedSymmWorker(StructureIdentifier id, CESymmParameters iParams,
-			QuatSymmetryParameters qParams, List<CombinedSymmWriter> writers) {
+			QuatSymmetryParameters qParams, List<CombinedSymmWriter> writers,
+			boolean show3d) {
 		this.id = id;
 		this.writers = writers;
 		this.iParams = iParams;
 		this.qParams = qParams;
+		this.show3d = show3d;
 	}
 
 	@Override
@@ -77,24 +85,28 @@ public class CombinedSymmWorker implements Runnable {
 			} catch (IOException | StructureException e) {
 				logger.error("Could not load Structure " + id.getIdentifier(),
 						e);
+				for (CombinedSymmWriter writer : writers)
+					writer.writeBlank(id);
 				return;
 			}
 
 			// If there is no biological assembly return
 			if (structure == null) {
-				logger.warn("Structure " + id.getIdentifier()
+				logger.error("Structure " + id.getIdentifier()
 						+ " does not have annotated biological assembly.");
 				for (CombinedSymmWriter writer : writers)
-					writer.writeResult(id, 0, "NA", false, "NA");
+					writer.writeBlank(id);
 				return;
 			}
+			structure.setStructureIdentifier(id);
 
 			// Run the Quaternary Symmetry detection (take the optimal)
 			QuatSymmetryResults qs = new QuatSymmetryDetector(structure,
 					qParams).getGlobalSymmetry().get(0);
 
 			boolean is = false;
-			int chains = 0;
+			int chainNr = 0;
+			char chainId = 'A';
 
 			// Run the internal symmetry analysis for every chain and split them
 			for (int m = 0; m < structure.nrModels(); m++) {
@@ -109,33 +121,63 @@ public class CombinedSymmWorker implements Runnable {
 						is = true;
 						Structure divided = SymmetryTools
 								.getQuaternaryStructure(result);
-						newModel.addAll(divided.getChains());
+						for (Chain chain : divided.getChains()) {
+							chain.setChainID((chainId++) + "");
+							newModel.add(chain);
+						}
 					} else {
+						structure.getChain(m, c).setChainID((chainId++) + "");
 						newModel.add(structure.getChain(m, c));
 					}
-					chains++;
+					chainNr++;
 				}
 				structure.setModel(m, newModel);
 			}
 
-			// Run the Quaternary Symmetry detection (take the optimal)
-			QuatSymmetryResults qsis = new QuatSymmetryDetector(structure,
-					qParams).getGlobalSymmetry().get(0);
+			// Run the Quaternary Symmetry detection (take the pseudosymmetric)
+			List<QuatSymmetryResults> qsiss = new QuatSymmetryDetector(
+					structure, qParams).getGlobalSymmetry();
+			QuatSymmetryResults qsis = qsiss.get(0);
+			for (QuatSymmetryResults q : qsiss) {
+				if (q.getSubunits().isPseudoSymmetric())
+					qsis = q;
+			}
+
+			if (show3d) {
+				AxisAligner aligner = AxisAligner.getInstance(qsis);
+				JmolSymmetryScriptGenerator scriptGenerator = JmolSymmetryScriptGeneratorPointGroup
+						.getInstance(aligner, "g");
+				String script = "set defaultStructureDSSP true; set measurementUnits ANGSTROMS;  select all;  spacefill off; wireframe off; "
+						+ "backbone off; cartoon on; color cartoon structure; color structure;  select ligand;wireframe 0.16;spacefill 0.5; "
+						+ "color cpk ; select all; model 0;set antialiasDisplay true; autobond=false;save STATE state_1;";
+				script += scriptGenerator.getOrientationWithZoom(0);
+				script += scriptGenerator.drawPolyhedron();
+				script += scriptGenerator.drawAxes();
+				script += scriptGenerator.colorBySymmetry();
+				script += "draw axes* on; draw poly* on;";
+
+				StructureAlignmentJmol jmol = new StructureAlignmentJmol();
+				jmol.setStructure(structure);
+				jmol.evalString(script);
+			}
 
 			// Write into the output files
 			for (CombinedSymmWriter writer : writers) {
 				try {
-					writer.writeResult(id, chains, qs.getSymmetry(), is,
-							qsis.getSymmetry());
+					writer.writeResult(id, chainNr, qs, is, qsis);
 				} catch (Exception e) {
 					logger.error(
 							"Could not save results for " + id.getIdentifier(),
 							e);
+					writer.writeBlank(id);
 				}
 			}
 
 		} catch (Exception e) {
 			logger.error("Could not complete job: " + id.getIdentifier(), e);
+			for (CombinedSymmWriter writer : writers) {
+				writer.writeBlank(id);
+			}
 		} finally {
 			logger.info("Finished job: " + id);
 		}

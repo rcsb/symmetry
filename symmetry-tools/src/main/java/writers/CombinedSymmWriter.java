@@ -3,6 +3,7 @@ package writers;
 import java.io.IOException;
 
 import org.biojava.nbio.structure.StructureIdentifier;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
 
 /**
  * Writer for the Combined Symmetry result.
@@ -24,24 +25,34 @@ public class CombinedSymmWriter extends OutputWriter {
 	 * @param chains
 	 *            number of chains in the assembly
 	 * @param qs
-	 *            quaternary symmetry of the assembly
+	 *            quaternary symmetry results of the assembly
 	 * @param is
 	 *            true if internal symmetry was found in any of the chains
 	 * @param qsis
-	 *            symmetry of the combined internal and quaternary
+	 *            symmetry results of the combined internal and quaternary
 	 * @throws IOException
 	 */
 	public synchronized void writeResult(StructureIdentifier id, int chains,
-			String qs, boolean is, String qsis) throws IOException {
+			QuatSymmetryResults qs, boolean is, QuatSymmetryResults qsis)
+			throws IOException {
 
 		// Calculate all chains of the BU
-		writer.println(id.getIdentifier() + "\t" + chains
-				+ "\t" + qs + "\t" + is + "\t" + qsis);
+		writer.println(id.getIdentifier() + "\t" + chains + "\t"
+				+ qs.getSymmetry() + "\t" + qs.getSubunits().getStoichiometry()
+				+ "\t" + is + "\t" + qsis.getSymmetry() + "\t"
+				+ qsis.getSubunits().getStoichiometry());
+		writer.flush();
+	}
+	
+	public synchronized void writeBlank(StructureIdentifier id) {
+		writer.println(id.getIdentifier() + "\t0\tNA\tNA\tfalse\tNA\tNA");
+		writer.flush();
 	}
 
 	@Override
 	public synchronized void writeHeader() throws IOException {
-		writer.println("PDB\t" + "Nr.Chains\t" + "QS\t" + "IS\t" + "QS+IS\t");
+		writer.println("PDB\t" + "Nr.Ch\t" + "QS-G\t" + "QS-S\t"
+				+ "IS?\t" + "IS-G\t" + "IS-S");
 		writer.flush();
 	}
 

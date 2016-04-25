@@ -138,6 +138,16 @@ public class CombinedSymmMain {
 			}
 		}
 
+		// Show jmol?
+		// Default to false with --input or with >=10 structures
+		boolean show3d = !cli.hasOption("input") && names.size() < 10;
+		if (cli.hasOption("noshow3d")) {
+			show3d = false;
+		}
+		if (cli.hasOption("show3d")) {
+			show3d = true;
+		}
+
 		// AtomCache options
 		String pdbFilePath = null;
 		if (cli.hasOption("pdbfilepath")) {
@@ -447,6 +457,9 @@ public class CombinedSymmMain {
 		verifyParams(params);
 
 		QuatSymmetryParameters qparams = new QuatSymmetryParameters();
+		qparams.setLocalSymmetry(false);
+		qparams.setSequencePseudoSymmetryThreshold(1.0);
+		qparams.setSequenceIdentityThresholds(new double[] {1.0});
 
 		// Done parsing arguments
 
@@ -465,7 +478,7 @@ public class CombinedSymmMain {
 		for (String name : names) {
 			StructureIdentifier id = new StructureName(name);
 			Runnable worker = new CombinedSymmWorker(id, params, qparams,
-					writers);
+					writers, show3d);
 			executor.execute(worker);
 		}
 		executor.shutdown();
@@ -541,34 +554,9 @@ public class CombinedSymmMain {
 		options.addOptionGroup(grp);
 
 		// Output formats
-		options.addOption(Option.builder("o").longOpt("simple").hasArg()
+		options.addOption(Option.builder("o").longOpt("output").hasArg()
 				.optionalArg(true).argName("file")
-				.desc("Output result in a simple format (default).").build());
-		options.addOption(Option.builder().longOpt("stats").hasArg()
-				.optionalArg(true).argName("file")
-				.desc("Output a tsv file with detailed symmetry info.").build());
-		options.addOption(Option
-				.builder()
-				.longOpt("tsv")
-				.hasArg()
-				.optionalArg(true)
-				.argName("file")
-				.desc("Output alignment as a tsv-formated list of aligned residues.")
-				.build());
-		options.addOption(Option
-				.builder()
-				.longOpt("xml")
-				.hasArg()
-				.optionalArg(true)
-				.argName("file")
-				.desc("Output alignment as XML (use --xml=- for standard out).")
-				.build());
-		options.addOption(Option.builder().longOpt("fatcat").hasArg()
-				.optionalArg(true).argName("file")
-				.desc("Output alignment as FATCAT output").build());
-		options.addOption(Option.builder().longOpt("fasta").hasArg()
-				.optionalArg(true).argName("file")
-				.desc("Output alignment as FASTA alignment output").build());
+				.desc("Output result in TSV format (default).").build());
 
 		// jmol
 		grp = new OptionGroup();

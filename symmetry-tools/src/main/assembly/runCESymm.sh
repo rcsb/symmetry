@@ -1,8 +1,11 @@
 #!/bin/bash
 # CE-Symm version ${project.version}
 #
-# Source:   https://github.com/rcsb/symmetry-tools
+# Source:   https://github.com/rcsb/symmetry
 # Server:   http://source.rcsb.org/jfatcatserver/symmetry.jsp
+#
+# Date: ${build.date}
+# Commit: ${buildNumber}
 
 ### EXAMPLES ###
 

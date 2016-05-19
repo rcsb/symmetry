@@ -29,7 +29,7 @@
 			<outputDirectory>.</outputDirectory>
 		</file>
 		<file>
-			<source>${project.build.directory}/${artifactId}-${version}.jar</source>
+			<source>${project.build.directory}/CeSymm-${version}.jar</source>
 			<outputDirectory>.</outputDirectory>
 			<destName>cesymm-${version}.jar</destName>
 		</file>

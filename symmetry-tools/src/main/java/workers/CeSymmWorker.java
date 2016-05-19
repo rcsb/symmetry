@@ -7,12 +7,12 @@ import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIdentifier;
-import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 import org.biojava.nbio.structure.symmetry.internal.CeSymmResult;
+import org.biojava.nbio.structure.symmetry.utils.SymmetryTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,15 +53,17 @@ public class CeSymmWorker implements Runnable {
 
 		try {
 			// Obtain the structure representation
-			Atom[] atoms;
+			Structure structure = null;
 			try {
-				Structure s = cache.getStructure(id);
-				atoms = StructureTools.getRepresentativeAtomArray(s);
+				structure = cache.getStructure(id);
 			} catch (IOException | StructureException e) {
 				logger.error("Could not load Structure " + id.getIdentifier(),
 						e);
 				return;
 			}
+			
+			Atom[] atoms = SymmetryTools.getRepresentativeAtoms(structure);
+			
 			// Run the symmetry analysis
 			CeSymmResult result = CeSymm.analyze(atoms, params);
 

@@ -10,9 +10,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import org.apache.commons.cli.CommandLine;
@@ -42,6 +45,7 @@ import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.util.UserConfiguration;
+import org.biojava.nbio.structure.contact.Pair;
 import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.biojava.nbio.structure.io.util.FileDownloadUtils;
 import org.biojava.nbio.structure.scop.ScopFactory;
@@ -53,6 +57,8 @@ import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMetho
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 import org.biojava.nbio.structure.symmetry.internal.CeSymmResult;
+import org.biojava.nbio.structure.symmetry.internal.SymmetryAxes;
+import org.biojava.nbio.structure.symmetry.internal.SymmetryAxes.Axis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -239,6 +245,18 @@ public class CeSymmMain {
 				filename = "-"; // standard out
 			try {
 				writers.add(new FastaWriter(filename));
+			} catch (IOException e) {
+				logger.error("Error: Ignoring file " + filename + ".");
+				logger.error(e.getMessage());
+			}
+		}
+		
+		if (cli.hasOption("axes")) {
+			String filename = cli.getOptionValue("axes");
+			if(filename == null || filename.isEmpty())
+				filename = "-"; // standard out
+			try {
+				writers.add(new AxesWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
@@ -630,28 +648,28 @@ public class CeSymmMain {
 				.hasArg()
 				.optionalArg(true)
 				.argName("file")
-				.desc( "Output result in a simple format (default).")
+				.desc( "Output result in a simple format. Use --simple=- for standard out (default)")
 				.build());
 		options.addOption(Option.builder()
 				.longOpt("stats")
 				.hasArg()
 				.optionalArg(true)
 				.argName("file")
-				.desc( "Output a tsv file with detailed symmetry info.")
+				.desc( "Output a tsv file with detailed symmetry info")
 				.build());
 		options.addOption(Option.builder()
 				.longOpt("tsv")
 				.hasArg()
 				.optionalArg(true)
 				.argName("file")
-				.desc( "Output alignment as a tsv-formated list of aligned residues.")
+				.desc( "Output alignment as a tsv-formated list of aligned residues")
 				.build());
 		options.addOption(Option.builder()
 				.longOpt("xml")
 				.hasArg()
 				.optionalArg(true)
 				.argName("file")
-				.desc( "Output alignment as XML (use --xml=- for standard out).")
+				.desc( "Output alignment as XML")
 				.build());
 		options.addOption(Option.builder()
 				.longOpt("fatcat")
@@ -666,6 +684,13 @@ public class CeSymmMain {
 				.optionalArg(true)
 				.argName("file")
 				.desc("Output alignment as FASTA alignment output")
+				.build());
+		options.addOption(Option.builder()
+				.longOpt("axes")
+				.hasArg()
+				.optionalArg(true)
+				.argName("file")
+				.desc("Output information about rotation axes")
 				.build());
 
 		// jmol
@@ -923,11 +948,6 @@ public class CeSymmMain {
 
 		boolean shouldClose = true;
 
-		public CeSymmWriter(PrintWriter writer) {
-			this.writer = writer;
-			this.shouldClose = true;
-		}
-
 		public CeSymmWriter(String filename) throws IOException {
 			if(filename.equals("-")) {
 				this.shouldClose = false;
@@ -949,21 +969,6 @@ public class CeSymmMain {
 				if(shouldClose)
 					writer.close();
 			}
-		}
-
-		/**
-		 * Opens 'filename' for writing.
-		 * 
-		 * @param filename
-		 *            Name of output file, or '-' for standard out
-		 * @throws IOException
-		 */
-		public static PrintWriter openOutputFile(String filename)
-				throws IOException {
-			if (filename.equals("-")) {
-				return new PrintWriter(System.out, true);
-			}
-			return new PrintWriter(new BufferedWriter(new FileWriter(filename)));
 		}
 	}
 
@@ -1044,7 +1049,7 @@ public class CeSymmMain {
 
 		@Override
 		public void writeHeader() {
-			writer.println("Name\t" + "NumRepeats\t" + "SymmGroup\t" + "Refined\t"
+			writer.println("Structure\t" + "NumRepeats\t" + "SymmGroup\t" + "Refined\t"
 					+ "SymmLevels\t" + "SymmType\t" + "RotationAngle\t"
 					+ "ScrewTranslation\t" + "UnrefinedTMscore\t" + "UnrefinedRMSD\t"
 					+ "SymmTMscore\t" + "SymmRMSD\t" + "RepeatLength\t"
@@ -1166,6 +1171,81 @@ public class CeSymmMain {
 				logger.warn("Could not write result... storing empty row.", e);
 				writeEmptyRow(id);
 			}
+			writer.flush();
+		}
+	}
+	
+	private static class AxesWriter extends CeSymmWriter {
+
+		public AxesWriter(String filename) throws IOException {
+			super(filename);
+		}
+
+		@Override
+		public void writeHeader() {
+
+			writer.println("Structure\t" + "SymmLevel\t" + "SymmType\t" + "SymmGroup\t"
+					+ "RotationAngle\t" + "ScrewTranslation\t" + "Point1\t" + "Point2\t"
+					+ "AlignedRepeats");
+			writer.flush();
+		}
+		private void writeEmptyRow(String id) {
+			writer.format("%s\t%d\t%s\t%s"
+					+ "%.2f\t%.2f\t%.3f,%.3f,%.3f\t%.3f,%.3f,%.3f\t%s%n",
+					id, -1, SymmetryType.DEFAULT, "C1",
+					0., 0., 0.,0.,0., 0.,0.,0.,
+					"");
+		}
+		@Override
+		public void writeResult(CeSymmResult result) throws IOException {
+			String id = null;
+			if( result == null) {
+				writeEmptyRow(id);
+				writer.flush();
+				return;
+			}
+			try {
+				id = result.getStructureId().getIdentifier();
+				
+				SymmetryAxes axes = result.getAxes();
+				Atom[] atoms = result.getAtoms();
+				//TODO is this correct for hierarchical cases?
+				String symmGroup = result.getSymmGroup();
+				
+				for(Axis axis : axes.getSymmetryAxes() ) {
+					RotationAxis rot = axis.getRotationAxis();
+//					Set<Integer> repIndex = new TreeSet<Integer>(axes
+//							.getRepeatRelation(a).get(0));
+					List<List<Integer>> repeatsCyclicForm = axes.getRepeatsCyclicForm(axis);
+					String cyclicForm = SymmetryAxes.getRepeatsCyclicForm(repeatsCyclicForm, result.getRepeatsID());
+					
+					// Get atoms aligned by this axis
+					List<Atom> axisAtoms = new ArrayList<Atom>();
+					for(List<Integer> cycle : repeatsCyclicForm) {
+						for(Integer repeat : cycle) {
+							axisAtoms.addAll(Arrays.asList(atoms[repeat]));
+						}
+					}
+					Pair<Atom> bounds = rot.getAxisEnds(axisAtoms.toArray(new Atom[axisAtoms.size()]));
+							
+					Atom start = bounds.getFirst();
+					Atom end = bounds.getSecond();
+
+					writer.format("%s\t%d\t%s\t%s\t"
+							+ "%.2f\t%.2f\t%.3f,%.3f,%.3f\t%.3f,%.3f,%.3f\t%s%n",
+							id, axis.getLevel()+1, axis.getSymmType(), symmGroup,
+							Math.toDegrees(rot.getAngle()), rot.getTranslation(),
+							start.getX(),start.getY(),start.getZ(),
+							end.getX(),end.getY(),end.getZ(),
+							cyclicForm);
+				}
+			} catch (Exception e) {
+				// If any exception occurs when writing the results store empty
+				// better
+				logger.warn("Could not write result... storing empty row.", e);
+				writeEmptyRow(id);
+			}
+
 			writer.flush();
 		}
 	}

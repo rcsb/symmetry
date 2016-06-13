@@ -1,4 +1,4 @@
-package demo;
+package main;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,9 +6,9 @@ import java.io.FileNotFoundException;
 import java.net.URL;
 import java.util.List;
 
-import org.junit.Test;
+import main.CeSymmMain;
 
-import demo.CeSymmMain;
+import org.junit.Test;
 
 public class CeSymmMainTest {
 

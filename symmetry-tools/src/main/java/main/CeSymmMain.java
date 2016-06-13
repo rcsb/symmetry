@@ -1,22 +1,14 @@
-package demo;
+package main;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import javax.vecmath.Point3d;
-import javax.vecmath.Vector3d;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -31,36 +23,32 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.Structure;
-import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIdentifier;
-import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
 import org.biojava.nbio.structure.align.client.StructureName;
-import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
-import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
-import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentWriter;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
-import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.align.util.UserConfiguration;
-import org.biojava.nbio.structure.contact.Pair;
 import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.biojava.nbio.structure.io.util.FileDownloadUtils;
 import org.biojava.nbio.structure.scop.ScopFactory;
-import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.symmetry.gui.SymmetryGui;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.OrderDetectorMethod;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.RefineMethod;
 import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
-import org.biojava.nbio.structure.symmetry.internal.CeSymm;
-import org.biojava.nbio.structure.symmetry.internal.CeSymmResult;
-import org.biojava.nbio.structure.symmetry.internal.SymmetryAxes;
-import org.biojava.nbio.structure.symmetry.internal.SymmetryAxes.Axis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import workers.CeSymmWorker;
+import writers.CeSymmAxesWriter;
+import writers.CeSymmFastaWriter;
+import writers.CeSymmFatcatWriter;
+import writers.CeSymmSimpleWriter;
+import writers.CeSymmStatsWriter;
+import writers.CeSymmTsvWriter;
+import writers.CeSymmWriter;
+import writers.CeSymmXMLWriter;
 
 /**
  * Main executable for running CE-Symm. Run with -h for usage help, or without
@@ -183,7 +171,7 @@ public class CeSymmMain {
 			if(filename == null || filename.isEmpty())
 				filename = "-"; // standard out
 			try {
-				writers.add(new SimpleWriter(filename));
+				writers.add(new CeSymmSimpleWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
@@ -195,7 +183,7 @@ public class CeSymmMain {
 			if(filename == null || filename.isEmpty())
 				filename = "-"; // standard out
 			try {
-				writers.add(new StatsWriter(filename));
+				writers.add(new CeSymmStatsWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
@@ -207,7 +195,7 @@ public class CeSymmMain {
 			if(filename == null || filename.isEmpty())
 				filename = "-"; // standard out
 			try {
-				writers.add(new TSVWriter(filename));
+				writers.add(new CeSymmTsvWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
@@ -219,7 +207,7 @@ public class CeSymmMain {
 			if(filename == null || filename.isEmpty())
 				filename = "-"; // standard out
 			try {
-				writers.add(new XMLWriter(filename));
+				writers.add(new CeSymmXMLWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
@@ -232,7 +220,7 @@ public class CeSymmMain {
 			if(filename == null || filename.isEmpty())
 				filename = "-"; // standard out
 			try {
-				writers.add(new FatcatWriter(filename));
+				writers.add(new CeSymmFatcatWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
@@ -244,7 +232,7 @@ public class CeSymmMain {
 			if(filename == null || filename.isEmpty())
 				filename = "-"; // standard out
 			try {
-				writers.add(new FastaWriter(filename));
+				writers.add(new CeSymmFastaWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
@@ -256,7 +244,7 @@ public class CeSymmMain {
 			if(filename == null || filename.isEmpty())
 				filename = "-"; // standard out
 			try {
-				writers.add(new AxesWriter(filename));
+				writers.add(new CeSymmAxesWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
@@ -266,7 +254,7 @@ public class CeSymmMain {
 		// Default to SimpleWriter
 		if( writers.isEmpty() && !cli.hasOption("noverbose") ) {
 			try {
-				writers.add(new SimpleWriter("-"));
+				writers.add(new CeSymmSimpleWriter("-"));
 			} catch (IOException e) {
 				logger.error(e.getMessage());
 			}
@@ -648,28 +636,28 @@ public class CeSymmMain {
 				.hasArg()
 				.optionalArg(true)
 				.argName("file")
-				.desc( "Output result in a simple format. Use --simple=- for standard out (default)")
+				.desc( "Output result in a simple format (default).")
 				.build());
 		options.addOption(Option.builder()
 				.longOpt("stats")
 				.hasArg()
 				.optionalArg(true)
 				.argName("file")
-				.desc( "Output a tsv file with detailed symmetry info")
+				.desc( "Output a tsv file with detailed symmetry info.")
 				.build());
 		options.addOption(Option.builder()
 				.longOpt("tsv")
 				.hasArg()
 				.optionalArg(true)
 				.argName("file")
-				.desc( "Output alignment as a tsv-formated list of aligned residues")
+				.desc( "Output alignment as a tsv-formated list of aligned residues.")
 				.build());
 		options.addOption(Option.builder()
 				.longOpt("xml")
 				.hasArg()
 				.optionalArg(true)
 				.argName("file")
-				.desc( "Output alignment as XML")
+				.desc( "Output alignment as XML (use --xml=- for standard out).")
 				.build());
 		options.addOption(Option.builder()
 				.longOpt("fatcat")
@@ -935,411 +923,6 @@ public class CeSymmMain {
 		}
 		s.close();
 		return structures;
-	}
-
-	// Output formats
-
-	/**
-	 * Parent class for all output formats All methods are empty stubs, which
-	 * should be overridden to write data to the writer.
-	 */
-	private static abstract class CeSymmWriter {
-		protected PrintWriter writer;
-
-		boolean shouldClose = true;
-
-		public CeSymmWriter(String filename) throws IOException {
-			if(filename.equals("-")) {
-				this.shouldClose = false;
-				writer = new PrintWriter(System.out,true);
-			} else {
-				this.shouldClose = true;
-				writer = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
-			}
-		}
-
-		abstract public void writeHeader() throws IOException;
-
-		abstract public void writeResult(CeSymmResult result)
-				throws IOException;
-
-		public void close() {
-			if (writer != null) {
-				writer.flush();
-				if(shouldClose)
-					writer.close();
-			}
-		}
-	}
-
-	private static class XMLWriter extends CeSymmWriter {
-		public XMLWriter(String filename) throws IOException {
-			super(filename);
-		}
-
-		@Override
-		public void writeResult(CeSymmResult result) throws IOException {
-			if (result != null && result.getMultipleAlignment() != null) {
-				writer.append(MultipleAlignmentWriter.toXML(result
-						.getMultipleAlignment().getEnsemble()));
-				writer.flush();
-			}
-		}
-
-		@Override
-		public void writeHeader() throws IOException {
-			// No header for XML file
-		}
-	}
-
-	private static class FatcatWriter extends CeSymmWriter {
-		public FatcatWriter(String filename) throws IOException {
-			super(filename);
-		}
-
-		@Override
-		public void writeResult(CeSymmResult result) {
-			if (result != null ) {
-				MultipleAlignment alignment = result.getMultipleAlignment();
-				if(alignment != null) {
-					writer.write(MultipleAlignmentWriter.toFatCat(alignment));
-				} else {
-					writer.format("Structures:[%s]%n",result.getStructureId());
-					writer.format("Insignificant Alignment%n");
-				}
-			}
-			writer.println("//");
-			writer.flush();
-		}
-
-		@Override
-		public void writeHeader() throws IOException {
-			// No header for FatCat file
-		}
-	}
-
-	private static class FastaWriter extends CeSymmWriter {
-		public FastaWriter(String filename) throws IOException {
-			super(filename);
-		}
-
-		@Override
-		public void writeResult(CeSymmResult result) {
-			if (result != null ) {
-				MultipleAlignment alignment = result.getMultipleAlignment();
-				if(alignment != null) {
-					writer.write(MultipleAlignmentWriter.toFASTA(alignment));
-				}
-			}
-			writer.println("//");
-			writer.flush();
-		}
-
-		@Override
-		public void writeHeader() throws IOException {
-			// No header for Fasta files
-		}
-	}
-
-	private static class StatsWriter extends CeSymmWriter {
-
-		public StatsWriter(String filename) throws IOException {
-			super(filename);
-		}
-
-		@Override
-		public void writeHeader() {
-			writer.println("Structure\t" + "NumRepeats\t" + "SymmGroup\t" + "Refined\t"
-					+ "SymmLevels\t" + "SymmType\t" + "RotationAngle\t"
-					+ "ScrewTranslation\t" + "UnrefinedTMscore\t" + "UnrefinedRMSD\t"
-					+ "SymmTMscore\t" + "SymmRMSD\t" + "RepeatLength\t"
-					+ "CoreLength\t" + "Length\t" + "Coverage");
-			writer.flush();
-		}
-
-		@Override
-		public void writeResult(CeSymmResult result) throws IOException {
-			String id = null;
-			if( result == null) {
-				writeEmptyRow(id);
-				writer.flush();
-				return;
-			}
-			try {
-				id = result.getStructureId().getIdentifier();
-				int repeatLen = 0;
-				int coreLen = result.getSelfAlignment().getOptLength();
-				double coverage = result.getSelfAlignment().getCoverage1() / 100;
-				String group = result.getSymmGroup();
-				int order = result.getSymmOrder();
-				double symmrmsd = 0.0;
-				double symmscore = 0.0;
-
-				RotationAxis rot = new RotationAxis(result.getSelfAlignment()
-						.getBlockRotationMatrix()[0], result.getSelfAlignment()
-						.getBlockShiftVector()[0]);
-				double rotation_angle = Math.toDegrees(rot.getAngle());
-				double screw_translation = new Vector3d(rot
-						.getScrewTranslation().getCoords()).length();
-
-				int structureLen = result.getAtoms().length;
-
-				// If there is refinement alignment
-				if (result.isRefined()) {
-					MultipleAlignment msa = result.getMultipleAlignment();
-					symmrmsd = msa.getScore(MultipleAlignmentScorer.RMSD);
-					symmscore = msa
-							.getScore(MultipleAlignmentScorer.AVGTM_SCORE);
-
-					repeatLen = msa.length();
-					coreLen = msa.getCoreLength() * msa.size();
-					
-					// Calculate coverage
-					coverage = 0;
-					for (int s = 0; s < msa.size(); s++)
-						coverage += msa.getCoverages().get(s);
-
-					rot = new RotationAxis(result.getAxes().getElementaryAxes()
-							.get(0));
-					rotation_angle = Math.toDegrees(rot.getAngle());
-					screw_translation = new Vector3d(rot.getScrewTranslation()
-							.getCoords()).length();
-				}
-
-				writer.format( "%s\t%d\t%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t"
-						+ "%.2f\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f%n",
-						id, order, group,
-						result.isRefined(), result.getSymmLevels(),
-						result.getType(), rotation_angle, screw_translation,
-						result.getSelfAlignment().getTMScore(),
-						result.getSelfAlignment().getTotalRmsdOpt(),
-						symmscore, symmrmsd, repeatLen, coreLen, structureLen,
-						coverage);
-			} catch (Exception e) {
-				// If any exception occurs when writing the results store empty
-				// better
-				logger.warn("Could not write result... storing empty row.", e);
-				writeEmptyRow(id);
-			}
-
-			writer.flush();
-		}
-
-		private void writeEmptyRow(String id) {
-			writer.format(
-					"%s\t%d\t%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t"
-							+ "%.2f\t%d\t%d\t%d\t%.2f%n", id, 1, "C1", false,
-					0, SymmetryType.DEFAULT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,
-					0, 0, 0.0);
-		}
-	}
-
-	private static class SimpleWriter extends CeSymmWriter {
-
-		public SimpleWriter(String filename) throws IOException {
-			super(filename);
-		}
-
-		@Override
-		public void writeHeader() {
-			writer.println("Structure\tNumRepeats\tSymmGroup\tReason");
-			writer.flush();
-		}
-		private void writeEmptyRow(String id) {
-			writer.format("%s\t%d\t%s\t%s%n", id, 1, "C1", "Error");
-		}
-		@Override
-		public void writeResult(CeSymmResult result) throws IOException {
-			String id = null;
-			if( result == null) {
-				writeEmptyRow(id);
-				writer.flush();
-				return;
-			}
-			try {
-				id = result.getStructureId().getIdentifier();
-				writer.append(id);
-				writer.append("\t");
-				writer.append(Integer.toString(result.getSymmOrder()));
-				writer.append("\t");
-				writer.append(result.getSymmGroup());
-				writer.append("\t");
-				writer.append(result.getReason());
-				writer.println();
-				writer.flush();
-			} catch( Exception e ) {
-				logger.warn("Could not write result... storing empty row.", e);
-				writeEmptyRow(id);
-			}
-			writer.flush();
-		}
-	}
-	
-	private static class AxesWriter extends CeSymmWriter {
-
-		public AxesWriter(String filename) throws IOException {
-			super(filename);
-		}
-
-		@Override
-		public void writeHeader() {
-
-			writer.println("Structure\t" + "SymmLevel\t" + "SymmType\t" + "SymmGroup\t"
-					+ "RotationAngle\t" + "ScrewTranslation\t" + "Point1\t" + "Point2\t"
-					+ "AlignedRepeats");
-			writer.flush();
-		}
-		private void writeEmptyRow(String id) {
-			writer.format("%s\t%d\t%s\t%s"
-					+ "%.2f\t%.2f\t%.3f,%.3f,%.3f\t%.3f,%.3f,%.3f\t%s%n",
-					id, -1, SymmetryType.DEFAULT, "C1",
-					0., 0., 0.,0.,0., 0.,0.,0.,
-					"");
-		}
-		@Override
-		public void writeResult(CeSymmResult result) throws IOException {
-			String id = null;
-			if( result == null) {
-				writeEmptyRow(id);
-				writer.flush();
-				return;
-			}
-			try {
-				id = result.getStructureId().getIdentifier();
-				
-				SymmetryAxes axes = result.getAxes();
-				Atom[] atoms = result.getAtoms();
-				//TODO is this correct for hierarchical cases?
-				String symmGroup = result.getSymmGroup();
-				
-				for(Axis axis : axes.getSymmetryAxes() ) {
-					RotationAxis rot = axis.getRotationAxis();
-//					Set<Integer> repIndex = new TreeSet<Integer>(axes
-//							.getRepeatRelation(a).get(0));
-					List<List<Integer>> repeatsCyclicForm = axes.getRepeatsCyclicForm(axis);
-					String cyclicForm = SymmetryAxes.getRepeatsCyclicForm(repeatsCyclicForm, result.getRepeatsID());
-					
-					// Get atoms aligned by this axis
-					List<Atom> axisAtoms = new ArrayList<Atom>();
-					for(List<Integer> cycle : repeatsCyclicForm) {
-						for(Integer repeat : cycle) {
-							axisAtoms.addAll(Arrays.asList(atoms[repeat]));
-						}
-					}
-					Pair<Atom> bounds = rot.getAxisEnds(axisAtoms.toArray(new Atom[axisAtoms.size()]));
-							
-					Atom start = bounds.getFirst();
-					Atom end = bounds.getSecond();
-
-					writer.format("%s\t%d\t%s\t%s\t"
-							+ "%.2f\t%.2f\t%.3f,%.3f,%.3f\t%.3f,%.3f,%.3f\t%s%n",
-							id, axis.getLevel()+1, axis.getSymmType(), symmGroup,
-							Math.toDegrees(rot.getAngle()), rot.getTranslation(),
-							start.getX(),start.getY(),start.getZ(),
-							end.getX(),end.getY(),end.getZ(),
-							cyclicForm);
-				}
-			} catch (Exception e) {
-				// If any exception occurs when writing the results store empty
-				// better
-				logger.warn("Could not write result... storing empty row.", e);
-				writeEmptyRow(id);
-			}
-
-			writer.flush();
-		}
-	}
-
-	private static class TSVWriter extends CeSymmWriter {
-		public TSVWriter(String filename) throws IOException {
-			super(filename);
-		}
-		@Override
-		public void writeHeader() throws IOException {
-			// no header
-		}
-		@Override
-		public void writeResult(CeSymmResult result) throws IOException {
-			if( result != null) {
-				MultipleAlignment alignment = result.getMultipleAlignment();
-				if(alignment != null)
-					writer.write(MultipleAlignmentWriter.toAlignedResidues(alignment));
-				else {
-					// No alignment; just write header
-					writer.format("#Struct1:\t%s%n",result.getStructureId());
-					writer.format("#Insignificant Alignment%n");
-				}
-			}
-			writer.println("//");
-			writer.flush();
-		}
-	}
-
-	/**
-	 * This Runnable implementation runs CeSymm on the input structure and with
-	 * the input parameters and writes the results to the output writers. If the
-	 * 3D visualization is turned on, it creates a new thread with the Jmol
-	 * frame.
-	 * 
-	 * @author Aleix Lafita
-	 *
-	 */
-	private static class CeSymmWorker implements Runnable {
-
-		private StructureIdentifier id;
-		private CESymmParameters params;
-		private AtomCache cache;
-		private List<CeSymmWriter> writers;
-		private boolean show3d;
-
-		public CeSymmWorker(StructureIdentifier id, CESymmParameters params,
-				AtomCache cache, List<CeSymmWriter> writers, boolean show3d) {
-			this.id = id;
-			this.cache = cache;
-			this.writers = writers;
-			this.show3d = show3d;
-			this.params = params;
-		}
-
-		@Override
-		public void run() {
-
-			try {
-				// Obtain the structure representation
-				Atom[] atoms;
-				try {
-					Structure s = cache.getStructure(id);
-					atoms = StructureTools.getRepresentativeAtomArray(s);
-				} catch (IOException | StructureException e) {
-					logger.error("Could not load Structure " + id.getIdentifier());
-					return;
-				}
-				// Run the symmetry analysis
-				CeSymmResult result = CeSymm.analyze(atoms, params);
-
-				// Write into the output files
-				for (CeSymmWriter writer : writers) {
-					try {
-						synchronized (writer) {
-							writer.writeResult(result);
-						}
-					} catch (Exception e) {
-						logger.error(
-								"Could not save results for "
-										+ id.getIdentifier(), e);
-					}
-				}
-
-				// Display alignment in 3D Jmol
-				if (show3d) {
-					SymmetryDisplay.display(result);
-				}
-			} catch (Exception e) {
-				logger.error("Could not complete job: " + id.getIdentifier(), e);
-			} finally {
-				logger.info("Finished job: " + id);
-			}
-		}
 	}
 
 }

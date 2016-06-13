@@ -119,11 +119,10 @@ public class CombinedSymmWorker implements Runnable {
 					CeSymmResult result = CeSymm.analyze(atoms, iParams);
 					if (result.isSignificant()) {
 						is = true;
-						Structure divided = SymmetryTools
-								.getQuaternaryStructure(result);
-						for (Chain chain : divided.getChains()) {
-							chain.setChainID((chainId++) + "");
-							newModel.add(chain);
+						List<Structure> repeats = SymmetryTools
+								.divideStructure(result);
+						for (Structure s : repeats) {
+							newModel.add(s.getChain(0));
 						}
 					} else {
 						structure.getChain(m, c).setChainID((chainId++) + "");

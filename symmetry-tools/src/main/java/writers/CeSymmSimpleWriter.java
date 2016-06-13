@@ -41,7 +41,7 @@ public class CeSymmSimpleWriter extends CeSymmWriter {
 			id = result.getStructureId().getIdentifier();
 			writer.append(id);
 			writer.append("\t");
-			writer.append(Integer.toString(result.getSymmOrder()));
+			writer.append(Integer.toString(result.getNumRepeats()));
 			writer.append("\t");
 			writer.append(result.getSymmGroup());
 			writer.append("\t");

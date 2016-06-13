@@ -48,7 +48,7 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 			int coreLen = result.getSelfAlignment().getOptLength();
 			double coverage = result.getSelfAlignment().getCoverage1() / 100;
 			String group = result.getSymmGroup();
-			int order = result.getSymmOrder();
+			int order = result.getNumRepeats();
 			double symmrmsd = 0.0;
 			double symmscore = 0.0;
 
@@ -85,8 +85,9 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 			writer.format("%s\t%d\t%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t"
 					+ "%.2f\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f%n", id, order, group,
 					result.isRefined(), result.getSymmLevels(), result
-							.getType(), rotation_angle, screw_translation,
-					result.getSelfAlignment().getTMScore(), result
+							.getAxes().getElementaryAxis(0).getSymmType(),
+					rotation_angle, screw_translation, result
+							.getSelfAlignment().getTMScore(), result
 							.getSelfAlignment().getTotalRmsdOpt(), symmscore,
 					symmrmsd, repeatLen, coreLen, structureLen, coverage);
 		} catch (Exception e) {

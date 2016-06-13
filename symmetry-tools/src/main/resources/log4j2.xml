@@ -4,7 +4,7 @@
 		<Property name="filename">cesymm.log</Property>
 	</Properties>
 	<Appenders>
-		<Console name="Console" target="ERROR">
+		<Console name="Console" target="SYSTEM_ERR">
 			<PatternLayout pattern="%r [%t] %-5p %c - %m%n" />
 		</Console>
 		<!-- <File name="File" fileName="${filename}"> <PatternLayout pattern="%r 
@@ -15,5 +15,8 @@
 			<AppenderRef ref="Console" />
 			<!-- <AppenderRef ref="File" /> -->
 		</Root>
+		<Logger name="demo" level="info" additivity="false">
+			<AppenderRef ref="Console" />
+		</Logger>
 	</Loggers>
 </Configuration>

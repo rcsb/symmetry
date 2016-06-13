@@ -175,6 +175,7 @@
 										<Specification-Title>${project.name}</Specification-Title>
 										<Implementation-Title>${project.name}</Implementation-Title>
 										<Main-Class>main.CombinedSymmMain</Main-Class>
+
 									</manifestEntries>
 								</transformer>
 								<!-- This bit merges the various META-INF/services files -->
@@ -219,6 +220,41 @@
 				<artifactId>maven-release-plugin</artifactId>
 			</plugin>
 
+			<!-- Include git commit -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+				<version>1.4</version>
+				<executions>
+					<execution>
+						<id>createbuildnum</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>createdate</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+						<configuration>
+							<format>{0,date,yyyy-MM-dd}</format>
+							<items>
+								<item>timestamp</item>
+							</items>
+							<buildNumberPropertyName>build.date</buildNumberPropertyName>
+						</configuration>
+					</execution>
+				</executions>
+				<configuration>
+					<!-- Allow building with local modifications -->
+					<doCheck>false</doCheck>
+					<!-- No need to fetch with git -->
+					<doUpdate>false</doUpdate>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

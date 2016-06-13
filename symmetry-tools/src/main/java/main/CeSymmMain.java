@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import workers.CeSymmWorker;
+import writers.CeSymmAxesWriter;
 import writers.CeSymmFastaWriter;
 import writers.CeSymmFatcatWriter;
 import writers.CeSymmSimpleWriter;
@@ -232,6 +233,18 @@ public class CeSymmMain {
 				filename = "-"; // standard out
 			try {
 				writers.add(new CeSymmFastaWriter(filename));
+			} catch (IOException e) {
+				logger.error("Error: Ignoring file " + filename + ".");
+				logger.error(e.getMessage());
+			}
+		}
+		
+		if (cli.hasOption("axes")) {
+			String filename = cli.getOptionValue("axes");
+			if(filename == null || filename.isEmpty())
+				filename = "-"; // standard out
+			try {
+				writers.add(new CeSymmAxesWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
@@ -659,6 +672,13 @@ public class CeSymmMain {
 				.optionalArg(true)
 				.argName("file")
 				.desc("Output alignment as FASTA alignment output")
+				.build());
+		options.addOption(Option.builder()
+				.longOpt("axes")
+				.hasArg()
+				.optionalArg(true)
+				.argName("file")
+				.desc("Output information about rotation axes")
 				.build());
 
 		// jmol

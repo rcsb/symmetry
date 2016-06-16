@@ -1,14 +1,13 @@
 package writers;
 
 import java.io.IOException;
-
 import javax.vecmath.Vector3d;
 
+import org.biojava.nbio.structure.StructureIdentifier;
 import org.biojava.nbio.structure.align.multiple.MultipleAlignment;
 import org.biojava.nbio.structure.align.multiple.util.MultipleAlignmentScorer;
 import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.symmetry.internal.CeSymmResult;
-import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.symmetry.internal.SymmetryAxes.Axis;
 
 /**
@@ -26,11 +25,12 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 
 	@Override
 	public synchronized void writeHeader() {
-		writer.println("Name\t" + "NumRepeats\t" + "SymmGroup\t" + "Refined\t"
-				+ "SymmLevels\t" + "SymmType\t" + "RotationAngle\t"
-				+ "ScrewTranslation\t" + "UnrefinedTMscore\t"
-				+ "UnrefinedRMSD\t" + "FinalTMscore\t" + "FinalRMSD\t"
-				+ "RepeatLength\t" + "CoreLength\t" + "Length\t" + "Coverage");
+		writer.println("Name\t" + "NumRepeats\t" + "Repeats\t" + "SymmGroup\t"
+				+ "Refined\t" + "SymmLevels\t" + "SymmType\t"
+				+ "RotationAngle\t" + "ScrewTranslation\t"
+				+ "UnrefinedTMscore\t" + "UnrefinedRMSD\t" + "FinalTMscore\t"
+				+ "FinalRMSD\t" + "RepeatLength\t" + "CoreLength\t"
+				+ "Length\t" + "Coverage");
 		writer.flush();
 	}
 
@@ -52,6 +52,7 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 			double symmrmsd = 0.0;
 			double symmscore = 0.0;
 			String type = "NONE";
+			String repeats = result.getStructureId().toCanonical().toString();
 
 			RotationAxis rot = new RotationAxis(result.getSelfAlignment()
 					.getBlockRotationMatrix()[0], result.getSelfAlignment()
@@ -71,6 +72,14 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 
 				repeatLen = msa.length();
 				coreLen = msa.getCoreLength() * msa.size();
+				
+				// Write repeats ID
+				repeats = "";
+				for (StructureIdentifier rid : result.getRepeatsID()){
+					if (!repeats.equals(""))
+						repeats += ":";
+					repeats += rid.toCanonical().toString();
+				}
 
 				// Calculate coverage
 				coverage = 0;
@@ -96,9 +105,9 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 				}
 			}
 
-			writer.format("%s\t%d\t%s\t%b\t%d\t%s\t%s\t%s\t%.2f\t"
+			writer.format("%s\t%d\t%s\t%s\t%b\t%d\t%s\t%s\t%s\t%.2f\t"
 					+ "%.2f\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f%n", id, order,
-					result.getSymmGroup(), result.isRefined(),
+					repeats, result.getSymmGroup(), result.isRefined(),
 					result.getSymmLevels(), type, rotation_angle,
 					screw_translation, result.getSelfAlignment().getTMScore(),
 					result.getSelfAlignment().getTotalRmsdOpt(), symmscore,
@@ -115,8 +124,7 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 
 	private synchronized void writeEmptyRow(String id) {
 		writer.format("%s\t%d\t%s\t%b\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t"
-				+ "%.2f\t%d\t%d\t%d\t%.2f%n", id, 1, "C1", false, 0,
-				SymmetryType.DEFAULT, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0,
-				0.0);
+				+ "%.2f\t%d\t%d\t%d\t%.2f%n", id, 1, "C1", false, 0, "NONE",
+				0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0.0);
 	}
 }

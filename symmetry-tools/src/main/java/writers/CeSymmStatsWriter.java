@@ -25,12 +25,12 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 
 	@Override
 	public synchronized void writeHeader() {
-		writer.println("Name\t" + "NumRepeats\t" + "Repeats\t" + "SymmGroup\t"
+		writer.println("Name\t" + "NumRepeats\t" + "SymmGroup\t"
 				+ "Refined\t" + "SymmLevels\t" + "SymmType\t"
 				+ "RotationAngle\t" + "ScrewTranslation\t"
 				+ "UnrefinedTMscore\t" + "UnrefinedRMSD\t" + "FinalTMscore\t"
 				+ "FinalRMSD\t" + "RepeatLength\t" + "CoreLength\t"
-				+ "Length\t" + "Coverage");
+				+ "Length\t" + "Coverage\t" + "Repeats");
 		writer.flush();
 	}
 
@@ -77,7 +77,7 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 				repeats = "";
 				for (StructureIdentifier rid : result.getRepeatsID()){
 					if (!repeats.equals(""))
-						repeats += ":";
+						repeats += ";";
 					repeats += rid.toCanonical().toString();
 				}
 
@@ -105,13 +105,13 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 				}
 			}
 
-			writer.format("%s\t%d\t%s\t%s\t%b\t%d\t%s\t%s\t%s\t%.2f\t"
-					+ "%.2f\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f%n", id, order,
-					repeats, result.getSymmGroup(), result.isRefined(),
+			writer.format("%s\t%d\t%s\t%b\t%d\t%s\t%s\t%s\t%.2f\t"
+					+ "%.2f\t%.2f\t%.2f\t%d\t%d\t%d\t%.2f\t%s%n", id, order,
+					result.getSymmGroup(), result.isRefined(),
 					result.getSymmLevels(), type, rotation_angle,
 					screw_translation, result.getSelfAlignment().getTMScore(),
 					result.getSelfAlignment().getTotalRmsdOpt(), symmscore,
-					symmrmsd, repeatLen, coreLen, structureLen, coverage);
+					symmrmsd, repeatLen, coreLen, structureLen, coverage, repeats);
 		} catch (Exception e) {
 			// If any exception occurs when writing the results store empty row
 			logger.warn("Could not write result for entry: " + id

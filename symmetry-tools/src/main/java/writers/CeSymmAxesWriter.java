@@ -43,9 +43,6 @@ public class CeSymmAxesWriter extends CeSymmWriter {
 		if (result == null) {
 			writeEmptyRow(id);
 			return;
-		} else if (!result.isSignificant()) {
-			writeEmptyRow(id);
-			return;
 		}
 		try {
 			id = result.getStructureId().getIdentifier();

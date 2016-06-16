@@ -10,7 +10,6 @@ import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.contact.Pair;
 import org.biojava.nbio.structure.symmetry.internal.CeSymmResult;
 import org.biojava.nbio.structure.symmetry.internal.SymmetryAxes;
-import org.biojava.nbio.structure.symmetry.internal.CESymmParameters.SymmetryType;
 import org.biojava.nbio.structure.symmetry.internal.SymmetryAxes.Axis;
 
 /**
@@ -26,7 +25,7 @@ public class CeSymmAxesWriter extends CeSymmWriter {
 	}
 
 	@Override
-	public void writeHeader() {
+	public synchronized void writeHeader() {
 
 		writer.println("Structure\t" + "SymmLevel\t" + "SymmType\t"
 				+ "SymmOrder\t" + "RotationAngle\t" + "ScrewTranslation\t"
@@ -34,18 +33,18 @@ public class CeSymmAxesWriter extends CeSymmWriter {
 		writer.flush();
 	}
 
-	private void writeEmptyRow(String id) {
-		writer.format("%s\t%d\t%s\t%s"
-				+ "%.2f\t%.2f\t%.3f,%.3f,%.3f\t%.3f,%.3f,%.3f\t%s%n", id, -1,
-				SymmetryType.DEFAULT, "C1", 0., 0., 0., 0., 0., 0., 0., 0., "");
+	private synchronized void writeEmptyRow(String id) {
+		// Do nothing, like for non-refined cases
 	}
 
 	@Override
-	public void writeResult(CeSymmResult result) throws IOException {
+	public synchronized void writeResult(CeSymmResult result) throws IOException {
 		String id = null;
 		if (result == null) {
 			writeEmptyRow(id);
-			writer.flush();
+			return;
+		} else if (!result.isSignificant()) {
+			writeEmptyRow(id);
 			return;
 		}
 		try {

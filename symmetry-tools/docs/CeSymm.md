@@ -1,8 +1,7 @@
-CE-Symm
-=======
+# CE-Symm
 
-Usage
------
+## Usage
+
 
 The easiest way to run CE-Symm is via the included wrapper script.
 
@@ -18,8 +17,7 @@ interactive mode. From the command line, it can be run as
 java -Xmx500M -jar cesymm-*.jar [OPTIONS] [structures...]
 ```
 
-Options
--------
+## Options
 
 Options are specified in gnu style. Boolean options can be negated by prefixing with "no".
 All common options have short forms.
@@ -32,11 +30,12 @@ Short Option | Long Option | Description
 -v  | --verbose         | Output verbose logging information.
 -q  | --noverbose       | Disable verbose logging information, as well as the default (--simple) output.
 -o  | --simple=file     | Output result in a simple format (default)
-    | --stats=file      | Output a tsv file with detailed symmetry info.
+    | --stats=file      | Output a tsv file with detailed symmetry information
     | --tsv=file        | Output alignment as a tsv-formated list of aligned residues.
     | --xml=file        | Output alignment as XML
     | --fatcat=file     | Output alignment as FATCAT output
     | --fasta=file      | Output alignment as FASTA alignment output
+    | --axes=file       | Output each axis of symmetry found in the structure as two points and a rotation angle
 -j  | --show3d          | Force jMol display for each structure [default for <10 structures when specified on command line]
 -J  | --noshow3d        | Disable jMol display [default with --input or for >=10 structures]
     | --ordermethod=Class   | Order detection method: SEQUENCE_FUNCTION (default), GRAPH_COMPONENT, ANGLE, or USER_INPUT
@@ -63,8 +62,7 @@ Short Option | Long Option | Description
     | --dcutoff=float   | The maximum distance, in A, allowed between any two aligned residue positions [default: 7.0].
     | --scopversion=version | Version of SCOP or SCOPe to use when resolving SCOP identifiers [defaults to latest SCOPe]
 
-Interactive mode
-----------------
+## Interactive mode
 
 By default, running CE-Symm will enter interactive mode. It will prompt you
 for an input structure and display the result in a jMol window.
@@ -85,8 +83,7 @@ runCESymm.sh 1HIV
 runCESymm.sh 1GEN.A d1tl2a_ PDP:1RI6Aa
 ```
 
-Batch mode
-----------
+## Batch mode
 
 To run CE-Symm on many structures, specify input and output files. The input
 should contain a list of whitespace separated structure identifiers. Lines
@@ -102,8 +99,7 @@ parallel. The option `-threads N` can be used to set the number N of threads
 to use. Note that the scaling efficiency of the multithreading is not perfect,
 and the **thread overhead** becomes significant with more than 8 threads.
 
-Output
-------
+## Output
 
 CE-Symm can output results in a number of formats. Format options may be followed
 by a filename (`--stats=out.txt`). If the filename is empty or '-', output will
@@ -122,6 +118,8 @@ alignment from the structure to itself.
   how that conclusion was reached.
 * __Stats__: Provides more detailed statistics about each result. See below
   for a description of the fields.
+* __Axes__: Provides detailed infomation about the axes of symmetry found. 
+* See below for a description of the fields.
 * __TSV__: A list of aligned residues for each structure,  with a line containing 
   only '//' to separate records.
 * __FATCAT__: A single file containing all alignments in FATCAT's traditional output
@@ -129,34 +127,46 @@ alignment from the structure to itself.
 * __XML__: All the alignments in a custom XML format suitable for machine parsing.
 
 
-***Statistics Output***
+### Statistics Output
 
-The `--stats` option outputs a tab-delimited file with the following columns:
+The `--stats` option outputs a tab-delimited file, where each row corresponds to an input structure, with the following columns:
 
 - __Name__ Name of the structure
 - __NumRepeats__ Total number of repeats detected by CE-Symm, including multiple
-  levels of symmetry if detected.
+  levels of symmetry if detected
 - __SymmGroup__ Symmetry Group of the top level of symmetry. This includes
   point group symmetry (Cn or Dn), helical symmetry (H), and translational
   repeats (R).
 - __Refined__ 'true' or 'false', indicating whether refinement was successful
 - __SymmLevels__ Number of symmetry levels detected
-- __SymmType__ OPEN or CLOSED symmetry
-- __RotationAngle__ Angle of rotation at the principal axis (degrees). Closed
-  symmetry may deviate from ideal values due to the superposition procedure.
-- __ScrewTranslation__ Translation parallel the principal axis (Å)
+- __SymmType__ OPEN or CLOSED for symmetry or NONE for asymmetry. Multiple levels of symmetry are comma separated, in order from the first level to the last
+- __RotationAngle__ Angle of rotation at the principal axis (degrees). Closed symmetry may deviate from ideal values due to the superposition procedure. Multiple axes of symmetry are comma separated, in order from the first symmetry level to the last
+- __ScrewTranslation__ Translation parallel the principal axis (Å). Multiple axes of symmetry are comma separated, in order from the first symmetry level to the last
 - __UnrefinedTMscore__ TM-Score of the self-alignment prior to refinement
 - __UnrefinedRMSD__ RMSD of the self-alignment prior to refinement
 - __SymmTMscore__ Average pairwise TM-Score of all repeats in the alignment
   after refinement
 - __SymmRMSD__ Average RMSD of all repeats in the alignment after refinement
-- __RepeatLength__ Number of aligned residues in each repeat
-- __CoreLength__ Number of _ungapped_ columns in the alignment
+- __RepeatLength__ Total number of alignment positions in the multiple repeats alignment
+- __CoreLength__ Number of _ungapped_ columns in the multiple alignment. Equivalent to (RepeatLength*NumRepeats)-Gaps
 - __Length__ Total length of the protein
 - __Coverage__ Fraction of the protein aligned
+- __Repeats__ Substructure identifiers of each repeat range, semicolon separated. The numbers correspond to residue numbers in the original structure
 
-License & Availability
-----------------------
+### Axes Output
+
+The `--axes` option also outputs a tab-delimited file, where each row corresponds to an axis of symmetry, with the following columns:
+- __Name__ Name of the structure
+- __SymmLevel__ Level of symmetry of the axis
+- __SymmType__ CLOSED if the first repeat aligns with the last when applying once the axis, OPEN otherwise
+- __SymmOrder__ Number of repeats in the structure to which the axis applies. For CLOSED symmetry axes, this is equivalent to 360/RotationAngle
+- __RotationAngle__ Angle of rotation at the principal axis (degrees). Closed symmetry may deviate from ideal values due to the superposition procedure
+- __ScrewTranslation__ Translation parallel the principal axis (Å)
+- __Point1__ First point to define the axis vector
+- __Point2__ Second point to define the axis vector
+- __AlignedRepeats__ The repeats, defined as substructure identifiers, that the axis applies to. The parenthesis define the repeat alignment groups (repeats that are superimposed onto each other after the axis is applied) in the group theory notation.
+
+## License & Availability
 
 CE-Symm is licensed under LGPL 2.1 (see LICENSE, which should have come bundled
 with the executable).
@@ -171,8 +181,7 @@ Douglas Myers-Turnbull, Spencer E Bliven, Peter W Rose, Zaid K Aziz, Philippe
   Youkharibache, Philip E Bourne, and Andreas Prlic. Systematic detection of
   internal symmetry in proteins using CE-Symm. 2014. Awaiting publication.
 
-Examples
---------
+## Examples
 
 ```
 # Get help

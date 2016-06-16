@@ -99,6 +99,19 @@ parallel. The option `-threads N` can be used to set the number N of threads
 to use. Note that the scaling efficiency of the multithreading is not perfect,
 and the **thread overhead** becomes significant with more than 8 threads.
 
+## Specifying Structures
+
+CE-Symm accepts a wide variety of ways to specify structures. Some examples:
+- PDB Code: `1TGH`
+- Single chain: `1ITB.A`
+- Residue Range: `2NWX.A:255-416`
+  - Multiple ranges can be concatenated by commas if needed
+- SCOP/CATH/ECOD domains: `d1u6dx_`, `e2j5aA1`
+- Files: `file.cif`, `file:///path/to/file.pdb?chainId=A`
+- URLs: `http://files.rcsb.org/download/1TIM.pdb`
+- Biological Assemblies: `BIO:3HDP:2`
+  - Biological Assembly support is currently experimental. Some visualization features may not behave properly.
+
 ## Output
 
 CE-Symm can output results in a number of formats. Format options may be followed

@@ -167,7 +167,13 @@ Information about the rotation axes can be extracted from the `--axes` output fo
 - __Point2__ Other end of the axis
 - __AlignedRepeats__ Defines which repeats are aligned. Each parenthetical group gives a set of aligned repeats. This is similar to the cycle notation used in group theory. For example, `(A;C;E)(B;D;F)` indicates a three-fold rotation superimposing `A` and `B` onto `C` and `D`, `C` and `D` onto `E` and `F`, and (if closed) `E` and `F` onto `A` and `B`.
 
-Rotation axes can be expressed equivalently as a rotation matrix. The transformation matrix in 4D homogeneous coordinates for the first axis of each level can be extracted from the `--xml` output if needed, or can be calculated directly from the RotationAngle, ScrewTranslation, and endpoints.
+### XML output
+
+The XML output is primarily suitable for loading results into BioJava. Other formats are generally preferable for common uses. However, a few clarifications are in order for advanced users:
+
+- The `<Structures>` element gives residue ranges for each repeat of the multiple alignment. This information is also available in the `--simple` format.
+- The `<eqrX>` elements give the indices of aligned residues for each repeat. Use of the `--tsv` output is strongly recommended rather than parsing these, since tsv uses standard PDB residue numbers.
+- The `<Matrix4d>` elements give the 4D transformation matrices required to superimpose each repeat onto the first repeat (thus the first entry is always the identity matrix). It is possible to express these matrices in terms of the rotation axes from the `--axes` output, but doing so requires careful tracking of which repeats are aligned by each axis.
 
 ## License & Availability
 

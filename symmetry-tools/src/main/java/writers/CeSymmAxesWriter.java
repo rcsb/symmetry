@@ -27,7 +27,7 @@ public class CeSymmAxesWriter extends CeSymmWriter {
 	@Override
 	public synchronized void writeHeader() {
 
-		writer.println("Structure\t" + "SymmLevel\t" + "SymmType\t"
+		writer.println("Name\t" + "SymmLevel\t" + "SymmType\t"
 				+ "SymmOrder\t" + "RotationAngle\t" + "ScrewTranslation\t"
 				+ "Point1\t" + "Point2\t" + "AlignedRepeats");
 		writer.flush();

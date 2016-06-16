@@ -28,8 +28,8 @@ public class CeSymmStatsWriter extends CeSymmWriter {
 		writer.println("Name\t" + "NumRepeats\t" + "SymmGroup\t"
 				+ "Refined\t" + "SymmLevels\t" + "SymmType\t"
 				+ "RotationAngle\t" + "ScrewTranslation\t"
-				+ "UnrefinedTMscore\t" + "UnrefinedRMSD\t" + "FinalTMscore\t"
-				+ "FinalRMSD\t" + "RepeatLength\t" + "CoreLength\t"
+				+ "UnrefinedTMscore\t" + "UnrefinedRMSD\t" + "SymmTMscore\t"
+				+ "SymmRMSD\t" + "RepeatLength\t" + "CoreLength\t"
 				+ "Length\t" + "Coverage\t" + "Repeats");
 		writer.flush();
 	}

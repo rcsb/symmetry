@@ -115,18 +115,18 @@ public class CombinedSymmWorker implements Runnable {
 				for (int c = 0; c < structure.getModel(m).size(); c++) {
 					Atom[] atoms = StructureTools
 							.getRepresentativeAtomArray(structure
-									.getChain(m, c));
+									.getChainByIndex(m, c));
 					CeSymmResult result = CeSymm.analyze(atoms, iParams);
 					if (result.isSignificant()) {
 						is = true;
 						List<Structure> repeats = SymmetryTools
 								.divideStructure(result);
 						for (Structure s : repeats) {
-							newModel.add(s.getChain(0));
+							newModel.add(s.getChainByIndex(0));
 						}
 					} else {
-						structure.getChain(m, c).setChainID((chainId++) + "");
-						newModel.add(structure.getChain(m, c));
+						structure.getChainByIndex(m, c).setChainID((chainId++) + "");
+						newModel.add(structure.getChainByIndex(m, c));
 					}
 					chainNr++;
 				}

@@ -126,13 +126,13 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>CombinedSymm</id>
+						<id>QuatSymm</id>
 						<phase>package</phase>
 						<goals>
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<outputFile>target/CombinedSymm-${project.version}.jar</outputFile>
+							<outputFile>target/QuatSymm-${project.version}.jar</outputFile>
 							<!-- Minimizing removes jmol and log4j -->
 							<minimizeJar>false</minimizeJar>
 							<artifactSet>
@@ -174,7 +174,7 @@
 										<Implementation-Version>${project.version}</Implementation-Version>
 										<Specification-Title>${project.name}</Specification-Title>
 										<Implementation-Title>${project.name}</Implementation-Title>
-										<Main-Class>main.CombinedSymmMain</Main-Class>
+										<Main-Class>main.QuatSymmMain</Main-Class>
 
 									</manifestEntries>
 								</transformer>

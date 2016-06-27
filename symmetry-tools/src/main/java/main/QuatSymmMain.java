@@ -243,7 +243,6 @@ public class QuatSymmMain {
 			cacheConfig.setCacheFilePath(pdbFilePath);
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
-		cache.setUseMmCif(true);
 		cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
 
 		long startTime = System.nanoTime();

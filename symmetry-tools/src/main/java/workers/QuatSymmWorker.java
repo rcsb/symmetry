@@ -7,8 +7,9 @@ import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIdentifier;
 import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.cluster.SubunitClustererParameters;
 import org.biojava.nbio.structure.gui.BiojavaJmol;
-import org.biojava.nbio.structure.symmetry.core.AxisAligner;
+import org.biojava.nbio.structure.symmetry.axis.AxisAligner;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
@@ -36,18 +37,20 @@ public class QuatSymmWorker implements Runnable {
 			.getLogger(QuatSymmWorker.class);
 
 	private StructureIdentifier id;
-	private QuatSymmetryParameters params;
+	private SubunitClustererParameters cparams;
+	private QuatSymmetryParameters sparams;
 	private AtomCache cache;
 	private List<QuatSymmWriter> writers;
 	private boolean show3d;
 
 	public QuatSymmWorker(StructureIdentifier id,
-			QuatSymmetryParameters params, AtomCache cache,
-			List<QuatSymmWriter> writers, boolean show3d) {
+			QuatSymmetryParameters sparams, SubunitClustererParameters cparams,
+			AtomCache cache, List<QuatSymmWriter> writers, boolean show3d) {
 		this.id = id;
 		this.cache = cache;
 		this.writers = writers;
-		this.params = params;
+		this.sparams = sparams;
+		this.cparams = cparams;
 		this.show3d = show3d;
 	}
 
@@ -65,13 +68,9 @@ public class QuatSymmWorker implements Runnable {
 				return;
 			}
 
-			// Run the Quaternary Symmetry detection
-			List<QuatSymmetryResults> results = new QuatSymmetryDetector(
-					structure, params).getGlobalSymmetry();
-
-			QuatSymmetryResults result = null;
-			if (results.size() > 0)
-				result = results.get(0); // Take the preferred
+			// Calculate the global symmetry
+			QuatSymmetryResults result = QuatSymmetryDetector
+					.calcGlobalSymmetry(structure, sparams, cparams);
 
 			// Write into the output files
 			for (QuatSymmWriter writer : writers) {

@@ -147,25 +147,25 @@ public class ScanSymmetry implements Runnable {
 						//PDBHeader pdbHeader = structure.getPDBHeader();
 						//resolution = pdbHeader.getResolution();
 					}
-					QuatSymmetryDetector detector = new QuatSymmetryDetector(structure, parameters);
-
-					if (detector.hasProteinSubunits()) {
-						long ts2 = System.nanoTime();
-
-						int time = Math.round((ts2-ts1)/1000000.0f);
-
-						// save global symmetry results
-						List<QuatSymmetryResults> globalResults = detector.getGlobalSymmetry();
-						printToCsv(reader95, reader30, out, pdbId,
-								i, time, globalResults, spaceGroup);
-
-						// save local symmetry results
-						for (List<QuatSymmetryResults> localResults: detector.getLocalSymmetries()) {
-							printToCsv(reader95, reader30, out, pdbId,
-									i, time, localResults, spaceGroup);
-						}
-						proteins++;
-					}
+//					QuatSymmetryDetector detector = new QuatSymmetryDetector(structure, parameters);
+//
+//					if (detector.hasProteinSubunits()) {
+//						long ts2 = System.nanoTime();
+//
+//						int time = Math.round((ts2-ts1)/1000000.0f);
+//
+//						// save global symmetry results
+//						List<QuatSymmetryResults> globalResults = detector.getGlobalSymmetry();
+//						printToCsv(reader95, reader30, out, pdbId,
+//								i, time, globalResults, spaceGroup);
+//
+//						// save local symmetry results
+//						for (List<QuatSymmetryResults> localResults: detector.getLocalSymmetries()) {
+//							printToCsv(reader95, reader30, out, pdbId,
+//									i, time, localResults, spaceGroup);
+//						}
+//						proteins++;
+//					}
 					success++;
 					out.flush();
 				} catch (Exception e) {

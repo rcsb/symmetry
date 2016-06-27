@@ -24,11 +24,12 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.biojava.nbio.structure.StructureIdentifier;
-import org.biojava.nbio.structure.align.ce.CeParameters.ScoringStrategy;
 import org.biojava.nbio.structure.align.client.StructureName;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.align.util.CliTools;
 import org.biojava.nbio.structure.align.util.UserConfiguration;
+import org.biojava.nbio.structure.cluster.SubunitClustererMethod;
+import org.biojava.nbio.structure.cluster.SubunitClustererParameters;
 import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.biojava.nbio.structure.io.util.FileDownloadUtils;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
@@ -181,7 +182,8 @@ public class QuatSymmMain {
 			}
 		}
 
-		QuatSymmetryParameters params = new QuatSymmetryParameters();
+		// Subunit Clustering parameters
+		SubunitClustererParameters cparams = new SubunitClustererParameters();
 
 		if (cli.hasOption("minSeqLen")) {
 			String value = cli.getOptionValue("minSeqLen");
@@ -191,36 +193,84 @@ public class QuatSymmMain {
 					logger.error("Invalid minSeqLen: " + minSeqLen);
 					System.exit(1);
 				}
-				params.setMinimumSequenceLength(minSeqLen);
+				cparams.setMinimumSequenceLength(minSeqLen);
 			} catch (NumberFormatException e) {
 				logger.error("Invalid minSeqLen: " + value);
 				System.exit(1);
 			}
 		}
-		if (cli.hasOption("maxRmsd")) {
-			String value = cli.getOptionValue("maxRmsd");
+		if (cli.hasOption("minSeqId")) {
+			String value = cli.getOptionValue("minSeqId");
 			try {
-				double maxRmsd = Double.parseDouble(value);
-				if (maxRmsd < 0) {
-					logger.error("Invalid maxRmsd: " + maxRmsd);
+				double minSeqId = Double.parseDouble(value);
+				if (minSeqId < 0 || minSeqId > 1) {
+					logger.error("Invalid minSeqId: " + minSeqId);
 					System.exit(1);
 				}
-				params.setRmsdThreshold(maxRmsd);
+				cparams.setSequenceIdentityThreshold(minSeqId);
 			} catch (NumberFormatException e) {
-				logger.error("Invalid maxRmsd: " + value);
+				logger.error("Invalid minSeqId: " + value);
 				System.exit(1);
 			}
 		}
-		if (cli.hasOption("enum")) {
-			String value = cli.getOptionValue("enum");
-			ScoringStrategy strat;
+		if (cli.hasOption("minCoverage")) {
+			String value = cli.getOptionValue("minCoverage");
 			try {
-				strat = ScoringStrategy.valueOf(value.toUpperCase());
-				// params.setScoringStrategy(strat);
+				double minCoverage = Double.parseDouble(value);
+				if (minCoverage < 0 || minCoverage > 1) {
+					logger.error("Invalid minCoverage: " + minCoverage);
+					System.exit(1);
+				}
+				cparams.setCoverageThreshold(minCoverage);
+			} catch (NumberFormatException e) {
+				logger.error("Invalid minCoverage: " + value);
+				System.exit(1);
+			}
+		}
+		if (cli.hasOption("maxClustRmsd")) {
+			String value = cli.getOptionValue("maxClustRmsd");
+			try {
+				double maxClustRmsd = Double.parseDouble(value);
+				if (maxClustRmsd < 0) {
+					logger.error("Invalid maxClustRmsd: " + maxClustRmsd);
+					System.exit(1);
+				}
+				cparams.setRmsdThreshold(maxClustRmsd);
+			} catch (NumberFormatException e) {
+				logger.error("Invalid maxClustRmsd: " + value);
+				System.exit(1);
+			}
+		}
+		if (cli.hasOption("clustMethod")) {
+			String value = cli.getOptionValue("clustMethod");
+			SubunitClustererMethod clustMethod;
+			try {
+				clustMethod = SubunitClustererMethod.valueOf(value
+						.toUpperCase());
+				cparams.setClustererMethod(clustMethod);
 			} catch (IllegalArgumentException e) {
 				// give up
-				logger.error("Illegal scoringstrategy. Requires on of "
-						+ CliTools.getEnumValuesAsString(ScoringStrategy.class));
+				logger.error("Illegal subunit clusterer method. Requires on of "
+						+ CliTools
+								.getEnumValuesAsString(SubunitClustererMethod.class));
+				System.exit(1);
+			}
+		}
+
+		// Quaternary Symmetry Parameters
+		QuatSymmetryParameters sparams = new QuatSymmetryParameters();
+
+		if (cli.hasOption("maxSymmRmsd")) {
+			String value = cli.getOptionValue("maxSymmRmsd");
+			try {
+				double maxSymmRmsd = Double.parseDouble(value);
+				if (maxSymmRmsd < 0 || maxSymmRmsd > 1) {
+					logger.error("Invalid maxSymmRmsd: " + maxSymmRmsd);
+					System.exit(1);
+				}
+				sparams.setRmsdThreshold(maxSymmRmsd);
+			} catch (NumberFormatException e) {
+				logger.error("Invalid maxSymmRmsd: " + value);
 				System.exit(1);
 			}
 		}
@@ -252,8 +302,8 @@ public class QuatSymmMain {
 		ExecutorService executor = Executors.newFixedThreadPool(threads);
 		for (String name : names) {
 			StructureIdentifier id = new StructureName(name);
-			Runnable worker = new QuatSymmWorker(id, params, cache, writers,
-					show3d);
+			Runnable worker = new QuatSymmWorker(id, sparams, cparams, cache,
+					writers, show3d);
 			executor.execute(worker);
 		}
 		executor.shutdown();
@@ -357,17 +407,56 @@ public class QuatSymmMain {
 				.longOpt("minSeqLen")
 				.hasArg(true)
 				.argName("int")
-				.desc("The minimum subunit length to be included in the symmetry "
-						+ "analysis (default: 20)").build());
+				.desc("The minimum subunit length to be considered for "
+						+ "clustering and symmetry " + "analysis (default: 20)")
+				.build());
 
 		options.addOption(Option
 				.builder()
-				.longOpt("maxRmsd")
+				.longOpt("minSeqId")
 				.hasArg(true)
 				.argName("float")
-				.desc("The maximum RMSD between subunits of the symmetry "
-						+ "(default: 7.0)")
+				.desc("Sequence identity threshold to consider for the sequence"
+						+ " subunit clustering. Two subunits with sequence "
+						+ "identity equal or higher than the threshold will be "
+						+ "clustered together (range: [0,1], default: 0.95)")
 				.build());
+
+		options.addOption(Option
+				.builder()
+				.longOpt("minCoverage")
+				.hasArg(true)
+				.argName("float")
+				.desc("The minimum coverage of the sequence alignment between "
+						+ "two subunits to be clustered together "
+						+ "(range: [0,1], default: 0.9)").build());
+
+		options.addOption(Option
+				.builder()
+				.longOpt("maxClustRmsd")
+				.hasArg(true)
+				.argName("float")
+				.desc("Structure similarity threshold (measured with RMSD) "
+						+ "to consider for the structural subunit clustering. "
+						+ "(default: 3.0 A)").build());
+
+		options.addOption(Option
+				.builder()
+				.longOpt("clustMethod")
+				.hasArg(true)
+				.argName("str")
+				.desc("Method to cluster the subunits: "
+						+ CliTools
+								.getEnumValuesAsString(SubunitClustererMethod.class))
+				.build());
+
+		options.addOption(Option
+				.builder()
+				.longOpt("maxSymmRmsd")
+				.hasArg(true)
+				.argName("float")
+				.desc("Structure similarity threshold (measured with RMSD) "
+						+ "in the symmetry detection (default: 7.0 A)").build());
 
 		return options;
 	}

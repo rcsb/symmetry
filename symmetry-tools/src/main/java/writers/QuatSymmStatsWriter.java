@@ -19,6 +19,11 @@ public class QuatSymmStatsWriter extends QuatSymmWriter {
 	@Override
 	public synchronized void writeResult(String identifier, QuatSymmetryResults result)
 			throws IOException {
+		
+		if (result == null) {
+			writeEmptyResult(identifier);
+			return;
+		}
 
 		writer.println(identifier + "\t" + result.getSubunits().getSubunitCount() + "\t"
 				+ result.getSubunits().getStoichiometry() + "\t" + result.getSymmetry()
@@ -26,11 +31,15 @@ public class QuatSymmStatsWriter extends QuatSymmWriter {
 				+ result.getScores().getTm());
 		writer.flush();
 	}
+	
+	private void writeEmptyResult(String identifier) {
+		writer.println(identifier + "\t0\t\t\t\t0\t0");
+	}
 
 	@Override
 	public synchronized void writeHeader() throws IOException {
 		writer.println("Name\t" + "Subunits\t" + "Stoichiometry\t" + "Symmetry\t"
-				+ "Type\t" + "RMSD\t" + "TMscore");
+				+ "Method\t" + "RMSD\t" + "TMscore");
 		writer.flush();
 	}
 

@@ -66,8 +66,12 @@ public class QuatSymmWorker implements Runnable {
 			}
 
 			// Run the Quaternary Symmetry detection
-			QuatSymmetryResults result = new QuatSymmetryDetector(structure,
-					params).getGlobalSymmetry().get(0);
+			List<QuatSymmetryResults> results = new QuatSymmetryDetector(
+					structure, params).getGlobalSymmetry();
+
+			QuatSymmetryResults result = null;
+			if (results.size() > 0)
+				result = results.get(0); // Take the preferred
 
 			// Write into the output files
 			for (QuatSymmWriter writer : writers) {
@@ -82,7 +86,7 @@ public class QuatSymmWorker implements Runnable {
 				}
 			}
 
-			if (show3d) {
+			if (show3d && result != null) {
 				AxisAligner aligner = AxisAligner.getInstance(result);
 				JmolSymmetryScriptGenerator scriptGenerator = JmolSymmetryScriptGeneratorPointGroup
 						.getInstance(aligner, "g");

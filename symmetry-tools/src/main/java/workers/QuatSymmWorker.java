@@ -73,7 +73,7 @@ public class QuatSymmWorker implements Runnable {
 			for (QuatSymmWriter writer : writers) {
 				try {
 					synchronized (writer) {
-						writer.writeResult(result);
+						writer.writeResult(id.toString(), result);
 					}
 				} catch (Exception e) {
 					logger.error(

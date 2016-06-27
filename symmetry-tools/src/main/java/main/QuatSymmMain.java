@@ -244,6 +244,7 @@ public class QuatSymmMain {
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
 		cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
+		cache.setUseMmCif(true);
 
 		long startTime = System.nanoTime();
 

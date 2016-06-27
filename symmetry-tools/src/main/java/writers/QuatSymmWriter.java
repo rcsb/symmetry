@@ -21,9 +21,11 @@ public abstract class QuatSymmWriter extends OutputWriter {
 	 * Implementations of this method need to be synchronized to avoid writting
 	 * at the same time.
 	 * 
+	 * @param identifier
 	 * @param result
 	 * @throws IOException
 	 */
-	abstract public void writeResult(QuatSymmetryResults result) throws IOException;
+	abstract public void writeResult(String identifier,
+			QuatSymmetryResults result) throws IOException;
 
 }

@@ -72,6 +72,22 @@ public class QuatSymmWorker implements Runnable {
 			QuatSymmetryResults result = QuatSymmetryDetector
 					.calcGlobalSymmetry(structure, sparams, cparams);
 
+			if (result.getSymmetry().equals("C1")) {
+				// Calculate local symmetry
+				List<QuatSymmetryResults> localResults = QuatSymmetryDetector
+						.calcLocalSymmetries(structure, sparams, cparams);
+				QuatSymmetryResults local = null;
+				for (QuatSymmetryResults r : localResults) {
+					if (local == null)
+						local = r;
+					else if (local.getSubunits().getSubunitCount() < r
+							.getSubunits().getSubunitCount())
+						local = r;
+				}
+				if (local != null)
+					result = local;
+			}
+			
 			// Write into the output files
 			for (QuatSymmWriter writer : writers) {
 				try {

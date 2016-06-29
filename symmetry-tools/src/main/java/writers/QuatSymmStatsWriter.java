@@ -17,28 +17,31 @@ public class QuatSymmStatsWriter extends QuatSymmWriter {
 	}
 
 	@Override
-	public synchronized void writeResult(String identifier, QuatSymmetryResults result)
-			throws IOException {
-		
+	public synchronized void writeResult(String identifier,
+			QuatSymmetryResults result) throws IOException {
+
 		if (result == null) {
 			writeEmptyResult(identifier);
 			return;
 		}
 
-		writer.println(identifier + "\t" + result.getSubunits().getSubunitCount() + "\t"
-				+ result.getSubunits().getStoichiometry() + "\t" + result.getSymmetry()
-				+ "\t" + result.getMethod() + "\t" + result.getScores().getRmsd() + "\t"
-				+ result.getScores().getTm());
+		writer.println(String.format("%s\t%d\t%s\t%b\t%s\t%b\t%s\t%.2f\t%.2f",
+				identifier, result.getSubunits().getSubunitCount(), result
+						.getSubunits().getStoichiometry(), result.getSubunits()
+						.isPseudoStoichiometric(), result.getSymmetry(), result
+						.isLocal(), result.getMethod(), result.getScores()
+						.getRmsd(), result.getScores().getTm()));
 		writer.flush();
 	}
-	
+
 	private void writeEmptyResult(String identifier) {
 		writer.println(identifier + "\t0\t\t\t\t0\t0");
 	}
 
 	@Override
 	public synchronized void writeHeader() throws IOException {
-		writer.println("Name\t" + "Subunits\t" + "Stoichiometry\t" + "Symmetry\t"
+		writer.println("Name\t" + "Subunits\t" + "Stoichiometry\t"
+				+ "Pseudostoichiometry\t" + "Symmetry\t" + "Local\t"
 				+ "Method\t" + "RMSD\t" + "TMscore");
 		writer.flush();
 	}

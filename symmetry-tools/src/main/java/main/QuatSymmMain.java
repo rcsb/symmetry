@@ -264,7 +264,7 @@ public class QuatSymmMain {
 			String value = cli.getOptionValue("maxSymmRmsd");
 			try {
 				double maxSymmRmsd = Double.parseDouble(value);
-				if (maxSymmRmsd < 0 || maxSymmRmsd > 1) {
+				if (maxSymmRmsd < 0) {
 					logger.error("Invalid maxSymmRmsd: " + maxSymmRmsd);
 					System.exit(1);
 				}
@@ -346,15 +346,13 @@ public class QuatSymmMain {
 		// Logger control
 		grp = new OptionGroup();
 		opt = Option.builder("v").longOpt("verbose")
-		// .hasArg(true)
-		// .argName("file")
 				.desc("Output verbose logging information.").build();
 		grp.addOption(opt);
 		opt = Option
 				.builder("q")
 				.longOpt("noverbose")
-				.hasArg(false)
-				.desc("Disable verbose logging information, as well as the default (--simple) output.")
+				.desc("Disable verbose logging information, as well as the "
+						+ "default (--simple) output.")
 				.build();
 		grp.addOption(opt);
 		options.addOptionGroup(grp);
@@ -447,8 +445,8 @@ public class QuatSymmMain {
 				.argName("str")
 				.desc("Method to cluster the subunits: "
 						+ CliTools
-								.getEnumValuesAsString(SubunitClustererMethod.class))
-				.build());
+								.getEnumValuesAsString(SubunitClustererMethod.class)
+						+ "(default: STRUCTURE)").build());
 
 		options.addOption(Option
 				.builder()

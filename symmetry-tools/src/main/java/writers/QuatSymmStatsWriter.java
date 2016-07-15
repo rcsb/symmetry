@@ -35,7 +35,7 @@ public class QuatSymmStatsWriter extends QuatSymmWriter {
 	}
 
 	private void writeEmptyResult(String identifier) {
-		writer.println(identifier + "\t0\t\t\t\t0\t0");
+		writer.println(identifier + "\t0\t\t\t\t\t\t0\t0");
 	}
 
 	@Override

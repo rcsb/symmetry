@@ -56,8 +56,7 @@ public class QuatSymmMain {
 
 		// Begin argument parsing
 		final String usage = "[OPTIONS] [structures...]";
-		final String header = "Determine the order for each structure, which may "
-				+ "be PDB IDs, SCOP domains, or file paths.";
+		final String header = "Determine the stoichiometry and symmetry of an assembly.";
 		Options options = getOptions();
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter help = new HelpFormatter();

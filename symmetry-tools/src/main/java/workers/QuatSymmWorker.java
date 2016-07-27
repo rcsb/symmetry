@@ -3,14 +3,9 @@ package workers;
 import java.io.IOException;
 import java.util.List;
 
-import org.biojava.nbio.structure.Chain;
-import org.biojava.nbio.structure.Element;
-import org.biojava.nbio.structure.Group;
-import org.biojava.nbio.structure.GroupType;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIdentifier;
-import org.biojava.nbio.structure.StructureTools;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.cluster.SubunitClustererParameters;
 import org.biojava.nbio.structure.gui.BiojavaJmol;
@@ -71,18 +66,6 @@ public class QuatSymmWorker implements Runnable {
 				logger.error("Could not load Structure " + id.getIdentifier(),
 						e);
 				return;
-			}
-
-			// This is a fix for for models without the element column
-			for (Chain c : structure.getChains()) {
-				for (Group g : c.getAtomGroups()) {
-					if (g.getType().equals(GroupType.AMINOACID)) {
-						if (g.hasAtom(StructureTools.CA_ATOM_NAME)) {
-							g.getAtom(StructureTools.CA_ATOM_NAME).setElement(
-									Element.C);
-						}
-					}
-				}
 			}
 
 			// Calculate the global symmetry

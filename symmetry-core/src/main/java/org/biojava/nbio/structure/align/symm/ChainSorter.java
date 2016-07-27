@@ -17,6 +17,7 @@ import org.biojava.nbio.structure.jama.Matrix;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetrySubunits;
 import org.biojava.nbio.structure.symmetry.gui.SymmetryDisplay;
 import org.biojava.nbio.structure.symmetry.internal.CeSymm;
 import org.biojava.nbio.structure.symmetry.internal.CeSymmResult;
@@ -187,7 +188,7 @@ public class ChainSorter {
 
 		QuatSymmetryResults result = QuatSymmetryDetector.calcGlobalSymmetry(
 				structure, params, clust);
-		
+
 		if (result.getSymmetry().equals("C1")) { // asymmetric
 			/*
 			 * List<List<QuatSymmetryResults>> local =
@@ -214,7 +215,8 @@ public class ChainSorter {
 
 		List<Atom> atomList = new ArrayList<Atom>();
 		for (int c : chainOrder) {
-			String id = result.getSubunits().getChainIds().get(c);
+			String id = new QuatSymmetrySubunits(result.getSubunitClusters())
+					.getChainIds().get(c);
 			Chain chain = structure.getPolyChainByPDB(id);
 			Atom[] array = StructureTools.getRepresentativeAtomArray(chain);
 			for (Atom a : array)

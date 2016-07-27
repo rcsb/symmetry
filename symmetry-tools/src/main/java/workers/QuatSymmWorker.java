@@ -97,8 +97,7 @@ public class QuatSymmWorker implements Runnable {
 				for (QuatSymmetryResults r : localResults) {
 					if (local == null)
 						local = r;
-					else if (local.getSubunits().getSubunitCount() < r
-							.getSubunits().getSubunitCount())
+					else if (local.getSubunitCount() < r.getSubunitCount())
 						local = r;
 				}
 				if (local != null)

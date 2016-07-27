@@ -26,11 +26,10 @@ public class QuatSymmStatsWriter extends QuatSymmWriter {
 		}
 
 		writer.println(String.format("%s\t%d\t%s\t%b\t%s\t%b\t%s\t%.2f\t%.2f",
-				identifier, result.getSubunits().getSubunitCount(), result
-						.getSubunits().getStoichiometry(), result.getSubunits()
-						.isPseudoStoichiometric(), result.getSymmetry(), result
-						.isLocal(), result.getMethod(), result.getScores()
-						.getRmsd(), result.getScores().getTm()));
+				identifier, result.getSubunitCount(),
+				result.getStoichiometry(), result.isPseudoStoichiometric(),
+				result.getSymmetry(), result.isLocal(), result.getMethod(),
+				result.getScores().getRmsd(), result.getScores().getTm()));
 		writer.flush();
 	}
 

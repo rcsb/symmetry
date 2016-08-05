@@ -1,6 +1,7 @@
 package writers;
 
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
 
@@ -25,8 +26,12 @@ public class QuatSymmStatsWriter extends QuatSymmWriter {
 			return;
 		}
 
-		writer.println(String.format("%s\t%d\t%s\t%b\t%s\t%b\t%s\t%.2f\t%.2f",
-				identifier, result.getSubunitCount(),
+		writer.println(String.format(
+				"%s\t%d\t%s\t%s\t%b\t%s\t%b\t%s\t%.2f\t%.2f",
+				identifier,
+				result.getSubunitCount(),
+				result.getSubunits().stream().map(s -> s.getName())
+						.collect(Collectors.toList()).toString(),
 				result.getStoichiometry(), result.isPseudoStoichiometric(),
 				result.getSymmetry(), result.isLocal(), result.getMethod(),
 				result.getScores().getRmsd(), result.getScores().getTm()));
@@ -39,9 +44,9 @@ public class QuatSymmStatsWriter extends QuatSymmWriter {
 
 	@Override
 	public synchronized void writeHeader() throws IOException {
-		writer.println("Name\t" + "Subunits\t" + "Stoichiometry\t"
+		writer.println("Name\t" + "Size\t" + "Subunits\t" + "Stoichiometry\t"
 				+ "Pseudostoichiometry\t" + "Symmetry\t" + "Local\t"
-				+ "Method\t" + "RMSD\t" + "TMscore");
+				+ "Method\t" + "SymmRMSD\t" + "SymmTMscore");
 		writer.flush();
 	}
 

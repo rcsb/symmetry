@@ -175,7 +175,8 @@
 										<Specification-Title>${project.name}</Specification-Title>
 										<Implementation-Title>${project.name}</Implementation-Title>
 										<Main-Class>main.CombinedSymmMain</Main-Class>
-
+										<Build-Date>${build.date}</Build-Date>
+										<Build-Number>${buildNumber}</Build-Number>
 									</manifestEntries>
 								</transformer>
 								<!-- This bit merges the various META-INF/services files -->

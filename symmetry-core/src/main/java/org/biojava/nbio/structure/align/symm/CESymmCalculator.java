@@ -1,12 +1,14 @@
 package org.biojava.nbio.structure.align.symm;
 
+import javax.vecmath.Matrix4d;
+import javax.vecmath.Point3d;
+
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.Calc;
-import org.biojava.nbio.structure.SVDSuperimposer;
 import org.biojava.nbio.structure.align.ce.CECalculator;
 import org.biojava.nbio.structure.align.ce.CeParameters;
 import org.biojava.nbio.structure.align.model.AFPChain;
-import org.biojava.nbio.structure.jama.Matrix;
+import org.biojava.nbio.structure.geometry.SuperPositions;
 
 /**
  * This is an experimental version of CECalculator that aims at improving the
@@ -31,6 +33,11 @@ public class CESymmCalculator extends CECalculator {
 	@Override
 	public void traceFragmentMatrix(AFPChain afpChain, Atom[] ca1, Atom[] ca2) {
 
+		// vecmath versions of points
+		// TODO Improve speed by using vecmath functions
+		Point3d[] points1 = Calc.atomsToPoints(ca1);
+		Point3d[] points2 = Calc.atomsToPoints(ca2);
+		
 		double rmsdThr = params.getRmsdThr();
 
 		double oldBestTraceScore = 10000.0;
@@ -114,7 +121,8 @@ public class CESymmCalculator extends CECalculator {
 		int kse1;
 		int kse2;
 
-		iterLoop: for (int iter = 0; iter < nIter; iter++) {
+		//iterLoop:
+		for (int iter = 0; iter < nIter; iter++) {
 
 			if (iter > 2) {
 				if (oldBestTraceScore <= bestTraceScore)
@@ -166,7 +174,8 @@ public class CESymmCalculator extends CECalculator {
 
 			// System.out.println("ise1Loop: " + ise11 + " " + ise12 + " " +
 			// ise21 + " " + ise22);
-			ise1Loop: for (int ise1_ = ise11; ise1_ < ise12; ise1_++) {
+			//ise1Loop:
+			for (int ise1_ = ise11; ise1_ < ise12; ise1_++) {
 				ise2Loop: for (int ise2_ = ise21; ise2_ < ise22; ise2_++) {
 
 					ise1 = ise1_;
@@ -291,7 +300,7 @@ public class CESymmCalculator extends CECalculator {
 								if (score1 > userRMSDMax)
 									continue itLoop;
 
-								double angle = checkAngle(mse1, mse2, ca2, ca2,
+								double angle = checkAngle(mse1, mse2, points1, points2,
 										winSize);
 								if (angle < MIN_ANGLE)
 									continue itLoop;
@@ -444,66 +453,56 @@ public class CESymmCalculator extends CECalculator {
 	 * @param mse2
 	 * @param ca1
 	 * @param ca2
+	 * @param winSize
 	 * @return
 	 */
-	private double checkAngle(int mse1, int mse2, Atom[] ca1, Atom[] ca2,
+	private double checkAngle(int mse1, int mse2, Point3d[] ca1, Point3d[] ca2,
 			int winSize) {
 		try {
-
-			if (origin1 == null)
-				origin1 = Calc.getCentroid(ca1);
-			if (origin2 == null)
-				origin2 = Calc.getCentroid(ca2);
-
-			int nse1 = ca1.length;
-			int nse2 = ca2.length;
-
-			int max1 = Math.min((nse1 - mse1 - 1), winSize);
-			int max2 = Math.min((nse2 - mse2 - 1), winSize);
-
+			// length of next window
+			// TODO Doesn't the -1 skip the last residue? -Spencer 2018-12-27
+			int max1 = Math.min(ca1.length - mse1 - 1, winSize);
+			int max2 = Math.min(ca2.length - mse2 - 1, winSize);
 			int maxAtoms = Math.min(max1, max2);
 
-			// System.out.println(max1 + "  " + max2 + " " + maxAtoms);
-			Atom[] cod1 = new Atom[maxAtoms];
-			Atom[] cod2 = new Atom[maxAtoms];
-
-			assert (cod1.length == cod2.length);
-
-			// this sums up over the distances of the fragments
-
-			int is1 = mse1;
-			for (int pos1 = 0; pos1 < maxAtoms; pos1++) {
-				is1++;
-				cod1[pos1] = (Atom) ca1[is1].clone();
-				// System.out.println(pos1 + " " + is1 + " " + cod1[pos1]);
-			}
-			int is2 = mse2;
-			for (int pos2 = 0; pos2 < maxAtoms; pos2++) {
-				is2++;
-				cod2[pos2] = (Atom) ca2[is2].clone();
+			// Extract fragments
+ 			Point3d[] cod1 = new Point3d[maxAtoms];
+			Point3d[] cod2 = new Point3d[maxAtoms];
+			for(int i=0;i<maxAtoms;i++) {
+				cod1[i] = ca1[mse1+i];
+				cod2[i] = ca2[mse2+i];
 			}
 
-			SVDSuperimposer svd = new SVDSuperimposer(cod1, cod2);
-
-			Matrix matrix = svd.getRotation();
-			Atom shift = svd.getTranslation();
-
-			for (Atom a : cod2) {
-				Calc.rotate(a, matrix);
-				Calc.shift(a, shift);
-			}
-
-			Atom v1 = Calc.subtract(origin1, cod1[0]);
-			Atom v2 = Calc.subtract(origin2, cod2[0]);
-
-			double ang = Calc.angle(v1, v2);
-			// System.out.println(v1 + " " + v2 + " " + ang);
+			Matrix4d transform = SuperPositions.superpose(cod1, cod2);
+			
+			double ang = getAngle(transform);
+			
 			return ang;
 
 		} catch (Exception e) {
 			e.printStackTrace();
 			return 0d;
 		}
+	}
+	
+
+	/**
+	 * Quickly compute the rotation angle from a rotation matrix.
+	 * @param transform 4D transformation matrix. Translation components are ignored.
+	 * @return Angle, from 0 to PI
+	 * @deprecated Use {@link RotationAxis#rotationAngle} from biojava 5.1.2 onward
+	 */
+	@Deprecated
+	private static double getAngle(Matrix4d transform) {
+		// Calculate angle
+		double c = (transform.m00 + transform.m11 + transform.m22 - 1)/2.0; //=cos(theta)
+		// c is sometimes slightly out of the [-1,1] range due to numerical instabilities
+		if( -1-1e-8 < c && c < -1 ) c = -1;
+		if( 1+1e-8 > c && c > 1 ) c = 1;
+		if( -1 > c || c > 1 ) {
+			throw new IllegalArgumentException("Input matrix is not a valid rotation matrix.");
+		}
+		return Math.acos(c);
 	}
 
 }

@@ -37,7 +37,6 @@ import org.biojava.nbio.structure.io.FileParsingParameters;
 import org.biojava.nbio.structure.io.mmcif.AllChemCompProvider;
 import org.biojava.nbio.structure.io.mmcif.ChemCompGroupFactory;
 import org.biojava.nbio.structure.rcsb.GetRepresentatives;
-import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetrySubunits;
 import org.biojava.nbio.structure.symmetry.misc.ProteinComplexSignature;
@@ -63,8 +62,8 @@ public class ScanSymmetry implements Runnable {
 
 		System.out.println("Reading blastclust files");
 
-		BlastClustReader reader95 = new BlastClustReader(95);
-		BlastClustReader reader30 = new BlastClustReader(30);
+		//BlastClustReader reader95 = new BlastClustReader(95);
+		//BlastClustReader reader30 = new BlastClustReader(30);
 
 		PrintWriter out = null;
 		PrintWriter error = null;
@@ -89,7 +88,7 @@ public class ScanSymmetry implements Runnable {
 				+ "lowSymmetry,minidentity,maxidentity,subunitrmsd,rmsd,tm,minrmsd,maxrmsd,mintm,maxtm,rmsdintra,tmintra,symdeviation,subunits,nucleiacids,cacount,time,signature95,stoich95,signature30,stoich30,spacegroup";
 		out.println(header);
 
-		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
+		//QuatSymmetryParameters parameters = new QuatSymmetryParameters();
 
 		Set<String> set = GetRepresentatives.getAll();
 		// pr testing
@@ -132,7 +131,7 @@ public class ScanSymmetry implements Runnable {
 				// identifier i=1 is used - JD 2016-05-17
 				i++;
 
-				long ts1 = System.nanoTime();
+				//long ts1 = System.nanoTime();
 
 				try {
 					SpaceGroup spaceGroup = null;
@@ -221,8 +220,6 @@ public class ScanSymmetry implements Runnable {
 					+ results.isPseudoStoichiometric()
 					+ ","
 					+ results.getStoichiometry()
-					+ ","
-					+ results.isPseudosymmetric()
 					+ ","
 					+ results.getSymmetry()
 					+ ","

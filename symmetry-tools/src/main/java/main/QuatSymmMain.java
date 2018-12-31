@@ -23,6 +23,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.biojava.nbio.core.util.FileDownloadUtils;
 import org.biojava.nbio.structure.StructureIdentifier;
 import org.biojava.nbio.structure.align.client.StructureName;
 import org.biojava.nbio.structure.align.util.AtomCache;
@@ -31,7 +32,6 @@ import org.biojava.nbio.structure.align.util.UserConfiguration;
 import org.biojava.nbio.structure.cluster.SubunitClustererMethod;
 import org.biojava.nbio.structure.cluster.SubunitClustererParameters;
 import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
-import org.biojava.nbio.structure.io.util.FileDownloadUtils;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -212,17 +212,31 @@ public class QuatSymmMain {
 				System.exit(1);
 			}
 		}
-		if (cli.hasOption("minCoverage")) {
-			String value = cli.getOptionValue("minCoverage");
+		if (cli.hasOption("minSequenceCoverage")) {
+			String value = cli.getOptionValue("minSequenceCoverage");
 			try {
-				double minCoverage = Double.parseDouble(value);
-				if (minCoverage < 0 || minCoverage > 1) {
-					logger.error("Invalid minCoverage: " + minCoverage);
+				double minSequenceCoverage = Double.parseDouble(value);
+				if (minSequenceCoverage < 0 || minSequenceCoverage > 1) {
+					logger.error("Invalid minSequenceCoverage: " + minSequenceCoverage);
 					System.exit(1);
 				}
-				cparams.setCoverageThreshold(minCoverage);
+				cparams.setSequenceCoverageThreshold(minSequenceCoverage);
 			} catch (NumberFormatException e) {
-				logger.error("Invalid minCoverage: " + value);
+				logger.error("Invalid minSequenceCoverage: " + value);
+				System.exit(1);
+			}
+		}
+		if (cli.hasOption("minStructureCoverage")) {
+			String value = cli.getOptionValue("minStructureCoverage");
+			try {
+				double minStructureCoverage = Double.parseDouble(value);
+				if (minStructureCoverage < 0 || minStructureCoverage > 1) {
+					logger.error("Invalid minStructureCoverage: " + minStructureCoverage);
+					System.exit(1);
+				}
+				cparams.setStructureCoverageThreshold(minStructureCoverage);
+			} catch (NumberFormatException e) {
+				logger.error("Invalid minStructureCoverage: " + value);
 				System.exit(1);
 			}
 		}
@@ -234,7 +248,7 @@ public class QuatSymmMain {
 					logger.error("Invalid maxClustRmsd: " + maxClustRmsd);
 					System.exit(1);
 				}
-				cparams.setRmsdThreshold(maxClustRmsd);
+				cparams.setRMSDThreshold(maxClustRmsd);
 			} catch (NumberFormatException e) {
 				logger.error("Invalid maxClustRmsd: " + value);
 				System.exit(1);
@@ -421,10 +435,19 @@ public class QuatSymmMain {
 
 		options.addOption(Option
 				.builder()
-				.longOpt("minCoverage")
+				.longOpt("minSequenceCoverage")
 				.hasArg(true)
 				.argName("float")
 				.desc("The minimum coverage of the sequence alignment between "
+						+ "two subunits to be clustered together "
+						+ "(range: [0,1], default: 0.9)").build());
+
+		options.addOption(Option
+				.builder()
+				.longOpt("minStructureCoverage")
+				.hasArg(true)
+				.argName("float")
+				.desc("The minimum coverage of the structure alignment between "
 						+ "two subunits to be clustered together "
 						+ "(range: [0,1], default: 0.9)").build());
 

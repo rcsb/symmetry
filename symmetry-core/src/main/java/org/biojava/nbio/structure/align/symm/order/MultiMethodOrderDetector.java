@@ -29,7 +29,7 @@ public class MultiMethodOrderDetector implements OrderDetector {
 			RotationAxis axis = new RotationAxis(afpChain);
 			OrderDetector method1 = new SequenceFunctionOrderDetector();
 			int orderMethod1 = method1.calculateOrder(afpChain, ca);
-			OrderDetector method2 = new AngleOrderDetector(angleError);
+			OrderDetector method2 = new AngleOrderDetectorPlus(angleError);
 			int orderMethod2 = method2.calculateOrder(afpChain, ca);
 			double screw = (float) (Calc.amount(axis.getScrewTranslation()) / Calc.amount(axis.getRotationAxis()));
 			if (screw > maxScrew) return 1;

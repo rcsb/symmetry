@@ -9,6 +9,7 @@ Documentation
 -------------
 
 * [CE-Symm](docs/CeSymm.md)
+* [QuatSymm](docs/QuatSymm.md)
 
 License
 ------------
@@ -16,6 +17,8 @@ License
 Symmetry-tools is released under the LGPL 2.1 and includes the following libraries:
 
 * [BioJava](http://biojava.org)
-* [RCSB Symmetry](http://github.com/rcsb/symmetry)
-* [jMol](http://jmol.sourceforge.net/)
+* [RCSB Symmetry-core](http://github.com/rcsb/symmetry)
+* [Jmol](http://jmol.sourceforge.net/)
 
+--------------------
+[Home](../README.md)

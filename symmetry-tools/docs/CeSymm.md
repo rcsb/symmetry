@@ -1,7 +1,6 @@
 # CE-Symm
 
-CE-Symm
-
+CE-Symm is a tool for detecting internal symmetry in protein structures. CE-Symm 2.0 is able to detect both open and closed symmetry and provide a multiple alignment of all repeats.
 
 When using CE-Symm, please cite:
 

@@ -20,7 +20,7 @@ or the following preprint about CE-Symm 2.0:
 
 CE-Symm requires Java 8 or newer to run.
 
-The latest release can be downloaded from [Github](https://github.com/rcsb/symmetry/releases) and contains the quatsymm jar file and the `runQuatSymm.sh` wrapper script. The script may be called directly or added to your PATH.
+The latest release can be downloaded from [Github](https://github.com/rcsb/symmetry/releases) and contains the cesymm jar file and the `runQuatSymm.sh` wrapper script. The script may be called directly or added to your PATH.
 
 ## Usage
 

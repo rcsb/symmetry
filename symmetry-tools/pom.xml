@@ -186,12 +186,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<descriptors>
-						<descriptor>src/main/assembly/assembly_cesymm.xml</descriptor>
-						<descriptor>src/main/assembly/assembly_quatsymm.xml</descriptor>
-					</descriptors>
-				</configuration>
 
 				<!-- Attach the creation of the assembly to the package phase. -->
 				<executions>
@@ -203,13 +197,14 @@
 						</goals>
 						<configuration>
 							<finalName>cesymm-${project.version}</finalName>
+							<descriptor>src/main/assembly/assembly_cesymm.xml</descriptor>
 							<appendAssemblyId>false</appendAssemblyId>
 							<filters>
 								<filter>${basedir}/src/main/assembly/filter.properties</filter>
 							</filters>
 						</configuration>
 					</execution>
-					<execution>
+ 					<execution>
 						<id>quatsymm_bundle</id>
 						<phase>package</phase>
 						<goals>
@@ -217,6 +212,7 @@
 						</goals>
 						<configuration>
 							<finalName>quatsymm-${project.version}</finalName>
+							<descriptor>src/main/assembly/assembly_quatsymm.xml</descriptor>
 							<appendAssemblyId>false</appendAssemblyId>
 							<filters>
 								<filter>${basedir}/src/main/assembly/filter.properties</filter>

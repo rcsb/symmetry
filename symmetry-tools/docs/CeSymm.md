@@ -1,5 +1,27 @@
 # CE-Symm
 
+CE-Symm is a tool for detecting internal symmetry in protein structures. CE-Symm 2.0 is able to detect both open and closed symmetry and provide a multiple alignment of all repeats.
+
+When using CE-Symm, please cite:
+
+> Douglas Myers-Turnbull, Spencer E Bliven, Peter W Rose, Zaid K Aziz, Philippe
+> Youkharibache, Philip E Bourne, Andreas Prlic (2013) Systematic detection of
+> internal symmetry in proteins using CE-Symm. *J Mol Biol*, 426(11), 2255–2268.
+> [PMID 24681267]
+
+or the following preprint about CE-Symm 2.0:
+
+> Spencer E Bliven, Aleix Lafita,Peter W Rose, Guido Capitani, Andreas  Prlić,
+> Philip E Bourne. Analyzing the symmetrical arrangement of structural repeats
+> in proteins with CE-Symm. Preprint on *BioRxiv*: 
+> https://doi.org/10.1101/297960
+
+## Installation
+
+CE-Symm requires Java 8 or newer to run.
+
+The latest release can be downloaded from [Github](https://github.com/rcsb/symmetry/releases) and contains the cesymm jar file and the `runQuatSymm.sh` wrapper script. The script may be called directly or added to your PATH.
+
 ## Usage
 
 
@@ -31,7 +53,7 @@ All common options have short forms.
 | -q  | --noverbose       | Disable verbose logging information, as well as the default (--simple) output.
 | -o  | --simple=file     | Output result in a simple format (default)
 |     | --stats=file      | Output a tsv file with detailed symmetry information
-|     | --tsv=file        | Output alignment as a tsv-formated list of aligned residues.
+|     | --tsv=file        | Output alignment as a tsv-formatted list of aligned residues.
 |     | --xml=file        | Output alignment as XML
 |     | --fatcat=file     | Output alignment as FATCAT output
 |     | --fasta=file      | Output alignment as FASTA alignment output
@@ -55,7 +77,7 @@ All common options have short forms.
 |     | --noopt           | Disable optimization of the resulting symmetry alignment.
 |     | --unrefinedscorethreshold=float | The TM-score threshold before refinement of the self-alignment. TM-scores above this value will be considered significant results [default: 0.4, interval [0.0,1.0]].
 |     | --refinedscorethreshold=float | The TM-score threshold of the multiple alignment of repeats after refinement. TM-scores above this value will be considered significant results [default: 0.36, interval [0.0,1.0]].
-|     | --ssethrehold=int | The minimum number of secondary structure elements (SSE) for each symmetric subunit, for the result to be singificant [default: 2].
+|     | --ssethrehold=int | The minimum number of secondary structure elements (SSE) for each symmetric subunit, for the result to be significant [default: 2].
 |     | --maxorder=int    | The maximum number of symmetric subunits [default: 8].
 |     | --rndseed=int     | The random seed used in optimization, for reproducibility of the results [default: 0].
 |     | --minlen=int      | The minimum length, expressed in number of core aligned residues, of a symmetric subunit [default: 15].
@@ -117,7 +139,7 @@ filenames, it is recommended to use the hyphen explicitly (e.g. `--stats=-`,
 although `--stats` may work alone in some contexts).
 
 If no format is specified, CE-Symm will default to printing the simple format to
-standard out, although this can be surpressed with the `-q` option.
+standard out, although this can be suppressed with the `-q` option.
 
 The following formats are supported. Most formats represent the symmetry as an
 alignment from the structure to itself.
@@ -127,7 +149,7 @@ alignment from the structure to itself.
   how that conclusion was reached.
 * __Stats__: Provides more detailed statistics about each result. See below
   for a description of the fields.
-* __Axes__: Provides detailed infomation about the axes of symmetry found. 
+* __Axes__: Provides detailed information about the axes of symmetry found. 
 * See below for a description of the fields.
 * __TSV__: A list of aligned residues for each structure,  with a line containing 
   only '//' to separate records.
@@ -192,12 +214,6 @@ with the executable).
 The source code is available at https://github.com/rcsb/symmetry and as part
 of the [BioJava library](https://github.com/biojava/biojava).
 A webserver is also provided at http://source.rcsb.org/jfatcatserver/symmetry.jsp
-
-If you use CE-Symm in your research, please cite:
-
-Douglas Myers-Turnbull, Spencer E Bliven, Peter W Rose, Zaid K Aziz, Philippe
-  Youkharibache, Philip E Bourne, and Andreas Prlic. Systematic detection of
-  internal symmetry in proteins using CE-Symm. 2014. Awaiting publication.
 
 ## Examples
 

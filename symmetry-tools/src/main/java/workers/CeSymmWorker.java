@@ -29,7 +29,7 @@ import writers.CeSymmWriter;
  *
  */
 public class CeSymmWorker implements Runnable {
-	
+
 	private static final Logger logger = LoggerFactory
 			.getLogger(CeSymmWorker.class);
 
@@ -61,9 +61,9 @@ public class CeSymmWorker implements Runnable {
 						e);
 				return;
 			}
-			
+
 			Atom[] atoms = SymmetryTools.getRepresentativeAtoms(structure);
-			
+
 			// Run the symmetry analysis
 			CeSymmResult result = CeSymm.analyze(atoms, params);
 
@@ -81,9 +81,9 @@ public class CeSymmWorker implements Runnable {
 			}
 
 			// Display alignment in 3D Jmol
-			if (show3d) {
+			if (show3d) 
 				SymmetryDisplay.display(result);
-			}
+			
 		} catch (Exception e) {
 			logger.error("Could not complete job: " + id.getIdentifier(), e);
 		} finally {

@@ -123,13 +123,13 @@
 						</configuration>
 					</execution>
 					<execution>
-						<id>CombinedSymm</id>
+						<id>QuatSymm</id>
 						<phase>package</phase>
 						<goals>
 							<goal>shade</goal>
 						</goals>
 						<configuration>
-							<outputFile>target/CombinedSymm-${project.version}.jar</outputFile>
+							<outputFile>target/QuatSymm-${project.version}.jar</outputFile>
 							<!-- Minimizing removes jmol and log4j -->
 							<minimizeJar>false</minimizeJar>
 							<artifactSet>
@@ -170,7 +170,7 @@
 										<Implementation-Version>${project.version}</Implementation-Version>
 										<Specification-Title>${project.name}</Specification-Title>
 										<Implementation-Title>${project.name}</Implementation-Title>
-										<Main-Class>main.CombinedSymmMain</Main-Class>
+										<Main-Class>main.QuatSymmMain</Main-Class>
 										<Build-Date>${build.date}</Build-Date>
 										<Build-Number>${buildNumber}</Build-Number>
 									</manifestEntries>
@@ -186,22 +186,33 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<descriptors>
-						<descriptor>src/main/assembly/assembly.xml</descriptor>
-					</descriptors>
-				</configuration>
 
 				<!-- Attach the creation of the assembly to the package phase. -->
 				<executions>
 					<execution>
-						<id>assemble</id>
+						<id>cesymm_bundle</id>
 						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
 						<configuration>
 							<finalName>cesymm-${project.version}</finalName>
+							<descriptor>src/main/assembly/assembly_cesymm.xml</descriptor>
+							<appendAssemblyId>false</appendAssemblyId>
+							<filters>
+								<filter>${basedir}/src/main/assembly/filter.properties</filter>
+							</filters>
+						</configuration>
+					</execution>
+ 					<execution>
+						<id>quatsymm_bundle</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<finalName>quatsymm-${project.version}</finalName>
+							<descriptor>src/main/assembly/assembly_quatsymm.xml</descriptor>
 							<appendAssemblyId>false</appendAssemblyId>
 							<filters>
 								<filter>${basedir}/src/main/assembly/filter.properties</filter>

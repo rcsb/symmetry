@@ -8,6 +8,7 @@ import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.align.ce.CECalculator;
 import org.biojava.nbio.structure.align.ce.CeParameters;
 import org.biojava.nbio.structure.align.model.AFPChain;
+import org.biojava.nbio.structure.align.util.RotationAxis;
 import org.biojava.nbio.structure.geometry.SuperPositions;
 
 /**
@@ -474,35 +475,15 @@ public class CESymmCalculator extends CECalculator {
 			}
 
 			Matrix4d transform = SuperPositions.superpose(cod1, cod2);
-			
-			double ang = getAngle(transform);
-			
+
+			double ang = RotationAxis.getAngle(transform);
+
 			return ang;
 
 		} catch (Exception e) {
 			e.printStackTrace();
 			return 0d;
 		}
-	}
-	
-
-	/**
-	 * Quickly compute the rotation angle from a rotation matrix.
-	 * @param transform 4D transformation matrix. Translation components are ignored.
-	 * @return Angle, from 0 to PI
-	 * @deprecated Use {@link RotationAxis#rotationAngle} from biojava 5.1.2 onward
-	 */
-	@Deprecated
-	private static double getAngle(Matrix4d transform) {
-		// Calculate angle
-		double c = (transform.m00 + transform.m11 + transform.m22 - 1)/2.0; //=cos(theta)
-		// c is sometimes slightly out of the [-1,1] range due to numerical instabilities
-		if( -1-1e-8 < c && c < -1 ) c = -1;
-		if( 1+1e-8 > c && c > 1 ) c = 1;
-		if( -1 > c || c > 1 ) {
-			throw new IllegalArgumentException("Input matrix is not a valid rotation matrix.");
-		}
-		return Math.acos(c);
 	}
 
 }

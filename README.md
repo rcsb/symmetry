@@ -15,6 +15,7 @@ User interfaces are available within the [symmetry-tools](https://github.com/rcs
 <img src="docu/img/1u6d_symmetry.png" align="left" width="150" alt="C6 internal symmetry in PDB:1U6D" title="PDB:1U6D" />
 
 CE-Symm is a tool for detecting internal symmetry in protein structures. CE-Symm version 2 is able to detect both open and closed symmetry and provide a multiple alignment of all repeats. 
+
 See [CE-Symm documentation](symmetry-tools/docs/CeSymm.md) for more details.
 
 When using CE-Symm, please cite:
@@ -35,12 +36,12 @@ CE-Symm version 1:
 
 ### Quaternary Symmetry
 
-<img src="docu/img/1G63.jpg" alt="Tetrahedral symmetry of PDB:1G63" title="PDB:1G63" style="float: left; width:150px" align="left" width="200"/>
+<img src="docu/img/1G63.jpg" alt="Tetrahedral symmetry of PDB:1G63" title="PDB:1G63" style="float: left; width:150px" align="left" width="150"/>
 
 The QuatSymm tool is used for identifying quaternary symmetry in protein complexes. It is also able to tolerate mutations and detect pseudosymmetry in complexes with structurally homologous subunits.
 See [QuatSymm documentation](symmetry-tools/docs/QuatSymm.md) for more details.
 
-The QuatSymm algorithms are used by the RCSB Protein Data Bank's [quaternary symmetry analysis](http://www.rcsb.org/pdb/browse/stoichiometry.do). The tool was also utilized for biological assembly assessment during the Critical Assessment of Protein Structure 2016 (CASP 12).
+The QuatSymm algorithms are used by the RCSB Protein Data Bank's [quaternary symmetry analysis](http://www.rcsb.org/pdb/browse/stoichiometry.do). The tool was also utilized for biological assembly assessment during the 1[2th Critical Assessment of Structure Prediction in 2016](https://doi.org/10.1002/prot.25408).
 
 
 ## Dependencies

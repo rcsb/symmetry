@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import workers.QuatSymmWorker;
+import writers.QuatSymmFastaWriter;
 import writers.QuatSymmStatsWriter;
 import writers.QuatSymmWriter;
 
@@ -157,6 +158,18 @@ public class QuatSymmMain {
 				filename = "-"; // standard out
 			try {
 				writers.add(new QuatSymmStatsWriter(filename));
+			} catch (IOException e) {
+				logger.error("Error: Ignoring file " + filename + ".");
+				logger.error(e.getMessage());
+			}
+		}
+		
+		if (cli.hasOption("fasta")) {
+			String filename = cli.getOptionValue("fasta");
+			if(filename == null || filename.isEmpty())
+				filename = "-"; // standard out
+			try {
+				writers.add(new QuatSymmFastaWriter(filename));
 			} catch (IOException e) {
 				logger.error("Error: Ignoring file " + filename + ".");
 				logger.error(e.getMessage());
@@ -378,6 +391,14 @@ public class QuatSymmMain {
 				.optionalArg(true)
 				.argName("file")
 				.desc("Output a tsv file with detailed symmetry information (default)")
+				.build());
+		options.addOption(Option
+				.builder("f")
+				.longOpt("fasta")
+				.hasArg()
+				.optionalArg(true)
+				.argName("file")
+				.desc("Output alignment as FASTA alignment output")
 				.build());
 
 		// jmol

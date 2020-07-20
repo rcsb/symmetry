@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/rcsb/symmetry.png)](https://travis-ci.org/rcsb/symmetry)
 
-# Symmetry in Biomolecular Structures
+# Symmetry in Protein Structures
 
 This project collects tools to detect, analyze, and visualize **protein symmetry**. This includes the CE-Symm tool for **internal symmetry**, a tool for **quaternary symmetry**, and other experiments relating to symmetry. 
 
@@ -14,34 +14,43 @@ User interfaces are available within the [symmetry-tools](https://github.com/rcs
 
 <img src="docu/img/1u6d_symmetry.png" align="left" width="150" alt="C6 internal symmetry in PDB:1U6D" title="PDB:1U6D" />
 
-CE-Symm is a tool for detecting internal symmetry in protein structures. CE-Symm version 2 is able to detect both open and closed symmetry and provide a multiple alignment of all repeats. 
+CE-Symm is a tool for detecting internal symmetry in protein structures.
+CE-Symm version 2 is able to detect both open and closed symmetry and provide a multiple alignment of all repeats. 
 
-See [CE-Symm documentation](symmetry-tools/docs/CeSymm.md) for more details.
+See [CE-Symm documentation](symmetry-tools/docs/CeSymm.md) for more details on how to use the tool.
 
-When using CE-Symm, please cite:
+If you find CE-Symm useful for your research, please consider citing:
 
-CE-Symm version 2:
+#### CE-Symm version 2:
 
 **Analyzing the symmetrical arrangement of structural repeats in proteins with CE-Symm**<br/>
 *Spencer E Bliven, Aleix Lafita, Peter W Rose, Guido Capitani, Andreas Prlić, & Philip E Bourne* <br/>
 [PLOS Computational Biology (2019) 15 (4):e1006842.](https://journals.plos.org/ploscompbiol/article/citation?id=10.1371/journal.pcbi.1006842) <br/>
 [![doi](https://img.shields.io/badge/doi-10.1371%2Fjournal.pcbi.1006842-blue.svg?style=flat)](https://doi.org/10.1371/journal.pcbi.1006842) [![pubmed](https://img.shields.io/badge/pubmed-31009453-blue.svg?style=flat)](http://www.ncbi.nlm.nih.gov/pubmed/31009453)
 
-CE-Symm version 1:
+#### CE-Symm version 1:
 
 **Systematic detection of internal symmetry in proteins using CE-Symm**<br/>
 *Douglas Myers-Turnbull, Spencer E Bliven, Peter W Rose, Zaid K Aziz, Philippe Youkharibache, Philip E Bourne, & Andreas Prlić* <br/>
 [J Mol Biol (2013) 426 (11): 2255–2268.](https://doi.org/10.1016/j.jmb.2014.03.010) <br/>
 [![doi](https://img.shields.io/badge/doi-10.1016%2Fj.jmb.2014.03.010-blue.svg?style=flat)](https://doi.org/10.1016/j.jmb.2014.03.010) [![pubmed](https://img.shields.io/badge/pubmed-24681267-blue.svg?style=flat)](http://www.ncbi.nlm.nih.gov/pubmed/24681267)
 
-### Quaternary Symmetry
+### QuatSymm
 
 <img src="docu/img/1G63.jpg" alt="Tetrahedral symmetry of PDB:1G63" title="PDB:1G63" style="float: left; width:150px" align="left" width="150"/>
 
-The QuatSymm tool is used for identifying quaternary symmetry in protein complexes. It is also able to tolerate mutations and detect pseudosymmetry in complexes with structurally homologous subunits.
+The QuatSymm tool is used for identifying quaternary symmetry in protein complexes.
+It is also able to detect pseudosymmetry in complexes with structurally homologous subunits.
+The QuatSymm tool is used by the RCSB Protein Data Bank's [quaternary symmetry analysis](http://www.rcsb.org/pdb/browse/stoichiometry.do) and it has also been utilized to assess protein assembly predictions at [CASP challenges](https://predictioncenter.org/).
+
 See [QuatSymm documentation](symmetry-tools/docs/QuatSymm.md) for more details.
 
-The QuatSymm algorithms are used by the RCSB Protein Data Bank's [quaternary symmetry analysis](http://www.rcsb.org/pdb/browse/stoichiometry.do). The tool was also utilized for biological assembly assessment during the 1[2th Critical Assessment of Structure Prediction in 2016](https://doi.org/10.1002/prot.25408).
+If you find the QuatSymm tool useful for your research, please consider citing the following publications where it has been described:
+
+**BioJava 5: A community driven open-source bioinformatics library**<br/>
+*Aleix Lafita, Spencer Bliven, Andreas Prlić, Dmytro Guzenko, Peter W. Rose, Anthony Bradley, Paolo Pavan, Douglas Myers-Turnbull, Yana Valasatava, Michael Heuer, Matt Larson, Stephen K. Burley, Jose M. Duarte* <br/>
+[PLOS Computational Biology 15(2): e1006791](http://dx.plos.org/10.1371/journal.pcbi.1006791) <br/>
+[![doi](http://img.shields.io/badge/doi-10.1371%2Fjournal.pcbi.1006791-blue.svg?style=flat)](https://doi.org/10.1371/journal.pcbi.1006791)
 
 
 ## Dependencies

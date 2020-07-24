@@ -26,6 +26,6 @@ public abstract class QuatSymmWriter extends OutputWriter {
 	 * @throws IOException
 	 */
 	abstract public void writeResult(String identifier,
-			QuatSymmetryResults result) throws IOException;
+			QuatSymmetryResults result) throws Exception;
 
 }

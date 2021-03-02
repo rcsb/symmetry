@@ -20,59 +20,92 @@
  */
 package org.biojava.nbio.structure.symmetry.analysis;
 
+import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.PDBCrystallographicInfo;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.align.util.AtomCache;
 import org.biojava.nbio.structure.io.FileParsingParameters;
-import org.biojava.nbio.structure.io.mmcif.AllChemCompProvider;
-import org.biojava.nbio.structure.io.mmcif.ChemCompGroupFactory;
-import org.biojava.nbio.structure.rcsb.GetRepresentatives;
+import org.biojava.nbio.structure.io.StructureFiletype;
+import org.biojava.nbio.structure.chem.AllChemCompProvider;
+import org.biojava.nbio.structure.chem.ChemCompGroupFactory;
+import org.biojava.nbio.structure.cluster.SubunitClustererParameters;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryDetector;
+import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryResults;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetrySubunits;
 import org.biojava.nbio.structure.symmetry.misc.ProteinComplexSignature;
 import org.biojava.nbio.structure.symmetry.utils.BlastClustReader;
 import org.biojava.nbio.structure.xtal.SpaceGroup;
 
+/**
+ * Utility to identify symmetry in a large-scale search. This is similar to
+ * QuatSymmMain but less user friendly.
+ *
+ * usage: java ScanSymmetry pdblist resultdir
+ *
+ * Arguments: pdblist File containing one structure identifier per line. May be
+ * - for stdin. resultdir Directory to store results
+ *
+ * Each run produces a DATE_symm.csv file with symmetry results and a
+ * DATE_error.txt
+ */
 public class ScanSymmetry implements Runnable {
 	private AtomCache cache = null;
-	private static String RESULT_DIR = "/Users/peter/Results/ScanSymmetry/";
+	private String pdbList;
+	private String resultDir;
 
-	public ScanSymmetry() {
+	public ScanSymmetry(String pdbList, String resultDir) {
+		this.pdbList = pdbList;
+		this.resultDir = resultDir;
 		initializeCache();
 	}
 
 	public static void main(String[] args) {
-		new ScanSymmetry().run();
+		if (args.length != 2) {
+			System.err.print("usage: ScanSymmetry pdblist resultdir");
+			System.exit(1);
+		}
+		String pdbList = args[0];
+		String resultDir = args[1];
+
+		if (!Files.exists(Paths.get(resultDir))) {
+			System.err.printf("Directory does not exist: %s%n", resultDir);
+			System.exit(1);
+		}
+		new ScanSymmetry(pdbList, resultDir).run();
 	}
 
 	@Override
 	public void run() {
-		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
-				.format(Calendar.getInstance().getTime());
+		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
 		System.out.println("Reading blastclust files");
-
-		//BlastClustReader reader95 = new BlastClustReader(95);
-		//BlastClustReader reader30 = new BlastClustReader(30);
+		BlastClustReader reader95 = new BlastClustReader(95);
+		BlastClustReader reader30 = new BlastClustReader(30);
 
 		PrintWriter out = null;
 		PrintWriter error = null;
 
 		try {
-			out = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp
-					+ "_symm.csv"));
-			error = new PrintWriter(new FileWriter(RESULT_DIR + timeStamp
-					+ "_error.txt"));
+			out = new PrintWriter(Files.newBufferedWriter(Paths.get(this.resultDir, timeStamp + "_symm.csv")));
+			error = new PrintWriter(Files.newBufferedWriter(Paths.get(this.resultDir, timeStamp + "_error.txt")));
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			System.exit(-1);
@@ -87,19 +120,29 @@ public class ScanSymmetry implements Runnable {
 		String header = "pdbId,bioassembly,local,pseudostoichiometric,stoichiometry,pseudosymmetric,pointgroup,order,"
 				+ "lowSymmetry,minidentity,maxidentity,subunitrmsd,rmsd,tm,minrmsd,maxrmsd,mintm,maxtm,rmsdintra,tmintra,symdeviation,subunits,nucleiacids,cacount,time,signature95,stoich95,signature30,stoich30,spacegroup";
 		out.println(header);
+		out.flush();
 
-		//QuatSymmetryParameters parameters = new QuatSymmetryParameters();
+		QuatSymmetryParameters parameters = new QuatSymmetryParameters();
+		SubunitClustererParameters scParams = new SubunitClustererParameters();
 
-		Set<String> set = GetRepresentatives.getAll();
-		// pr testing
-		set.clear();
-		set.add("4HHB");
+		StructureIO.setAtomCache(cache);
+
+		Collection<String> set;
+		try {
+			set = parsePDBList(pdbList);
+		} catch (IOException e1) {
+			System.err.printf("Error reading pdblist: %s%n", e1.getMessage());
+			System.exit(1);
+			return;
+		}
+		System.out.printf("Read %d identifiers%n", set.size());
 
 		// set skip to true to restart calculation with a specified PDB ID
 		boolean skip = false;
 		String restartId = "10MH";
 
 		for (String pdbId : set) {
+			System.out.println(pdbId);
 			if (skip && pdbId.equals(restartId)) {
 				skip = false;
 			}
@@ -107,9 +150,7 @@ public class ScanSymmetry implements Runnable {
 				continue;
 			}
 
-			System.out.println("------------- " + pdbId + "-------------");
-
-			StructureIO.setAtomCache(cache);
+			System.out.println("------------- " + pdbId + " -------------");
 
 			List<Structure> structures = null;
 			try {
@@ -131,42 +172,41 @@ public class ScanSymmetry implements Runnable {
 				// identifier i=1 is used - JD 2016-05-17
 				i++;
 
-				//long ts1 = System.nanoTime();
+				if (!structure.getPolyChains().stream().anyMatch(Chain::isProtein)) {
+					// not a protein assembly
+					continue;
+				}
+				SpaceGroup spaceGroup = null;
+				// float resolution = 0.0f;
+				PDBCrystallographicInfo info = structure.getCrystallographicInfo();
+				if (info != null) {
+					spaceGroup = info.getSpaceGroup();
+				}
+				// PDBHeader pdbHeader = structure.getPDBHeader();
+				// resolution = pdbHeader.getResolution();
 
 				try {
-					SpaceGroup spaceGroup = null;
-					// float resolution = 0.0f;
-					if (structure != null) {
-						PDBCrystallographicInfo info = structure
-								.getCrystallographicInfo();
-						if (info != null) {
-							spaceGroup = info.getSpaceGroup();
-						}
-						// PDBHeader pdbHeader = structure.getPDBHeader();
-						// resolution = pdbHeader.getResolution();
+
+					long ts1 = System.nanoTime();
+					// save global symmetry results
+					QuatSymmetryResults globalResults = QuatSymmetryDetector.calcGlobalSymmetry(structure, parameters,
+							scParams);
+					long ts2 = System.nanoTime();
+					int time = Math.round((ts2 - ts1) / 1000000.0f);
+					printToCsv(reader95, reader30, out, pdbId, i, time, globalResults, spaceGroup);
+
+					// save local symmetry results
+					ts1 = System.nanoTime();
+					List<QuatSymmetryResults> localResults = QuatSymmetryDetector.calcLocalSymmetries(structure,
+							parameters, scParams);
+					ts2 = System.nanoTime();
+					time = Math.round((ts2 - ts1) / 1000000.0f);
+
+					for (QuatSymmetryResults localResult : localResults) {
+						printToCsv(reader95, reader30, out, pdbId, i, time, localResult, spaceGroup);
 					}
-					// QuatSymmetryDetector detector = new
-					// QuatSymmetryDetector(structure, parameters);
-					//
-					// if (detector.hasProteinSubunits()) {
-					// long ts2 = System.nanoTime();
-					//
-					// int time = Math.round((ts2-ts1)/1000000.0f);
-					//
-					// // save global symmetry results
-					// List<QuatSymmetryResults> globalResults =
-					// detector.getGlobalSymmetry();
-					// printToCsv(reader95, reader30, out, pdbId,
-					// i, time, globalResults, spaceGroup);
-					//
-					// // save local symmetry results
-					// for (List<QuatSymmetryResults> localResults:
-					// detector.getLocalSymmetries()) {
-					// printToCsv(reader95, reader30, out, pdbId,
-					// i, time, localResults, spaceGroup);
-					// }
-					// proteins++;
-					// }
+					proteins++;
+
 					success++;
 					out.flush();
 				} catch (Exception e) {
@@ -177,6 +217,7 @@ public class ScanSymmetry implements Runnable {
 				}
 			}
 		}
+
 		long t2 = System.nanoTime();
 
 		System.out.println("PDBs succeeded: " + success);
@@ -189,84 +230,51 @@ public class ScanSymmetry implements Runnable {
 		error.close();
 	}
 
-	private void printToCsv(BlastClustReader reader95,
-			BlastClustReader reader30, PrintWriter out, String pdbId,
-			int bioAssemblyId, int time, List<QuatSymmetryResults> resultsList,
-			SpaceGroup spaceGroup) {
-
-		for (QuatSymmetryResults results : resultsList) {
-			ProteinComplexSignature s95 = new ProteinComplexSignature(pdbId,
-					new QuatSymmetrySubunits(results.getSubunitClusters())
-							.getChainIds(), reader95);
-			String signature95 = s95.getComplexSignature();
-			String stoich95 = s95.getComplexStoichiometry();
-			ProteinComplexSignature s30 = new ProteinComplexSignature(pdbId,
-					new QuatSymmetrySubunits(results.getSubunitClusters())
-							.getChainIds(), reader30);
-			String signature30 = s30.getComplexSignature();
-			String stoich30 = s30.getComplexStoichiometry();
-			int order = 1;
-			if (!results.getSymmetry().equals("H")) {
-				order = results.getRotationGroup().getOrder();
-			}
-
-			out.println("PDB"
-					+ pdbId
-					+ ","
-					+ bioAssemblyId
-					+ ","
-					+ results.isLocal()
-					+ ","
-					+ results.isPseudoStoichiometric()
-					+ ","
-					+ results.getStoichiometry()
-					+ ","
-					+ results.getSymmetry()
-					+ ","
-					+ order
-					+ ","
-					+ isLowSymmetry(results)
-					+ ","
-					+ Math.round(100)// results.getSubunits().getMinSequenceIdentity()
-										// * 100.0)
-					+ ","
-					+ Math.round(100) // results.getSubunits().getMaxSequenceIdentity()
-										// * 100.0)
-					+ ","
-					+ (float) results.getScores().getRmsdCenters()
-					+ ","
-					+ (float) results.getScores().getRmsd()
-					+ ","
-					+ (float) results.getScores().getTm()
-					+ ","
-					+ (float) results.getScores().getMinRmsd()
-					+ ","
-					+ (float) results.getScores().getMaxRmsd()
-					+ ","
-					+ (float) results.getScores().getMinTm()
-					+ ","
-					+ (float) results.getScores().getMaxTm()
-					+ ","
-					+ (float) results.getScores().getRmsdIntra()
-					+ ","
-					+ (float) results.getScores().getTmIntra()
-					+ ","
-					+ (float) results.getScores().getSymDeviation()
-					+ ","
-					+ results.getSubunitClusters().size()
-					+ ",NA"
-					+ ","
-					+ new QuatSymmetrySubunits(results.getSubunitClusters())
-							.getCalphaCount() + "," + time + "," + signature95
-					+ "," + stoich95 + "," + signature30 + "," + stoich30 + ","
-					+ spaceGroup);
+	private static List<String> parsePDBList(String pdbList) throws IOException {
+		Stream<String> in;
+		if (pdbList == null || pdbList.equals("-")) {
+			in = new BufferedReader(new InputStreamReader(System.in)).lines();
+		} else {
+			in = Files.lines(Paths.get(pdbList));
 		}
+		return in.filter((line) -> line.length() > 0 && line.charAt(0) != '#').collect(Collectors.toList());
+	}
+
+	private void printToCsv(BlastClustReader reader95, BlastClustReader reader30, PrintWriter out, String pdbId,
+			int bioAssemblyId, int time, QuatSymmetryResults results, SpaceGroup spaceGroup) {
+		ProteinComplexSignature s95 = new ProteinComplexSignature(pdbId,
+				new QuatSymmetrySubunits(results.getSubunitClusters()).getChainIds(), reader95);
+		String signature95 = s95.getComplexSignature();
+		String stoich95 = s95.getComplexStoichiometry();
+		ProteinComplexSignature s30 = new ProteinComplexSignature(pdbId,
+				new QuatSymmetrySubunits(results.getSubunitClusters()).getChainIds(), reader30);
+		String signature30 = s30.getComplexSignature();
+		String stoich30 = s30.getComplexStoichiometry();
+		int order = 1;
+		if (!results.getSymmetry().equals("H")) {
+			order = results.getRotationGroup().getOrder();
+		}
+
+		out.println("PDB" + pdbId + "," + bioAssemblyId + "," + results.isLocal() + ","
+				+ results.isPseudoStoichiometric() + "," + results.getStoichiometry() + "," + results.getSymmetry()
+				+ "," + order + "," + isLowSymmetry(results) + "," + Math.round(100)// results.getSubunits().getMinSequenceIdentity()
+																					// * 100.0)
+				+ "," + Math.round(100) // results.getSubunits().getMaxSequenceIdentity()
+										// * 100.0)
+				+ "," + (float) results.getScores().getRmsdCenters() + "," + (float) results.getScores().getRmsd() + ","
+				+ (float) results.getScores().getTm() + "," + (float) results.getScores().getMinRmsd() + ","
+				+ (float) results.getScores().getMaxRmsd() + "," + (float) results.getScores().getMinTm() + ","
+				+ (float) results.getScores().getMaxTm() + "," + (float) results.getScores().getRmsdIntra() + ","
+				+ (float) results.getScores().getTmIntra() + "," + (float) results.getScores().getSymDeviation() + ","
+				+ results.getSubunitClusters().size() + ",NA" + ","
+				+ new QuatSymmetrySubunits(results.getSubunitClusters()).getCalphaCount() + "," + time + ","
+				+ signature95 + "," + stoich95 + "," + signature30 + "," + stoich30 + "," + spaceGroup);
+		out.flush();
 	}
 
 	private boolean isLowSymmetry(QuatSymmetryResults results) {
 		return getMinFold(new QuatSymmetrySubunits(results.getSubunitClusters())) > 1
-				&& results.getRotationGroup() != null
-				&& results.getRotationGroup().getPointGroup().equals("C1");
+				&& results.getRotationGroup() != null && results.getRotationGroup().getPointGroup().equals("C1");
 	}
 
 	private int getMinFold(QuatSymmetrySubunits subunits) {
@@ -279,7 +287,7 @@ public class ScanSymmetry implements Runnable {
 	private void initializeCache() {
 		cache = new AtomCache();
 		FileParsingParameters params = cache.getFileParsingParams();
-		cache.setUseMmCif(true);
+		cache.setFiletype(StructureFiletype.CIF);
 		params.setParseCAOnly(true);
 		// MmCifBiolAssemblyProvider mmcifProvider = new
 		// MmCifBiolAssemblyProvider();
@@ -287,5 +295,6 @@ public class ScanSymmetry implements Runnable {
 		ChemCompGroupFactory.setChemCompProvider(new AllChemCompProvider());
 		// ChemCompGroupFactory.setChemCompProvider(new
 		// DownloadChemCompProvider());
+		ChemCompGroupFactory.getChemComp("HEM"); // Force download to start
 	}
 }

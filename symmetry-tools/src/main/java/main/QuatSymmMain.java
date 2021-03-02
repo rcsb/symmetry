@@ -31,6 +31,7 @@ import org.biojava.nbio.structure.align.util.CliTools;
 import org.biojava.nbio.structure.align.util.UserConfiguration;
 import org.biojava.nbio.structure.cluster.SubunitClustererMethod;
 import org.biojava.nbio.structure.cluster.SubunitClustererParameters;
+import org.biojava.nbio.structure.io.StructureFiletype;
 import org.biojava.nbio.structure.io.LocalPDBDirectory.ObsoleteBehavior;
 import org.biojava.nbio.structure.symmetry.core.QuatSymmetryParameters;
 import org.slf4j.Logger;
@@ -163,7 +164,7 @@ public class QuatSymmMain {
 				logger.error(e.getMessage());
 			}
 		}
-		
+
 		if (cli.hasOption("fasta")) {
 			String filename = cli.getOptionValue("fasta");
 			if(filename == null || filename.isEmpty())
@@ -320,7 +321,7 @@ public class QuatSymmMain {
 		}
 		AtomCache cache = new AtomCache(cacheConfig);
 		cache.setObsoleteBehavior(ObsoleteBehavior.FETCH_OBSOLETE);
-		cache.setUseMmCif(true);
+		cache.setFiletype(StructureFiletype.CIF);
 
 		long startTime = System.nanoTime();
 
@@ -347,7 +348,7 @@ public class QuatSymmMain {
 
 	/**
 	 * Creates the options
-	 * 
+	 *
 	 * @param optionOrder
 	 *            An empty map, which will be filled in with the option order
 	 * @return all Options
@@ -504,7 +505,7 @@ public class QuatSymmMain {
 
 	/**
 	 * Parse a whitespace-delimited file containing structure names
-	 * 
+	 *
 	 * @throws FileNotFoundException
 	 */
 	public static List<String> parseInputStructures(String filename)

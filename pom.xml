@@ -3,9 +3,9 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>symmetry</artifactId>
-	<version>2.1.1-SNAPSHOT</version>
+	<version>2.2.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	
+
 	<name>RCSB Symmetry</name>
 	<url>https://github.com/rcsb/symmetry</url>
 	<description>Tools to detect, analyze, and visualize protein symmetry.
@@ -21,16 +21,16 @@ into BioJava as they mature.</description>
 		<name>RCSB</name>
 		<url>http://www.rcsb.org</url>
 	</organization>
-	
+
 	<properties>
 		<jdk.version>1.8</jdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.targetEncoding>UTF-8</project.build.targetEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
 		<timestamp>${maven.build.timestamp}</timestamp>
-		<slf4j.version>1.7.19</slf4j.version>
-		<log4j.version>2.13.3</log4j.version>
-		<biojava.version>5.2.0</biojava.version>
+		<slf4j.version>1.7.30</slf4j.version>
+		<log4j.version>2.14.0</log4j.version>
+		<biojava.version>6.0.0-SNAPSHOT</biojava.version>
 	</properties>
 
 	<repositories>
@@ -110,7 +110,7 @@ into BioJava as they mature.</description>
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
-				<version>4.13.1</version>
+				<version>4.13.2</version>
 				<scope>test</scope>
 			</dependency>
 
@@ -123,7 +123,7 @@ into BioJava as they mature.</description>
 			<dependency>
 				<groupId>commons-cli</groupId>
 				<artifactId>commons-cli</artifactId>
-				<version>1.3.1</version>
+				<version>1.4</version>
 			</dependency>
 
 			<dependency>
@@ -161,16 +161,16 @@ into BioJava as they mature.</description>
 				<!-- runtime scope includes the test scope as well -->
 				<scope>runtime</scope>
 			</dependency>
-	
+
 			<dependency>
 				<groupId>xmlunit</groupId>
 				<artifactId>xmlunit</artifactId>
 				<version>1.6</version>
 			</dependency>
-	
+
 		</dependencies>
 	</dependencyManagement>
-	
+
 	<build>
 		<pluginManagement>
 			<plugins>
@@ -237,8 +237,8 @@ into BioJava as they mature.</description>
 
 	<profiles>
 
-		<!-- Note: before you can use this build profile you need to set up an 
-			environment that contains correctly signed keys. Configure the keystore properties 
+		<!-- Note: before you can use this build profile you need to set up an
+			environment that contains correctly signed keys. Configure the keystore properties
 			and the profile in ~/.m2/settings.xml -->
 		<profile>
 			<id>codesigning</id>

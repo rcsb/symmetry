@@ -1,6 +1,24 @@
 RCSB Symmetry
 -------------
 
+## CE-Symm 2.2.0 (symmetry-2.2.0)
+
+Released 4 January 2022.
+
+This version requires Java 8 or newer, and is tested up to Java 17.
+
+Bug Fixes:
+
+- Fix Log4j vulnerabilities (CVE-2021-44228 and related)
+- Fix errors when using RCSB services (e.g. fetching domains)
+- Fix issue with Jmol not displaying correctly in european locales
+- Fix issues with older Java versions due to various dependencies (#104)
+- Upgrade to BioJava 6.0.3
+
+Removed Features:
+
+- Remove ScanSymmetry class
+
 ## CE-Symm 2.1.0 (symmetry-2.1.0)
 
 Released 9 January 2019.

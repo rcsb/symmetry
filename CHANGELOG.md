@@ -1,6 +1,14 @@
 RCSB Symmetry
 -------------
 
+## CE-Symm 2.2.1 (symmetry-2.2.1)
+
+Released 5 January 2022
+
+Bug Fixes:
+
+- Upgrade to BioJava 6.0.4
+
 ## CE-Symm 2.2.0 (symmetry-2.2.0)
 
 Released 4 January 2022.

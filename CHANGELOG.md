@@ -1,6 +1,15 @@
 RCSB Symmetry
 -------------
 
+## CE-Symm 2.2.2 (symmetry-2.2.2)
+
+Released 2 February 2022
+
+Bug Fixes:
+
+- Fix NullPointerException when loading files without PDB Ids (#113)
+- Update to biojava 6.0.5
+
 ## CE-Symm 2.2.1 (symmetry-2.2.1)
 
 Released 5 January 2022

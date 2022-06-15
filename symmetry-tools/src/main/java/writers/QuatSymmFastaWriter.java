@@ -34,7 +34,7 @@ public class QuatSymmFastaWriter extends QuatSymmWriter {
 				// the identifier seems to be a file, let's take just the name and drop dots, or otherwise
 				// `new StructureName()` below fails when SubstructureIdentifier tries parsing ranges (because it splits at dots)
 				// see https://github.com/rcsb/symmetry/issues/116
-				identifierForOutput = new File(identifier).getName().replace(".", "");
+				identifierForOutput = new File(identifier).getName().replaceAll(".", "");
 			} else {
 				identifierForOutput = identifier;
 			}

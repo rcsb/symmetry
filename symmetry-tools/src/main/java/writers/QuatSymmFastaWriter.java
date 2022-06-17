@@ -1,5 +1,6 @@
 package writers;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,10 +29,20 @@ public class QuatSymmFastaWriter extends QuatSymmWriter {
 	public synchronized void writeResult(String identifier,
 			QuatSymmetryResults result) throws StructureException {
 		if (result != null ) {
+			final String identifierForOutput;
+			if (new File(identifier).exists()) {
+				// the identifier seems to be a file, let's take just the name and drop dots, or otherwise
+				// `new StructureName()` below fails when SubstructureIdentifier tries parsing ranges (because it splits at dots)
+				// see https://github.com/rcsb/symmetry/issues/116
+				identifierForOutput = new File(identifier).getName().replaceAll(".", "");
+			} else {
+				identifierForOutput = identifier;
+			}
+
 			for (SubunitCluster cluster:result.getSubunitClusters()){
 				// There is bug because Structure Identifiers are null - quick fix here
 				List<StructureIdentifier> structident = cluster.getSubunits().stream()
-						.map(n -> new StructureName(identifier + "_" + n.getName()))
+						.map(n -> new StructureName(identifierForOutput + "_" + n.getName()))
 						.collect(Collectors.toList());
 				
 				MultipleAlignment alignment = cluster.getMultipleAlignment();

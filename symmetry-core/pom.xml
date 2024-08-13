@@ -16,7 +16,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>java3d</groupId>
+			<groupId>javax.vecmath</groupId>
 			<artifactId>vecmath</artifactId>
 		</dependency>
 
@@ -34,7 +34,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>jfree</groupId>
+			<groupId>org.jfree</groupId>
 			<artifactId>jfreechart</artifactId>
 		</dependency>
 		<dependency>

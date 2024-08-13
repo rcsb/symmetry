@@ -23,30 +23,15 @@ into BioJava as they mature.</description>
 	</organization>
 
 	<properties>
-		<jdk.version>1.8</jdk.version>
+		<jdk.version>11</jdk.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.targetEncoding>UTF-8</project.build.targetEncoding>
 		<maven.build.timestamp.format>yyyyMMdd-HHmm</maven.build.timestamp.format>
 		<timestamp>${maven.build.timestamp}</timestamp>
-		<slf4j.version>1.7.32</slf4j.version>
-		<log4j.version>2.17.1</log4j.version>
-		<biojava.version>6.0.5</biojava.version>
+		<slf4j.version>2.0.12</slf4j.version>
+		<log4j.version>2.23.1</log4j.version>
+		<biojava.version>7.1.2</biojava.version>
 	</properties>
-
-	<repositories>
-		<repository>
-			<id>biojava-maven-repo</id>
-			<name>BioJava repository</name>
-			<url>http://www.biojava.org/download/maven/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-
-	</repositories>
 
 	<scm>
 		<connection>scm:git:git@github.com:rcsb/symmetry.git</connection>
@@ -61,29 +46,22 @@ into BioJava as they mature.</description>
 
 	<!-- where Maven deploy will deploy project jars/wars -->
 	<distributionManagement>
-		<downloadUrl>http://www.biojava.org/download/maven/</downloadUrl>
-		<repository>
-			<uniqueVersion>false</uniqueVersion>
-			<id>biojava-maven-repo</id>
-			<name>BioJava Maven Repository</name>
-			<url>scp://cloudportal.open-bio.org/home/websites/biojava.org/html/static/download/maven/</url>
-			<layout>default</layout>
-		</repository>
 		<snapshotRepository>
-			<uniqueVersion>false</uniqueVersion>
-			<id>biojava-maven-repo</id>
-			<name>BioJava Maven Repository</name>
-			<url>scp://cloudportal.open-bio.org/home/websites/biojava.org/html/static/download/maven/</url>
-			<layout>default</layout>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
 	</distributionManagement>
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>java3d</groupId>
+				<groupId>javax.vecmath</groupId>
 				<artifactId>vecmath</artifactId>
-				<version>1.3.1</version>
+				<version>1.5.2</version>
 			</dependency>
 
 			<dependency>
@@ -103,9 +81,9 @@ into BioJava as they mature.</description>
 			</dependency>
 
 			<dependency>
-				<groupId>jfree</groupId>
+				<groupId>org.jfree</groupId>
 				<artifactId>jfreechart</artifactId>
-				<version>1.0.13</version>
+				<version>1.5.5</version>
 			</dependency>
 			<dependency>
 				<groupId>junit</groupId>
@@ -123,7 +101,7 @@ into BioJava as they mature.</description>
 			<dependency>
 				<groupId>commons-cli</groupId>
 				<artifactId>commons-cli</artifactId>
-				<version>1.4</version>
+				<version>1.8.0</version>
 			</dependency>
 
 			<dependency>
@@ -177,7 +155,7 @@ into BioJava as they mature.</description>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.5.1</version>
+					<version>3.13.0</version>
 					<configuration>
 						<source>${jdk.version}</source>
 						<target>${jdk.version}</target>
@@ -187,7 +165,7 @@ into BioJava as they mature.</description>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.2.0</version>
+					<version>3.4.2</version>
 					<configuration>
 						<archive>
 							<manifestEntries>
@@ -200,12 +178,12 @@ into BioJava as they mature.</description>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-resources-plugin</artifactId>
-					<version>2.7</version>
+					<version>3.3.1</version>
 				</plugin>
 
 				<plugin>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>2.19.1</version>
+					<version>3.3.1</version>
 					<configuration>
 						<argLine>-Xms256m -Xmx2000M</argLine>
 					</configuration>
@@ -214,13 +192,13 @@ into BioJava as they mature.</description>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-release-plugin</artifactId>
-					<version>2.5.3</version>
+					<version>3.1.1</version>
 				</plugin>
 
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-shade-plugin</artifactId>
-					<version>2.4.3</version>
+					<version>3.6.0</version>
 				</plugin>
 
 				<plugin>
@@ -236,7 +214,7 @@ into BioJava as they mature.</description>
 			<extension>
 				<groupId>org.apache.maven.wagon</groupId>
 				<artifactId>wagon-ssh</artifactId>
-				<version>2.6</version>
+				<version>3.5.3</version>
 			</extension>
 		</extensions>
 

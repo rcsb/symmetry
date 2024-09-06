@@ -7,7 +7,7 @@ import org.biojava.nbio.structure.symmetry.internal.CeSymmResult;
 /**
  * This is a simple writer meant for the standard out that prints the most
  * relevant CeSymm prediction and a reason for it.
- * 
+ *
  * @author Aleix Lafita
  * @author Spencer Bliven
  *
@@ -50,7 +50,7 @@ public class CeSymmSimpleWriter extends CeSymmWriter {
 			writer.flush();
 		} catch (Exception e) {
 			logger.warn("Could not write result for entry: " + id
-					+ ". Writting empty row.");
+					+ ". Writing empty row. Cause:", e);
 			writeEmptyRow(id);
 		}
 		writer.flush();

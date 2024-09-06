@@ -30,7 +30,7 @@ into BioJava as they mature.</description>
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<slf4j.version>2.0.12</slf4j.version>
 		<log4j.version>2.23.1</log4j.version>
-		<biojava.version>7.1.2</biojava.version>
+		<biojava.version>7.1.3-SNAPSHOT</biojava.version>
 	</properties>
 
 	<scm>

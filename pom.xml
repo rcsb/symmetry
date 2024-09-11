@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.biojava</groupId>
 	<artifactId>symmetry</artifactId>
-	<version>2.2.3-SNAPSHOT</version>
+	<version>2.3.0</version>
 	<packaging>pom</packaging>
 
 	<name>RCSB Symmetry</name>
@@ -37,7 +37,7 @@ into BioJava as they mature.</description>
 		<connection>scm:git:git@github.com:rcsb/symmetry.git</connection>
 		<developerConnection>scm:git:git@github.com:rcsb/symmetry.git</developerConnection>
 		<url>https://github.com/rcsb/symmetry</url>
-		<tag>HEAD</tag>
+		<tag>symmetry-2.3.0</tag>
 	</scm>
 	<issueManagement>
 		<url>https://github.com/rcsb/symmetry/issues</url>
